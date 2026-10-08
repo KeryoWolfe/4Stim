@@ -19,7 +19,7 @@ namespace SceneRegistry
 	};
 
 	// An actor's sex as the scenes see it.
-	Sex SexOf(const RE::Actor* a_actor);
+	Sex SexOf(RE::Actor* a_actor);  // GetSex() isn't const
 
 	struct SceneActor
 	{

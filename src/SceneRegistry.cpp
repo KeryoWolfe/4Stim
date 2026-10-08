@@ -446,7 +446,7 @@ namespace SceneRegistry
 		return it != g_sequences.end() ? it->second : nullptr;
 	}
 
-	Sex SexOf(const RE::Actor* a_actor)
+	Sex SexOf(RE::Actor* a_actor)
 	{
 		if (!a_actor) {
 			return Sex::kAny;
