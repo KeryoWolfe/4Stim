@@ -259,7 +259,7 @@ namespace
 		return out;
 	}
 
-	bool CallActorMethodPlace(RE::Actor* a_actor, const Furniture::Spot& a_spot);
+	bool PlaceActorAt(RE::Actor* a_actor, const Furniture::Spot& a_spot);
 
 	// Moves a_actors onto the pending furniture's spot, if the next scene for
 	// them has one. False if it doesn't.
@@ -280,7 +280,7 @@ namespace
 		}
 		const auto spot = Furniture::SpotFor(ref, pending->type);
 		for (const auto actor : a_actors) {
-			CallActorMethodPlace(actor, spot);
+			PlaceActorAt(actor, spot);
 		}
 		return true;
 	}
@@ -676,17 +676,26 @@ namespace
 			a_args...);
 	}
 
-	bool CallActorMethodPlace(RE::Actor* a_actor, const Furniture::Spot& a_spot)
+	// Teleports a_actor to a_spot (on the main thread). Natively, not through
+	// Papyrus SetPosition: that left the player where they stood.
+	bool PlaceActorAt(RE::Actor* a_actor, const Furniture::Spot& a_spot)
 	{
-		float headingDeg = std::fmod(a_spot.heading * 180.0F / PI_F, 360.0F);
-		if (headingDeg < 0.0F) {
-			headingDeg += 360.0F;
+		if (!a_actor) {
+			return false;
 		}
-		const auto moveOk = CallActorMethod(a_actor, "ObjectReference"sv, "SetPosition"sv, a_spot.position.x, a_spot.position.y, a_spot.position.z);
-		const auto angleOk = CallActorMethod(a_actor, "ObjectReference"sv, "SetAngle"sv, 0.0F, 0.0F, headingDeg);
-		REX::INFO("Furniture: {:08X} -> ({:.1f}, {:.1f}, {:.1f}), heading {:.1f} deg (SetPosition dispatch={}, SetAngle dispatch={})",
-			a_actor->GetFormID(), a_spot.position.x, a_spot.position.y, a_spot.position.z, headingDeg, moveOk, angleOk);
-		return moveOk && angleOk;
+		const auto id = a_actor->GetFormID();
+		F4SE::GetTaskInterface()->AddTask([id, a_spot]() {
+			const auto actor = RE::TESForm::GetFormByID<RE::Actor>(id);
+			if (!actor) {
+				return;
+			}
+			actor->SetPosition(a_spot.position, true);
+			actor->SetHeading(a_spot.heading);
+			const auto& now = actor->data.location;
+			REX::INFO("Furniture: {:08X} -> ({:.1f}, {:.1f}, {:.1f}), heading {:.1f} deg; now at ({:.1f}, {:.1f}, {:.1f})",
+				id, a_spot.position.x, a_spot.position.y, a_spot.position.z, a_spot.heading * 180.0F / PI_F, now.x, now.y, now.z);
+		});
+		return true;
 	}
 
 	// ---- Spike 3: play / stop a pose (unchanged) ----

@@ -31,7 +31,8 @@ namespace Furniture
 			std::vector<std::string>       excludeKeywords;  // none of these
 			int                            minMarkers = -1;  // furniture markers, -1 = any
 			int                            maxMarkers = -1;
-			bool                           useMarker = true;  // place at the first furniture marker
+			bool                           useMarker = true;  // place at a furniture marker
+			int                            markerIndex = 0;   // which one
 			bool                           ignoreMarker[3] = { false, false, false };
 			RE::NiPoint3                   offset;            // in the furniture's own frame
 			float                          rotation = 0.0F;   // radians
@@ -138,6 +139,7 @@ namespace Furniture
 					type.minMarkers = entry.value("minMarkers", -1);
 					type.maxMarkers = entry.value("maxMarkers", -1);
 					type.useMarker = entry.value("useMarker", true);
+					type.markerIndex = entry.value("marker", 0);
 					if (const auto ignore = Strings(entry, "ignoreMarkerAxes", true); !ignore.empty()) {
 						for (const auto& axis : ignore) {
 							if (axis == "x" || axis == "y" || axis == "z") {
@@ -211,6 +213,36 @@ namespace Furniture
 				return false;
 			}
 			return true;
+		}
+
+		// The furniture markers in an object's loaded model (the "FRN" extra
+		// data of its root node), in the object's own frame. Fallout 4 keeps
+		// the marker positions there; the form only has per-marker settings.
+		struct MarkerNode : RE::NiExtraData
+		{
+			RE::BSTArray<RE::BSFurnitureMarker> markers;  // 18
+		};
+
+		std::vector<RE::BSFurnitureMarker> MarkersOf(RE::TESObjectREFR* a_ref)
+		{
+			std::vector<RE::BSFurnitureMarker> out;
+			const auto root = a_ref ? a_ref->Get3D() : nullptr;
+			if (!root) {
+				return out;
+			}
+			const auto node = static_cast<MarkerNode*>(root->GetExtraData("FRN"));
+			if (!node) {
+				return out;
+			}
+			const auto count = node->markers.size();
+			if (count == 0 || count > 64) {
+				REX::WARN("Furniture: {:08X}: {} markers in its model? Not used", a_ref->GetFormID(), count);
+				return out;
+			}
+			for (const auto& marker : node->markers) {
+				out.push_back(marker);
+			}
+			return out;
 		}
 
 		// g_lock held.
@@ -342,16 +374,21 @@ namespace Furniture
 				type = it->second;
 			}
 		}
-		const auto  base = a_ref->GetObjectReference();
-		const auto  furn = base ? base->As<RE::TESFurniture>() : nullptr;
 		const float scale = a_ref->refScale > 0 ? a_ref->refScale / 100.0F : 1.0F;
 		const float yaw = a_ref->data.angle.z;
 
 		// In the furniture's own frame: x right, y forward, z up.
 		RE::NiPoint3 local;
 		float        localHeading = 0.0F;
-		if (type.useMarker && furn && !furn->markersArray.empty()) {
-			const auto& marker = furn->markersArray[0];
+		const auto   markers = MarkersOf(a_ref);
+		for (std::size_t i = 0; i < markers.size(); ++i) {
+			REX::INFO("Furniture: {:08X} marker {}: ({:.1f}, {:.1f}, {:.1f}), heading {:.1f} deg, animations 0x{:X}", a_ref->GetFormID(), i,
+				markers[i].position.x, markers[i].position.y, markers[i].position.z, markers[i].heading / DEG, markers[i].allowedAnimations);
+		}
+		int used = -1;
+		if (type.useMarker && !markers.empty()) {
+			used = std::clamp(type.markerIndex, 0, static_cast<int>(markers.size()) - 1);
+			const auto& marker = markers[used];
 			local = marker.position;
 			localHeading = marker.heading;
 			if (type.ignoreMarker[0]) {
@@ -374,7 +411,7 @@ namespace Furniture
 		spot.heading = yaw + localHeading + type.rotation;
 		REX::INFO("Furniture: spot on {:08X} ({}): ({:.1f}, {:.1f}, {:.1f}), heading {:.1f} deg (marker {}: local ({:.1f}, {:.1f}, {:.1f}), {:.1f} deg)",
 			a_ref->GetFormID(), a_type, spot.position.x, spot.position.y, spot.position.z, spot.heading / DEG,
-			furn && !furn->markersArray.empty() ? "0" : "none", local.x, local.y, local.z, localHeading / DEG);
+			used >= 0 ? std::to_string(used) : std::string("none"), local.x, local.y, local.z, localHeading / DEG);
 		return spot;
 	}
 }

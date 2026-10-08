@@ -40,7 +40,8 @@ With `bLogFurniture=1`, every object looked at is written to `4Stim.log`, with i
 | `keywords` | one of `models` or `keywords` | It matches if its base object has any of these keywords (editor IDs). |
 | `excludeKeywords` | no | It doesn't match if its base object has any of these keywords. |
 | `minMarkers`, `maxMarkers` | no | How many furniture markers (places to sit, lie or lean) it must have. Only furniture has markers. For example, `"minMarkers": 2` tells a double bed from a single one. |
-| `useMarker` | no | Place scenes at its first furniture marker (default `true`). Otherwise, or when it has no markers, at the object's own origin and facing. |
+| `useMarker` | no | Place scenes at one of its furniture markers (default `true`), read from its loaded model. Otherwise, or when it has none, at the object's own origin and facing. The markers are logged (position, heading) whenever a furniture scene is placed. |
+| `marker` | no | Which marker to use, counting from 0 (default 0). |
 | `ignoreMarkerAxes` | no | Axes of the marker's position to ignore (`"x"`, `"y"`, `"z"`), so the scene sits on the object's center line along that axis instead. For example, `["z"]` keeps the actors on the floor in front of a chair. |
 | `offset` | no | `[x, y, z]` added to the spot, in the object's own frame: x to its right, y forward, z up. Scaled with the object. |
 | `rotation` | no | Degrees added to the scene's facing. |
