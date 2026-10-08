@@ -76,12 +76,13 @@ A transition is a short animation between two poses, like turning around from co
 
 **Transition idles must use the one-shot `dyn_Activation` animation event** (the Idle record's animation event), not `dyn_ActivationLoop`. Switching from a looping idle replays the outgoing clip's first frames while it blends out: harmless between two loops, but a transition starts in the previous pose, so it shows as a jump back. A one-shot clip blends out from where it is.
 
-Navigate to the transition as to any scene (the player picks "turn around"); when its time is up, the scene moves on to the destination on its own, at the same speed where the destination has it. Time only counts while the game isn't paused. By default (`fTransitionLead=-0.3` in `4Stim.ini`) the scene moves on when the transition clip ends by itself (the game's "IdleStop", about 0.35 s before the clip's end), with the timer, 0.3 s past the length, only as a fallback.
+Navigate to the transition as to any scene (the player picks "turn around"); when its time is up, the scene moves on to the destination on its own, at the same speed where the destination has it. Time only counts while the game isn't paused. The scene moves on `fTransitionLead` seconds before the length (0 by default, in `4Stim.ini`); if the clip ends first (the game's "IdleStop"), it moves on the moment it does.
 
-Two things about the transition clip itself:
+Three things about the transition idle and clip:
 
-- **Hold the last pose for about 0.5 s at its end.** The game starts blending a finished one-shot clip back to the base pose about 0.35 s before the clip's end, so motion in that stretch is never seen. Set the scene's `length` to the motion, not the padded clip. The converter's `hold_end.py` adds the held frames: `python hold_end.py --seconds=0.5 <clips or folder>`.
-- **Its last pose should be the destination's first.** Switching idles while a clip is still playing makes the game blend from that clip's *first* frames for a moment, which is why 4Stim waits for the clip to end rather than cutting it. During the transition, the HUD already lists the destination's options; picking one waits for the transition to finish and then goes there instead of the destination. A transition without a `length`, or whose destination doesn't exist, is logged and plays like an ordinary scene.
+- **Play it once.** Its idle record's animation event must be `dyn_Activation`, not `dyn_ActivationLoop`. Leaving a looping idle makes the game blend from the clip's *first* frames for a moment, a bounce back.
+- **Hold the last pose for about 0.5 s at its end.** The game starts blending a one-shot clip back to the base pose about 0.35 s before the clip's end, so motion in that stretch would never be seen, and the base pose would show through. Set the scene's `length` to the motion, not the padded clip. The converter's `hold_end.py` adds the held frames: `python hold_end.py --seconds=0.5 <clips or folder>`.
+- **Its last pose should be the destination's first.** During the transition, the HUD already lists the destination's options; picking one waits for the transition to finish and then goes there instead of the destination. A transition without a `length`, or whose destination doesn't exist, is logged and plays like an ordinary scene.
 
 ## Sequences
 
