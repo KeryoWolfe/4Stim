@@ -517,7 +517,7 @@
 		{
 			"id": "4StimTest_OStim2PCowgirlToReverseIdleMF",
 			"name": "Cowgirl To Reverse Idle (MF)",
-			"length": 1.95,
+			"length": 4.0,
 			"destination": "4StimTest_OStim2PReverseCowgirlIdleMF",
 			"actors": [
 				{
@@ -720,7 +720,7 @@
 		{
 			"id": "4StimTest_OStim2PMissionaryToSidewaysIdleMF",
 			"name": "Missionary To Sideways Idle (MF)",
-			"length": 1.4,
+			"length": 2.0,
 			"destination": "4StimTest_OStim2PSidewaysIdleMF",
 			"actors": [
 				{
@@ -785,7 +785,7 @@
 		{
 			"id": "4StimTest_OStim2PReverseToCowgirlIdleMF",
 			"name": "Reverse To Cowgirl Idle (MF)",
-			"length": 1.95,
+			"length": 4.0,
 			"destination": "4StimTest_OStim2PCowgirlIdleMF",
 			"actors": [
 				{
@@ -2440,7 +2440,7 @@
 		{
 			"id": "4StimTest_OStim2PStandingSpankMF",
 			"name": "Standing Spank (MF)",
-			"length": 2.666,
+			"length": 2.667,
 			"destination": "4StimTest_OStim2PStandingSpankIdleMF",
 			"actors": [
 				{
@@ -3190,7 +3190,7 @@
 		{
 			"id": "4StimTest_OStim2PReverseIdleCowgirlToReverseCowgirl1MF",
 			"name": "Reverse Idle Cowgirl To Reverse Cowgirl 1 (MF)",
-			"length": 0.75,
+			"length": 1.0,
 			"destination": "4StimTest_OStim2PReverseIdleCowgirlToReverseCowgirl2MF",
 			"actors": [
 				{
@@ -3212,7 +3212,7 @@
 		{
 			"id": "4StimTest_OStim2PReverseIdleCowgirlToReverseCowgirl2MF",
 			"name": "Reverse Idle Cowgirl To Reverse Cowgirl 2 (MF)",
-			"length": 1.75,
+			"length": 2.0,
 			"destination": "4StimTest_OStim2PReverseCowgirlMF",
 			"actors": [
 				{
@@ -5520,7 +5520,7 @@
 		{
 			"id": "4StimTest_OStim2PMissionaryClimaxMF",
 			"name": "Missionary Climax (MF)",
-			"length": 5.0,
+			"length": 5.25,
 			"destination": "4StimTest_OStim2PMissionaryMF",
 			"actors": [
 				{
