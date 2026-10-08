@@ -1,0 +1,293 @@
+{
+	"plugin": "killer905_pose.esp",
+	"scenes": [
+		{
+			"id": "k905_001",
+			"name": "Pose 1",
+			"actors": [
+				{
+					"idle": "0x001"
+				}
+			],
+			"tags": [
+				"pose"
+			]
+		},
+		{
+			"id": "k905_002",
+			"name": "Pose 2",
+			"actors": [
+				{
+					"idle": "0x002"
+				}
+			],
+			"tags": [
+				"pose"
+			]
+		},
+		{
+			"id": "k905_003",
+			"name": "Pose 3",
+			"actors": [
+				{
+					"idle": "0x003"
+				}
+			],
+			"tags": [
+				"pose"
+			]
+		},
+		{
+			"id": "k905_004",
+			"name": "Pose 4",
+			"actors": [
+				{
+					"idle": "0x004"
+				}
+			],
+			"tags": [
+				"pose"
+			]
+		},
+		{
+			"id": "k905_005",
+			"name": "Pose 5",
+			"actors": [
+				{
+					"idle": "0x005"
+				}
+			],
+			"tags": [
+				"pose"
+			]
+		},
+		{
+			"id": "k905_006",
+			"name": "Pose 6",
+			"actors": [
+				{
+					"idle": "0x006"
+				}
+			],
+			"tags": [
+				"pose"
+			]
+		},
+		{
+			"id": "k905_007",
+			"name": "Pose 7",
+			"actors": [
+				{
+					"idle": "0x007"
+				}
+			],
+			"tags": [
+				"pose"
+			]
+		},
+		{
+			"id": "k905_008",
+			"name": "Pose 8",
+			"actors": [
+				{
+					"idle": "0x008"
+				}
+			],
+			"tags": [
+				"pose"
+			]
+		},
+		{
+			"id": "k905_009",
+			"name": "Pose 9",
+			"actors": [
+				{
+					"idle": "0x009"
+				}
+			],
+			"tags": [
+				"pose"
+			]
+		},
+		{
+			"id": "k905_010",
+			"name": "Pose 10",
+			"actors": [
+				{
+					"idle": "0x00A"
+				}
+			],
+			"tags": [
+				"pose"
+			]
+		},
+		{
+			"id": "k905_011",
+			"name": "Pose 11",
+			"actors": [
+				{
+					"idle": "0x00B"
+				}
+			],
+			"tags": [
+				"pose"
+			]
+		},
+		{
+			"id": "k905_012",
+			"name": "Pose 12",
+			"actors": [
+				{
+					"idle": "0x00C"
+				}
+			],
+			"tags": [
+				"pose"
+			]
+		},
+		{
+			"id": "k905_013",
+			"name": "Pose 13",
+			"actors": [
+				{
+					"idle": "0x00D"
+				}
+			],
+			"tags": [
+				"pose"
+			]
+		},
+		{
+			"id": "k905_014",
+			"name": "Pose 14",
+			"actors": [
+				{
+					"idle": "0x00E"
+				}
+			],
+			"tags": [
+				"pose"
+			]
+		},
+		{
+			"id": "k905_015",
+			"name": "Pose 15",
+			"actors": [
+				{
+					"idle": "0x00F"
+				}
+			],
+			"tags": [
+				"pose"
+			]
+		},
+		{
+			"id": "k905_016",
+			"name": "Pose 16",
+			"actors": [
+				{
+					"idle": "0x010"
+				}
+			],
+			"tags": [
+				"pose"
+			]
+		},
+		{
+			"id": "k905_017",
+			"name": "Pose 17",
+			"actors": [
+				{
+					"idle": "0x011"
+				}
+			],
+			"tags": [
+				"pose"
+			]
+		},
+		{
+			"id": "k905_018",
+			"name": "Pose 18",
+			"actors": [
+				{
+					"idle": "0x012"
+				}
+			],
+			"tags": [
+				"pose"
+			]
+		},
+		{
+			"id": "k905_019",
+			"name": "Pose 19",
+			"actors": [
+				{
+					"idle": "0x013"
+				}
+			],
+			"tags": [
+				"pose"
+			]
+		},
+		{
+			"id": "k905_020",
+			"name": "Pose 20",
+			"actors": [
+				{
+					"idle": "0x014"
+				}
+			],
+			"tags": [
+				"pose"
+			]
+		},
+		{
+			"id": "k905_021",
+			"name": "Pose 21",
+			"actors": [
+				{
+					"idle": "0x015"
+				}
+			],
+			"tags": [
+				"pose"
+			]
+		},
+		{
+			"id": "k905_022",
+			"name": "Pose 22",
+			"actors": [
+				{
+					"idle": "0x016"
+				}
+			],
+			"tags": [
+				"pose"
+			]
+		},
+		{
+			"id": "k905_023",
+			"name": "Pose 23",
+			"actors": [
+				{
+					"idle": "0x017"
+				}
+			],
+			"tags": [
+				"pose"
+			]
+		},
+		{
+			"id": "k905_024",
+			"name": "Pose 24",
+			"actors": [
+				{
+					"idle": "0x018"
+				}
+			],
+			"tags": [
+				"pose"
+			]
+		}
+	]
+}

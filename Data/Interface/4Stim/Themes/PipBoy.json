@@ -1,0 +1,17 @@
+{
+	// The built-in Pip-Boy theme: everything in the Pip-Boy's green.
+	// "tint" recolors every accent and text color; the rest below sets the
+	// dark backgrounds to match.
+	"name": "Pip-Boy",
+	"tint": "#1AFF80",
+	"colors": {
+		"disc": "#04110A",
+		"tabBackground": "#000E07D9",
+		"tabSelectedText": "#04110A",
+		"navBackground": "#000E07E6",
+		"navSelectedText": "#1AFF80",
+		"iconTile": "#00000099",
+		"meterTrack": "#1AFF802E"
+	},
+	"tintLogo": true
+}

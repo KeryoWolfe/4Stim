@@ -1,0 +1,31 @@
+{
+	// The built-in full-color theme: blue-to-pink, matching the 4Stim logo.
+	// Copy this file to make your own theme, then set sTheme in 4Stim.ini.
+	"name": "Color",
+	"layout": { "anchor": "bottomLeft", "offsetX": 0, "offsetY": 0, "scale": 1.0, "opacity": 1.0 },
+	"colors": {
+		"text": "#F4EAF1",
+		"textMuted": "#C3B2CE",
+		"accent": "#E7567A",
+		"separator": ["#6A7CAF", "#E7567A"],
+		"ring": ["#E7567A", "#6A7CAF"],
+		"disc": "#17121F",
+		"tabBackground": "#16101EDB",
+		"tabBorder": "#9A6E9ACC",
+		"tabSelected": ["#6A7CAF", "#E7567A"],
+		"tabSelectedText": "#FFFFFF",
+		"navBackground": "#16101EE6",
+		"navSelected": ["#E7567A", "#6A7CAF"],
+		"navSelectedText": "#FFFFFF",
+		"iconTile": "#08060CB3",
+		"meterTrack": "#FFFFFF24",
+		"meterMale": ["#5B80D8"],
+		"meterFemale": ["#E7567A"],
+		"meterOther": ["#9A6E9A"],
+		"speed": ["#6A7CAF", "#E7567A"]
+	},
+	"show": { "tabs": true, "navigation": true, "logo": true, "actorMeters": true, "speedMeter": true },
+	"logoMovie": "4Stim\\HUDLogo.swf",
+	"tintLogo": true,
+	"font": "$MAIN_Font"
+}
