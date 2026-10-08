@@ -1,6 +1,7 @@
 #include <atomic>
 #include <chrono>
 #include <mutex>
+#include <thread>
 #include <fstream>
 #include <unordered_map>
 
@@ -280,11 +281,16 @@ namespace
 	// A transition scene (one with a "destination") plays for its "length"
 	// and then moves on to its destination; a sequence plays its scenes for
 	// their durations, one after another. Time is counted in frames the game
-	// isn't paused, so a pause menu doesn't skip ahead. While anything is
-	// counting down, a task re-queues itself every frame (like
-	// EnterFreeCamera's retries); it stops once nothing is.
+	// isn't paused, so a pause menu doesn't skip ahead.
+	//
+	// The clock: a background thread queues one AutoplayTick task every
+	// ~10 ms while anything is counting down. A task can't simply re-queue
+	// itself: the game runs tasks added during its task pass in that same
+	// pass, so that loops without the frame ever advancing (the game froze
+	// for the whole transition, and the destination idle was lost).
 
-	bool                                  g_autoplayTicking = false;
+	std::atomic<bool>                     g_autoplayTicking = false;   // the ticker thread is wanted
+	std::atomic<bool>                     g_autoplayTickQueued = false;  // a tick task is waiting to run
 	std::chrono::steady_clock::time_point g_autoplayLast;
 
 	// Sets how long a_scene stays where it is before it moves on.
@@ -300,44 +306,6 @@ namespace
 		if (a_scene.remaining >= 0.0F) {
 			StartAutoplayTicks();
 		}
-	}
-
-	// Makes sure an autoplay idle actually took. PlayIdle can return true
-	// and still be dropped (seen at the end of a transition: the actors kept
-	// looping it), so for a while after each switch, check the actor's
-	// current idle and play the new one again if it isn't the current one.
-	// Stops as soon as the scene moves on.
-	void EnsureAutoplayIdle(std::uint32_t a_actorID, RE::TESIdleForm* a_idle, std::string a_sceneID, int a_frame, int a_resends)
-	{
-		F4SE::GetTaskInterface()->AddTask([=]() {
-			const auto active = FindActiveScene(a_actorID);
-			if (!active || _stricmp(active->sceneID.c_str(), a_sceneID.c_str()) != 0) {
-				return;
-			}
-			const auto actor = RE::TESForm::GetFormByID<RE::Actor>(a_actorID);
-			const auto process = actor ? actor->currentProcess : nullptr;
-			const auto data = process ? process->middleHigh : nullptr;
-			if (!data) {
-				return;
-			}
-			const auto current = data->currentIdle;
-			const bool took = current == a_idle;
-			if (a_frame == 1 || a_frame == 10 || a_frame == 30 || (!took && a_frame % 10 == 0)) {
-				REX::INFO("Autoplay: {:08X} frame {}: current idle {:08X} ({})", a_actorID, a_frame,
-					current ? current->GetFormID() : 0, took ? "the new one" : "not the new one");
-			}
-			int resends = a_resends;
-			if (!took && a_frame % 10 == 0 && resends < 5) {
-				const bool ok = process->PlayIdle(*actor, a_idle, nullptr);
-				++resends;
-				REX::INFO("Autoplay: {:08X} replayed \"{}\" (try {}): {}", a_actorID, a_sceneID, resends, ok ? "ok" : "refused");
-			}
-			if (a_frame < 60) {
-				EnsureAutoplayIdle(a_actorID, a_idle, a_sceneID, a_frame + 1, resends);
-			} else if (!took) {
-				REX::WARN("Autoplay: {:08X} still isn't playing \"{}\"", a_actorID, a_sceneID);
-			}
-		});
 	}
 
 	// Plays a_sceneID at a_speed on a running scene's actors (all roles on
@@ -358,9 +326,6 @@ namespace
 			const auto process = actor ? actor->currentProcess : nullptr;
 			const bool ok = process && process->PlayIdle(*actor, idles[role], nullptr);
 			results += std::format("{}{:08X} {}", role ? ", " : "", a_active.actors[role], ok ? "ok" : "refused");
-			if (process) {
-				EnsureAutoplayIdle(a_active.actors[role], idles[role], scene->id, 1, 0);
-			}
 		}
 		REX::INFO("Autoplay: \"{}\" speed {}: PlayIdle {}", scene->id, speed + 1, results);
 		const auto previous = a_active.sceneID;
@@ -419,6 +384,7 @@ namespace
 
 	void AutoplayTick()
 	{
+		g_autoplayTickQueued = false;
 		const auto now = std::chrono::steady_clock::now();
 		float      elapsed = std::chrono::duration<float>(now - g_autoplayLast).count();
 		g_autoplayLast = now;
@@ -426,7 +392,6 @@ namespace
 
 		const auto ui = RE::UI::GetSingleton();
 		const bool paused = ui && ui->menuMode > 0;
-		bool       waiting = false;
 		if (!paused) {
 			// AdvanceAutoplay can't add or remove running scenes, so the
 			// list is safe to walk while it runs.
@@ -440,24 +405,27 @@ namespace
 				}
 			}
 		}
-		for (const auto& active : g_activeScenes) {
-			waiting = waiting || active.remaining >= 0.0F;
-		}
-		if (waiting) {
-			F4SE::GetTaskInterface()->AddTask(AutoplayTick);
-		} else {
+		const bool waiting = std::ranges::any_of(g_activeScenes, [](const ActiveScene& a_scene) { return a_scene.remaining >= 0.0F; });
+		if (!waiting) {
 			g_autoplayTicking = false;
 		}
 	}
 
+	// Main thread. Starts the ticker thread if it isn't running.
 	void StartAutoplayTicks()
 	{
-		if (g_autoplayTicking) {
+		if (g_autoplayTicking.exchange(true)) {
 			return;
 		}
-		g_autoplayTicking = true;
 		g_autoplayLast = std::chrono::steady_clock::now();
-		F4SE::GetTaskInterface()->AddTask(AutoplayTick);
+		std::thread([]() {
+			while (g_autoplayTicking) {
+				std::this_thread::sleep_for(std::chrono::milliseconds(10));
+				if (g_autoplayTicking && !g_autoplayTickQueued.exchange(true)) {
+					F4SE::GetTaskInterface()->AddTask(AutoplayTick);
+				}
+			}
+		}).detach();
 	}
 
 	// Plays a_sequence from its first entry on the running scene a_actorID
