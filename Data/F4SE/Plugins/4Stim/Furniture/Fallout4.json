@@ -4,48 +4,117 @@
 		{
 			"id": "bed",
 			"name": "Bed",
-			"forms": ["FURN"],
-			"models": ["bed", "mattress", "sleepingbag"],
-			"excludeModels": ["bedside", "nightstand", "bedpan", "flatbed"],
+			"forms": [
+				"FURN"
+			],
+			"models": [
+				"bed",
+				"mattress",
+				"sleepingbag"
+			],
+			"excludeModels": [
+				"bedside",
+				"nightstand",
+				"bedpan",
+				"flatbed"
+			],
 			"minMarkers": 1,
-			"ignoreMarkerAxes": ["x"],
-			"offset": [0, 0, 0],
+			"ignoreMarkerAxes": [
+				"x"
+			],
+			"offset": [
+				0,
+				0,
+				0
+			],
 			"rotation": 0
 		},
 		{
 			"id": "chair",
 			"name": "Chair",
-			"forms": ["FURN"],
-			"models": ["chair", "stool", "seat", "throne"],
-			"excludeModels": ["wheelchair", "carseat"],
+			"forms": [
+				"FURN"
+			],
+			"models": [
+				"chair",
+				"stool",
+				"seat",
+				"throne"
+			],
+			"excludeModels": [
+				"wheelchair",
+				"carseat"
+			],
 			"minMarkers": 1,
-			"ignoreMarkerAxes": ["z"]
+			"ignoreMarkerAxes": [
+				"z"
+			]
 		},
 		{
 			"id": "bench",
 			"name": "Bench",
 			"supertype": "chair",
 			"priority": 5,
-			"forms": ["FURN"],
-			"models": ["bench", "couch", "sofa", "loveseat"],
-			"excludeModels": ["workbench", "chembench", "weaponbench", "armorbench"],
+			"forms": [
+				"FURN"
+			],
+			"models": [
+				"bench",
+				"couch",
+				"sofa",
+				"loveseat"
+			],
+			"excludeModels": [
+				"armorbench",
+				"chembench",
+				"chemistry",
+				"weaponbench",
+				"workbench"
+			],
 			"minMarkers": 1,
-			"ignoreMarkerAxes": ["x", "z"]
+			"ignoreMarkerAxes": [
+				"x",
+				"z"
+			]
 		},
 		{
 			"id": "table",
-			"name": "Table",
-			"forms": ["STAT", "MSTT", "FURN"],
-			"models": ["table", "desk"],
-			"excludeModels": ["tablet", "vegetable", "timetable", "bedside", "nightstand", "workbench"],
+			"name": "Table / workbench",
+			"forms": [
+				"STAT",
+				"MSTT",
+				"FURN"
+			],
+			"models": [
+				"table",
+				"desk",
+				"workbench",
+				"chembench",
+				"weaponbench",
+				"armorbench",
+				"chemistry"
+			],
+			"excludeModels": [
+				"tablet",
+				"vegetable",
+				"timetable",
+				"bedside",
+				"nightstand"
+			],
 			"useMarker": false
 		},
 		{
 			"id": "cookingpot",
 			"name": "Cooking station",
 			"priority": 10,
-			"forms": ["FURN"],
-			"models": ["cooking", "cookpot", "cookstation"],
+			"forms": [
+				"FURN"
+			],
+			"models": [
+				"cooking",
+				"cookpot",
+				"cookstation"
+			],
 			"useMarker": false
 		}
 	]
