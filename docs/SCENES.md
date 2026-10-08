@@ -60,6 +60,7 @@ The first scene has two speeds and one navigation option. The second uses the si
 | `icon` | scene or navigation | no | HUD icon: a `.dds` (or `.swf`) under `Data\Interface\4Stim\Icons\`, extension optional, so `"4Stim/positional/standup_f"` is `Icons\4Stim\positional\standup_f.dds` (see `HUD_API.md`). On a navigation entry it overrides the destination scene's icon. |
 | `length` | scene | for transitions | Seconds one play-through of the animation takes. A transition moves on after this long; a sequence uses it when an entry has no `duration`. |
 | `destination` | scene | no | Makes the scene a **transition**: it plays once (for `length` seconds) and then moves on to this scene by itself. Must have the same number of actors. |
+| `furniture` | scene | no | The furniture type the scene is played on (`"bed"`, `"chair"`, `"table"`...; see `FURNITURE.md`). The picker only lists it when furniture of that type, or of a subtype, is near the player, and the actors are moved onto the nearest such piece. Navigation stays on the furniture: from a furniture scene only scenes for the same furniture are offered, and from a scene without `furniture` only scenes without it. All scenes of a sequence must have the same `furniture`. |
 
 ## Speeds and navigation in game
 
@@ -109,7 +110,7 @@ A sequence plays a fixed run of scenes, each for a set time, then stays on the l
 | `id` | yes | Unique sequence ID, case-insensitive. |
 | `name` | no | Display name. Defaults to the ID. |
 | `tags` | no | Free-form tags. |
-| `scenes` | yes | The scenes in order. All must have the same number of actors. |
+| `scenes` | yes | The scenes in order. All must have the same number of actors and the same `furniture`. |
 | `scenes[].id` | yes | Scene ID. |
 | `scenes[].duration` | unless the scene has a `length` | Seconds to stay in this scene. |
 | `scenes[].speed` | no | Speed to play it at, 1 = slowest (default). |

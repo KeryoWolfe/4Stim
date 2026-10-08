@@ -136,6 +136,10 @@ namespace SceneRegistry
 				scene.name = entry.value("name", id);
 				scene.icon = entry.value("icon", std::string{});
 				scene.destination = entry.value("destination", std::string{});
+				scene.furniture = Lower(entry.value("furniture", std::string{}));
+				if (scene.furniture == "none") {
+					scene.furniture.clear();
+				}
 				if (const auto length = entry.find("length"); length != entry.end()) {
 					if (length->is_number() && length->get<float>() > 0.0F) {
 						scene.length = length->get<float>();
@@ -265,9 +269,14 @@ namespace SceneRegistry
 						break;
 					}
 					const auto& scene = it->second;
+					if (!seq.entries.empty() && scene.furniture != seq.furniture) {
+						problem = std::format("entry {}: \"{}\" is played on other furniture than the scenes before it", index, sceneID);
+						break;
+					}
 					if (seq.entries.empty()) {
 						seq.actorCount = scene.actors.size();
 						seq.actors = scene.actors;
+						seq.furniture = scene.furniture;
 					} else if (scene.actors.size() != seq.actorCount) {
 						problem = std::format("entry {}: \"{}\" has {} actor(s), the sequence {}", index, sceneID, scene.actors.size(), seq.actorCount);
 						break;
@@ -524,7 +533,7 @@ namespace SceneRegistry
 			for (const auto& tag : ptr->tags) {
 				tags += tags.empty() ? tag : ", " + tag;
 			}
-			out.push_back({ ptr->id, ptr->name, std::move(tags) });
+			out.push_back({ ptr->id, ptr->name, std::move(tags), ptr->furniture });
 		}
 		std::ranges::sort(out, [](const SceneSummary& a, const SceneSummary& b) { return Lower(a.name) < Lower(b.name); });
 		return out;
@@ -546,7 +555,7 @@ namespace SceneRegistry
 			for (const auto& tag : scene.tags) {
 				tags += tags.empty() ? tag : ", " + tag;
 			}
-			out.push_back({ scene.id, scene.name, std::move(tags) });
+			out.push_back({ scene.id, scene.name, std::move(tags), scene.furniture });
 		}
 		std::ranges::sort(out, [](const SceneSummary& a, const SceneSummary& b) { return Lower(a.name) < Lower(b.name); });
 		return out;

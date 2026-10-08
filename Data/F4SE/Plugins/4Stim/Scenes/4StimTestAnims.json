@@ -9390,6 +9390,7 @@
 		{
 			"id": "4StimTest_OStimBed2PBothSittingFF",
 			"name": "Bed: Both Sitting (FF)",
+			"furniture": "bed",
 			"actors": [
 				{
 					"sex": "female",
@@ -9411,6 +9412,7 @@
 		{
 			"id": "4StimTest_OStimBed2PBothSittingMF_FF",
 			"name": "Bed: Both Sitting (MF) (FF-folder copy)",
+			"furniture": "bed",
 			"actors": [
 				{
 					"sex": "male",
@@ -9433,6 +9435,7 @@
 		{
 			"id": "4StimTest_OStimBed2PSittingStandingFF",
 			"name": "Bed: Sitting Standing (FF)",
+			"furniture": "bed",
 			"actors": [
 				{
 					"sex": "female",
@@ -9455,6 +9458,7 @@
 		{
 			"id": "4StimTest_OStimBed2PStandingAllFoursFF",
 			"name": "Bed: Standing All Fours (FF)",
+			"furniture": "bed",
 			"actors": [
 				{
 					"sex": "female",
@@ -9476,6 +9480,7 @@
 		{
 			"id": "4StimTest_OStimBed2PBothSittingMF",
 			"name": "Bed: Both Sitting (MF)",
+			"furniture": "bed",
 			"actors": [
 				{
 					"sex": "male",
@@ -9497,6 +9502,7 @@
 		{
 			"id": "4StimTest_OStimBed2PSittingKneelingMF",
 			"name": "Bed: Sitting Kneeling (MF)",
+			"furniture": "bed",
 			"actors": [
 				{
 					"sex": "male",
@@ -9519,6 +9525,7 @@
 		{
 			"id": "4StimTest_OStimBed2PSittingOnLapMF",
 			"name": "Bed: Sitting On Lap (MF)",
+			"furniture": "bed",
 			"actors": [
 				{
 					"sex": "male",
@@ -9540,6 +9547,7 @@
 		{
 			"id": "4StimTest_OStimBed2PSittingStandingFacingAwayMF",
 			"name": "Bed: Sitting Standing Facing Away (MF)",
+			"furniture": "bed",
 			"actors": [
 				{
 					"sex": "male",
@@ -9562,6 +9570,7 @@
 		{
 			"id": "4StimTest_OStimBed2PSittingStandingMF",
 			"name": "Bed: Sitting Standing (MF)",
+			"furniture": "bed",
 			"actors": [
 				{
 					"sex": "male",
@@ -9584,6 +9593,7 @@
 		{
 			"id": "4StimTest_OStimBed2PStandingAllFoursMF",
 			"name": "Bed: Standing All Fours (MF)",
+			"furniture": "bed",
 			"actors": [
 				{
 					"sex": "male",
@@ -9605,6 +9615,7 @@
 		{
 			"id": "4StimTest_OStimBed2PStandingSittingMF",
 			"name": "Bed: Standing Sitting (MF)",
+			"furniture": "bed",
 			"actors": [
 				{
 					"sex": "male",
@@ -9627,6 +9638,7 @@
 		{
 			"id": "4StimTest_OStimBed2PBothSittingKissMF",
 			"name": "Bed: Both Sitting Kiss (MF)",
+			"furniture": "bed",
 			"actors": [
 				{
 					"sex": "male",
@@ -9648,6 +9660,7 @@
 		{
 			"id": "4StimTest_OStimBed2PCowgirlMF",
 			"name": "Bed: Cowgirl (MF)",
+			"furniture": "bed",
 			"actors": [
 				{
 					"sex": "male"
@@ -9692,6 +9705,7 @@
 		{
 			"id": "4StimTest_OStimBed2PKneelingBlowjobMF",
 			"name": "Bed: Kneeling Blowjob (MF)",
+			"furniture": "bed",
 			"actors": [
 				{
 					"sex": "male"
@@ -9737,6 +9751,7 @@
 		{
 			"id": "4StimTest_OStimBench1PSittingF",
 			"name": "Bench: Sitting (F)",
+			"furniture": "bench",
 			"actors": [
 				{
 					"sex": "female",
@@ -9754,6 +9769,7 @@
 		{
 			"id": "4StimTest_OStimBench1PSittingM",
 			"name": "Bench: Sitting (M)",
+			"furniture": "bench",
 			"actors": [
 				{
 					"sex": "male",
@@ -9771,6 +9787,7 @@
 		{
 			"id": "4StimTest_OStimBench2PBothSittingFF",
 			"name": "Bench: Both Sitting (FF)",
+			"furniture": "bench",
 			"length": 2.0,
 			"actors": [
 				{
@@ -9805,6 +9822,7 @@
 		{
 			"id": "4StimTest_OStimBench2PSittingKneelingFF",
 			"name": "Bench: Sitting Kneeling (FF)",
+			"furniture": "bench",
 			"actors": [
 				{
 					"sex": "female",
@@ -9827,6 +9845,7 @@
 		{
 			"id": "4StimTest_OStimBench2PSittingStandingFF",
 			"name": "Bench: Sitting Standing (FF)",
+			"furniture": "bench",
 			"actors": [
 				{
 					"sex": "female",
@@ -9849,6 +9868,7 @@
 		{
 			"id": "4StimTest_OStimBench2PStandingSittingFF",
 			"name": "Bench: Standing Sitting (FF)",
+			"furniture": "bench",
 			"actors": [
 				{
 					"sex": "female",
@@ -9871,6 +9891,7 @@
 		{
 			"id": "4StimTest_OStimBench2PBothSittingMF",
 			"name": "Bench: Both Sitting (MF)",
+			"furniture": "bench",
 			"length": 2.0,
 			"actors": [
 				{
@@ -9905,6 +9926,7 @@
 		{
 			"id": "4StimTest_OStimBench2PSittingKneelingMF",
 			"name": "Bench: Sitting Kneeling (MF)",
+			"furniture": "bench",
 			"actors": [
 				{
 					"sex": "male",
@@ -9927,6 +9949,7 @@
 		{
 			"id": "4StimTest_OStimBench2PSittingOnLapMF",
 			"name": "Bench: Sitting On Lap (MF)",
+			"furniture": "bench",
 			"actors": [
 				{
 					"sex": "male",
@@ -9948,6 +9971,7 @@
 		{
 			"id": "4StimTest_OStimBench2PSittingStandingFacingAwayMF",
 			"name": "Bench: Sitting Standing Facing Away (MF)",
+			"furniture": "bench",
 			"actors": [
 				{
 					"sex": "male",
@@ -9970,6 +9994,7 @@
 		{
 			"id": "4StimTest_OStimBench2PSittingStandingMF",
 			"name": "Bench: Sitting Standing (MF)",
+			"furniture": "bench",
 			"actors": [
 				{
 					"sex": "male",
@@ -9992,6 +10017,7 @@
 		{
 			"id": "4StimTest_OStimBench2PStandingSittingMF",
 			"name": "Bench: Standing Sitting (MF)",
+			"furniture": "bench",
 			"actors": [
 				{
 					"sex": "male",
@@ -10014,6 +10040,7 @@
 		{
 			"id": "4StimTest_OStimBench2PBothSittingMM",
 			"name": "Bench: Both Sitting (MM)",
+			"furniture": "bench",
 			"length": 2.0,
 			"actors": [
 				{
@@ -10048,6 +10075,7 @@
 		{
 			"id": "4StimTest_OStimBench2PSittingStandingMM",
 			"name": "Bench: Sitting Standing (MM)",
+			"furniture": "bench",
 			"actors": [
 				{
 					"sex": "male",
@@ -10070,6 +10098,7 @@
 		{
 			"id": "4StimTest_OStimBench2PStandingSittingMM",
 			"name": "Bench: Standing Sitting (MM)",
+			"furniture": "bench",
 			"actors": [
 				{
 					"sex": "male",
@@ -10092,6 +10121,7 @@
 		{
 			"id": "4StimTest_OStimBench3PSittingStandingFFF",
 			"name": "Bench: 3P Sitting Standing (FFF)",
+			"furniture": "bench",
 			"actors": [
 				{
 					"sex": "female",
@@ -10118,6 +10148,7 @@
 		{
 			"id": "4StimTest_OStimBench3PSittingStandingMFF",
 			"name": "Bench: 3P Sitting Standing (MFF)",
+			"furniture": "bench",
 			"actors": [
 				{
 					"sex": "male",
@@ -10144,6 +10175,7 @@
 		{
 			"id": "4StimTest_OStimBench3PSittingStandingMMF",
 			"name": "Bench: 3P Sitting Standing (MMF)",
+			"furniture": "bench",
 			"actors": [
 				{
 					"sex": "male",
@@ -10170,6 +10202,7 @@
 		{
 			"id": "4StimTest_OStimBench3PSittingStandingMMM",
 			"name": "Bench: 3P Sitting Standing (MMM)",
+			"furniture": "bench",
 			"actors": [
 				{
 					"sex": "male",
@@ -10196,6 +10229,7 @@
 		{
 			"id": "4StimTest_OStimCookingPot1PCookingF",
 			"name": "Cooking Pot: Cooking (F)",
+			"furniture": "cookingpot",
 			"length": 2.0,
 			"actors": [
 				{
@@ -10220,6 +10254,7 @@
 		{
 			"id": "4StimTest_OStimCookingPot1PCookingM",
 			"name": "Cooking Pot: Cooking (M)",
+			"furniture": "cookingpot",
 			"length": 2.0,
 			"actors": [
 				{
@@ -10244,6 +10279,7 @@
 		{
 			"id": "4StimTest_OStimCookingPot2PBehindFF",
 			"name": "Cooking Pot: Behind (FF)",
+			"furniture": "cookingpot",
 			"length": 2.0,
 			"actors": [
 				{
@@ -10278,6 +10314,7 @@
 		{
 			"id": "4StimTest_OStimCookingPot2PBehindApproachMF",
 			"name": "Cooking Pot: Behind Approach (MF)",
+			"furniture": "cookingpot",
 			"length": 2.0,
 			"actors": [
 				{
@@ -10307,6 +10344,7 @@
 		{
 			"id": "4StimTest_OStimCookingPot2PBehindMF",
 			"name": "Cooking Pot: Behind (MF)",
+			"furniture": "cookingpot",
 			"length": 2.0,
 			"actors": [
 				{
@@ -10345,6 +10383,7 @@
 		{
 			"id": "4StimTest_OStimCookingPot2PBehindMM",
 			"name": "Cooking Pot: Behind (MM)",
+			"furniture": "cookingpot",
 			"length": 2.0,
 			"actors": [
 				{
@@ -10379,6 +10418,7 @@
 		{
 			"id": "4StimTest_OStimShelf1PBendOverF",
 			"name": "Shelf: Bend Over (F)",
+			"furniture": "shelf",
 			"length": 2.0,
 			"actors": [
 				{
@@ -10404,6 +10444,7 @@
 		{
 			"id": "4StimTest_OStimShelf1PStandingF",
 			"name": "Shelf: Standing (F)",
+			"furniture": "shelf",
 			"length": 2.0,
 			"actors": [
 				{
@@ -10434,6 +10475,7 @@
 		{
 			"id": "4StimTest_OStimShelf1PStandingM",
 			"name": "Shelf: Standing (M)",
+			"furniture": "shelf",
 			"length": 2.0,
 			"actors": [
 				{
@@ -10459,6 +10501,7 @@
 		{
 			"id": "4StimTest_OStimShelf2PBehindFF",
 			"name": "Shelf: Behind (FF)",
+			"furniture": "shelf",
 			"length": 2.0,
 			"actors": [
 				{
@@ -10498,6 +10541,7 @@
 		{
 			"id": "4StimTest_OStimShelf2PBendOverFF",
 			"name": "Shelf: Bend Over (FF)",
+			"furniture": "shelf",
 			"length": 2.0,
 			"actors": [
 				{
@@ -10532,6 +10576,7 @@
 		{
 			"id": "4StimTest_OStimShelf2PBehindMF",
 			"name": "Shelf: Behind (MF)",
+			"furniture": "shelf",
 			"length": 2.0,
 			"actors": [
 				{
@@ -10571,6 +10616,7 @@
 		{
 			"id": "4StimTest_OStimShelf2PBendOverMF",
 			"name": "Shelf: Bend Over (MF)",
+			"furniture": "shelf",
 			"length": 2.0,
 			"actors": [
 				{
@@ -10605,6 +10651,7 @@
 		{
 			"id": "4StimTest_OStimShelf2PBehindMM",
 			"name": "Shelf: Behind (MM)",
+			"furniture": "shelf",
 			"length": 2.0,
 			"actors": [
 				{
@@ -10639,6 +10686,7 @@
 		{
 			"id": "4StimTest_OStimTable1PSittingF",
 			"name": "Table: Sitting (F)",
+			"furniture": "table",
 			"length": 2.0,
 			"actors": [
 				{
@@ -10664,6 +10712,7 @@
 		{
 			"id": "4StimTest_OStimTable1PSittingM",
 			"name": "Table: Sitting (M)",
+			"furniture": "table",
 			"length": 2.0,
 			"actors": [
 				{
@@ -10689,6 +10738,7 @@
 		{
 			"id": "4StimTest_OStimTable2PBehindFF",
 			"name": "Table: Behind (FF)",
+			"furniture": "table",
 			"length": 2.0,
 			"actors": [
 				{
@@ -10723,6 +10773,7 @@
 		{
 			"id": "4StimTest_OStimTable2PStandingLeaningFF",
 			"name": "Table: Standing Leaning (FF)",
+			"furniture": "table",
 			"length": 2.0,
 			"actors": [
 				{
@@ -10768,6 +10819,7 @@
 		{
 			"id": "4StimTest_OStimTable2PStandingSittingFF",
 			"name": "Table: Standing Sitting (FF)",
+			"furniture": "table",
 			"length": 2.0,
 			"actors": [
 				{
@@ -10803,6 +10855,7 @@
 		{
 			"id": "4StimTest_OStimTable2PBehindMF",
 			"name": "Table: Behind (MF)",
+			"furniture": "table",
 			"length": 2.0,
 			"actors": [
 				{
@@ -10837,6 +10890,7 @@
 		{
 			"id": "4StimTest_OStimTable2PStandingLeaningMF",
 			"name": "Table: Standing Leaning (MF)",
+			"furniture": "table",
 			"length": 2.0,
 			"actors": [
 				{
@@ -10882,6 +10936,7 @@
 		{
 			"id": "4StimTest_OStimTable2PStandingSittingMF",
 			"name": "Table: Standing Sitting (MF)",
+			"furniture": "table",
 			"length": 2.0,
 			"actors": [
 				{
@@ -10917,6 +10972,7 @@
 		{
 			"id": "4StimTest_OStimTable2PStandingLeaningMM",
 			"name": "Table: Standing Leaning (MM)",
+			"furniture": "table",
 			"length": 2.0,
 			"actors": [
 				{
@@ -10952,6 +11008,7 @@
 		{
 			"id": "4StimTest_OStimWall1PLeaningF",
 			"name": "Wall: Leaning (F)",
+			"furniture": "wall",
 			"length": 2.0,
 			"actors": [
 				{
@@ -10977,6 +11034,7 @@
 		{
 			"id": "4StimTest_OStimWall1PLeaningM",
 			"name": "Wall: Leaning (M)",
+			"furniture": "wall",
 			"length": 2.0,
 			"actors": [
 				{
@@ -11002,6 +11060,7 @@
 		{
 			"id": "4StimTest_OStimWall2PStandingLeaningFF",
 			"name": "Wall: Standing Leaning (FF)",
+			"furniture": "wall",
 			"length": 2.0,
 			"actors": [
 				{
@@ -11037,6 +11096,7 @@
 		{
 			"id": "4StimTest_OStimWall2PStandingLeaningMF",
 			"name": "Wall: Standing Leaning (MF)",
+			"furniture": "wall",
 			"length": 2.0,
 			"actors": [
 				{
@@ -11072,6 +11132,7 @@
 		{
 			"id": "4StimTest_OStimWall2PStandingLeaningMM",
 			"name": "Wall: Standing Leaning (MM)",
+			"furniture": "wall",
 			"length": 2.0,
 			"actors": [
 				{

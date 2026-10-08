@@ -21,6 +21,7 @@ namespace FourStim
 		std::uint32_t role1 = 0;  // 0 = solo scene
 		std::string   sceneID;
 		int           speed = 0;  // index into the scene's speeds
+		std::string   furniture;  // furniture type the scene is on, "" = none
 
 		[[nodiscard]] bool Active() const { return role0 != 0; }
 

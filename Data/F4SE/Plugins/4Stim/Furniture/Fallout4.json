@@ -1,0 +1,52 @@
+{
+	"_comment": "Furniture types for Fallout 4's own objects, recognized by their model paths. See docs/FURNITURE.md. Offsets are first guesses: tune them in game (set bLogFurniture=1 in 4Stim.ini to log what's found and where scenes are placed).",
+	"types": [
+		{
+			"id": "bed",
+			"name": "Bed",
+			"forms": ["FURN"],
+			"models": ["bed", "mattress", "sleepingbag"],
+			"excludeModels": ["bedside", "nightstand", "bedpan", "flatbed"],
+			"minMarkers": 1,
+			"ignoreMarkerAxes": ["x"],
+			"offset": [0, 0, 0],
+			"rotation": 0
+		},
+		{
+			"id": "chair",
+			"name": "Chair",
+			"forms": ["FURN"],
+			"models": ["chair", "stool", "seat", "throne"],
+			"excludeModels": ["wheelchair", "carseat"],
+			"minMarkers": 1,
+			"ignoreMarkerAxes": ["z"]
+		},
+		{
+			"id": "bench",
+			"name": "Bench",
+			"supertype": "chair",
+			"priority": 5,
+			"forms": ["FURN"],
+			"models": ["bench", "couch", "sofa", "loveseat"],
+			"excludeModels": ["workbench", "chembench", "weaponbench", "armorbench"],
+			"minMarkers": 1,
+			"ignoreMarkerAxes": ["x", "z"]
+		},
+		{
+			"id": "table",
+			"name": "Table",
+			"forms": ["STAT", "MSTT", "FURN"],
+			"models": ["table", "desk"],
+			"excludeModels": ["tablet", "vegetable", "timetable", "bedside", "nightstand", "workbench"],
+			"useMarker": false
+		},
+		{
+			"id": "cookingpot",
+			"name": "Cooking station",
+			"priority": 10,
+			"forms": ["FURN"],
+			"models": ["cooking", "cookpot", "cookstation"],
+			"useMarker": false
+		}
+	]
+}

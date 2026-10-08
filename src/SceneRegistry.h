@@ -44,6 +44,7 @@ namespace SceneRegistry
 		std::string                                icon;  // HUD icon under Data\Interface\4Stim\Icons\, or empty
 		float                                      length = 0.0F;  // seconds of one play-through; 0 = not given
 		std::string                                destination;    // transition: the scene it moves on to after `length`
+		std::string                                furniture;      // furniture type it's played on (lowercase); "" = anywhere
 		std::string                                sourceFile;
 
 		bool IsTransition() const { return !destination.empty(); }
@@ -65,7 +66,8 @@ namespace SceneRegistry
 		std::vector<SequenceEntry> entries;  // at least one
 		std::vector<std::string>   tags;
 		std::string                sourceFile;
-		std::vector<SceneActor>    actors;  // per role, what its scenes ask for
+		std::vector<SceneActor>    actors;     // per role, what its scenes ask for
+		std::string                furniture;  // what its scenes are played on (all the same)
 	};
 
 	// Which actor takes each role of a scene (or sequence) whose roles ask for
@@ -98,7 +100,8 @@ namespace SceneRegistry
 	{
 		std::string id;
 		std::string name;
-		std::string tags;  // comma-separated
+		std::string tags;       // comma-separated
+		std::string furniture;  // furniture type it needs, "" = none
 	};
 
 	// Which of the lists below to give: every scene for that many actors, or
