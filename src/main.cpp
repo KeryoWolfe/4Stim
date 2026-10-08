@@ -41,7 +41,7 @@ namespace
 		std::uint32_t speedDownKey = 0xBD;     // 0xBD = the -/_ key
 		std::string   hudTheme = "Color";     // file name in Data\Interface\4Stim\Themes\, without .json
 		bool          hudEnabled = true;
-		float         transitionLead = 0.4F;  // seconds before a transition's length to move on (see 4Stim.ini)
+		float         transitionLead = 0.8F;  // seconds before a transition's length to move on (see 4Stim.ini)
 	};
 	Settings g_settings;
 
