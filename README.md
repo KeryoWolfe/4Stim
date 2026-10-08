@@ -33,7 +33,7 @@ Children are never eligible for scenes.
 | Esc or Backspace / B | Back, or hand the keys back to the game |
 | `=` / `-` (gamepad Y / X) | Scene speed up / down |
 
-All keys are set in `Data\F4SE\Plugins\4Stim.ini`.
+The hotkey and the speed keys are set in `Data\F4SE\Plugins\4Stim.ini`.
 
 ## Repository layout
 
