@@ -19,7 +19,7 @@ add_requires("nlohmann_json")
 target("4Stim")
     add_rules("commonlibf4.plugin", {
         name = "4Stim",
-        author = "TODO: your name",
+        author = "KeryoWolfe",
         description = "A scene/animation framework for Fallout 4, inspired by OStim"
     })
 

@@ -1,55 +1,82 @@
-# CommonLibF4 Plugin Template
+# 4Stim
 
-This is a basic plugin template using CommonLibF4.
+An OStim-style scene framework for **Fallout 4** (1.11.240, "Anniversary Edition"), built as an F4SE plugin. Two actors (or one) share a spot, play paired animations, and move between scenes through an in-scene HUD. Animation authors add content with an Idle-record plugin and a JSON file, with no scripting.
 
-### Requirements
-* [XMake](https://xmake.io) [3.0.0+]
-* C++23 Compiler (MSVC or Clang-CL)
+> **Status:** early development (0.0.1). Expect breaking changes.
 
-## Getting Started
-```bat
-git clone --recurse-submodules https://github.com/libxse/commonlibf4-template
-cd commonlibf4-template
+## Features
+
+- **Scenes from JSON:** solo and two-actor scenes, multiple speeds, and navigation links between scenes ([docs/SCENES.md](docs/SCENES.md)).
+- **Transitions:** short "in-between" animations that play once and move on to their destination by themselves.
+- **Sequences:** fixed runs of scenes, each played for a set time, startable from the picker, the HUD or Papyrus.
+- **In-scene HUD:** a Scaleform HUD with a navigation list, scene icons (`.dds`), actor and speed meters, and keyboard and gamepad control.
+- **Customizable HUD:** themes, a replaceable logo animation, Utility entries, or a complete replacement HUD ([docs/HUD_API.md](docs/HUD_API.md)).
+- **Scene picker:** the hotkey opens a list of scenes for you and the actor you're looking at.
+- **Free camera** during scenes, with the player's controls locked to what a scene allows.
+- **Scene events for other mods:** start, change, speed change and end, delivered to Papyrus.
+
+Children are never eligible for scenes.
+
+## Requirements (players)
+
+- Fallout 4 **1.11.240**
+- [F4SE](https://f4se.silverlock.org/) for that runtime
+- An animation pack with a 4Stim scene file (the test pack in `Data\F4SE\Plugins\4Stim\Scenes\` needs its matching `4StimTestAnims.esp` and animations, which aren't in this repository)
+
+## Usage
+
+| Key | Action |
+|---|---|
+| `N` (hotkey) | Out of a scene: open the scene picker. In a scene: give the HUD the arrow keys / d-pad, or hand them back. |
+| Arrow keys / d-pad | Move through the HUD (tabs, navigation list) |
+| Enter / A | Choose |
+| Esc or Backspace / B | Back, or hand the keys back to the game |
+| `=` / `-` (gamepad Y / X) | Scene speed up / down |
+
+All keys are set in `Data\F4SE\Plugins\4Stim.ini`.
+
+## Repository layout
+
+```
+src/                   F4SE plugin (C++23, CommonLibF4)
+Data/                  Files that ship with the mod
+  F4SE/Plugins/        4Stim.ini, scene files
+  Interface/4Stim/     HUD themes
+  Scripts/Source/User/ Papyrus sources (FourStim, FourStimScene, FourStimMenu, FourStimTest)
+Interface-src/         ActionScript 3 sources for the picker and HUD movies
+docs/                  Scene format (SCENES.md) and HUD API (HUD_API.md)
+lib/commonlibf4/       CommonLibF4 (git submodule)
 ```
 
-### Build
-To build the project, run the following command:
+## Building
+
+### Plugin (DLL)
+
+Requirements: [XMake](https://xmake.io) 3.0+ and a C++23 compiler (MSVC or Clang-CL).
+
 ```bat
+git clone --recurse-submodules https://github.com/KeryoWolfe/4Stim
+cd 4Stim
 xmake build
 ```
 
-> ***Note:*** *This will generate a `build/windows/` directory in the **project's root directory** with the build output.*
+The DLL lands in `build\windows\`. To have it copied straight into a mod manager or game folder, set `XSE_FO4_MODS_PATH` or `XSE_FO4_GAME_PATH` first. For Visual Studio, run `xmake project -k vsxmake`; for clangd, run `xmake project -k compile_commands`.
 
-### Build Output (Optional)
-If you want to redirect the build output, set one of the following environment variables:
+### Interface movies (SWF)
 
-- Path to a Mod Manager mods folder: `XSE_FO4_MODS_PATH`
+Requirements: the [Apache Flex SDK](https://flex.apache.org/) (playerglobal 11.0) and Java.
 
-  or
+Set `FLEX_HOME` at the top of `Interface-src\build.bat`, then run it. The movies are written to `Interface-src\out\Interface\`; copy that folder into `Data\`.
 
-- Path to a Fallout 4 install folder: `XSE_FO4_GAME_PATH`
+### Papyrus
 
-### Project Generation (Optional)
-If you use Visual Studio, run the following command:
-```bat
-xmake project -k vsxmake
-```
+Compile the scripts in `Data\Scripts\Source\User\` with the Creation Kit's Papyrus compiler (F4SE's script sources are needed for the `Native` declarations).
 
-> ***Note:*** *This will generate a `vsxmakeXXXX/` directory in the **project's root directory** using the latest version of Visual Studio installed on the system.*
+## Credits
 
-**Alternatively**, if you do not use Visual Studio, you can generate a `compile_commands.json` file for use with a laguage server like clangd in any code editor that supports it, like vscode:
-```bat
-xmake project -k compile_commands
-```
+- [OStim NG](https://github.com/VersuchDrei/OStimNG) for the design this framework follows and the scene data used for testing
+- [CommonLibF4](https://github.com/libxse/commonlibf4) and the [F4SE](https://f4se.silverlock.org/) team
 
-> ***Note:*** *You must have a language server extension installed to make use of this file. I recommend `clangd`. Do not have more than one installed at a time as they will conflict with each other. I also recommend installing the `xmake` extension if available to make building the project easier.*
+## License
 
-### Upgrading Packages (Optional)
-If you want to upgrade the project's dependencies, run the following commands:
-```bat
-xmake repo --update
-xmake require --upgrade
-```
-
-## Documentation
-Please refer to the [Wiki](../../wiki/Home) for more advanced topics.
+GPL-3.0 with the modding exception in [EXCEPTIONS](EXCEPTIONS). See [LICENSE](LICENSE).
