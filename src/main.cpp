@@ -43,6 +43,7 @@ namespace
 		bool          hudEnabled = true;
 		bool          logAnimEvents = false;  // log scene actors' animation events (for authors)
 		float         transitionLead = 0.0F;   // seconds before a transition's length to move on (see 4Stim.ini)
+		bool          matchSex = true;         // only offer scenes whose roles' sexes the actors fit
 	};
 	Settings g_settings;
 
@@ -97,6 +98,8 @@ namespace
 					g_settings.hudTheme = value;
 				} else if (key == "benablehud") {
 					g_settings.hudEnabled = std::stoi(value) != 0;
+				} else if (key == "bmatchsex") {
+					g_settings.matchSex = std::stoi(value) != 0;
 				} else if (key == "bloganimevents") {
 					g_settings.logAnimEvents = std::stoi(value) != 0;
 				} else if (key == "ftransitionlead") {
@@ -110,7 +113,7 @@ namespace
 			g_settings.hotkey, g_settings.targetMode == 1 ? "Proximity" : "Crosshair",
 			g_settings.maxDistance, g_settings.crosshairCone, g_settings.proximityRadius, g_settings.freeCameraSpeed,
 			g_settings.speedUpKey, g_settings.speedDownKey);
-		REX::INFO("Settings: HUD {}, theme \"{}\", transition lead {}s", g_settings.hudEnabled ? "on" : "off", g_settings.hudTheme, g_settings.transitionLead);
+		REX::INFO("Settings: HUD {}, theme \"{}\", transition lead {}s, match sex {}", g_settings.hudEnabled ? "on" : "off", g_settings.hudTheme, g_settings.transitionLead, g_settings.matchSex ? "on" : "off");
 	}
 
 
@@ -154,6 +157,37 @@ namespace
 		if (focused.Active() && (focused.role0 == a_actorID || focused.role1 == a_actorID)) {
 			SetPlayerScene({});
 		}
+	}
+
+	// ---- Sexes ----
+	// Scenes say who may take each role ("sex" on each actor, SCENES.md);
+	// with bMatchSex on, only scenes the actors fit are offered or played.
+
+	std::vector<SceneRegistry::Sex> SexesOf(const std::vector<std::uint32_t>& a_ids)
+	{
+		std::vector<SceneRegistry::Sex> sexes;
+		for (const auto id : a_ids) {
+			sexes.push_back(SceneRegistry::SexOf(RE::TESForm::GetFormByID<RE::Actor>(id)));
+		}
+		return sexes;
+	}
+
+	// The filter for the picker's lists: these actors, roles open (a new
+	// scene) or already given (a running one).
+	SceneRegistry::ListFilter SexFilter(const std::vector<std::uint32_t>& a_ids, bool a_fixedOrder)
+	{
+		SceneRegistry::ListFilter filter;
+		filter.fixedOrder = a_fixedOrder;
+		if (g_settings.matchSex) {
+			filter.sexes = SexesOf(a_ids);
+		}
+		return filter;
+	}
+
+	// Whether the actors of a running scene (role order) may play a_scene.
+	bool SexesFit(const SceneRegistry::Scene& a_scene, const std::vector<std::uint32_t>& a_ids)
+	{
+		return !g_settings.matchSex || SceneRegistry::Fits(a_scene.actors, SexesOf(a_ids));
 	}
 
 	// ---- Running scenes ----
@@ -1288,6 +1322,10 @@ namespace
 			REX::WARN("NavigateScene: can't go to \"{}\"", a_destination);
 			return false;
 		}
+		if (!SexesFit(*to, current.ActorIDs())) {
+			REX::WARN("NavigateScene: \"{}\" is for other sexes than this scene's actors (bMatchSex)", a_destination);
+			return false;
+		}
 		if (from->IsTransition()) {
 			// Let the transition finish, then go there instead of its
 			// destination (no jump out of the middle of it).
@@ -1503,19 +1541,30 @@ namespace
 				return;
 			}
 			const bool  search = mode == PickerMode::kSearch;
-			const auto  focusedCount = GetPlayerScene().ActorIDs().size();
+			const auto  focusedIDs = GetPlayerScene().ActorIDs();
+			const auto  focusedCount = focusedIDs.size();
 			const bool  solo = search ? focusedCount == 1 : g_pickerTarget == 0;
 			const auto  actorCount = search ? focusedCount : solo ? 1 : 2;
+			// Only what these actors can play: a running scene's in its role
+			// order, a new one's in any.
+			std::vector<std::uint32_t> ids = focusedIDs;
+			if (!search) {
+				ids = { RE::PlayerCharacter::GetSingleton()->GetFormID() };
+				if (!solo) {
+					ids.push_back(g_pickerTarget);
+				}
+			}
+			const auto filter = SexFilter(ids, search);
 			// Sequences first, as "Sequence: <name>" with SEQUENCE_PREFIX on
 			// the ID, then the scenes.
-			auto scenes = SceneRegistry::ListSequences(actorCount);
+			auto scenes = SceneRegistry::ListSequences(actorCount, filter);
 			for (auto& seq : scenes) {
 				seq.id = std::string(SEQUENCE_PREFIX) + seq.id;
 				seq.name = "Sequence: " + seq.name;
 				seq.tags = seq.tags.empty() ? "sequence" : "sequence, " + seq.tags;
 			}
 			const auto sequenceCount = scenes.size();
-			std::ranges::move(SceneRegistry::List(actorCount), std::back_inserter(scenes));
+			std::ranges::move(SceneRegistry::List(actorCount, filter), std::back_inserter(scenes));
 
 			Scaleform::GFx::Value list;
 			uiMovie->CreateArray(&list);
@@ -1564,6 +1613,9 @@ namespace
 				const auto settled = SceneRegistry::Settled(scene);
 				for (const auto& nav : settled->navigations) {
 					const auto dest = SceneRegistry::Find(nav.to);
+					if (dest && !SexesFit(*dest, current.ActorIDs())) {
+						continue;
+					}
 					add(nav.to, FormatNavLabel(nav.label, current), dest ? dest->name : nav.to);
 				}
 				title = scene->name + "   (speed " + std::to_string(current.speed + 1) + "/" + std::to_string(scene->speeds.size()) + ")";
@@ -1581,11 +1633,13 @@ namespace
 		{
 			REX::INFO("Picker: picked \"{}\"", a_sceneID);
 			Close();
+			std::vector<SceneRegistry::SceneActor> roles;  // what its roles ask for
 			if (a_sceneID.starts_with(SEQUENCE_PREFIX)) {
 				const auto sequence = SceneRegistry::FindSequence(std::string_view(a_sceneID).substr(SEQUENCE_PREFIX.size()));
 				if (!sequence) {
 					return;
 				}
+				roles = sequence->actors;
 				if (g_pickerMode == PickerMode::kSearch) {
 					// On the running scene.
 					F4SE::GetTaskInterface()->AddTask([sequence]() { StartSequenceOnScene(GetPlayerScene().role0, sequence); });
@@ -1616,10 +1670,23 @@ namespace
 				}
 				return;
 			}
+			// Who takes which role: the player first unless only the other
+			// way round fits the scene (e.g. a female player and a male
+			// partner in a scene whose first role is male).
+			bool targetFirst = false;
+			if (const auto target = g_pickerTarget.load(); target != 0) {
+				if (roles.empty()) {
+					if (const auto scene = SceneRegistry::Find(a_sceneID)) {
+						roles = scene->actors;
+					}
+				}
+				const auto order = SceneRegistry::AssignRoles(roles, SexesOf({ RE::PlayerCharacter::GetSingleton()->GetFormID(), target }));
+				targetFirst = !order.empty() && order.front() == 1;
+			}
 			if (g_vm) {
 				RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
 				g_vm->DispatchStaticCall("FourStimMenu"sv, "StartPickedScene"sv, callback,
-					std::move(a_sceneID), static_cast<std::int32_t>(g_pickerTarget.load()));
+					std::move(a_sceneID), static_cast<std::int32_t>(g_pickerTarget.load()), targetFirst);
 			}
 		}
 	};
@@ -2041,6 +2108,11 @@ namespace FourStim
 	std::string FormatLabel(std::string a_label, const FocusedScene& a_scene)
 	{
 		return FormatNavLabel(std::move(a_label), a_scene);
+	}
+
+	bool FocusedCanPlay(const SceneRegistry::Scene& a_scene)
+	{
+		return SexesFit(a_scene, GetPlayerScene().ActorIDs());
 	}
 
 	std::vector<RE::Actor*> ResolveActors(const std::vector<std::uint32_t>& a_ids)

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <span>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -10,9 +11,19 @@
 // file, no scripting. See SCENES.md for the format.
 namespace SceneRegistry
 {
+	enum class Sex : std::uint8_t
+	{
+		kAny,  // a role open to anyone; for an actor, not known
+		kMale,
+		kFemale
+	};
+
+	// An actor's sex as the scenes see it.
+	Sex SexOf(const RE::Actor* a_actor);
+
 	struct SceneActor
 	{
-		std::string sex;  // "male", "female" or "any" (informational for now)
+		Sex sex = Sex::kAny;  // who may take this role
 	};
 
 	struct Navigation
@@ -54,7 +65,17 @@ namespace SceneRegistry
 		std::vector<SequenceEntry> entries;  // at least one
 		std::vector<std::string>   tags;
 		std::string                sourceFile;
+		std::vector<SceneActor>    actors;  // per role, what its scenes ask for
 	};
+
+	// Which actor takes each role of a scene (or sequence) whose roles ask for
+	// a_roles: for each role, an index into a_actors. Empty if they can't fill
+	// it (wrong count, or a role's sex doesn't match). Keeps a_actors' own
+	// order when it fits, otherwise tries the other order (two actors).
+	std::vector<std::size_t> AssignRoles(std::span<const SceneActor> a_roles, std::span<const Sex> a_actors);
+
+	// Whether a_actors, in this role order, fit a_roles.
+	bool Fits(std::span<const SceneActor> a_roles, std::span<const Sex> a_actors);
 
 	// Re-reads every scene file. Returns the number of scenes loaded.
 	int Reload();
@@ -80,9 +101,18 @@ namespace SceneRegistry
 		std::string tags;  // comma-separated
 	};
 
-	// All scenes with exactly a_actorCount actors, sorted by name.
-	std::vector<SceneSummary> List(std::size_t a_actorCount);
+	// Which of the lists below to give: every scene for that many actors, or
+	// only those these actors can play.
+	struct ListFilter
+	{
+		std::vector<Sex> sexes;               // the actors; empty = no sex check
+		bool             fixedOrder = false;  // roles already given (a running scene)
+	};
 
-	// All sequences for a_actorCount actors, sorted by name.
-	std::vector<SceneSummary> ListSequences(std::size_t a_actorCount);
+	// All scenes with exactly a_actorCount actors that pass a_filter, sorted
+	// by name.
+	std::vector<SceneSummary> List(std::size_t a_actorCount, const ListFilter& a_filter = {});
+
+	// All sequences for a_actorCount actors that pass a_filter, sorted by name.
+	std::vector<SceneSummary> ListSequences(std::size_t a_actorCount, const ListFilter& a_filter = {});
 }

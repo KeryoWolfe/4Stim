@@ -702,6 +702,9 @@ namespace HUD
 				if (a_scene) {
 					for (const auto& nav : a_scene->navigations) {
 						const auto dest = SceneRegistry::Find(nav.to);
+						if (dest && !FourStim::FocusedCanPlay(*dest)) {
+							continue;
+						}
 						const auto icon = IconPath(!nav.icon.empty() ? nav.icon : dest ? dest->icon : std::string{});
 						AddEntry(list, nav.to, FourStim::FormatLabel(nav.label, a_focused), icon, "scene");
 					}

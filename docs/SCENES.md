@@ -52,7 +52,7 @@ The first scene has two speeds and one navigation option. The second uses the si
 | `id` | scene | yes | Unique scene ID. Case-insensitive. Prefix it with your pack name to avoid clashes. |
 | `name` | scene | no | Display name. Defaults to the ID. |
 | `actors` | scene | yes | One entry per role, **in role order**: the first entry is role 0, the second role 1, and so on. |
-| `sex` | actor | no | `"male"`, `"female"` or `"any"` (default). Informational for now. |
+| `sex` | actor | no | Who may take this role: `"male"`, `"female"` or `"any"` (default). With `bMatchSex=1` (the default, in `4Stim.ini`), the picker, the HUD and navigation only offer scenes and sequences whose roles the actors fit, and a new scene gives each actor the role that fits (the player takes the first role unless only the other order fits). A sequence's role asks for whatever its scenes ask for; scenes that ask for different sexes in the same role can't share a sequence. |
 | `speeds` | scene | one of `speeds` or actor `idle` | List of speeds, slowest first. Each has `idles`: one Idle form ID per role, in role order. |
 | `idle` | actor | one of `speeds` or actor `idle` | Single-speed shorthand: the Idle form ID for this role. |
 | `navigations` | scene | no | Scenes the player can move to from this one, in display order. Each has `to` (destination scene ID) and `label`. In a label, `{0}`, `{1}` and so on are replaced by the name of the actor in that role. |

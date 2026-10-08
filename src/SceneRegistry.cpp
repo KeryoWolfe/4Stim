@@ -159,7 +159,16 @@ namespace SceneRegistry
 					continue;
 				}
 				for (const auto& a : *actors) {
-					scene.actors.push_back({ a.value("sex", std::string{ "any" }) });
+					const auto sex = Lower(a.is_object() ? a.value("sex", std::string{ "any" }) : std::string{ "any" });
+					SceneActor role;
+					if (sex == "male" || sex == "m") {
+						role.sex = Sex::kMale;
+					} else if (sex == "female" || sex == "f") {
+						role.sex = Sex::kFemale;
+					} else if (sex != "any" && !sex.empty()) {
+						REX::WARN("Scenes: {}: scene \"{}\": unknown \"sex\" \"{}\" (male, female or any), taken as any", file, id, sex);
+					}
+					scene.actors.push_back(role);
 				}
 				const auto roles = scene.actors.size();
 
@@ -258,9 +267,25 @@ namespace SceneRegistry
 					const auto& scene = it->second;
 					if (seq.entries.empty()) {
 						seq.actorCount = scene.actors.size();
+						seq.actors = scene.actors;
 					} else if (scene.actors.size() != seq.actorCount) {
 						problem = std::format("entry {}: \"{}\" has {} actor(s), the sequence {}", index, sceneID, scene.actors.size(), seq.actorCount);
 						break;
+					} else {
+						bool clash = false;
+						for (std::size_t role = 0; role < seq.actors.size(); ++role) {
+							auto&      have = seq.actors[role].sex;
+							const auto want = scene.actors[role].sex;
+							if (have == Sex::kAny) {
+								have = want;
+							} else if (want != Sex::kAny && want != have) {
+								clash = true;
+							}
+						}
+						if (clash) {
+							problem = std::format("entry {}: \"{}\" asks for a different sex in a role than the scenes before it", index, sceneID);
+							break;
+						}
 					}
 					float duration = scene.length;
 					if (e.is_object() && e.contains("duration")) {
@@ -421,7 +446,70 @@ namespace SceneRegistry
 		return it != g_sequences.end() ? it->second : nullptr;
 	}
 
-	std::vector<SceneSummary> ListSequences(std::size_t a_actorCount)
+	Sex SexOf(const RE::Actor* a_actor)
+	{
+		if (!a_actor) {
+			return Sex::kAny;
+		}
+		switch (a_actor->GetSex()) {
+		case RE::SEX::kMale:
+			return Sex::kMale;
+		case RE::SEX::kFemale:
+			return Sex::kFemale;
+		default:
+			return Sex::kAny;
+		}
+	}
+
+	bool Fits(std::span<const SceneActor> a_roles, std::span<const Sex> a_actors)
+	{
+		if (a_roles.size() != a_actors.size()) {
+			return false;
+		}
+		for (std::size_t i = 0; i < a_roles.size(); ++i) {
+			const auto want = a_roles[i].sex;
+			const auto have = a_actors[i];
+			if (want != Sex::kAny && have != Sex::kAny && want != have) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	std::vector<std::size_t> AssignRoles(std::span<const SceneActor> a_roles, std::span<const Sex> a_actors)
+	{
+		if (a_roles.size() != a_actors.size()) {
+			return {};
+		}
+		std::vector<std::size_t> order(a_actors.size());
+		for (std::size_t i = 0; i < order.size(); ++i) {
+			order[i] = i;
+		}
+		// Every order, starting with the actors' own (two actors: two orders).
+		do {
+			std::vector<Sex> ordered;
+			for (const auto index : order) {
+				ordered.push_back(a_actors[index]);
+			}
+			if (Fits(a_roles, ordered)) {
+				return order;
+			}
+		} while (std::ranges::next_permutation(order).found);
+		return {};
+	}
+
+	namespace
+	{
+		bool Passes(std::span<const SceneActor> a_roles, const ListFilter& a_filter)
+		{
+			if (a_filter.sexes.empty()) {
+				return true;
+			}
+			return a_filter.fixedOrder ? Fits(a_roles, a_filter.sexes) : !AssignRoles(a_roles, a_filter.sexes).empty();
+		}
+	}
+
+	std::vector<SceneSummary> ListSequences(std::size_t a_actorCount, const ListFilter& a_filter)
 	{
 		std::scoped_lock lock(g_lock);
 		if (!g_loaded) {
@@ -429,7 +517,7 @@ namespace SceneRegistry
 		}
 		std::vector<SceneSummary> out;
 		for (const auto& [key, ptr] : g_sequences) {
-			if (ptr->actorCount != a_actorCount) {
+			if (ptr->actorCount != a_actorCount || !Passes(ptr->actors, a_filter)) {
 				continue;
 			}
 			std::string tags;
@@ -442,7 +530,7 @@ namespace SceneRegistry
 		return out;
 	}
 
-	std::vector<SceneSummary> List(std::size_t a_actorCount)
+	std::vector<SceneSummary> List(std::size_t a_actorCount, const ListFilter& a_filter)
 	{
 		std::scoped_lock lock(g_lock);
 		if (!g_loaded) {
@@ -451,7 +539,7 @@ namespace SceneRegistry
 		std::vector<SceneSummary> out;
 		for (const auto& [key, ptr] : g_published) {
 			const auto& scene = *ptr;
-			if (scene.actors.size() != a_actorCount) {
+			if (scene.actors.size() != a_actorCount || !Passes(scene.actors, a_filter)) {
 				continue;
 			}
 			std::string tags;

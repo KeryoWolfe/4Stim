@@ -42,8 +42,9 @@ Function EndPlayerScene() Global
 EndFunction
 
 ; Called by the plugin when the player picks a scene in the picker.
-; aiTargetID is the partner's form ID, or 0 for a solo scene.
-Function StartPickedScene(String asSceneID, int aiTargetID) Global
+; aiTargetID is the partner's form ID, or 0 for a solo scene; with
+; abTargetFirst, the partner takes role 0.
+Function StartPickedScene(String asSceneID, int aiTargetID, bool abTargetFirst = false) Global
 	Actor akPlayer = Game.GetPlayer()
 	Actor akTarget = None
 	if aiTargetID != 0
@@ -52,11 +53,11 @@ Function StartPickedScene(String asSceneID, int aiTargetID) Global
 
 	bool bStarted
 	if akTarget
-		; Role 0 is the male role in OStim's scenes; give it to whichever of
-		; the two is male (the player if both or neither are).
+		; The plugin works out who takes which role from the scene's "sex"
+		; per role: the player first unless only the other order fits.
 		Actor akRole0 = akPlayer
 		Actor akRole1 = akTarget
-		if akPlayer.GetLeveledActorBase().GetSex() == 1 && akTarget.GetLeveledActorBase().GetSex() == 0
+		if abTargetFirst
 			akRole0 = akTarget
 			akRole1 = akPlayer
 		endif
