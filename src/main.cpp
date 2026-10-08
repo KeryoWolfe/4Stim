@@ -41,6 +41,7 @@ namespace
 		std::uint32_t speedDownKey = 0xBD;     // 0xBD = the -/_ key
 		std::string   hudTheme = "Color";     // file name in Data\Interface\4Stim\Themes\, without .json
 		bool          hudEnabled = true;
+		float         transitionLead = 0.4F;  // seconds before a transition's length to move on (see 4Stim.ini)
 	};
 	Settings g_settings;
 
@@ -95,6 +96,8 @@ namespace
 					g_settings.hudTheme = value;
 				} else if (key == "benablehud") {
 					g_settings.hudEnabled = std::stoi(value) != 0;
+				} else if (key == "ftransitionlead") {
+					g_settings.transitionLead = std::max(0.0F, std::stof(value));
 				}
 			} catch (...) {
 				REX::WARN("Settings: couldn't read \"{}\" for {}", value, key);
@@ -104,7 +107,7 @@ namespace
 			g_settings.hotkey, g_settings.targetMode == 1 ? "Proximity" : "Crosshair",
 			g_settings.maxDistance, g_settings.crosshairCone, g_settings.proximityRadius, g_settings.freeCameraSpeed,
 			g_settings.speedUpKey, g_settings.speedDownKey);
-		REX::INFO("Settings: HUD {}, theme \"{}\"", g_settings.hudEnabled ? "on" : "off", g_settings.hudTheme);
+		REX::INFO("Settings: HUD {}, theme \"{}\", transition lead {}s", g_settings.hudEnabled ? "on" : "off", g_settings.hudTheme, g_settings.transitionLead);
 	}
 
 
@@ -170,6 +173,10 @@ namespace
 		// Speed from before a transition, for its destination (the
 		// transition itself has only one speed).
 		int carrySpeed = 0;
+
+		// A scene the player picked during a transition: played when the
+		// transition ends, instead of its destination.
+		std::string queuedScene;
 	};
 
 	// Remembers the outgoing speed when a scene enters a transition.
@@ -265,6 +272,7 @@ namespace
 		const bool moved = _stricmp(scene->sceneID.c_str(), a_sceneID.c_str()) != 0;
 		if (moved) {
 			NoteCarrySpeed(*scene, a_sceneID);
+			scene->queuedScene.clear();
 		}
 		scene->sceneID = a_sceneID;
 		scene->speed = a_speed;
@@ -301,7 +309,10 @@ namespace
 			const auto& entry = a_scene.sequence->entries[a_scene.step];
 			a_scene.remaining = entry.duration;
 		} else if (const auto scene = SceneRegistry::Find(a_scene.sceneID); scene && scene->IsTransition()) {
-			a_scene.remaining = scene->length;
+			// A little early: the animation, started with a blend, can end
+			// and restart just before its nominal length, which shows as a
+			// jump. The destination's blend covers the cut instead.
+			a_scene.remaining = std::max(scene->length - g_settings.transitionLead, scene->length * 0.5F);
 		}
 		if (a_scene.remaining >= 0.0F) {
 			StartAutoplayTicks();
@@ -348,6 +359,20 @@ namespace
 	// a_active's time is up: on to the next scene.
 	void AdvanceAutoplay(ActiveScene& a_active)
 	{
+		if (!a_active.queuedScene.empty()) {
+			const auto queued = std::exchange(a_active.queuedScene, std::string{});
+			if (a_active.sequence) {
+				REX::INFO("Sequence \"{}\": stopped, the player picked \"{}\"", a_active.sequence->id, queued);
+				a_active.sequence.reset();
+			}
+			REX::INFO("Transition \"{}\" -> \"{}\" (picked during the transition)", a_active.sceneID, queued);
+			if (PlayOnActiveScene(a_active, queued, a_active.carrySpeed)) {
+				ArmAutoplay(a_active);
+			} else {
+				a_active.remaining = -1.0F;
+			}
+			return;
+		}
 		if (a_active.sequence) {
 			const auto sequence = a_active.sequence;
 			if (a_active.step + 1 < sequence->entries.size()) {
@@ -1253,6 +1278,17 @@ namespace
 			REX::WARN("NavigateScene: can't go to \"{}\"", a_destination);
 			return false;
 		}
+		if (from->IsTransition()) {
+			// Let the transition finish, then go there instead of its
+			// destination (no jump out of the middle of it).
+			F4SE::GetTaskInterface()->AddTask([actorID = current.role0, sceneID = to->id]() {
+				if (const auto active = FindActiveScene(actorID)) {
+					active->queuedScene = sceneID;
+					REX::INFO("NavigateScene: \"{}\" queued until the transition ends", sceneID);
+				}
+			});
+			return true;
+		}
 		const int speed = std::min(current.speed, static_cast<int>(to->speeds.size()) - 1);
 		PlayPlayerScene(*to, speed, current);
 		return true;
@@ -1514,7 +1550,9 @@ namespace
 			};
 			std::string title = "Scene";
 			if (scene) {
-				for (const auto& nav : scene->navigations) {
+				// During a transition, the options of where it's going.
+				const auto settled = SceneRegistry::Settled(scene);
+				for (const auto& nav : settled->navigations) {
 					const auto dest = SceneRegistry::Find(nav.to);
 					add(nav.to, FormatNavLabel(nav.label, current), dest ? dest->name : nav.to);
 				}
@@ -1526,7 +1564,7 @@ namespace
 			args[0] = list;
 			args[1] = title.c_str();
 			menuObj.Invoke("SetScenes", nullptr, args, 2);
-			REX::INFO("Picker: sent {} navigation option(s)", scene ? scene->navigations.size() : 0);
+			REX::INFO("Picker: sent {} navigation option(s)", scene ? SceneRegistry::Settled(scene)->navigations.size() : 0);
 		}
 
 		static void StartPicked(std::string a_sceneID)

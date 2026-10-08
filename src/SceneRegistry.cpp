@@ -399,6 +399,18 @@ namespace SceneRegistry
 		return it != g_published.end() ? it->second : nullptr;
 	}
 
+	std::shared_ptr<const Scene> Settled(std::shared_ptr<const Scene> a_scene)
+	{
+		for (int hop = 0; a_scene && a_scene->IsTransition() && hop < 8; ++hop) {
+			auto next = Find(a_scene->destination);
+			if (!next) {
+				break;
+			}
+			a_scene = std::move(next);
+		}
+		return a_scene;
+	}
+
 	std::shared_ptr<const Sequence> FindSequence(std::string_view a_id)
 	{
 		std::scoped_lock lock(g_lock);

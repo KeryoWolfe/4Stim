@@ -519,7 +519,8 @@ namespace HUD
 				SendScene(scene.get());
 				SendActors(focused);
 				SendSpeed(focused, scene.get());
-				SendNavigation(focused, scene.get());
+				// During a transition, the options of where it's going.
+				SendNavigation(focused, scene ? SceneRegistry::Settled(scene).get() : nullptr);
 				SendUtility(focused);
 				SendFocus();
 			}

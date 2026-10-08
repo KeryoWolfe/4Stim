@@ -64,6 +64,11 @@ namespace SceneRegistry
 	// as long as the pointer is held, even across a Reload.
 	std::shared_ptr<const Scene> Find(std::string_view a_id);
 
+	// Where a scene ends up: a_scene itself, or for a transition, its
+	// destination (followed through chained transitions). Never null for a
+	// non-null a_scene.
+	std::shared_ptr<const Scene> Settled(std::shared_ptr<const Scene> a_scene);
+
 	// Case-insensitive sequence lookup; nullptr if there's no such sequence.
 	std::shared_ptr<const Sequence> FindSequence(std::string_view a_id);
 
