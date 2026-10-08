@@ -61,6 +61,7 @@ The first scene has two speeds and one navigation option. The second uses the si
 | `length` | scene | for transitions | Seconds one play-through of the animation takes. A transition moves on after this long; a sequence uses it when an entry has no `duration`. |
 | `destination` | scene | no | Makes the scene a **transition**: it plays once (for `length` seconds) and then moves on to this scene by itself. Must have the same number of actors. |
 | `furniture` | scene | no | The furniture type the scene is played on (`"bed"`, `"chair"`, `"table"`...; see `FURNITURE.md`). The picker only lists it when furniture of that type, or of a subtype, is near the player, and the actors are moved onto the nearest such piece. Navigation stays on the furniture: from a furniture scene only scenes for the same furniture are offered, and from a scene without `furniture` only scenes without it. All scenes of a sequence must have the same `furniture`. |
+| `furnitureOffset` | scene | no | `[x, y, z]` or `[x, y, z, degrees]`: moves this scene from its furniture type's spot, in the spot's own frame (x to the right, y forward, z up), and turns it. For scenes whose animation starts somewhere other than the rest on that furniture. |
 
 ## Speeds and navigation in game
 

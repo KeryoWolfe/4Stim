@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <memory>
 #include <span>
 #include <string>
@@ -45,6 +46,7 @@ namespace SceneRegistry
 		float                                      length = 0.0F;  // seconds of one play-through; 0 = not given
 		std::string                                destination;    // transition: the scene it moves on to after `length`
 		std::string                                furniture;      // furniture type it's played on (lowercase); "" = anywhere
+		std::array<float, 4>                       furnitureOffset{};  // x, y, z, degrees from the furniture's spot
 		std::string                                sourceFile;
 
 		bool IsTransition() const { return !destination.empty(); }

@@ -140,6 +140,15 @@ namespace SceneRegistry
 				if (scene.furniture == "none") {
 					scene.furniture.clear();
 				}
+				if (const auto off = entry.find("furnitureOffset"); off != entry.end()) {
+					if (off->is_array() && (off->size() == 3 || off->size() == 4) && std::ranges::all_of(*off, [](const nlohmann::json& v) { return v.is_number(); })) {
+						for (std::size_t i = 0; i < off->size(); ++i) {
+							scene.furnitureOffset[i] = (*off)[i].get<float>();
+						}
+					} else {
+						REX::WARN("Scenes: {}: scene \"{}\" \"furnitureOffset\" must be [x, y, z] or [x, y, z, degrees], ignored", file, id);
+					}
+				}
 				if (const auto length = entry.find("length"); length != entry.end()) {
 					if (length->is_number() && length->get<float>() > 0.0F) {
 						scene.length = length->get<float>();

@@ -50,6 +50,7 @@ namespace Furniture
 	// log with its model, for writing type files.
 	std::vector<Found> FindNear(const RE::NiPoint3& a_center, float a_radius, float a_maxHeight, bool a_log);
 
-	// Where a scene goes on a_ref, a piece of furniture of type a_type.
-	Spot SpotFor(RE::TESObjectREFR* a_ref, std::string_view a_type);
+	// Where a scene goes on a_ref, a piece of furniture of type a_type. For
+	// types anchored on an edge, the side nearest a_near is used.
+	Spot SpotFor(RE::TESObjectREFR* a_ref, std::string_view a_type, const RE::NiPoint3& a_near);
 }

@@ -241,6 +241,7 @@ namespace
 		std::uint32_t              ref = 0;
 		std::string                type;
 		std::vector<std::uint32_t> actors;  // sorted
+		std::array<float, 4>       offset{};  // the scene's own offset from the spot
 	};
 	std::mutex                      g_pendingFurnitureLock;
 	std::optional<PendingFurniture> g_pendingFurniture;
@@ -278,7 +279,17 @@ namespace
 			REX::WARN("Furniture: {:08X} is gone, the scene is played where the actors are", pending->ref);
 			return false;
 		}
-		const auto spot = Furniture::SpotFor(ref, pending->type);
+		const auto player = RE::PlayerCharacter::GetSingleton();
+		auto       spot = Furniture::SpotFor(ref, pending->type, player ? player->GetPosition() : ref->GetPosition());
+		if (const auto& o = pending->offset; o[0] != 0.0F || o[1] != 0.0F || o[2] != 0.0F || o[3] != 0.0F) {
+			// In the spot's frame: x to its right, y forward.
+			const float c = std::cos(spot.heading), s = std::sin(spot.heading);
+			spot.position.x += o[0] * c + o[1] * s;
+			spot.position.y += -o[0] * s + o[1] * c;
+			spot.position.z += o[2];
+			spot.heading += o[3] * PI_F / 180.0F;
+			REX::INFO("Furniture: scene offset ({}, {}, {}, {} deg)", o[0], o[1], o[2], o[3]);
+		}
 		for (const auto actor : a_actors) {
 			PlaceActorAt(actor, spot);
 		}
@@ -1850,6 +1861,9 @@ namespace
 					const auto found = PickerFurniture();
 					if (const auto piece = FurnitureFor(found, furnitureType)) {
 						PendingFurniture pending{ piece->ref, piece->type, { RE::PlayerCharacter::GetSingleton()->GetFormID() } };
+						if (const auto scene = SceneRegistry::Find(a_sceneID)) {
+							pending.offset = scene->furnitureOffset;
+						}
 						if (const auto target = g_pickerTarget.load(); target != 0) {
 							pending.actors.push_back(target);
 						}

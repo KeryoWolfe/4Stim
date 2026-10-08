@@ -33,6 +33,13 @@ namespace Furniture
 			int                            maxMarkers = -1;
 			bool                           useMarker = true;  // place at a furniture marker
 			int                            markerIndex = 0;   // which one
+			// "edge": on an edge of its bounding box (the side nearest the
+			// player), facing out from it or in toward it.
+			bool                           edge = false;
+			bool                           edgeLong = true;      // a long side (else a short one)
+			bool                           edgeFacingOut = true;
+			float                          edgeInset = 0.0F;     // toward the middle; negative = outside
+			bool                           markerHeight = false; // edge: at the marker's height, if it has one
 			bool                           ignoreMarker[3] = { false, false, false };
 			RE::NiPoint3                   offset;            // in the furniture's own frame
 			float                          rotation = 0.0F;   // radians
@@ -140,6 +147,17 @@ namespace Furniture
 					type.maxMarkers = entry.value("maxMarkers", -1);
 					type.useMarker = entry.value("useMarker", true);
 					type.markerIndex = entry.value("marker", 0);
+					if (const auto anchor = Lower(entry.value("anchor", std::string{ "marker" })); anchor == "edge") {
+						type.edge = true;
+					} else if (anchor == "origin") {
+						type.useMarker = false;
+					} else if (anchor != "marker") {
+						REX::WARN("Furniture: {}: type \"{}\": unknown \"anchor\" \"{}\" (marker, origin or edge)", file, type.id, anchor);
+					}
+					type.edgeLong = Lower(entry.value("edgeSide", std::string{ "long" })) != "short";
+					type.edgeFacingOut = Lower(entry.value("facing", std::string{ "out" })) != "in";
+					type.edgeInset = entry.value("edgeInset", 0.0F);
+					type.markerHeight = entry.value("markerHeight", false);
 					if (const auto ignore = Strings(entry, "ignoreMarkerAxes", true); !ignore.empty()) {
 						for (const auto& axis : ignore) {
 							if (axis == "x" || axis == "y" || axis == "z") {
@@ -223,15 +241,37 @@ namespace Furniture
 			RE::BSTArray<RE::BSFurnitureMarker> markers;  // 18
 		};
 
+		MarkerNode* FindMarkerNode(RE::NiAVObject* a_object, int a_depth)
+		{
+			if (!a_object) {
+				return nullptr;
+			}
+			if (const auto node = static_cast<MarkerNode*>(a_object->GetExtraData("FRN"))) {
+				return node;
+			}
+			const auto asNode = a_depth > 0 ? a_object->IsNode() : nullptr;
+			if (!asNode) {
+				return nullptr;
+			}
+			for (const auto& child : asNode->children) {
+				if (const auto found = FindMarkerNode(child.get(), a_depth - 1)) {
+					return found;
+				}
+			}
+			return nullptr;
+		}
+
 		std::vector<RE::BSFurnitureMarker> MarkersOf(RE::TESObjectREFR* a_ref)
 		{
 			std::vector<RE::BSFurnitureMarker> out;
 			const auto root = a_ref ? a_ref->Get3D() : nullptr;
 			if (!root) {
+				REX::INFO("Furniture: {:08X}: no loaded model", a_ref ? a_ref->GetFormID() : 0);
 				return out;
 			}
-			const auto node = static_cast<MarkerNode*>(root->GetExtraData("FRN"));
+			const auto node = FindMarkerNode(root, 2);
 			if (!node) {
+				REX::INFO("Furniture: {:08X}: no furniture markers in its model (root \"{}\")", a_ref->GetFormID(), root->GetName().c_str());
 				return out;
 			}
 			const auto count = node->markers.size();
@@ -360,7 +400,7 @@ namespace Furniture
 		return found;
 	}
 
-	Spot SpotFor(RE::TESObjectREFR* a_ref, std::string_view a_type)
+	Spot SpotFor(RE::TESObjectREFR* a_ref, std::string_view a_type, const RE::NiPoint3& a_near)
 	{
 		Spot spot;
 		if (!a_ref) {
@@ -385,8 +425,44 @@ namespace Furniture
 			REX::INFO("Furniture: {:08X} marker {}: ({:.1f}, {:.1f}, {:.1f}), heading {:.1f} deg, animations 0x{:X}", a_ref->GetFormID(), i,
 				markers[i].position.x, markers[i].position.y, markers[i].position.z, markers[i].heading / DEG, markers[i].allowedAnimations);
 		}
-		int used = -1;
-		if (type.useMarker && !markers.empty()) {
+		int        used = -1;
+		bool       zFromMarker = false;
+		const auto bound = a_ref->GetObjectReference() ? a_ref->GetObjectReference()->As<RE::TESBoundObject>() : nullptr;
+		if (type.edge && bound) {
+			// The bounding box, in the object's frame.
+			const auto& b = bound->boundData;
+			const float minX = b.boundMin.x, maxX = b.boundMax.x, minY = b.boundMin.y, maxY = b.boundMax.y;
+			const float midX = (minX + maxX) * 0.5F, midY = (minY + maxY) * 0.5F;
+			const bool  alongX = (maxX - minX) >= (maxY - minY);  // long axis is x
+			// The sides to choose from: long sides lie along the long axis.
+			const bool sidesOnY = type.edgeLong ? alongX : !alongX;
+			// Which of the two is nearer the player, in the object's frame.
+			const auto  origin = a_ref->GetPosition();
+			const float dx = a_near.x - origin.x, dy = a_near.y - origin.y;
+			const float c0 = std::cos(yaw), s0 = std::sin(yaw);
+			const float nearX = dx * c0 - dy * s0;  // inverse of the rotation below
+			const float nearY = dx * s0 + dy * c0;
+			if (sidesOnY) {
+				const bool  plus = nearY >= midY * scale;
+				const float edgeY = plus ? maxY : minY;
+				local = { midX, edgeY + (plus ? -type.edgeInset : type.edgeInset), 0.0F };
+				localHeading = plus ? 0.0F : 3.14159265F;  // facing out along y
+			} else {
+				const bool  plus = nearX >= midX * scale;
+				const float edgeX = plus ? maxX : minX;
+				local = { edgeX + (plus ? -type.edgeInset : type.edgeInset), midY, 0.0F };
+				localHeading = plus ? 3.14159265F * 0.5F : -3.14159265F * 0.5F;  // facing out along x
+			}
+			if (!type.edgeFacingOut) {
+				localHeading += 3.14159265F;
+			}
+			if (type.markerHeight && !markers.empty()) {
+				local.z = markers[std::clamp(type.markerIndex, 0, static_cast<int>(markers.size()) - 1)].position.z;
+				zFromMarker = true;  // instead of the offset's height
+			}
+			REX::INFO("Furniture: {:08X} bounds ({}, {}, {}) to ({}, {}, {}); edge {} side, facing {}", a_ref->GetFormID(),
+				b.boundMin.x, b.boundMin.y, b.boundMin.z, b.boundMax.x, b.boundMax.y, b.boundMax.z, type.edgeLong ? "long" : "short", type.edgeFacingOut ? "out" : "in");
+		} else if (type.useMarker && !markers.empty()) {
 			used = std::clamp(type.markerIndex, 0, static_cast<int>(markers.size()) - 1);
 			const auto& marker = markers[used];
 			local = marker.position;
@@ -401,7 +477,7 @@ namespace Furniture
 				local.z = 0.0F;
 			}
 		}
-		local = local + type.offset;
+		local = local + RE::NiPoint3{ type.offset.x, type.offset.y, zFromMarker ? 0.0F : type.offset.z };
 		local = local * scale;
 
 		const float c = std::cos(yaw);

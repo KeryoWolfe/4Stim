@@ -1,5 +1,5 @@
 {
-	"_comment": "Furniture types for Fallout 4's own objects, recognized by their model paths. See docs/FURNITURE.md. Offsets are first guesses: tune them in game (set bLogFurniture=1 in 4Stim.ini to log what's found and where scenes are placed).",
+	"_comment": "Furniture types for Fallout 4's own objects, recognized by their model paths. See docs/FURNITURE.md. Spots follow the OStim animations: bed scenes start on the mattress at a long edge facing out, bench scenes on the floor under the seat facing out, table scenes on the floor at a long edge facing the table. Heights and insets are first guesses to tune in game.",
 	"types": [
 		{
 			"id": "bed",
@@ -8,9 +8,7 @@
 				"FURN"
 			],
 			"models": [
-				"bed",
-				"mattress",
-				"sleepingbag"
+				"bed"
 			],
 			"excludeModels": [
 				"bedside",
@@ -19,15 +17,40 @@
 				"flatbed"
 			],
 			"minMarkers": 1,
-			"ignoreMarkerAxes": [
-				"x"
-			],
+			"anchor": "edge",
+			"edgeSide": "long",
+			"facing": "out",
+			"edgeInset": 15,
+			"markerHeight": true,
 			"offset": [
 				0,
 				0,
-				0
+				32
+			]
+		},
+		{
+			"id": "mattress",
+			"name": "Mattress",
+			"supertype": "bed",
+			"priority": 5,
+			"forms": [
+				"FURN"
 			],
-			"rotation": 0
+			"models": [
+				"mattress",
+				"sleepingbag"
+			],
+			"minMarkers": 1,
+			"anchor": "edge",
+			"edgeSide": "long",
+			"facing": "out",
+			"edgeInset": 15,
+			"markerHeight": true,
+			"offset": [
+				0,
+				0,
+				10
+			]
 		},
 		{
 			"id": "chair",
@@ -72,9 +95,14 @@
 				"workbench"
 			],
 			"minMarkers": 1,
-			"ignoreMarkerAxes": [
-				"x",
-				"z"
+			"anchor": "edge",
+			"edgeSide": "long",
+			"facing": "out",
+			"edgeInset": 18,
+			"offset": [
+				0,
+				0,
+				0
 			]
 		},
 		{
@@ -101,7 +129,15 @@
 				"bedside",
 				"nightstand"
 			],
-			"useMarker": false
+			"anchor": "edge",
+			"edgeSide": "long",
+			"facing": "in",
+			"edgeInset": -5,
+			"offset": [
+				0,
+				0,
+				0
+			]
 		},
 		{
 			"id": "cookingpot",
@@ -115,7 +151,7 @@
 				"cookpot",
 				"cookstation"
 			],
-			"useMarker": false
+			"anchor": "origin"
 		}
 	]
 }
