@@ -74,7 +74,9 @@ A transition is a short animation between two poses, like turning around from co
   "destination": "MyPack_ReverseCowgirl", "actors": [ ... ] }
 ```
 
-Navigate to the transition as to any scene (the player picks "turn around"); when its time is up, the scene moves on to the destination on its own, at the same speed where the destination has it. Time only counts while the game isn't paused, and the move happens `fTransitionLead` seconds (0.8 by default, in `4Stim.ini`) before the length, so the animation doesn't restart first. During the transition, the HUD already lists the destination's options; picking one waits for the transition to finish and then goes there instead of the destination. A transition without a `length`, or whose destination doesn't exist, is logged and plays like an ordinary scene.
+**Transition idles must use the one-shot `dyn_Activation` animation event** (the Idle record's animation event), not `dyn_ActivationLoop`. Switching from a looping idle replays the outgoing clip's first frames while it blends out: harmless between two loops, but a transition starts in the previous pose, so it shows as a jump back. A one-shot clip blends out from where it is.
+
+Navigate to the transition as to any scene (the player picks "turn around"); when its time is up, the scene moves on to the destination on its own, at the same speed where the destination has it. Time only counts while the game isn't paused, and the move happens `fTransitionLead` seconds (0.4 by default, in `4Stim.ini`) before the length, just before the game starts blending a finished one-shot clip back to the base pose; if the clip ends first, the scene moves on the moment it does. During the transition, the HUD already lists the destination's options; picking one waits for the transition to finish and then goes there instead of the destination. A transition without a `length`, or whose destination doesn't exist, is logged and plays like an ordinary scene.
 
 ## Sequences
 

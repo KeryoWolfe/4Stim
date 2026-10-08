@@ -41,7 +41,8 @@ namespace
 		std::uint32_t speedDownKey = 0xBD;     // 0xBD = the -/_ key
 		std::string   hudTheme = "Color";     // file name in Data\Interface\4Stim\Themes\, without .json
 		bool          hudEnabled = true;
-		float         transitionLead = 0.8F;  // seconds before a transition's length to move on (see 4Stim.ini)
+		bool          logAnimEvents = false;  // log scene actors' animation events (for authors)
+		float         transitionLead = 0.4F;  // seconds before a transition's length to move on (see 4Stim.ini)
 	};
 	Settings g_settings;
 
@@ -96,6 +97,8 @@ namespace
 					g_settings.hudTheme = value;
 				} else if (key == "benablehud") {
 					g_settings.hudEnabled = std::stoi(value) != 0;
+				} else if (key == "bloganimevents") {
+					g_settings.logAnimEvents = std::stoi(value) != 0;
 				} else if (key == "ftransitionlead") {
 					g_settings.transitionLead = std::max(0.0F, std::stof(value));
 				}
@@ -1787,10 +1790,12 @@ namespace
 		}
 	};
 
-	// ---- Animation event log (diagnostic) ----
-	// Logs the animation graph events of scene actors for a few seconds
-	// after each scene change, to find one that marks a transition's end
-	// (timing transitions by their listed length is only approximate).
+	// ---- Animation events of scene actors ----
+	// A transition idle played with the one-shot dyn_Activation event sends
+	// "IdleStop" when its clip ends (and the actor starts blending back to
+	// its base pose). If the timer hasn't moved the scene on by then, this
+	// does, at once. With bLogAnimEvents=1, every event a scene actor gets
+	// in the 5 s after a scene change is logged too (for animation authors).
 	// Hooks ProcessEvent of the BSTEventSink<BSAnimationGraphEvent> base
 	// (vtable 3, at +0x38) of Actor and PlayerCharacter.
 
@@ -1830,14 +1835,32 @@ namespace
 					return;
 				}
 				seconds = std::chrono::duration<float>(std::chrono::steady_clock::now() - it->second.start).count();
-				if (seconds > 5.0F) {
+				if (seconds > 60.0F) {  // long enough for any transition
 					g_animWatch.erase(it);
 					return;
 				}
 				sceneID = it->second.sceneID;
 			}
-			REX::INFO("AnimEvent: {:08X} +{:.2f}s in \"{}\": \"{}\" ({})", id, seconds, sceneID,
-				a_event.tag.c_str(), a_event.payload.c_str());
+			if (g_settings.logAnimEvents && seconds <= 5.0F) {
+				REX::INFO("AnimEvent: {:08X} +{:.2f}s in \"{}\": \"{}\" ({})", id, seconds, sceneID,
+					a_event.tag.c_str(), a_event.payload.c_str());
+			}
+			if (_stricmp(a_event.tag.c_str(), "IdleStop") == 0) {
+				// Animation threads: hand it to the main thread.
+				F4SE::GetTaskInterface()->AddTask([id, sceneID]() {
+					const auto active = FindActiveScene(id);
+					if (!active || active->remaining < 0.0F || _stricmp(active->sceneID.c_str(), sceneID.c_str()) != 0) {
+						return;
+					}
+					const auto scene = SceneRegistry::Find(active->sceneID);
+					if (!scene || !scene->IsTransition()) {
+						return;
+					}
+					REX::INFO("Transition \"{}\": clip ended ({:.2f}s early by the timer), moving on now", scene->id, active->remaining);
+					active->remaining = -1.0F;
+					AdvanceAutoplay(*active);
+				});
+			}
 		}
 
 		static RE::BSEventNotifyControl ThunkActor(RE::BSTEventSink<RE::BSAnimationGraphEvent>* a_this, const RE::BSAnimationGraphEvent& a_event, RE::BSTEventSource<RE::BSAnimationGraphEvent>* a_source)
