@@ -205,6 +205,7 @@ namespace
 
 	void ArmAutoplay(ActiveScene& a_scene);
 	void StartAutoplayTicks();
+	void WatchAnimEvents(const std::vector<std::uint32_t>& a_actors, const std::string& a_sceneID);
 	bool PlayOnActiveScene(ActiveScene& a_active, const std::string& a_sceneID, int a_speed);
 
 	ActiveScene* FindActiveScene(std::uint32_t a_actorID)
@@ -241,6 +242,7 @@ namespace
 		}
 		g_activeScenes.push_back(std::move(scene));
 		SceneEvents::SceneStarted(a_actors, a_sceneID);
+		WatchAnimEvents(a_actors, a_sceneID);
 		auto& added = g_activeScenes.back();
 		if (added.sequence && added.sequence->entries.front().speed != 0) {
 			PlayOnActiveScene(added, added.sequence->entries.front().scene, added.sequence->entries.front().speed);
@@ -273,6 +275,7 @@ namespace
 		if (moved) {
 			NoteCarrySpeed(*scene, a_sceneID);
 			scene->queuedScene.clear();
+			WatchAnimEvents(scene->actors, a_sceneID);
 		}
 		scene->sceneID = a_sceneID;
 		scene->speed = a_speed;
@@ -339,6 +342,7 @@ namespace
 			results += std::format("{}{:08X} {}", role ? ", " : "", a_active.actors[role], ok ? "ok" : "refused");
 		}
 		REX::INFO("Autoplay: \"{}\" speed {}: PlayIdle {}", scene->id, speed + 1, results);
+		WatchAnimEvents(a_active.actors, scene->id);
 		const auto previous = a_active.sceneID;
 		NoteCarrySpeed(a_active, scene->id);
 		a_active.sceneID = scene->id;
@@ -1783,6 +1787,96 @@ namespace
 		}
 	};
 
+	// ---- Animation event log (diagnostic) ----
+	// Logs the animation graph events of scene actors for a few seconds
+	// after each scene change, to find one that marks a transition's end
+	// (timing transitions by their listed length is only approximate).
+	// Hooks ProcessEvent of the BSTEventSink<BSAnimationGraphEvent> base
+	// (vtable 3, at +0x38) of Actor and PlayerCharacter.
+
+	struct AnimWatch
+	{
+		std::string                           sceneID;
+		std::chrono::steady_clock::time_point start;
+	};
+	std::mutex                                    g_animWatchLock;
+	std::unordered_map<std::uint32_t, AnimWatch>  g_animWatch;
+
+	void WatchAnimEvents(const std::vector<std::uint32_t>& a_actors, const std::string& a_sceneID)
+	{
+		std::scoped_lock lock(g_animWatchLock);
+		const auto now = std::chrono::steady_clock::now();
+		for (const auto id : a_actors) {
+			g_animWatch[id] = { a_sceneID, now };
+		}
+	}
+
+	struct AnimEventHook
+	{
+		using func_t = RE::BSEventNotifyControl (*)(RE::BSTEventSink<RE::BSAnimationGraphEvent>*, const RE::BSAnimationGraphEvent&, RE::BSTEventSource<RE::BSAnimationGraphEvent>*);
+		static inline func_t originalActor = nullptr;
+		static inline func_t originalPlayer = nullptr;
+
+		static void Log(RE::BSTEventSink<RE::BSAnimationGraphEvent>* a_this, const RE::BSAnimationGraphEvent& a_event)
+		{
+			const auto ref = reinterpret_cast<RE::TESObjectREFR*>(reinterpret_cast<std::uintptr_t>(a_this) - 0x38);
+			const auto id = ref->GetFormID();
+			std::string sceneID;
+			float       seconds = 0.0F;
+			{
+				std::scoped_lock lock(g_animWatchLock);
+				const auto it = g_animWatch.find(id);
+				if (it == g_animWatch.end()) {
+					return;
+				}
+				seconds = std::chrono::duration<float>(std::chrono::steady_clock::now() - it->second.start).count();
+				if (seconds > 5.0F) {
+					g_animWatch.erase(it);
+					return;
+				}
+				sceneID = it->second.sceneID;
+			}
+			REX::INFO("AnimEvent: {:08X} +{:.2f}s in \"{}\": \"{}\" ({})", id, seconds, sceneID,
+				a_event.tag.c_str(), a_event.payload.c_str());
+		}
+
+		static RE::BSEventNotifyControl ThunkActor(RE::BSTEventSink<RE::BSAnimationGraphEvent>* a_this, const RE::BSAnimationGraphEvent& a_event, RE::BSTEventSource<RE::BSAnimationGraphEvent>* a_source)
+		{
+			Log(a_this, a_event);
+			return originalActor(a_this, a_event, a_source);
+		}
+
+		static RE::BSEventNotifyControl ThunkPlayer(RE::BSTEventSink<RE::BSAnimationGraphEvent>* a_this, const RE::BSAnimationGraphEvent& a_event, RE::BSTEventSource<RE::BSAnimationGraphEvent>* a_source)
+		{
+			Log(a_this, a_event);
+			return originalPlayer(a_this, a_event, a_source);
+		}
+
+		// After game data loads (the player exists then): checks the player's
+		// own vtable pointer at +0x38 against the one to patch first, so a
+		// wrong table index can't patch the wrong function.
+		static void Install()
+		{
+			static bool installed = false;
+			if (installed) {
+				return;
+			}
+			installed = true;
+			REL::Relocation<std::uintptr_t> check{ RE::VTABLE::PlayerCharacter[3] };
+			const auto player = RE::PlayerCharacter::GetSingleton();
+			const auto actual = player ? *reinterpret_cast<std::uintptr_t*>(reinterpret_cast<std::uintptr_t>(player) + 0x38) : 0;
+			if (actual != check.address()) {
+				REX::WARN("Animation event log: vtable check failed ({:X} vs {:X}), not installed", actual, check.address());
+				return;
+			}
+			REL::Relocation<std::uintptr_t> actorVtbl{ RE::VTABLE::Actor[3] };
+			originalActor = reinterpret_cast<func_t>(actorVtbl.write_vfunc(1, ThunkActor));
+			REL::Relocation<std::uintptr_t> playerVtbl{ RE::VTABLE::PlayerCharacter[3] };
+			originalPlayer = reinterpret_cast<func_t>(playerVtbl.write_vfunc(1, ThunkPlayer));
+			REX::INFO("Animation event log hook installed");
+		}
+	};
+
 	bool RegisterPapyrusFunctions(RE::BSScript::IVirtualMachine* a_vm)
 	{
 		g_vm = a_vm;
@@ -1847,6 +1941,7 @@ namespace
 		case F4SE::MessagingInterface::kGameLoaded:
 			{
 				REX::INFO("kGameLoaded");
+				AnimEventHook::Install();
 				static bool menuRegistered = false;
 				if (!menuRegistered) {
 					if (const auto ui = RE::UI::GetSingleton()) {
