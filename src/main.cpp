@@ -42,7 +42,7 @@ namespace
 		std::string   hudTheme = "Color";     // file name in Data\Interface\4Stim\Themes\, without .json
 		bool          hudEnabled = true;
 		bool          logAnimEvents = false;  // log scene actors' animation events (for authors)
-		float         transitionLead = 0.4F;  // seconds before a transition's length to move on (see 4Stim.ini)
+		float         transitionLead = -0.3F;  // seconds before a transition's length to move on (see 4Stim.ini)
 	};
 	Settings g_settings;
 
@@ -100,7 +100,7 @@ namespace
 				} else if (key == "bloganimevents") {
 					g_settings.logAnimEvents = std::stoi(value) != 0;
 				} else if (key == "ftransitionlead") {
-					g_settings.transitionLead = std::max(0.0F, std::stof(value));
+					g_settings.transitionLead = std::clamp(std::stof(value), -2.0F, 5.0F);
 				}
 			} catch (...) {
 				REX::WARN("Settings: couldn't read \"{}\" for {}", value, key);
@@ -315,10 +315,15 @@ namespace
 			const auto& entry = a_scene.sequence->entries[a_scene.step];
 			a_scene.remaining = entry.duration;
 		} else if (const auto scene = SceneRegistry::Find(a_scene.sceneID); scene && scene->IsTransition()) {
-			// A little early: the animation, started with a blend, can end
-			// and restart just before its nominal length, which shows as a
-			// jump. The destination's blend covers the cut instead.
-			a_scene.remaining = std::max(scene->length - g_settings.transitionLead, scene->length * 0.5F);
+			// A positive lead moves on a little before the nominal length. A
+			// negative one waits past it, so the clip's own end ("IdleStop",
+			// see AnimEventHook) moves the scene on and the timer is only a
+			// fallback: switching idles while the transition clip is still
+			// the active one makes the game blend from the clip's first
+			// frames, which shows as a bounce back.
+			a_scene.remaining = g_settings.transitionLead >= 0.0F ?
+			                        std::max(scene->length - g_settings.transitionLead, scene->length * 0.5F) :
+			                        scene->length - g_settings.transitionLead;
 		}
 		if (a_scene.remaining >= 0.0F) {
 			StartAutoplayTicks();
@@ -1856,7 +1861,7 @@ namespace
 					if (!scene || !scene->IsTransition()) {
 						return;
 					}
-					REX::INFO("Transition \"{}\": clip ended ({:.2f}s early by the timer), moving on now", scene->id, active->remaining);
+					REX::INFO("Transition \"{}\": clip ended ({:.2f}s before the timer), moving on now", scene->id, active->remaining);
 					active->remaining = -1.0F;
 					AdvanceAutoplay(*active);
 				});
