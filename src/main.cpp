@@ -6,6 +6,7 @@
 #include <fstream>
 #include <unordered_map>
 
+#include "Actions.h"
 #include "Bridge.h"
 #include "HUD.h"
 #include "SceneEvents.h"
@@ -1159,6 +1160,107 @@ namespace
 		return scene ? static_cast<std::int32_t>(scene->actors.size()) : 0;
 	}
 
+	// ---- Actions (docs/ACTIONS.md) ----
+
+	bool SceneHasAction(std::monostate, std::string a_sceneID, std::string a_type)
+	{
+		const auto scene = SceneRegistry::Find(a_sceneID);
+		return scene && scene->HasAction(a_type);
+	}
+
+	bool SceneHasActionTag(std::monostate, std::string a_sceneID, std::string a_tag)
+	{
+		const auto scene = SceneRegistry::Find(a_sceneID);
+		return scene && scene->HasActionTag(a_tag);
+	}
+
+	std::int32_t GetSceneActionCount(std::monostate, std::string a_sceneID)
+	{
+		const auto scene = SceneRegistry::Find(a_sceneID);
+		return scene ? static_cast<std::int32_t>(scene->actions.size()) : 0;
+	}
+
+	// The first action of a_type (id, alias, or "" for any) with these roles
+	// (-1: any); its index, or -1.
+	std::int32_t FindSceneAction(std::monostate, std::string a_sceneID, std::string a_type, std::int32_t a_actor, std::int32_t a_target)
+	{
+		const auto scene = SceneRegistry::Find(a_sceneID);
+		if (!scene) {
+			return -1;
+		}
+		const auto type = a_type.empty() ? nullptr : Actions::Find(a_type);
+		if (!a_type.empty() && !type) {
+			return -1;
+		}
+		for (std::size_t i = 0; i < scene->actions.size(); ++i) {
+			const auto& action = scene->actions[i];
+			if ((!type || action.type->id == type->id) &&
+				(a_actor < 0 || action.actor == static_cast<std::size_t>(a_actor)) &&
+				(a_target < 0 || action.target == static_cast<std::size_t>(a_target))) {
+				return static_cast<std::int32_t>(i);
+			}
+		}
+		return -1;
+	}
+
+	namespace
+	{
+		const SceneRegistry::SceneAction* SceneActionAt(const SceneRegistry::Scene* a_scene, std::int32_t a_index)
+		{
+			return a_scene && a_index >= 0 && static_cast<std::size_t>(a_index) < a_scene->actions.size() ? &a_scene->actions[static_cast<std::size_t>(a_index)] : nullptr;
+		}
+	}
+
+	std::string GetSceneActionType(std::monostate, std::string a_sceneID, std::int32_t a_index)
+	{
+		const auto scene = SceneRegistry::Find(a_sceneID);
+		const auto action = SceneActionAt(scene.get(), a_index);
+		return action ? action->type->id : std::string{};
+	}
+
+	// a_which: 0 actor, 1 target, 2 performer. The role index, or -1.
+	std::int32_t GetSceneActionRole(std::monostate, std::string a_sceneID, std::int32_t a_index, std::int32_t a_which)
+	{
+		const auto scene = SceneRegistry::Find(a_sceneID);
+		const auto action = SceneActionAt(scene.get(), a_index);
+		if (!action) {
+			return -1;
+		}
+		switch (a_which) {
+		case 0:
+			return static_cast<std::int32_t>(action->actor);
+		case 1:
+			return static_cast<std::int32_t>(action->target);
+		case 2:
+			return static_cast<std::int32_t>(action->performer);
+		default:
+			return -1;
+		}
+	}
+
+	std::vector<std::string> GetActionTypes(std::monostate)
+	{
+		return Actions::List();
+	}
+
+	std::string GetActionName(std::monostate, std::string a_type)
+	{
+		const auto type = Actions::Find(a_type);
+		return type ? type->name : std::string{};
+	}
+
+	std::vector<std::string> GetActionTags(std::monostate, std::string a_type)
+	{
+		const auto type = Actions::Find(a_type);
+		return type ? type->tags : std::vector<std::string>{};
+	}
+
+	bool ActionHasTag(std::monostate, std::string a_type, std::string a_tag)
+	{
+		const auto type = Actions::Find(a_type);
+		return type && type->HasTag(a_tag);
+	}
+
 	// Re-reads all scene files (handy while authoring). Returns the count loaded.
 	std::int32_t ReloadScenes(std::monostate)
 	{
@@ -1973,7 +2075,7 @@ namespace
 				Scaleform::GFx::Value id, name, tags;
 				id = scene.id.c_str();
 				name = scene.name.c_str();
-				tags = scene.tags.c_str();
+				tags = scene.actions.empty() ? scene.tags.c_str() : scene.actions.c_str();  // what happens in it, else its tags
 				entry.SetMember("id"sv, id);
 				entry.SetMember("name"sv, name);
 				entry.SetMember("tags"sv, tags);
@@ -2592,6 +2694,16 @@ namespace
 		a_vm->BindNativeMethod(SCRIPT_NAME, "StartSequenceOnScene"sv, StartSequenceOnSceneNative);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "StopSequence"sv, StopSequenceNative);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "ReloadScenes"sv, ReloadScenes);
+		a_vm->BindNativeMethod(SCRIPT_NAME, "SceneHasAction"sv, SceneHasAction);
+		a_vm->BindNativeMethod(SCRIPT_NAME, "SceneHasActionTag"sv, SceneHasActionTag);
+		a_vm->BindNativeMethod(SCRIPT_NAME, "GetSceneActionCount"sv, GetSceneActionCount);
+		a_vm->BindNativeMethod(SCRIPT_NAME, "FindSceneAction"sv, FindSceneAction);
+		a_vm->BindNativeMethod(SCRIPT_NAME, "GetSceneActionType"sv, GetSceneActionType);
+		a_vm->BindNativeMethod(SCRIPT_NAME, "GetSceneActionRole"sv, GetSceneActionRole);
+		a_vm->BindNativeMethod(SCRIPT_NAME, "GetActionTypes"sv, GetActionTypes);
+		a_vm->BindNativeMethod(SCRIPT_NAME, "GetActionName"sv, GetActionName);
+		a_vm->BindNativeMethod(SCRIPT_NAME, "GetActionTags"sv, GetActionTags);
+		a_vm->BindNativeMethod(SCRIPT_NAME, "ActionHasTag"sv, ActionHasTag);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "StopPair"sv, StopPair);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "SaveStartView"sv, SaveStartView);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "OpenScenePicker"sv, OpenScenePicker);

@@ -1,0 +1,1774 @@
+{
+	"_comment": "Action types, adapted from OStim NG's actions (GPL-3.0, github.com/VersuchDrei/OStimNG). See docs/ACTIONS.md.",
+	"actions": [
+		{
+			"id": "analfingering",
+			"name": "Anal fingering",
+			"aliases": [
+				"fingeringanus",
+				"fingeranus"
+			],
+			"tags": [
+				"analstimulation",
+				"fingering",
+				"sexual"
+			],
+			"actor": {
+				"stimulation": 0.1,
+				"maxStimulation": 50,
+				"requirements": [
+					"hand"
+				]
+			},
+			"target": {
+				"stimulation": 0.2,
+				"requirements": [
+					"anus"
+				]
+			}
+		},
+		{
+			"id": "analfisting",
+			"name": "Anal fisting",
+			"tags": [
+				"analpenetration",
+				"analstimulation",
+				"fisting",
+				"sexual"
+			],
+			"actor": {
+				"stimulation": 0.1,
+				"maxStimulation": 50,
+				"requirements": [
+					"hand"
+				]
+			},
+			"target": {
+				"stimulation": 0.2,
+				"requirements": [
+					"anus"
+				]
+			}
+		},
+		{
+			"id": "anallicking",
+			"name": "Anal licking",
+			"aliases": [
+				"lickanus",
+				"lickinganus"
+			],
+			"tags": [
+				"analstimulation",
+				"anilingus",
+				"oral",
+				"sexual"
+			],
+			"actor": {
+				"stimulation": 0.1,
+				"maxStimulation": 50,
+				"requirements": [
+					"mouth"
+				]
+			},
+			"target": {
+				"stimulation": 0.3,
+				"requirements": [
+					"anus"
+				]
+			}
+		},
+		{
+			"id": "analsex",
+			"name": "Anal sex",
+			"aliases": [
+				"anal"
+			],
+			"tags": [
+				"analpenetration",
+				"analstimulation",
+				"intercourse",
+				"sexual"
+			],
+			"actor": {
+				"stimulation": 1.0,
+				"requirements": [
+					"penis"
+				]
+			},
+			"target": {
+				"stimulation": 0.3,
+				"requirements": [
+					"anus"
+				]
+			}
+		},
+		{
+			"id": "analtailsex",
+			"name": "Anal tail sex",
+			"tags": [
+				"intercourse",
+				"sexual",
+				"analpenetration",
+				"analstimulation"
+			],
+			"actor": {
+				"stimulation": 0.1,
+				"maxStimulation": 50,
+				"requirements": [
+					"tail"
+				]
+			},
+			"target": {
+				"stimulation": 0.3,
+				"requirements": [
+					"anus"
+				]
+			}
+		},
+		{
+			"id": "analtoying",
+			"name": "Anal toying",
+			"tags": [
+				"analpenetration",
+				"analstimulation",
+				"sexual",
+				"toying"
+			],
+			"actor": {
+				"stimulation": 0.1,
+				"maxStimulation": 75
+			},
+			"target": {
+				"stimulation": 0.3,
+				"requirements": [
+					"anus"
+				]
+			}
+		},
+		{
+			"id": "bathing",
+			"name": "Bathing",
+			"aliases": [
+				"bathe"
+			]
+		},
+		{
+			"id": "blowjob",
+			"name": "Blowjob",
+			"aliases": [
+				"bj",
+				"bjob",
+				"blowj",
+				"suckingdick",
+				"suckingpenis",
+				"suckdick",
+				"suckpenis"
+			],
+			"tags": [
+				"fellatio",
+				"oral",
+				"penilestimulation",
+				"sexual"
+			],
+			"actor": {
+				"stimulation": 0.1,
+				"maxStimulation": 75,
+				"requirements": [
+					"mouth"
+				]
+			},
+			"target": {
+				"stimulation": 1.4,
+				"requirements": [
+					"penis"
+				]
+			}
+		},
+		{
+			"id": "boobjob",
+			"name": "Boobjob",
+			"aliases": [
+				"boj",
+				"boobj",
+				"breastj",
+				"breastjob",
+				"titj",
+				"titjob"
+			],
+			"tags": [
+				"penilestimulation",
+				"sexual"
+			],
+			"actor": {
+				"stimulation": 0.1,
+				"maxStimulation": 50,
+				"requirements": [
+					"breast"
+				]
+			},
+			"target": {
+				"stimulation": 0.8,
+				"requirements": [
+					"penis"
+				]
+			}
+		},
+		{
+			"id": "breastslapping",
+			"name": "Breast slapping",
+			"aliases": [
+				"slapbreast"
+			],
+			"tags": [
+				"sexual"
+			],
+			"actor": {
+				"requirements": [
+					"hand"
+				]
+			}
+		},
+		{
+			"id": "breastsliding",
+			"name": "Breast sliding",
+			"aliases": [
+				"breastmassage",
+				"boobmassage",
+				"breastslide"
+			],
+			"tags": [
+				"sensual"
+			],
+			"actor": {
+				"stimulation": 0.1,
+				"maxStimulation": 50,
+				"requirements": [
+					"breast"
+				]
+			},
+			"target": {
+				"stimulation": 0.1,
+				"maxStimulation": 50
+			}
+		},
+		{
+			"id": "breastsmothering",
+			"name": "Breast smothering",
+			"aliases": [
+				"boobsmothering",
+				"smothering"
+			],
+			"tags": [
+				"sensual"
+			],
+			"actor": {
+				"stimulation": 0.1,
+				"maxStimulation": 50,
+				"requirements": [
+					"breast"
+				]
+			},
+			"target": {
+				"stimulation": 0.3,
+				"maxStimulation": 75
+			}
+		},
+		{
+			"id": "buttjob",
+			"name": "Buttjob",
+			"aliases": [
+				"buj",
+				"buttj"
+			],
+			"tags": [
+				"penilestimulation",
+				"sexual"
+			],
+			"actor": {
+				"stimulation": 0.1,
+				"maxStimulation": 50
+			},
+			"target": {
+				"stimulation": 0.8,
+				"requirements": [
+					"penis"
+				]
+			}
+		},
+		{
+			"id": "buttsmothering",
+			"name": "Butt smothering",
+			"aliases": [
+				"bootysmothering"
+			],
+			"tags": [
+				"sensual"
+			],
+			"actor": {
+				"stimulation": 0.1,
+				"maxStimulation": 50,
+				"requirements": [
+					"breast"
+				]
+			},
+			"target": {
+				"stimulation": 0.3,
+				"maxStimulation": 75
+			}
+		},
+		{
+			"id": "choking",
+			"name": "Choking",
+			"aliases": [
+				"choke"
+			],
+			"actor": {
+				"requirements": [
+					"hand"
+				]
+			},
+			"target": {
+				"stimulation": 0.25,
+				"maxStimulation": 65
+			}
+		},
+		{
+			"id": "cuddling",
+			"name": "Cuddling",
+			"aliases": [
+				"cuddle"
+			],
+			"tags": [
+				"sensual"
+			]
+		},
+		{
+			"id": "cumonbutt",
+			"name": "Cum on butt",
+			"tags": [
+				"cumshot",
+				"sexual"
+			],
+			"actor": {
+				"requirements": [
+					"penis"
+				]
+			}
+		},
+		{
+			"id": "cumonchest",
+			"name": "Cum on chest",
+			"tags": [
+				"cumshot",
+				"sexual"
+			],
+			"actor": {
+				"requirements": [
+					"penis"
+				]
+			}
+		},
+		{
+			"id": "cumonvulva",
+			"name": "Cum on vulva",
+			"tags": [
+				"cumshot",
+				"sexual"
+			],
+			"actor": {
+				"requirements": [
+					"penis"
+				]
+			},
+			"target": {
+				"requirements": [
+					"vagina"
+				]
+			}
+		},
+		{
+			"id": "dancing",
+			"name": "Dancing"
+		},
+		{
+			"id": "deepthroating",
+			"name": "Deepthroating",
+			"aliases": [
+				"deepthroat"
+			],
+			"tags": [
+				"fellatio",
+				"oral",
+				"penilestimulation",
+				"sexual"
+			],
+			"actor": {
+				"stimulation": 0.1,
+				"maxStimulation": 75,
+				"requirements": [
+					"mouth"
+				]
+			},
+			"target": {
+				"stimulation": 1.4,
+				"requirements": [
+					"penis"
+				]
+			}
+		},
+		{
+			"id": "default",
+			"name": "Default"
+		},
+		{
+			"id": "facial",
+			"name": "Facial",
+			"aliases": [
+				"cumonface"
+			],
+			"tags": [
+				"cumshot",
+				"sexual"
+			],
+			"actor": {
+				"requirements": [
+					"penis"
+				]
+			}
+		},
+		{
+			"id": "femalemasturbation",
+			"name": "Female masturbation",
+			"tags": [
+				"sexual"
+			],
+			"actor": {
+				"stimulation": 0.0,
+				"requirements": [
+					"hand"
+				]
+			},
+			"target": {
+				"stimulation": 0.9,
+				"requirements": [
+					"vagina"
+				]
+			}
+		},
+		{
+			"id": "footjob",
+			"name": "Footjob",
+			"aliases": [
+				"feetj",
+				"feetjob",
+				"fj",
+				"footj"
+			],
+			"tags": [
+				"penilestimulation",
+				"sexual"
+			],
+			"actor": {
+				"stimulation": 0.1,
+				"maxStimulation": 50,
+				"requirements": [
+					"foot"
+				]
+			},
+			"target": {
+				"stimulation": 0.9,
+				"requirements": [
+					"penis"
+				]
+			}
+		},
+		{
+			"id": "frenchkissing",
+			"name": "French kissing",
+			"aliases": [
+				"frenchkiss"
+			],
+			"tags": [
+				"romantic",
+				"sensual"
+			],
+			"actor": {
+				"stimulation": 0.1,
+				"maxStimulation": 50,
+				"requirements": [
+					"mouth"
+				]
+			},
+			"target": {
+				"stimulation": 0.1,
+				"maxStimulation": 50,
+				"requirements": [
+					"mouth"
+				]
+			}
+		},
+		{
+			"id": "grindingfoot",
+			"name": "Grinding foot",
+			"aliases": [
+				"grindfoot"
+			],
+			"tags": [
+				"grinding",
+				"sexual"
+			],
+			"actor": {
+				"stimulation": 0.6,
+				"requirements": [
+					"vagina"
+				]
+			},
+			"target": {
+				"stimulation": 0.2,
+				"maxStimulation": 75
+			}
+		},
+		{
+			"id": "grindingobject",
+			"name": "Grinding object",
+			"tags": [
+				"grinding",
+				"sexual"
+			],
+			"actor": {
+				"stimulation": 0.6,
+				"requirements": [
+					"vagina"
+				]
+			}
+		},
+		{
+			"id": "grindingpenis",
+			"name": "Grinding penis",
+			"aliases": [
+				"grinddick",
+				"grindingdick",
+				"grindpenis"
+			],
+			"tags": [
+				"grinding",
+				"penilestimulation",
+				"sexual"
+			],
+			"actor": {
+				"stimulation": 0.75,
+				"requirements": [
+					"vagina"
+				]
+			},
+			"target": {
+				"stimulation": 0.75,
+				"requirements": [
+					"penis"
+				]
+			}
+		},
+		{
+			"id": "grindingthigh",
+			"name": "Grinding thigh",
+			"aliases": [
+				"grindthigh"
+			],
+			"tags": [
+				"sexual"
+			],
+			"actor": {
+				"stimulation": 0.6,
+				"requirements": [
+					"vagina"
+				]
+			},
+			"target": {
+				"stimulation": 0.2,
+				"maxStimulation": 75
+			}
+		},
+		{
+			"id": "gropingbreast",
+			"name": "Groping breast",
+			"aliases": [
+				"gropeboob",
+				"gropeboobs",
+				"gropebreast",
+				"gropebreasts",
+				"gropetit",
+				"gropetits",
+				"gropingboob",
+				"gropingboobs",
+				"gropingbreasts",
+				"gropingtit",
+				"gropingtits",
+				"holdboob",
+				"holdboobs",
+				"holdbreast",
+				"holdbreasts",
+				"holdingboob",
+				"holdingboobs",
+				"holdingbreast",
+				"holdingbreasts",
+				"holdingtit",
+				"holdingtits",
+				"holdtit",
+				"holdtits"
+			],
+			"tags": [
+				"sensual"
+			],
+			"actor": {
+				"stimulation": 0.1,
+				"maxStimulation": 50,
+				"requirements": [
+					"hand"
+				]
+			},
+			"target": {
+				"stimulation": 0.1,
+				"maxStimulation": 50,
+				"requirements": [
+					"breast"
+				]
+			}
+		},
+		{
+			"id": "gropingbutt",
+			"name": "Groping butt",
+			"aliases": [
+				"gropeass",
+				"gropebooty",
+				"gropebutt",
+				"gropingass",
+				"gropingbooty",
+				"holdass",
+				"holdbooty",
+				"holdbutt",
+				"holdingass",
+				"holdingbooty",
+				"holdingbutt"
+			],
+			"tags": [
+				"sensual"
+			],
+			"actor": {
+				"stimulation": 0.1,
+				"maxStimulation": 50,
+				"requirements": [
+					"hand"
+				]
+			},
+			"target": {
+				"stimulation": 0.1,
+				"maxStimulation": 50
+			}
+		},
+		{
+			"id": "gropingtesticles",
+			"name": "Groping testicles",
+			"aliases": [
+				"gropeballs",
+				"gropeballsack",
+				"gropetesticle",
+				"gropetesticles",
+				"gropingballs",
+				"gropingballsack",
+				"gropringtesticle",
+				"holdballs",
+				"holdballsack",
+				"holdingballs",
+				"holdingballsack",
+				"holdingtesticle",
+				"holdingtesticles",
+				"holdtesticle",
+				"holdtesticles"
+			],
+			"tags": [
+				"sexual"
+			],
+			"actor": {
+				"stimulation": 0.1,
+				"maxStimulation": 50,
+				"requirements": [
+					"hand"
+				]
+			},
+			"target": {
+				"stimulation": 0.4,
+				"maxStimulation": 50,
+				"requirements": [
+					"testicles"
+				]
+			}
+		},
+		{
+			"id": "handjob",
+			"name": "Handjob",
+			"aliases": [
+				"handj",
+				"hj"
+			],
+			"tags": [
+				"penilestimulation",
+				"sexual"
+			],
+			"actor": {
+				"stimulation": 0.1,
+				"maxStimulation": 50,
+				"requirements": [
+					"hand"
+				]
+			},
+			"target": {
+				"stimulation": 0.9,
+				"requirements": [
+					"penis"
+				]
+			}
+		},
+		{
+			"id": "holdingarm",
+			"name": "Holding arm",
+			"aliases": [
+				"holdarm",
+				"holdarms",
+				"holdingarms"
+			],
+			"actor": {
+				"requirements": [
+					"hand"
+				]
+			}
+		},
+		{
+			"id": "holdingbody",
+			"name": "Holding body",
+			"aliases": [
+				"holdbody"
+			],
+			"actor": {
+				"requirements": [
+					"hand"
+				]
+			}
+		},
+		{
+			"id": "holdingchin",
+			"name": "Holding chin",
+			"aliases": [
+				"holdchin"
+			],
+			"tags": [
+				"romantic"
+			],
+			"actor": {
+				"requirements": [
+					"hand"
+				]
+			}
+		},
+		{
+			"id": "holdingfoot",
+			"name": "Holding foot",
+			"aliases": [
+				"holdfeet",
+				"holdfoot",
+				"holdingfeet"
+			],
+			"actor": {
+				"requirements": [
+					"hand"
+				]
+			},
+			"target": {
+				"requirements": [
+					"foot"
+				]
+			}
+		},
+		{
+			"id": "holdinghand",
+			"name": "Holding hand",
+			"aliases": [
+				"holdhand",
+				"holdhands",
+				"holdinghands"
+			],
+			"tags": [
+				"romantic"
+			],
+			"actor": {
+				"requirements": [
+					"hand"
+				]
+			},
+			"target": {
+				"requirements": [
+					"hand"
+				]
+			}
+		},
+		{
+			"id": "holdinghead",
+			"name": "Holding head",
+			"aliases": [
+				"holdhead"
+			],
+			"actor": {
+				"requirements": [
+					"hand"
+				]
+			}
+		},
+		{
+			"id": "holdinghip",
+			"name": "Holding hip",
+			"aliases": [
+				"holdhip",
+				"holdhips",
+				"holdinghips"
+			],
+			"tags": [
+				"romantic"
+			],
+			"actor": {
+				"requirements": [
+					"hand"
+				]
+			}
+		},
+		{
+			"id": "holdingleg",
+			"name": "Holding leg",
+			"aliases": [
+				"holdleg",
+				"holdlegs",
+				"holdinglegs"
+			],
+			"actor": {
+				"requirements": [
+					"hand"
+				]
+			}
+		},
+		{
+			"id": "holdingneck",
+			"name": "Holding neck",
+			"aliases": [
+				"holdneck"
+			],
+			"actor": {
+				"requirements": [
+					"hand"
+				]
+			},
+			"target": {
+				"stimulation": 0.1,
+				"maxStimulation": 50
+			}
+		},
+		{
+			"id": "holdingthigh",
+			"name": "Holding thigh",
+			"aliases": [
+				"holdthigh",
+				"holdthighs",
+				"holdingthighs"
+			],
+			"tags": [
+				"romantic"
+			],
+			"actor": {
+				"requirements": [
+					"hand"
+				]
+			}
+		},
+		{
+			"id": "hugging",
+			"name": "Hugging",
+			"aliases": [
+				"hug"
+			],
+			"tags": [
+				"sensual"
+			]
+		},
+		{
+			"id": "kissing",
+			"name": "Kissing",
+			"aliases": [
+				"kiss"
+			],
+			"tags": [
+				"romantic",
+				"sensual"
+			],
+			"actor": {
+				"stimulation": 0.1,
+				"maxStimulation": 50,
+				"requirements": [
+					"mouth"
+				]
+			},
+			"target": {
+				"stimulation": 0.1,
+				"maxStimulation": 50,
+				"requirements": [
+					"mouth"
+				]
+			}
+		},
+		{
+			"id": "kissingcheek",
+			"name": "Kissing cheek",
+			"aliases": [
+				"kisscheek",
+				"kisscheeks",
+				"kissingcheeks"
+			],
+			"tags": [
+				"romantic",
+				"sensual"
+			],
+			"actor": {
+				"stimulation": 0.1,
+				"maxStimulation": 25,
+				"requirements": [
+					"mouth"
+				]
+			},
+			"target": {
+				"stimulation": 0.1,
+				"maxStimulation": 25
+			}
+		},
+		{
+			"id": "kissingfoot",
+			"name": "Kissing foot",
+			"aliases": [
+				"kissfeet",
+				"kissfoot",
+				"kissingfeet"
+			],
+			"tags": [
+				"sensual"
+			],
+			"actor": {
+				"stimulation": 0.1,
+				"maxStimulation": 50,
+				"requirements": [
+					"mouth"
+				]
+			},
+			"target": {
+				"stimulation": 0.1,
+				"maxStimulation": 50,
+				"requirements": [
+					"foot"
+				]
+			}
+		},
+		{
+			"id": "kissinghand",
+			"name": "Kissing hand",
+			"aliases": [
+				"kisshand",
+				"kisshands",
+				"kissinghands"
+			],
+			"tags": [
+				"romantic",
+				"sensual"
+			],
+			"actor": {
+				"stimulation": 0.1,
+				"maxStimulation": 25,
+				"requirements": [
+					"mouth"
+				]
+			},
+			"target": {
+				"stimulation": 0.1,
+				"maxStimulation": 25
+			}
+		},
+		{
+			"id": "kissingneck",
+			"name": "Kissing neck",
+			"aliases": [
+				"kissneck"
+			],
+			"tags": [
+				"romantic",
+				"sensual"
+			],
+			"actor": {
+				"stimulation": 0.1,
+				"maxStimulation": 50,
+				"requirements": [
+					"mouth"
+				]
+			},
+			"target": {
+				"stimulation": 0.1,
+				"maxStimulation": 50
+			}
+		},
+		{
+			"id": "leglocking",
+			"name": "Leg locking",
+			"aliases": [
+				"legclench",
+				"legclenching",
+				"leglock"
+			]
+		},
+		{
+			"id": "lickingnipple",
+			"name": "Licking nipple",
+			"aliases": [
+				"licknipple",
+				"licknipples",
+				"lickingnipples"
+			],
+			"tags": [
+				"licking",
+				"nipplestimulation",
+				"oral",
+				"oralnipplestimulation",
+				"sexual"
+			],
+			"actor": {
+				"stimulation": 0.1,
+				"maxStimulation": 50,
+				"requirements": [
+					"mouth"
+				]
+			},
+			"target": {
+				"stimulation": 0.6,
+				"requirements": [
+					"nipple"
+				]
+			}
+		},
+		{
+			"id": "malemasturbation",
+			"name": "Male masturbation",
+			"tags": [
+				"sexual"
+			],
+			"actor": {
+				"stimulation": 0.0,
+				"requirements": [
+					"hand"
+				]
+			},
+			"target": {
+				"stimulation": 0.9,
+				"requirements": [
+					"penis"
+				]
+			}
+		},
+		{
+			"id": "massaging",
+			"name": "Massaging",
+			"aliases": [
+				"massage"
+			],
+			"tags": [
+				"sensual"
+			],
+			"actor": {
+				"requirements": [
+					"hand"
+				]
+			},
+			"target": {
+				"stimulation": 0.1,
+				"maxStimulation": 50
+			}
+		},
+		{
+			"id": "massagingtail",
+			"name": "Massaging tail",
+			"aliases": [
+				"massage"
+			],
+			"tags": [
+				"sensual"
+			],
+			"target": {
+				"stimulation": 0.1,
+				"maxStimulation": 50
+			}
+		},
+		{
+			"id": "mounting",
+			"name": "Mounting",
+			"aliases": [
+				"mount",
+				"ride",
+				"riding"
+			]
+		},
+		{
+			"id": "oralfingering",
+			"name": "Oral fingering",
+			"tags": [
+				"sensual"
+			],
+			"actor": {
+				"requirements": [
+					"hand"
+				]
+			},
+			"target": {
+				"stimulation": 0.1,
+				"maxStimulation": 50,
+				"requirements": [
+					"mouth"
+				]
+			}
+		},
+		{
+			"id": "oraltoying",
+			"name": "Oral toying",
+			"tags": [
+				"sexual",
+				"toying"
+			],
+			"actor": {
+				"stimulation": 0.1,
+				"maxStimulation": 75
+			},
+			"target": {
+				"stimulation": 0.1,
+				"maxStimulation": 75,
+				"requirements": [
+					"mouth"
+				]
+			}
+		},
+		{
+			"id": "pattinghead",
+			"name": "Patting head",
+			"aliases": [
+				"pathead"
+			],
+			"actor": {
+				"requirements": [
+					"hand"
+				]
+			}
+		},
+		{
+			"id": "penilelicking",
+			"name": "Penile licking",
+			"aliases": [
+				"lickdick",
+				"lickpenis",
+				"lickingdick",
+				"lickingpenis"
+			],
+			"tags": [
+				"fellatio",
+				"licking",
+				"oral",
+				"penilestimulation",
+				"sexual"
+			],
+			"actor": {
+				"stimulation": 0.1,
+				"maxStimulation": 50,
+				"requirements": [
+					"mouth"
+				]
+			},
+			"target": {
+				"stimulation": 1.4,
+				"requirements": [
+					"penis"
+				]
+			}
+		},
+		{
+			"id": "pullinghair",
+			"name": "Pulling hair",
+			"aliases": [
+				"pullhair"
+			],
+			"tags": [
+				"sensual"
+			],
+			"actor": {
+				"stimulation": 0.1,
+				"maxStimulation": 50,
+				"requirements": [
+					"hand"
+				]
+			},
+			"target": {
+				"stimulation": 0.1,
+				"maxStimulation": 50
+			}
+		},
+		{
+			"id": "pullingtail",
+			"name": "Pulling tail",
+			"aliases": [
+				"pullhair"
+			],
+			"tags": [
+				"sensual"
+			],
+			"actor": {
+				"stimulation": 0.1,
+				"maxStimulation": 50,
+				"requirements": [
+					"hand"
+				]
+			},
+			"target": {
+				"stimulation": 0.1,
+				"maxStimulation": 50,
+				"requirements": [
+					"tail"
+				]
+			}
+		},
+		{
+			"id": "reading",
+			"name": "Reading",
+			"actor": {
+				"requirements": [
+					"hand"
+				]
+			}
+		},
+		{
+			"id": "rimjob",
+			"name": "Rimjob",
+			"aliases": [
+				"analeating",
+				"anilingus",
+				"rimj",
+				"rj"
+			],
+			"tags": [
+				"analstimulation",
+				"anilingus",
+				"oral",
+				"sexual"
+			],
+			"actor": {
+				"stimulation": 0.1,
+				"maxStimulation": 50,
+				"requirements": [
+					"mouth"
+				]
+			},
+			"target": {
+				"stimulation": 0.3,
+				"requirements": [
+					"anus"
+				]
+			}
+		},
+		{
+			"id": "rubbingpenisagainstface",
+			"name": "Rubbing penis against face",
+			"aliases": [
+				"rubdickagainstface",
+				"rubpenisagainstface",
+				"rubbingdickagainstface"
+			],
+			"tags": [
+				"sexual"
+			],
+			"actor": {
+				"stimulation": 0.75,
+				"requirements": [
+					"penis"
+				]
+			},
+			"target": {
+				"stimulation": 0.1,
+				"maxStimulation": 50
+			}
+		},
+		{
+			"id": "spanking",
+			"name": "Spanking",
+			"aliases": [
+				"spank",
+				"buttslapping"
+			],
+			"actor": {
+				"requirements": [
+					"hand"
+				]
+			}
+		},
+		{
+			"id": "spectating",
+			"name": "Spectating",
+			"aliases": [
+				"specate",
+				"watch",
+				"watching"
+			]
+		},
+		{
+			"id": "spooning",
+			"name": "Spooning",
+			"aliases": [
+				"spoon"
+			],
+			"tags": [
+				"sensual"
+			]
+		},
+		{
+			"id": "strokinghead",
+			"name": "Stroking head",
+			"aliases": [
+				"strokehead"
+			],
+			"actor": {
+				"requirements": [
+					"hand"
+				]
+			}
+		},
+		{
+			"id": "strokingtail",
+			"name": "Stroking tail",
+			"aliases": [
+				"stroketail"
+			],
+			"tags": [
+				"romantic"
+			],
+			"actor": {
+				"requirements": [
+					"hand"
+				]
+			},
+			"target": {
+				"requirements": [
+					"tail"
+				]
+			}
+		},
+		{
+			"id": "suckingnipple",
+			"name": "Sucking nipple",
+			"aliases": [
+				"sucknipple",
+				"sucknipples",
+				"suckingnipples"
+			],
+			"tags": [
+				"nipplestimulation",
+				"oral",
+				"oralnipplestimulation",
+				"sexual"
+			],
+			"actor": {
+				"stimulation": 0.1,
+				"maxStimulation": 50,
+				"requirements": [
+					"mouth"
+				]
+			},
+			"target": {
+				"stimulation": 0.6,
+				"requirements": [
+					"nipple"
+				]
+			}
+		},
+		{
+			"id": "tailjob",
+			"name": "Tailjob",
+			"aliases": [
+				"tailj",
+				"tj"
+			],
+			"tags": [
+				"penilestimulation",
+				"sexual"
+			],
+			"actor": {
+				"stimulation": 0.1,
+				"maxStimulation": 50,
+				"requirements": [
+					"tail"
+				]
+			},
+			"target": {
+				"stimulation": 0.9,
+				"requirements": [
+					"penis"
+				]
+			}
+		},
+		{
+			"id": "testicularlicking",
+			"name": "Testicular licking",
+			"aliases": [
+				"lickingscrotum",
+				"lickingtesticle",
+				"lickingtesticles",
+				"lickscrotum",
+				"licktesticle",
+				"licktesticles",
+				"testicularlicking"
+			],
+			"tags": [
+				"licking",
+				"oral",
+				"sexual"
+			],
+			"actor": {
+				"stimulation": 0.1,
+				"maxStimulation": 50,
+				"requirements": [
+					"mouth"
+				]
+			},
+			"target": {
+				"stimulation": 0.4,
+				"requirements": [
+					"testicles"
+				]
+			}
+		},
+		{
+			"id": "thighjob",
+			"name": "Thighjob",
+			"aliases": [
+				"thighj",
+				"tj"
+			],
+			"tags": [
+				"penilestimulation",
+				"sexual"
+			],
+			"actor": {
+				"stimulation": 0.2
+			},
+			"target": {
+				"stimulation": 0.9,
+				"requirements": [
+					"penis"
+				]
+			}
+		},
+		{
+			"id": "ticklingfoot",
+			"name": "Tickling foot",
+			"aliases": [
+				"ticklefeet",
+				"ticklefoot",
+				"ticklingfeet"
+			],
+			"actor": {
+				"requirements": [
+					"hand"
+				]
+			},
+			"target": {
+				"requirements": [
+					"foot"
+				]
+			}
+		},
+		{
+			"id": "tribbing",
+			"name": "Tribbing",
+			"tags": [
+				"vulvalstimulation",
+				"intercourse",
+				"sexual"
+			],
+			"actor": {
+				"stimulation": 1.0,
+				"requirements": [
+					"vagina"
+				]
+			},
+			"target": {
+				"stimulation": 1.0,
+				"requirements": [
+					"vagina"
+				]
+			}
+		},
+		{
+			"id": "vaginalfingering",
+			"name": "Vaginal fingering",
+			"aliases": [
+				"fingering",
+				"fingeringvagina",
+				"fingervagina"
+			],
+			"tags": [
+				"fingering",
+				"sexual",
+				"vaginalstimulation"
+			],
+			"actor": {
+				"stimulation": 0.1,
+				"maxStimulation": 50,
+				"requirements": [
+					"hand"
+				]
+			},
+			"target": {
+				"stimulation": 0.6,
+				"requirements": [
+					"vagina"
+				]
+			}
+		},
+		{
+			"id": "vaginalfisting",
+			"name": "Vaginal fisting",
+			"aliases": [
+				"fisting"
+			],
+			"tags": [
+				"fisting",
+				"sexual",
+				"vaginalpenetration",
+				"vaginalstimulation"
+			],
+			"actor": {
+				"stimulation": 0.1,
+				"maxStimulation": 50,
+				"requirements": [
+					"hand"
+				]
+			},
+			"target": {
+				"stimulation": 0.6,
+				"requirements": [
+					"vagina"
+				]
+			}
+		},
+		{
+			"id": "vaginalsex",
+			"name": "Vaginal sex",
+			"aliases": [
+				"sex"
+			],
+			"tags": [
+				"intercourse",
+				"sexual",
+				"vaginalpenetration",
+				"vaginalstimulation"
+			],
+			"actor": {
+				"stimulation": 1.0,
+				"requirements": [
+					"penis"
+				]
+			},
+			"target": {
+				"stimulation": 1.0,
+				"requirements": [
+					"vagina"
+				]
+			}
+		},
+		{
+			"id": "vaginaltailsex",
+			"name": "Vaginal tail sex",
+			"tags": [
+				"intercourse",
+				"sexual",
+				"vaginalpenetration",
+				"vaginalstimulation"
+			],
+			"actor": {
+				"stimulation": 0.1,
+				"maxStimulation": 50,
+				"requirements": [
+					"tail"
+				]
+			},
+			"target": {
+				"stimulation": 1.0,
+				"requirements": [
+					"vagina"
+				]
+			}
+		},
+		{
+			"id": "vaginaltoying",
+			"name": "Vaginal toying",
+			"aliases": [
+				"toying"
+			],
+			"tags": [
+				"sexual",
+				"toying",
+				"vaginalpenetration",
+				"vaginalstimulation"
+			],
+			"actor": {
+				"stimulation": 0.1,
+				"maxStimulation": 75
+			},
+			"target": {
+				"stimulation": 1.0,
+				"requirements": [
+					"vagina"
+				]
+			}
+		},
+		{
+			"id": "vampirebiting",
+			"name": "Vampire biting",
+			"aliases": [
+				"vampbite",
+				"vampbiting",
+				"vampdrain",
+				"vampfeed",
+				"vampfeeding",
+				"vampirebite",
+				"vampiredrain",
+				"vampirefeed",
+				"vampirefeeding",
+				"vampiricbite",
+				"vampiricdrain",
+				"vampiricfeed",
+				"vampiricfeeding"
+			],
+			"tags": [
+				"seductive",
+				"sensual"
+			],
+			"actor": {
+				"stimulation": 0.0,
+				"requirements": [
+					"mouth",
+					"vampire"
+				]
+			},
+			"target": {
+				"stimulation": 0.25,
+				"maxStimulation": 50
+			}
+		},
+		{
+			"id": "vulvaleating",
+			"name": "Vulval eating",
+			"aliases": [
+				"clitoraleating",
+				"cunnilingus",
+				"vaginaleating"
+			],
+			"tags": [
+				"vulvalstimulation",
+				"cunnilingus",
+				"oral",
+				"sexual"
+			],
+			"actor": {
+				"stimulation": 0.1,
+				"maxStimulation": 50,
+				"requirements": [
+					"mouth"
+				]
+			},
+			"target": {
+				"stimulation": 1.4,
+				"requirements": [
+					"vagina"
+				]
+			}
+		},
+		{
+			"id": "vulvallicking",
+			"name": "Vulval licking",
+			"aliases": [
+				"clitorallicking",
+				"lickclitoris",
+				"lickingclitoris",
+				"lickingpussy",
+				"lickingvagina",
+				"lickingvulva",
+				"lickpussy",
+				"lickvagina",
+				"lickvulva",
+				"vaginallicking"
+			],
+			"tags": [
+				"vulvalstimulation",
+				"cunnilingus",
+				"licking",
+				"oral",
+				"sexual"
+			],
+			"actor": {
+				"stimulation": 0.1,
+				"maxStimulation": 50,
+				"requirements": [
+					"mouth"
+				]
+			},
+			"target": {
+				"stimulation": 1.4,
+				"requirements": [
+					"vagina"
+				]
+			}
+		},
+		{
+			"id": "vulvalrubbing",
+			"name": "Vulval rubbing",
+			"aliases": [
+				"clitoralrubbing",
+				"rubbingclit",
+				"rubbingclitoris",
+				"rubclit",
+				"rubclitoris",
+				"rubbingvulva",
+				"rubvulva",
+				"vaginalrubbing"
+			],
+			"tags": [
+				"vulvalstimulation",
+				"sexual"
+			],
+			"actor": {
+				"stimulation": 0.1,
+				"maxStimulation": 50,
+				"requirements": [
+					"hand"
+				]
+			},
+			"target": {
+				"stimulation": 1.3,
+				"requirements": [
+					"vagina"
+				]
+			}
+		},
+		{
+			"id": "washing",
+			"name": "Washing",
+			"aliases": [
+				"wash"
+			]
+		}
+	]
+}

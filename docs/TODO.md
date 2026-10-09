@@ -19,7 +19,7 @@
 What OStim NG has that 4Stim doesn't yet, from a read of its source (October 2026). Roughly in priority order within each group.
 
 ### Core
-- **Actions.** Scene metadata for who does what to whom (actor / target / performer, e.g. vaginal sex, kissing), with action tags. Excitement, sounds, expressions and undressing all key off actions; 4Stim scenes only have free-form tags.
+- ~~**Actions.**~~ Done: action types in `Actions\*.json`, `actions` in scene files, requirements in role matching, Papyrus queries (docs/ACTIONS.md). The converter should copy OStim scenes' `actions` (the test pack's were backfilled from OStim's scene files).
 - **Excitement and climax.** Per-actor excitement from actions, decay, climax (count, climax animations, reactions), end the scene on player / male / female / all climax, excitement bars in the HUD, and an orgasm event.
 - **Auto mode.** Random navigation by stage (foreplay, main, pull-out), auto speed from excitement, min/max time per scene; for the player (toggle hotkey) and for NPC scenes. Needs `noRandomSelection` on scenes.
 - **Concurrent scenes (threads).** Several scenes at once, NPC-only scenes started by hotkey or script, all tracked natively (the claim registry). Today the HUD follows one focused scene.
@@ -35,8 +35,7 @@ What OStim NG has that 4Stim doesn't yet, from a read of its source (October 202
 - **Camera extras.** Freecam speed and FOV, first person after the scene, fades on start and on scene changes, screen shake.
 
 ### Actors and roles
-- **Equip objects.** Strap-ons (equipped when a female takes a male role), tongues and other per-scene items, removed at the end.
-- **Futa and sex detection.** Detect sex from the body / genitals rather than the base sex; futa options (male role, male climax).
+- **Equip objects, strap-ons and futa (one system).** Strap-ons equipped when a woman takes a role that needs a penis, plus tongues and other per-scene items, removed at the end. **Futa is merged into strap-ons:** in Fallout 4 futa comes from equippable penises with two states (flaccid / erect), not one built into the body mesh, so they can't be posed or bent like a male body's. They're handled like a strap-on: an actor wearing one has a `penis` for action requirements (`Actions::Provides`), with options for the male role, male excitement and male climax.
 - **Role choice.** Intended-sex-only filter (have it: `bMatchSex`), player always dominant or submissive, choose your role when several fit.
 - **Actor requirements and properties.** Per-role requirements (race, vampire / ghoul / super mutant, has a penis...), actor tags, perk-conditioned properties. Covers "Race filtering" below.
 

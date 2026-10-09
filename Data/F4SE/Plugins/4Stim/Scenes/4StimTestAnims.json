@@ -234,6 +234,12 @@
 				"1p",
 				"m",
 				"standing"
+			],
+			"actions": [
+				{
+					"type": "bathing",
+					"actor": 0
+				}
 			]
 		},
 		{
@@ -315,6 +321,13 @@
 				"kneeling",
 				"lying"
 			],
+			"actions": [
+				{
+					"type": "holdinghand",
+					"actor": 0,
+					"target": 1
+				}
+			],
 			"navigations": [
 				{
 					"to": "4StimTest_OStim2PSittingMF",
@@ -357,6 +370,18 @@
 				"2p",
 				"ff",
 				"sitting"
+			],
+			"actions": [
+				{
+					"type": "holdingbody",
+					"actor": 0,
+					"target": 1
+				},
+				{
+					"type": "holdingbody",
+					"actor": 1,
+					"target": 0
+				}
 			],
 			"navigations": [
 				{
@@ -439,6 +464,13 @@
 				"mf",
 				"lying"
 			],
+			"actions": [
+				{
+					"type": "holdinghand",
+					"actor": 0,
+					"target": 1
+				}
+			],
 			"navigations": [
 				{
 					"to": "4StimTest_OStim2PLyingOnTopMF",
@@ -480,6 +512,13 @@
 				"idle",
 				"2p",
 				"mf"
+			],
+			"actions": [
+				{
+					"type": "mounting",
+					"actor": 1,
+					"target": 0
+				}
 			],
 			"navigations": [
 				{
@@ -534,6 +573,13 @@
 				"2p",
 				"mf",
 				"transition"
+			],
+			"actions": [
+				{
+					"type": "mounting",
+					"actor": 1,
+					"target": 0
+				}
 			]
 		},
 		{
@@ -604,6 +650,13 @@
 				"kneeling",
 				"lying"
 			],
+			"actions": [
+				{
+					"type": "holdingthigh",
+					"actor": 1,
+					"target": 0
+				}
+			],
 			"navigations": [
 				{
 					"to": "4StimTest_OStim2PKneelingTailjobMF",
@@ -646,6 +699,18 @@
 				"2p",
 				"mf",
 				"lying"
+			],
+			"actions": [
+				{
+					"type": "holdinghand",
+					"actor": 0,
+					"target": 1
+				},
+				{
+					"type": "strokinghead",
+					"actor": 1,
+					"target": 0
+				}
 			],
 			"navigations": [
 				{
@@ -759,6 +824,18 @@
 				"2p",
 				"mf"
 			],
+			"actions": [
+				{
+					"type": "mounting",
+					"actor": 1,
+					"target": 0
+				},
+				{
+					"type": "holdingleg",
+					"actor": 1,
+					"target": 0
+				}
+			],
 			"navigations": [
 				{
 					"to": "4StimTest_OStim2PFaceSittingMF",
@@ -802,6 +879,13 @@
 				"2p",
 				"mf",
 				"transition"
+			],
+			"actions": [
+				{
+					"type": "mounting",
+					"actor": 1,
+					"target": 0
+				}
 			]
 		},
 		{
@@ -872,6 +956,13 @@
 				"mf",
 				"sitting"
 			],
+			"actions": [
+				{
+					"type": "holdingleg",
+					"actor": 1,
+					"target": 0
+				}
+			],
 			"navigations": [
 				{
 					"to": "4StimTest_OStim2PSittingMaleInMF",
@@ -929,6 +1020,13 @@
 				"2p",
 				"mf",
 				"sitting"
+			],
+			"actions": [
+				{
+					"type": "holdingleg",
+					"actor": 0,
+					"target": 1
+				}
 			],
 			"navigations": [
 				{
@@ -1240,6 +1338,13 @@
 				"standing",
 				"behind"
 			],
+			"actions": [
+				{
+					"type": "holdingbody",
+					"actor": 0,
+					"target": 1
+				}
+			],
 			"navigations": [
 				{
 					"to": "4StimTest_OStim2PStandingFingeringFromBehindMF",
@@ -1320,6 +1425,13 @@
 				"standing",
 				"behind",
 				"transition"
+			],
+			"actions": [
+				{
+					"type": "holdingbody",
+					"actor": 0,
+					"target": 1
+				}
 			]
 		},
 		{
@@ -1341,6 +1453,18 @@
 				"2p",
 				"mf",
 				"standing"
+			],
+			"actions": [
+				{
+					"type": "holdingbody",
+					"actor": 0,
+					"target": 1
+				},
+				{
+					"type": "holdingbody",
+					"actor": 1,
+					"target": 0
+				}
 			],
 			"navigations": [
 				{
@@ -1435,6 +1559,13 @@
 				"standing",
 				"behind",
 				"transition"
+			],
+			"actions": [
+				{
+					"type": "holdingbody",
+					"actor": 0,
+					"target": 1
+				}
 			]
 		},
 		{
@@ -1663,6 +1794,13 @@
 				"standing",
 				"behind"
 			],
+			"actions": [
+				{
+					"type": "cuddling",
+					"actor": 0,
+					"target": 1
+				}
+			],
 			"navigations": [
 				{
 					"to": "4StimTest_OStim2PStandingGropingBreastsFromBehindMF",
@@ -1711,6 +1849,23 @@
 				"mf",
 				"standing"
 			],
+			"actions": [
+				{
+					"type": "cuddling",
+					"actor": 0,
+					"target": 1
+				},
+				{
+					"type": "cuddling",
+					"actor": 1,
+					"target": 0
+				},
+				{
+					"type": "holdinghead",
+					"actor": 0,
+					"target": 1
+				}
+			],
 			"navigations": [
 				{
 					"to": "4StimTest_OStim2PStandingHugMF",
@@ -1749,6 +1904,13 @@
 				"mf",
 				"standing"
 			],
+			"actions": [
+				{
+					"type": "holdinghand",
+					"actor": 0,
+					"target": 1
+				}
+			],
 			"navigations": [
 				{
 					"to": "4StimTest_OStim2PStandingHandHoldingKissMF",
@@ -1786,6 +1948,18 @@
 				"2p",
 				"mf",
 				"standing"
+			],
+			"actions": [
+				{
+					"type": "kissing",
+					"actor": 0,
+					"target": 1
+				},
+				{
+					"type": "holdinghand",
+					"actor": 0,
+					"target": 1
+				}
 			],
 			"navigations": [
 				{
@@ -1839,6 +2013,13 @@
 				"2p",
 				"mf",
 				"standing"
+			],
+			"actions": [
+				{
+					"type": "holdinghand",
+					"actor": 0,
+					"target": 1
+				}
 			],
 			"navigations": [
 				{
@@ -1901,6 +2082,23 @@
 				"mf",
 				"standing"
 			],
+			"actions": [
+				{
+					"type": "holdingchin",
+					"actor": 0,
+					"target": 1
+				},
+				{
+					"type": "hug",
+					"actor": 0,
+					"target": 1
+				},
+				{
+					"type": "hug",
+					"actor": 1,
+					"target": 0
+				}
+			],
 			"navigations": [
 				{
 					"to": "4StimTest_OStim2PStandingSquattingMF",
@@ -1953,6 +2151,23 @@
 				"2p",
 				"mf",
 				"standing"
+			],
+			"actions": [
+				{
+					"type": "kissing",
+					"actor": 0,
+					"target": 1
+				},
+				{
+					"type": "holdingchin",
+					"actor": 0,
+					"target": 1
+				},
+				{
+					"type": "holdinghand",
+					"actor": 0,
+					"target": 1
+				}
 			],
 			"navigations": [
 				{
@@ -2027,6 +2242,23 @@
 				"mf",
 				"standing"
 			],
+			"actions": [
+				{
+					"type": "holdingchin",
+					"actor": 0,
+					"target": 1
+				},
+				{
+					"type": "holdinghand",
+					"actor": 0,
+					"target": 1
+				},
+				{
+					"type": "holdingarm",
+					"actor": 1,
+					"target": 0
+				}
+			],
 			"navigations": [
 				{
 					"to": "4StimTest_OStim2PStandingSquattingMF",
@@ -2071,6 +2303,13 @@
 				"mf",
 				"standing",
 				"transition"
+			],
+			"actions": [
+				{
+					"type": "holdingchin",
+					"actor": 0,
+					"target": 1
+				}
 			]
 		},
 		{
@@ -2093,6 +2332,13 @@
 				"mf",
 				"standing",
 				"behind"
+			],
+			"actions": [
+				{
+					"type": "hug",
+					"actor": 0,
+					"target": 1
+				}
 			],
 			"navigations": [
 				{
@@ -2141,6 +2387,13 @@
 				"2p",
 				"mf",
 				"standing"
+			],
+			"actions": [
+				{
+					"type": "hug",
+					"actor": 0,
+					"target": 1
+				}
 			],
 			"navigations": [
 				{
@@ -2204,6 +2457,23 @@
 				"2p",
 				"mf",
 				"standing"
+			],
+			"actions": [
+				{
+					"type": "kissing",
+					"actor": 0,
+					"target": 1
+				},
+				{
+					"type": "hug",
+					"actor": 0,
+					"target": 1
+				},
+				{
+					"type": "hug",
+					"actor": 1,
+					"target": 0
+				}
 			],
 			"navigations": [
 				{
@@ -2273,6 +2543,18 @@
 				"mf",
 				"standing"
 			],
+			"actions": [
+				{
+					"type": "kissing",
+					"actor": 0,
+					"target": 1
+				},
+				{
+					"type": "holdinghip",
+					"actor": 0,
+					"target": 1
+				}
+			],
 			"navigations": [
 				{
 					"to": "4StimTest_OStim2PStandingHandjobRKissMF",
@@ -2340,6 +2622,28 @@
 				"2p",
 				"mf",
 				"standing"
+			],
+			"actions": [
+				{
+					"type": "kissing",
+					"actor": 0,
+					"target": 1
+				},
+				{
+					"type": "holdinghip",
+					"actor": 0,
+					"target": 1
+				},
+				{
+					"type": "holdinghead",
+					"actor": 0,
+					"target": 1
+				},
+				{
+					"type": "holdingbody",
+					"actor": 1,
+					"target": 0
+				}
 			],
 			"navigations": [
 				{
@@ -2409,6 +2713,13 @@
 				"mf",
 				"standing"
 			],
+			"actions": [
+				{
+					"type": "holdingbody",
+					"actor": 0,
+					"target": 1
+				}
+			],
 			"navigations": [
 				{
 					"to": "4StimTest_OStim2PStandingGrindingDryMF",
@@ -2457,6 +2768,13 @@
 				"2p",
 				"mf",
 				"standing"
+			],
+			"actions": [
+				{
+					"type": "holdingbody",
+					"actor": 0,
+					"target": 1
+				}
 			]
 		},
 		{
@@ -2503,6 +2821,13 @@
 				"mf",
 				"squatting",
 				"behind"
+			],
+			"actions": [
+				{
+					"type": "gropingbutt",
+					"actor": 0,
+					"target": 1
+				}
 			],
 			"navigations": [
 				{
@@ -2564,6 +2889,17 @@
 				"2p",
 				"mf",
 				"standing"
+			],
+			"actions": [
+				{
+					"type": "buttjob",
+					"actor": 1,
+					"target": 0
+				},
+				{
+					"type": "gropingbreast",
+					"actor": 1
+				}
 			],
 			"navigations": [
 				{
@@ -2652,6 +2988,13 @@
 				"mf",
 				"standing"
 			],
+			"actions": [
+				{
+					"type": "gropingbreast",
+					"actor": 0,
+					"target": 1
+				}
+			],
 			"navigations": [
 				{
 					"to": "4StimTest_OStim2PStandingNippleSuckingMF",
@@ -2709,6 +3052,13 @@
 				"mf",
 				"standing",
 				"behind"
+			],
+			"actions": [
+				{
+					"type": "gropingbreast",
+					"actor": 0,
+					"target": 1
+				}
 			],
 			"navigations": [
 				{
@@ -2787,6 +3137,13 @@
 				"mf",
 				"standing"
 			],
+			"actions": [
+				{
+					"type": "pattinghead",
+					"actor": 0,
+					"target": 1
+				}
+			],
 			"navigations": [
 				{
 					"to": "4StimTest_OStim2PStandingHandHoldingLowMF",
@@ -2843,6 +3200,23 @@
 				"2p",
 				"mf",
 				"standing"
+			],
+			"actions": [
+				{
+					"type": "kissing",
+					"actor": 0,
+					"target": 1
+				},
+				{
+					"type": "gropingbutt",
+					"actor": 0,
+					"target": 1
+				},
+				{
+					"type": "hug",
+					"actor": 1,
+					"target": 0
+				}
 			],
 			"navigations": [
 				{
@@ -2935,6 +3309,29 @@
 				"2p",
 				"mf"
 			],
+			"actions": [
+				{
+					"type": "vaginalsex",
+					"actor": 0,
+					"target": 1,
+					"performer": 1
+				},
+				{
+					"type": "mounting",
+					"actor": 1,
+					"target": 0
+				},
+				{
+					"type": "gropingbreast",
+					"actor": 0,
+					"target": 1
+				},
+				{
+					"type": "holdingleg",
+					"actor": 1,
+					"target": 0
+				}
+			],
 			"navigations": [
 				{
 					"to": "4StimTest_OStim2PCowgirlHoldingHipMF",
@@ -2996,6 +3393,29 @@
 				"2p",
 				"mf"
 			],
+			"actions": [
+				{
+					"type": "vaginalsex",
+					"actor": 0,
+					"target": 1,
+					"performer": 1
+				},
+				{
+					"type": "mounting",
+					"actor": 1,
+					"target": 0
+				},
+				{
+					"type": "holdinghip",
+					"actor": 0,
+					"target": 1
+				},
+				{
+					"type": "holdingleg",
+					"actor": 1,
+					"target": 0
+				}
+			],
 			"navigations": [
 				{
 					"to": "4StimTest_OStim2PCowgirlHoldingBreastMF",
@@ -3056,6 +3476,24 @@
 				"sexual",
 				"2p",
 				"mf"
+			],
+			"actions": [
+				{
+					"type": "vaginalsex",
+					"actor": 0,
+					"target": 1,
+					"performer": 1
+				},
+				{
+					"type": "mounting",
+					"actor": 1,
+					"target": 0
+				},
+				{
+					"type": "holdingleg",
+					"actor": 1,
+					"target": 0
+				}
 			],
 			"navigations": [
 				{
@@ -3123,6 +3561,19 @@
 				"2p",
 				"mf"
 			],
+			"actions": [
+				{
+					"type": "vaginalsex",
+					"actor": 0,
+					"target": 1,
+					"performer": 1
+				},
+				{
+					"type": "mounting",
+					"actor": 1,
+					"target": 0
+				}
+			],
 			"navigations": [
 				{
 					"to": "4StimTest_OStim2PReverseCowgirlMF",
@@ -3174,6 +3625,24 @@
 				"2p",
 				"mf"
 			],
+			"actions": [
+				{
+					"type": "vaginalsex",
+					"actor": 0,
+					"target": 1,
+					"performer": 1
+				},
+				{
+					"type": "mounting",
+					"actor": 1,
+					"target": 0
+				},
+				{
+					"type": "holdingleg",
+					"actor": 1,
+					"target": 0
+				}
+			],
 			"navigations": [
 				{
 					"to": "4StimTest_OStim2PReverseCowgirlArchBackMF",
@@ -3207,6 +3676,13 @@
 				"2p",
 				"mf",
 				"transition"
+			],
+			"actions": [
+				{
+					"type": "mounting",
+					"actor": 1,
+					"target": 0
+				}
 			]
 		},
 		{
@@ -3229,6 +3705,13 @@
 				"2p",
 				"mf",
 				"transition"
+			],
+			"actions": [
+				{
+					"type": "mounting",
+					"actor": 1,
+					"target": 0
+				}
 			]
 		},
 		{
@@ -3273,6 +3756,18 @@
 				"sexual",
 				"2p",
 				"mf"
+			],
+			"actions": [
+				{
+					"type": "vaginalsex",
+					"actor": 0,
+					"target": 1
+				},
+				{
+					"type": "holdingarm",
+					"actor": 0,
+					"target": 1
+				}
 			],
 			"navigations": [
 				{
@@ -3340,6 +3835,18 @@
 				"2p",
 				"mf"
 			],
+			"actions": [
+				{
+					"type": "vaginalsex",
+					"actor": 0,
+					"target": 1
+				},
+				{
+					"type": "holdingarm",
+					"actor": 0,
+					"target": 1
+				}
+			],
 			"navigations": [
 				{
 					"to": "4StimTest_OStim2PSittingDoggyJerkToButtMF",
@@ -3395,6 +3902,23 @@
 				"sexual",
 				"2p",
 				"mf"
+			],
+			"actions": [
+				{
+					"type": "vaginalsex",
+					"actor": 0,
+					"target": 1
+				},
+				{
+					"type": "holdinghip",
+					"actor": 0,
+					"target": 1
+				},
+				{
+					"type": "holdingarm",
+					"actor": 0,
+					"target": 1
+				}
 			],
 			"navigations": [
 				{
@@ -3461,6 +3985,18 @@
 				"sexual",
 				"2p",
 				"mf"
+			],
+			"actions": [
+				{
+					"type": "vaginalsex",
+					"actor": 0,
+					"target": 1
+				},
+				{
+					"type": "holdinghip",
+					"actor": 0,
+					"target": 1
+				}
 			],
 			"navigations": [
 				{
@@ -3533,6 +4069,18 @@
 				"2p",
 				"mf"
 			],
+			"actions": [
+				{
+					"type": "vaginalsex",
+					"actor": 0,
+					"target": 1
+				},
+				{
+					"type": "holdinghip",
+					"actor": 0,
+					"target": 1
+				}
+			],
 			"navigations": [
 				{
 					"to": "4StimTest_OStim2PSittingDoggyJerkToButtMF",
@@ -3603,6 +4151,18 @@
 				"sexual",
 				"2p",
 				"mf"
+			],
+			"actions": [
+				{
+					"type": "vaginalsex",
+					"actor": 0,
+					"target": 1
+				},
+				{
+					"type": "holdinghip",
+					"actor": 0,
+					"target": 1
+				}
 			],
 			"navigations": [
 				{
@@ -3680,6 +4240,14 @@
 				"2p",
 				"mf"
 			],
+			"actions": [
+				{
+					"type": "vaginalsex",
+					"actor": 0,
+					"target": 1,
+					"performer": 1
+				}
+			],
 			"navigations": [
 				{
 					"to": "4StimTest_OStim2PSittingDoggyJerkToButtMF",
@@ -3745,6 +4313,18 @@
 				"sexual",
 				"2p",
 				"mf"
+			],
+			"actions": [
+				{
+					"type": "vaginalsex",
+					"actor": 0,
+					"target": 1
+				},
+				{
+					"type": "holdingbody",
+					"actor": 0,
+					"target": 1
+				}
 			],
 			"navigations": [
 				{
@@ -3812,6 +4392,18 @@
 				"2p",
 				"mf"
 			],
+			"actions": [
+				{
+					"type": "vaginalsex",
+					"actor": 0,
+					"target": 1
+				},
+				{
+					"type": "pullinghair",
+					"actor": 0,
+					"target": 1
+				}
+			],
 			"navigations": [
 				{
 					"to": "4StimTest_OStim2PSittingDoggyJerkToButtMF",
@@ -3874,6 +4466,18 @@
 				"mf",
 				"squatting"
 			],
+			"actions": [
+				{
+					"type": "vaginalsex",
+					"actor": 0,
+					"target": 1
+				},
+				{
+					"type": "holdingbody",
+					"actor": 0,
+					"target": 1
+				}
+			],
 			"navigations": [
 				{
 					"to": "4StimTest_OStim2PSittingDoggyJerkToButtMF",
@@ -3923,6 +4527,27 @@
 				"mf",
 				"sitting",
 				"transition"
+			],
+			"actions": [
+				{
+					"type": "malemasturbation",
+					"actor": 0
+				},
+				{
+					"type": "spectating",
+					"actor": 1,
+					"target": 0
+				},
+				{
+					"type": "cumonbutt",
+					"actor": 0,
+					"target": 1
+				},
+				{
+					"type": "cumonvulva",
+					"actor": 0,
+					"target": 1
+				}
 			],
 			"navigations": [
 				{
@@ -3990,6 +4615,23 @@
 				"2p",
 				"mf"
 			],
+			"actions": [
+				{
+					"type": "lickingvagina",
+					"actor": 0,
+					"target": 1
+				},
+				{
+					"type": "analfingering",
+					"actor": 0,
+					"target": 1
+				},
+				{
+					"type": "gropingbutt",
+					"actor": 0,
+					"target": 1
+				}
+			],
 			"navigations": [
 				{
 					"to": "4StimTest_OStim2PFaceSittingMF",
@@ -4046,6 +4688,23 @@
 				"2p",
 				"mf",
 				"sitting"
+			],
+			"actions": [
+				{
+					"type": "lickingvagina",
+					"actor": 0,
+					"target": 1
+				},
+				{
+					"type": "analfingering",
+					"actor": 0,
+					"target": 1
+				},
+				{
+					"type": "gropingbutt",
+					"actor": 0,
+					"target": 1
+				}
 			],
 			"navigations": [
 				{
@@ -4105,6 +4764,18 @@
 				"kneeling",
 				"behind"
 			],
+			"actions": [
+				{
+					"type": "lickingvagina",
+					"actor": 0,
+					"target": 1
+				},
+				{
+					"type": "holdinghead",
+					"actor": 1,
+					"target": 0
+				}
+			],
 			"navigations": [
 				{
 					"to": "4StimTest_OStim2PFaceRidingMF",
@@ -4163,6 +4834,13 @@
 				"kneeling",
 				"behind"
 			],
+			"actions": [
+				{
+					"type": "lickingvagina",
+					"actor": 0,
+					"target": 1
+				}
+			],
 			"navigations": [
 				{
 					"to": "4StimTest_OStim2PStandingCunnilingusMF",
@@ -4207,6 +4885,26 @@
 				"mf",
 				"kneeling",
 				"behind"
+			],
+			"actions": [
+				{
+					"type": "malemasturbation",
+					"actor": 0
+				},
+				{
+					"type": "spectating",
+					"actor": 1,
+					"target": 0
+				},
+				{
+					"type": "cumonvulva",
+					"actor": 0,
+					"target": 1
+				},
+				{
+					"type": "gropingbreast",
+					"actor": 1
+				}
 			],
 			"navigations": [
 				{
@@ -4274,6 +4972,18 @@
 				"2p",
 				"mf",
 				"kneeling"
+			],
+			"actions": [
+				{
+					"type": "blowjob",
+					"actor": 1,
+					"target": 0
+				},
+				{
+					"type": "holdinghead",
+					"actor": 0,
+					"target": 1
+				}
 			],
 			"navigations": [
 				{
@@ -4357,6 +5067,23 @@
 				"mf",
 				"kneeling"
 			],
+			"actions": [
+				{
+					"type": "blowjob",
+					"actor": 1,
+					"target": 0
+				},
+				{
+					"type": "holdinghead",
+					"actor": 0,
+					"target": 1
+				},
+				{
+					"type": "holdingthigh",
+					"actor": 1,
+					"target": 0
+				}
+			],
 			"navigations": [
 				{
 					"to": "4StimTest_OStim2PKneelingJerkToFaceMF",
@@ -4438,6 +5165,13 @@
 				"2p",
 				"mf",
 				"kneeling"
+			],
+			"actions": [
+				{
+					"type": "blowjob",
+					"actor": 1,
+					"target": 0
+				}
 			],
 			"navigations": [
 				{
@@ -4526,6 +5260,19 @@
 				"mf",
 				"kneeling"
 			],
+			"actions": [
+				{
+					"type": "blowjob",
+					"actor": 1,
+					"target": 0,
+					"performer": 0
+				},
+				{
+					"type": "holdinghead",
+					"actor": 0,
+					"target": 1
+				}
+			],
 			"navigations": [
 				{
 					"to": "4StimTest_OStim2PKneelingJerkToFaceMF",
@@ -4608,6 +5355,23 @@
 				"mf",
 				"kneeling"
 			],
+			"actions": [
+				{
+					"type": "handjob",
+					"actor": 1,
+					"target": 0
+				},
+				{
+					"type": "gropingtesticles",
+					"actor": 1,
+					"target": 0
+				},
+				{
+					"type": "facial",
+					"actor": 0,
+					"target": 1
+				}
+			],
 			"navigations": [
 				{
 					"to": "4StimTest_OStim2PKneelingJerkToFaceMF",
@@ -4680,6 +5444,22 @@
 				"mf",
 				"kneeling",
 				"transition"
+			],
+			"actions": [
+				{
+					"type": "malemasturbation",
+					"actor": 0
+				},
+				{
+					"type": "spectating",
+					"actor": 1,
+					"target": 0
+				},
+				{
+					"type": "facial",
+					"actor": 0,
+					"target": 1
+				}
 			],
 			"navigations": [
 				{
@@ -4773,6 +5553,18 @@
 				"mf",
 				"kneeling"
 			],
+			"actions": [
+				{
+					"type": "lickingpenis",
+					"actor": 1,
+					"target": 0
+				},
+				{
+					"type": "holdingbody",
+					"actor": 1,
+					"target": 0
+				}
+			],
 			"navigations": [
 				{
 					"to": "4StimTest_OStim2PKneelingJerkToFaceMF",
@@ -4841,6 +5633,13 @@
 				"standing",
 				"kneeling"
 			],
+			"actions": [
+				{
+					"type": "boobjob",
+					"actor": 1,
+					"target": 0
+				}
+			],
 			"navigations": [
 				{
 					"to": "4StimTest_OStim2PStandingKneelingTitfuckMF",
@@ -4908,6 +5707,14 @@
 				"mf",
 				"standing",
 				"kneeling"
+			],
+			"actions": [
+				{
+					"type": "boobjob",
+					"actor": 1,
+					"target": 0,
+					"performer": 0
+				}
 			],
 			"navigations": [
 				{
@@ -4981,6 +5788,18 @@
 				"mf",
 				"kneeling"
 			],
+			"actions": [
+				{
+					"type": "tailjob",
+					"actor": 1,
+					"target": 0
+				},
+				{
+					"type": "holdingbody",
+					"actor": 1,
+					"target": 0
+				}
+			],
 			"navigations": [
 				{
 					"to": "4StimTest_OStim2PLyingKneelingMF",
@@ -5032,6 +5851,23 @@
 				"2p",
 				"mf",
 				"lying"
+			],
+			"actions": [
+				{
+					"type": "cunnilingus",
+					"actor": 0,
+					"target": 1
+				},
+				{
+					"type": "holdingthigh",
+					"actor": 0,
+					"target": 1
+				},
+				{
+					"type": "holdinghead",
+					"actor": 1,
+					"target": 0
+				}
 			],
 			"navigations": [
 				{
@@ -5090,6 +5926,23 @@
 				"mf",
 				"lying"
 			],
+			"actions": [
+				{
+					"type": "cunnilingus",
+					"actor": 0,
+					"target": 1
+				},
+				{
+					"type": "holdingthigh",
+					"actor": 0,
+					"target": 1
+				},
+				{
+					"type": "leglock",
+					"actor": 1,
+					"target": 0
+				}
+			],
 			"navigations": [
 				{
 					"to": "4StimTest_OStim2PLyingCunnilingusMF",
@@ -5141,6 +5994,18 @@
 				"2p",
 				"mf",
 				"lying"
+			],
+			"actions": [
+				{
+					"type": "cunnilingus",
+					"actor": 0,
+					"target": 1
+				},
+				{
+					"type": "holdingthigh",
+					"actor": 0,
+					"target": 1
+				}
 			],
 			"navigations": [
 				{
@@ -5199,6 +6064,13 @@
 				"mf",
 				"kneeling"
 			],
+			"actions": [
+				{
+					"type": "blowjob",
+					"actor": 1,
+					"target": 0
+				}
+			],
 			"navigations": [
 				{
 					"to": "4StimTest_OStim2PMaleSittingHandJobMF",
@@ -5242,6 +6114,27 @@
 				"mf",
 				"kneeling",
 				"transition"
+			],
+			"actions": [
+				{
+					"type": "malemasturbation",
+					"actor": 0
+				},
+				{
+					"type": "spectating",
+					"actor": 1,
+					"target": 0
+				},
+				{
+					"type": "facial",
+					"actor": 0,
+					"target": 1
+				},
+				{
+					"type": "cumonchest",
+					"actor": 0,
+					"target": 1
+				}
 			],
 			"navigations": [
 				{
@@ -5304,6 +6197,13 @@
 				"2p",
 				"mf",
 				"sitting"
+			],
+			"actions": [
+				{
+					"type": "blowjob",
+					"actor": 1,
+					"target": 0
+				}
 			],
 			"navigations": [
 				{
@@ -5382,6 +6282,18 @@
 				"mf",
 				"sitting"
 			],
+			"actions": [
+				{
+					"type": "handjob",
+					"actor": 1,
+					"target": 0
+				},
+				{
+					"type": "facial",
+					"actor": 0,
+					"target": 1
+				}
+			],
 			"navigations": [
 				{
 					"to": "4StimTest_OStim2PMaleSittingProneBlowJobMF",
@@ -5425,6 +6337,27 @@
 				"mf",
 				"sitting",
 				"transition"
+			],
+			"actions": [
+				{
+					"type": "malemasturbation",
+					"actor": 0
+				},
+				{
+					"type": "spectating",
+					"actor": 1,
+					"target": 0
+				},
+				{
+					"type": "facial",
+					"actor": 0,
+					"target": 1
+				},
+				{
+					"type": "cumonchest",
+					"actor": 0,
+					"target": 1
+				}
 			],
 			"navigations": [
 				{
@@ -5494,6 +6427,13 @@
 				"sitting",
 				"prone"
 			],
+			"actions": [
+				{
+					"type": "blowjob",
+					"actor": 1,
+					"target": 0
+				}
+			],
 			"navigations": [
 				{
 					"to": "4StimTest_OStim2PMaleSittingHandJobMF",
@@ -5536,6 +6476,18 @@
 				"sexual",
 				"2p",
 				"mf"
+			],
+			"actions": [
+				{
+					"type": "vaginalsex",
+					"actor": 0,
+					"target": 1
+				},
+				{
+					"type": "holdingleg",
+					"actor": 0,
+					"target": 1
+				}
 			]
 		},
 		{
@@ -5580,6 +6532,18 @@
 				"sexual",
 				"2p",
 				"mf"
+			],
+			"actions": [
+				{
+					"type": "vaginalsex",
+					"actor": 0,
+					"target": 1
+				},
+				{
+					"type": "holdinghand",
+					"actor": 0,
+					"target": 1
+				}
 			],
 			"navigations": [
 				{
@@ -5634,6 +6598,32 @@
 				"2p",
 				"mf",
 				"transition"
+			],
+			"actions": [
+				{
+					"type": "malemasturbation",
+					"actor": 0
+				},
+				{
+					"type": "spectating",
+					"actor": 1,
+					"target": 0
+				},
+				{
+					"type": "cumonchest",
+					"actor": 0,
+					"target": 1
+				},
+				{
+					"type": "cumonvulva",
+					"actor": 0,
+					"target": 1
+				},
+				{
+					"type": "facial",
+					"actor": 0,
+					"target": 1
+				}
 			],
 			"navigations": [
 				{
@@ -5696,6 +6686,23 @@
 				"2p",
 				"mf"
 			],
+			"actions": [
+				{
+					"type": "vaginalsex",
+					"actor": 0,
+					"target": 1
+				},
+				{
+					"type": "kissingfoot",
+					"actor": 0,
+					"target": 1
+				},
+				{
+					"type": "holdingleg",
+					"actor": 0,
+					"target": 1
+				}
+			],
 			"navigations": [
 				{
 					"to": "4StimTest_OStim2PMissionaryJerkToPussyMF",
@@ -5756,6 +6763,33 @@
 				"sexual",
 				"2p",
 				"mf"
+			],
+			"actions": [
+				{
+					"type": "vaginalsex",
+					"actor": 0,
+					"target": 1
+				},
+				{
+					"type": "kissing",
+					"actor": 0,
+					"target": 1
+				},
+				{
+					"type": "leglock",
+					"actor": 1,
+					"target": 0
+				},
+				{
+					"type": "hug",
+					"actor": 0,
+					"target": 1
+				},
+				{
+					"type": "hug",
+					"actor": 1,
+					"target": 0
+				}
 			],
 			"navigations": [
 				{
@@ -5828,6 +6862,28 @@
 				"2p",
 				"mf"
 			],
+			"actions": [
+				{
+					"type": "vaginalsex",
+					"actor": 0,
+					"target": 1
+				},
+				{
+					"type": "kissing",
+					"actor": 0,
+					"target": 1
+				},
+				{
+					"type": "hug",
+					"actor": 0,
+					"target": 1
+				},
+				{
+					"type": "hug",
+					"actor": 1,
+					"target": 0
+				}
+			],
 			"navigations": [
 				{
 					"to": "4StimTest_OStim2PMissionaryJerkToPussyMF",
@@ -5898,6 +6954,18 @@
 				"sexual",
 				"2p",
 				"mf"
+			],
+			"actions": [
+				{
+					"type": "vaginalsex",
+					"actor": 0,
+					"target": 1
+				},
+				{
+					"type": "holdingleg",
+					"actor": 0,
+					"target": 1
+				}
 			],
 			"navigations": [
 				{
@@ -5985,6 +7053,18 @@
 				"2p",
 				"mf"
 			],
+			"actions": [
+				{
+					"type": "vaginalsex",
+					"actor": 0,
+					"target": 1
+				},
+				{
+					"type": "holdingleg",
+					"actor": 0,
+					"target": 1
+				}
+			],
 			"navigations": [
 				{
 					"to": "4StimTest_OStim2PMissionaryJerkToPussyMF",
@@ -6056,6 +7136,18 @@
 				"2p",
 				"mf"
 			],
+			"actions": [
+				{
+					"type": "vaginalsex",
+					"actor": 0,
+					"target": 1
+				},
+				{
+					"type": "holdingleg",
+					"actor": 0,
+					"target": 1
+				}
+			],
 			"navigations": [
 				{
 					"to": "4StimTest_OStim2PMissionaryJerkToPussyMF",
@@ -6126,6 +7218,18 @@
 				"sexual",
 				"2p",
 				"mf"
+			],
+			"actions": [
+				{
+					"type": "vaginalsex",
+					"actor": 0,
+					"target": 1
+				},
+				{
+					"type": "holdingleg",
+					"actor": 0,
+					"target": 1
+				}
 			],
 			"navigations": [
 				{
@@ -6214,6 +7318,18 @@
 				"mf",
 				"prone"
 			],
+			"actions": [
+				{
+					"type": "vaginalsex",
+					"actor": 0,
+					"target": 1
+				},
+				{
+					"type": "cuddle",
+					"actor": 0,
+					"target": 1
+				}
+			],
 			"navigations": [
 				{
 					"to": "4StimTest_OStim2PProneHoldingMF",
@@ -6276,6 +7392,18 @@
 				"mf",
 				"prone"
 			],
+			"actions": [
+				{
+					"type": "vaginalsex",
+					"actor": 0,
+					"target": 1
+				},
+				{
+					"type": "cuddle",
+					"actor": 0,
+					"target": 1
+				}
+			],
 			"navigations": [
 				{
 					"to": "4StimTest_OStim2PProneHoldingLegsSpreadMF",
@@ -6314,6 +7442,27 @@
 				"mf",
 				"prone",
 				"transition"
+			],
+			"actions": [
+				{
+					"type": "malemasturbation",
+					"actor": 0
+				},
+				{
+					"type": "spectating",
+					"actor": 1,
+					"target": 0
+				},
+				{
+					"type": "cumonbutt",
+					"actor": 0,
+					"target": 1
+				},
+				{
+					"type": "cumonvulva",
+					"actor": 0,
+					"target": 1
+				}
 			],
 			"navigations": [
 				{
@@ -6382,6 +7531,13 @@
 				"mf",
 				"prone"
 			],
+			"actions": [
+				{
+					"type": "vaginalsex",
+					"actor": 0,
+					"target": 1
+				}
+			],
 			"navigations": [
 				{
 					"to": "4StimTest_OStim2PProneMF",
@@ -6444,6 +7600,14 @@
 				"mf",
 				"prone"
 			],
+			"actions": [
+				{
+					"type": "buttjob",
+					"actor": 1,
+					"target": 0,
+					"performer": 0
+				}
+			],
 			"navigations": [
 				{
 					"to": "4StimTest_OStim2PProneMaleMountedMF",
@@ -6505,6 +7669,13 @@
 				"2p",
 				"mf",
 				"prone"
+			],
+			"actions": [
+				{
+					"type": "vaginalsex",
+					"actor": 0,
+					"target": 1
+				}
 			],
 			"navigations": [
 				{
@@ -6572,6 +7743,13 @@
 				"2p",
 				"mf",
 				"prone"
+			],
+			"actions": [
+				{
+					"type": "vaginalsex",
+					"actor": 0,
+					"target": 1
+				}
 			],
 			"navigations": [
 				{
@@ -6650,6 +7828,13 @@
 				"mf",
 				"sideways"
 			],
+			"actions": [
+				{
+					"type": "vaginalsex",
+					"actor": 0,
+					"target": 1
+				}
+			],
 			"navigations": [
 				{
 					"to": "4StimTest_OStim2PSidewaysJerkToBodyMF",
@@ -6717,6 +7902,13 @@
 				"mf",
 				"sideways"
 			],
+			"actions": [
+				{
+					"type": "vaginalsex",
+					"actor": 0,
+					"target": 1
+				}
+			],
 			"navigations": [
 				{
 					"to": "4StimTest_OStim2PSidewaysJerkToBodyMF",
@@ -6766,6 +7958,32 @@
 				"mf",
 				"sideways",
 				"transition"
+			],
+			"actions": [
+				{
+					"type": "malemasturbation",
+					"actor": 0
+				},
+				{
+					"type": "spectating",
+					"actor": 1,
+					"target": 0
+				},
+				{
+					"type": "cumonchest",
+					"actor": 0,
+					"target": 1
+				},
+				{
+					"type": "cumonbutt",
+					"actor": 0,
+					"target": 1
+				},
+				{
+					"type": "facial",
+					"actor": 0,
+					"target": 1
+				}
 			],
 			"navigations": [
 				{
@@ -6823,6 +8041,13 @@
 				"2p",
 				"mf",
 				"sideways"
+			],
+			"actions": [
+				{
+					"type": "vaginalsex",
+					"actor": 0,
+					"target": 1
+				}
 			],
 			"navigations": [
 				{
@@ -6891,6 +8116,18 @@
 				"mf",
 				"squatting"
 			],
+			"actions": [
+				{
+					"type": "blowjob",
+					"actor": 1,
+					"target": 0
+				},
+				{
+					"type": "holdinghead",
+					"actor": 0,
+					"target": 1
+				}
+			],
 			"navigations": [
 				{
 					"to": "4StimTest_OStim2PSquattingJerkToFaceMF",
@@ -6958,6 +8195,22 @@
 				"mf",
 				"squatting"
 			],
+			"actions": [
+				{
+					"type": "blowjob",
+					"actor": 1,
+					"target": 0
+				},
+				{
+					"type": "femalemasturbation",
+					"actor": 1
+				},
+				{
+					"type": "spectating",
+					"actor": 0,
+					"target": 1
+				}
+			],
 			"navigations": [
 				{
 					"to": "4StimTest_OStim2PStandingSittingJerkToFaceMasturbationMF",
@@ -7014,6 +8267,13 @@
 				"2p",
 				"mf",
 				"squatting"
+			],
+			"actions": [
+				{
+					"type": "blowjob",
+					"actor": 1,
+					"target": 0
+				}
 			],
 			"navigations": [
 				{
@@ -7092,6 +8352,19 @@
 				"mf",
 				"squatting"
 			],
+			"actions": [
+				{
+					"type": "blowjob",
+					"actor": 1,
+					"target": 0,
+					"performer": 0
+				},
+				{
+					"type": "holdinghead",
+					"actor": 0,
+					"target": 1
+				}
+			],
 			"navigations": [
 				{
 					"to": "4StimTest_OStim2PSquattingJerkToFaceMF",
@@ -7153,6 +8426,13 @@
 				"2p",
 				"mf",
 				"squatting"
+			],
+			"actions": [
+				{
+					"type": "handjob",
+					"actor": 1,
+					"target": 0
+				}
 			],
 			"navigations": [
 				{
@@ -7216,6 +8496,22 @@
 				"mf",
 				"squatting",
 				"transition"
+			],
+			"actions": [
+				{
+					"type": "malemasturbation",
+					"actor": 0
+				},
+				{
+					"type": "spectating",
+					"actor": 1,
+					"target": 0
+				},
+				{
+					"type": "facial",
+					"actor": 0,
+					"target": 1
+				}
 			],
 			"navigations": [
 				{
@@ -7299,6 +8595,13 @@
 				"mf",
 				"standing"
 			],
+			"actions": [
+				{
+					"type": "handjob",
+					"actor": 1,
+					"target": 0
+				}
+			],
 			"navigations": [
 				{
 					"to": "4StimTest_OStim2PStandingSquattingMF",
@@ -7368,6 +8671,13 @@
 				"standing",
 				"behind",
 				"bending"
+			],
+			"actions": [
+				{
+					"type": "vaginalsex",
+					"actor": 0,
+					"target": 1
+				}
 			],
 			"navigations": [
 				{
@@ -7446,6 +8756,13 @@
 				"mf",
 				"standing",
 				"behind"
+			],
+			"actions": [
+				{
+					"type": "vaginalsex",
+					"actor": 0,
+					"target": 1
+				}
 			],
 			"navigations": [
 				{
@@ -7531,6 +8848,13 @@
 				"standing",
 				"behind"
 			],
+			"actions": [
+				{
+					"type": "vaginalsex",
+					"actor": 0,
+					"target": 1
+				}
+			],
 			"navigations": [
 				{
 					"to": "4StimTest_OStim2PSquattingBehindGropingButtBothHandsMF",
@@ -7609,6 +8933,17 @@
 				"standing",
 				"behind"
 			],
+			"actions": [
+				{
+					"type": "vaginalsex",
+					"actor": 0,
+					"target": 1
+				},
+				{
+					"type": "femalemasturbation",
+					"actor": 1
+				}
+			],
 			"navigations": [
 				{
 					"to": "4StimTest_OStim2PSquattingBehindGropingButtBothHandsMF",
@@ -7681,6 +9016,13 @@
 				"mf",
 				"standing",
 				"behind"
+			],
+			"actions": [
+				{
+					"type": "vaginalsex",
+					"actor": 0,
+					"target": 1
+				}
 			],
 			"navigations": [
 				{
@@ -7775,6 +9117,13 @@
 				"standing",
 				"behind"
 			],
+			"actions": [
+				{
+					"type": "vaginalsex",
+					"actor": 0,
+					"target": 1
+				}
+			],
 			"navigations": [
 				{
 					"to": "4StimTest_OStim2PSquattingBehindGropingButtBothHandsMF",
@@ -7840,6 +9189,26 @@
 				"standing",
 				"behind",
 				"transition"
+			],
+			"actions": [
+				{
+					"type": "malemasturbation",
+					"actor": 0
+				},
+				{
+					"type": "spectating",
+					"actor": 1,
+					"target": 0
+				},
+				{
+					"type": "cumonbutt",
+					"actor": 0,
+					"target": 1
+				},
+				{
+					"type": "gropingbreast",
+					"actor": 1
+				}
 			],
 			"navigations": [
 				{
@@ -7918,6 +9287,14 @@
 				"mf",
 				"standing"
 			],
+			"actions": [
+				{
+					"type": "buttjob",
+					"actor": 1,
+					"target": 0,
+					"performer": 0
+				}
+			],
 			"navigations": [
 				{
 					"to": "4StimTest_OStim2PSquattingBehindGropingButtBothHandsMF",
@@ -7985,6 +9362,13 @@
 				"mf",
 				"standing"
 			],
+			"actions": [
+				{
+					"type": "lickingvagina",
+					"actor": 0,
+					"target": 1
+				}
+			],
 			"navigations": [
 				{
 					"to": "4StimTest_OStim2PFaceSittingMF",
@@ -8047,6 +9431,18 @@
 				"mf",
 				"standing",
 				"behind"
+			],
+			"actions": [
+				{
+					"type": "rubbingclitoris",
+					"actor": 0,
+					"target": 1
+				},
+				{
+					"type": "gropingbreast",
+					"actor": 0,
+					"target": 1
+				}
 			],
 			"navigations": [
 				{
@@ -8114,6 +9510,23 @@
 				"2p",
 				"mf",
 				"standing"
+			],
+			"actions": [
+				{
+					"type": "handjob",
+					"actor": 1,
+					"target": 0
+				},
+				{
+					"type": "kissing",
+					"actor": 0,
+					"target": 1
+				},
+				{
+					"type": "holdingbody",
+					"actor": 0,
+					"target": 1
+				}
 			],
 			"navigations": [
 				{
@@ -8187,6 +9600,23 @@
 				"mf",
 				"standing"
 			],
+			"actions": [
+				{
+					"type": "vaginalfingering",
+					"actor": 0,
+					"target": 1
+				},
+				{
+					"type": "kissing",
+					"actor": 0,
+					"target": 1
+				},
+				{
+					"type": "holdinghead",
+					"actor": 0,
+					"target": 1
+				}
+			],
 			"navigations": [
 				{
 					"to": "4StimTest_OStim2PStandingHandjobRKissMF",
@@ -8254,6 +9684,13 @@
 				"mf",
 				"standing"
 			],
+			"actions": [
+				{
+					"type": "suckingnipples",
+					"actor": 0,
+					"target": 1
+				}
+			],
 			"navigations": [
 				{
 					"to": "4StimTest_OStim2PStandingGropingBreastsMF",
@@ -8312,6 +9749,36 @@
 				"standing",
 				"sitting",
 				"transition"
+			],
+			"actions": [
+				{
+					"type": "malemasturbation",
+					"actor": 0
+				},
+				{
+					"type": "femalemasturbation",
+					"actor": 1
+				},
+				{
+					"type": "spectating",
+					"actor": 1,
+					"target": 0
+				},
+				{
+					"type": "spectating",
+					"actor": 0,
+					"target": 1
+				},
+				{
+					"type": "facial",
+					"actor": 0,
+					"target": 1
+				},
+				{
+					"type": "cumonchest",
+					"actor": 0,
+					"target": 1
+				}
 			],
 			"navigations": [
 				{
@@ -8527,6 +9994,23 @@
 				"mf",
 				"standing"
 			],
+			"actions": [
+				{
+					"type": "vampirebite",
+					"actor": 1,
+					"target": 0
+				},
+				{
+					"type": "holdinghead",
+					"actor": 1,
+					"target": 0
+				},
+				{
+					"type": "holdingarm",
+					"actor": 1,
+					"target": 0
+				}
+			],
 			"navigations": [
 				{
 					"to": "4StimTest_OStim2PStandingVampireBiteFemaleToDrainedMaleMF",
@@ -8629,6 +10113,23 @@
 				"mf",
 				"standing"
 			],
+			"actions": [
+				{
+					"type": "vampirebite",
+					"actor": 0,
+					"target": 1
+				},
+				{
+					"type": "holdinghead",
+					"actor": 0,
+					"target": 1
+				},
+				{
+					"type": "holdingbody",
+					"actor": 0,
+					"target": 1
+				}
+			],
 			"navigations": [
 				{
 					"to": "4StimTest_OStim2PStandingVampireBiteMaleToDrainedFemaleMF",
@@ -8681,6 +10182,13 @@
 				"kneeling",
 				"lying"
 			],
+			"actions": [
+				{
+					"type": "holdingbody",
+					"actor": 0,
+					"target": 1
+				}
+			],
 			"navigations": [
 				{
 					"to": "4StimTest_OStim2PSittingMF",
@@ -8724,6 +10232,13 @@
 				"mm",
 				"kneeling",
 				"lying"
+			],
+			"actions": [
+				{
+					"type": "holdingleg",
+					"actor": 0,
+					"target": 1
+				}
 			],
 			"navigations": [
 				{
@@ -8797,6 +10312,13 @@
 				"mm",
 				"kneeling",
 				"lying"
+			],
+			"actions": [
+				{
+					"type": "holdingthigh",
+					"actor": 0,
+					"target": 1
+				}
 			],
 			"navigations": [
 				{
@@ -9655,6 +11177,23 @@
 				"2p",
 				"mf",
 				"sitting"
+			],
+			"actions": [
+				{
+					"type": "kissing",
+					"actor": 0,
+					"target": 1
+				},
+				{
+					"type": "holdinghand",
+					"actor": 0,
+					"target": 1
+				},
+				{
+					"type": "holdingbody",
+					"actor": 0,
+					"target": 1
+				}
 			]
 		},
 		{
@@ -9700,6 +11239,24 @@
 				"bed",
 				"2p",
 				"mf"
+			],
+			"actions": [
+				{
+					"type": "vaginalsex",
+					"actor": 0,
+					"target": 1,
+					"performer": 1
+				},
+				{
+					"type": "gropingbutt",
+					"actor": 0,
+					"target": 1
+				},
+				{
+					"type": "holdingbody",
+					"actor": 1,
+					"target": 0
+				}
 			]
 		},
 		{
@@ -9746,6 +11303,18 @@
 				"2p",
 				"mf",
 				"kneeling"
+			],
+			"actions": [
+				{
+					"type": "blowjob",
+					"actor": 1,
+					"target": 0
+				},
+				{
+					"type": "handjob",
+					"actor": 1,
+					"target": 0
+				}
 			]
 		},
 		{

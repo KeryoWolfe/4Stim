@@ -7,6 +7,11 @@
 #include <string_view>
 #include <vector>
 
+namespace Actions
+{
+	struct Type;
+}
+
 // Scenes are defined in JSON files under Data\F4SE\Plugins\4Stim\Scenes\,
 // so animation authors add content with an Idle-record plugin plus a JSON
 // file, no scripting. See SCENES.md for the format.
@@ -24,7 +29,17 @@ namespace SceneRegistry
 
 	struct SceneActor
 	{
-		Sex sex = Sex::kAny;  // who may take this role
+		Sex                      sex = Sex::kAny;  // who may take this role
+		std::vector<std::string> requirements;     // what the role's actions need (penis, mouth...), lowercase
+	};
+
+	// One action in a scene: who does what to whom (docs/ACTIONS.md).
+	struct SceneAction
+	{
+		std::shared_ptr<const Actions::Type> type;  // never null
+		std::size_t                          actor = 0;      // role doing it
+		std::size_t                          target = 0;     // role it's done to (= actor: done to themselves)
+		std::size_t                          performer = 0;  // role moving
 	};
 
 	struct Navigation
@@ -42,6 +57,7 @@ namespace SceneRegistry
 		std::vector<std::vector<RE::TESIdleForm*>> speeds;       // [speed][role]; at least one speed
 		std::vector<Navigation>                    navigations;  // only to scenes that exist
 		std::vector<std::string>                   tags;
+		std::vector<SceneAction>                   actions;
 		std::string                                icon;  // HUD icon under Data\Interface\4Stim\Icons\, or empty
 		float                                      length = 0.0F;  // seconds of one play-through; 0 = not given
 		std::string                                destination;    // transition: the scene it moves on to after `length`
@@ -50,6 +66,10 @@ namespace SceneRegistry
 		std::string                                sourceFile;
 
 		bool IsTransition() const { return !destination.empty(); }
+
+		// Whether one of its actions is of a_type (an id or alias) / has a_tag.
+		bool HasAction(std::string_view a_type) const;
+		bool HasActionTag(std::string_view a_tag) const;
 	};
 
 	// A fixed run of scenes played one after another (OStim's sequences).
@@ -78,7 +98,8 @@ namespace SceneRegistry
 	// order when it fits, otherwise tries the other order (two actors).
 	std::vector<std::size_t> AssignRoles(std::span<const SceneActor> a_roles, std::span<const Sex> a_actors);
 
-	// Whether a_actors, in this role order, fit a_roles.
+	// Whether a_actors, in this role order, fit a_roles: each role's sex,
+	// and what its actions need (Actions::Provides).
 	bool Fits(std::span<const SceneActor> a_roles, std::span<const Sex> a_actors);
 
 	// Re-reads every scene file. Returns the number of scenes loaded.
@@ -104,6 +125,7 @@ namespace SceneRegistry
 		std::string name;
 		std::string tags;       // comma-separated
 		std::string furniture;  // furniture type it needs, "" = none
+		std::string actions;    // its actions' names, comma-separated
 	};
 
 	// Which of the lists below to give: every scene for that many actors, or

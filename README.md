@@ -7,6 +7,7 @@ An OStim-style scene framework for **Fallout 4** (1.11.240, "Anniversary Edition
 ## Features
 
 - **Scenes from JSON:** solo and two-actor scenes, multiple speeds, and navigation links between scenes ([docs/SCENES.md](docs/SCENES.md)).
+- **Actions:** scenes say who does what to whom (OStim's action types), and roles only go to actors who fit them ([docs/ACTIONS.md](docs/ACTIONS.md)).
 - **Transitions:** short "in-between" animations that play once and move on to their destination by themselves.
 - **Sequences:** fixed runs of scenes, each played for a set time, startable from the picker, the HUD or Papyrus.
 - **In-scene HUD:** a Scaleform HUD with a navigation list, scene icons (`.dds`), actor and speed meters, and keyboard and gamepad control.
@@ -41,7 +42,7 @@ The hotkey and the speed keys are set in `Data\F4SE\Plugins\4Stim.ini`.
 ```
 src/                   F4SE plugin (C++23, CommonLibF4)
 Data/                  Files that ship with the mod
-  F4SE/Plugins/        4Stim.ini, scene files
+  F4SE/Plugins/        4Stim.ini, scene, action, furniture and physics files
   Interface/4Stim/     HUD themes
   Scripts/Source/User/ Papyrus sources (FourStim, FourStimScene, FourStimMenu, FourStimTest)
 Interface-src/         ActionScript 3 sources for the picker and HUD movies
@@ -75,7 +76,7 @@ Compile the scripts in `Data\Scripts\Source\User\` with the Creation Kit's Papyr
 
 ## Credits
 
-- [OStim NG](https://github.com/VersuchDrei/OStimNG) for the design this framework follows and the scene data used for testing
+- [OStim NG](https://github.com/VersuchDrei/OStimNG) for the design this framework follows, the action types (`Actions\Default.json`) and the scene data used for testing
 - [CommonLibF4](https://github.com/libxse/commonlibf4) and the [F4SE](https://f4se.silverlock.org/) team
 
 ## License

@@ -10,8 +10,40 @@ Scriptname FourStim Native Hidden
 ; Number of actors (roles) in a scene, or 0 if no such scene is loaded.
 int Function GetSceneActorCount(String asSceneID) Global Native
 
-; Re-reads all scene files. Returns how many scenes loaded.
+; Re-reads all scene files (and the action types). Returns how many scenes loaded.
 int Function ReloadScenes() Global Native
+
+; ---- Actions ----
+; What a scene's actors do to each other: an action type (id or alias, see
+; docs\ACTIONS.md) with an actor (doing it), a target (it's done to) and a
+; performer (moving), each a role index of the scene.
+
+; Whether a scene has an action of this type / with this action tag
+; ("oral", "intercourse", "sexual"...).
+bool Function SceneHasAction(String asSceneID, String asType) Global Native
+bool Function SceneHasActionTag(String asSceneID, String asTag) Global Native
+
+; Number of actions in a scene.
+int Function GetSceneActionCount(String asSceneID) Global Native
+
+; Index of the first action of asType ("" = any type) whose actor / target is
+; that role (-1 = any role), or -1 if there's none.
+int Function FindSceneAction(String asSceneID, String asType, int aiActor = -1, int aiTarget = -1) Global Native
+
+; The type id of action aiIndex, or "".
+String Function GetSceneActionType(String asSceneID, int aiIndex) Global Native
+
+; The role of action aiIndex's actor (aiWhich 0), target (1) or performer
+; (2), or -1.
+int Function GetSceneActionRole(String asSceneID, int aiIndex, int aiWhich) Global Native
+
+; Every action type id loaded.
+String[] Function GetActionTypes() Global Native
+
+; An action type's display name / tags ("" / empty if there's no such type).
+String Function GetActionName(String asType) Global Native
+String[] Function GetActionTags(String asType) Global Native
+bool Function ActionHasTag(String asType, String asTag) Global Native
 
 ; ---- Animation ----
 

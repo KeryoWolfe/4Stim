@@ -1,5 +1,7 @@
 #include "SceneRegistry.h"
 
+#include "Actions.h"
+
 #include <algorithm>
 #include <cctype>
 #include <filesystem>
@@ -242,6 +244,43 @@ namespace SceneRegistry
 					continue;
 				}
 
+				// Actions: who does what to whom. Each role collects what its
+				// side of its actions needs (Fits checks it).
+				if (const auto acts = entry.find("actions"); acts != entry.end() && acts->is_array()) {
+					for (const auto& a : *acts) {
+						const auto typeID = a.is_object() ? a.value("type", std::string{}) : std::string{};
+						auto       type = Actions::Find(typeID);
+						if (!type) {
+							REX::WARN("Scenes: {}: scene \"{}\": unknown action \"{}\" ignored (not in any Actions file)", file, id, typeID);
+							continue;
+						}
+						auto role = [&](const char* a_key, int a_default) {
+							const auto v = a.find(a_key);
+							return v != a.end() && v->is_number_integer() ? v->get<int>() : a_default;
+						};
+						const int actor = role("actor", 0);
+						const int target = role("target", actor);
+						const int performer = role("performer", actor);
+						const auto inRange = [&](int a_role) { return a_role >= 0 && static_cast<std::size_t>(a_role) < roles; };
+						if (!inRange(actor) || !inRange(target) || !inRange(performer)) {
+							REX::WARN("Scenes: {}: scene \"{}\": action \"{}\" names a role the scene doesn't have (0 to {}), ignored", file, id, typeID, roles - 1);
+							continue;
+						}
+						auto need = [&](int a_role, const Actions::Side& a_side) {
+							auto& reqs = scene.actors[static_cast<std::size_t>(a_role)].requirements;
+							for (const auto& r : a_side.requirements) {
+								if (std::ranges::find(reqs, r) == reqs.end()) {
+									reqs.push_back(r);
+								}
+							}
+						};
+						need(actor, type->actor);
+						need(target, type->target);
+						need(performer, type->performer);
+						scene.actions.push_back({ std::move(type), static_cast<std::size_t>(actor), static_cast<std::size_t>(target), static_cast<std::size_t>(performer) });
+					}
+				}
+
 				if (const auto navs = entry.find("navigations"); navs != entry.end() && navs->is_array()) {
 					for (const auto& n : *navs) {
 						const auto to = n.value("to", std::string{});
@@ -348,6 +387,7 @@ namespace SceneRegistry
 
 		int LoadLocked()
 		{
+			Actions::Reload();  // scenes name their actions
 			g_scenes.clear();
 			g_rawSequences.clear();
 			g_loaded = true;
@@ -490,8 +530,24 @@ namespace SceneRegistry
 			if (want != Sex::kAny && have != Sex::kAny && want != have) {
 				return false;
 			}
+			for (const auto& req : a_roles[i].requirements) {
+				if (!Actions::Provides(have, req)) {
+					return false;
+				}
+			}
 		}
 		return true;
+	}
+
+	bool Scene::HasAction(std::string_view a_type) const
+	{
+		const auto type = Actions::Find(a_type);
+		return type && std::ranges::any_of(actions, [&](const SceneAction& a) { return a.type->id == type->id; });
+	}
+
+	bool Scene::HasActionTag(std::string_view a_tag) const
+	{
+		return std::ranges::any_of(actions, [&](const SceneAction& a) { return a.type->HasTag(a_tag); });
 	}
 
 	std::vector<std::size_t> AssignRoles(std::span<const SceneActor> a_roles, std::span<const Sex> a_actors)
@@ -564,7 +620,15 @@ namespace SceneRegistry
 			for (const auto& tag : scene.tags) {
 				tags += tags.empty() ? tag : ", " + tag;
 			}
-			out.push_back({ scene.id, scene.name, std::move(tags), scene.furniture });
+			std::string names;
+			std::vector<const Actions::Type*> seen;
+			for (const auto& action : scene.actions) {
+				if (std::ranges::find(seen, action.type.get()) == seen.end()) {
+					seen.push_back(action.type.get());
+					names += names.empty() ? action.type->name : ", " + action.type->name;
+				}
+			}
+			out.push_back({ scene.id, scene.name, std::move(tags), scene.furniture, std::move(names) });
 		}
 		std::ranges::sort(out, [](const SceneSummary& a, const SceneSummary& b) { return Lower(a.name) < Lower(b.name); });
 		return out;
