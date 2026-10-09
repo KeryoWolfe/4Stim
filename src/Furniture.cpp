@@ -505,24 +505,27 @@ namespace Furniture
 			// stands right outside it and the other side is free.
 			bool plus = sidesOnY ? nearY >= midY * scale : nearX >= midX * scale;
 			if (type.checkWalls) {
-				auto freeOutside = [&](bool a_plus) {
-					// From just outside that side, outward, above the bed frame.
+				// How far out from that side there's room, up to
+				// WALL_CHECK_DISTANCE. The ray starts over the middle of the bed,
+				// not at its edge: a bed pushed against a wall has its edge in
+				// or touching the wall, and a ray starting inside a wall
+				// doesn't see it.
+				auto roomOutside = [&](bool a_plus) {
 					const float sign = a_plus ? 1.0F : -1.0F;
 					const RE::NiPoint3 dir = sidesOnY ? RE::NiPoint3{ 0.0F, sign, 0.0F } : RE::NiPoint3{ sign, 0.0F, 0.0F };
-					const RE::NiPoint3 edgePoint = sidesOnY ? RE::NiPoint3{ midX, a_plus ? maxY : minY, 0.0F } : RE::NiPoint3{ a_plus ? maxX : minX, midY, 0.0F };
 					const float height = static_cast<float>(b.boundMax.z) + 30.0F;
-					const RE::NiPoint3 start = edgePoint * scale + dir * 4.0F + RE::NiPoint3{ 0.0F, 0.0F, height * scale };
-					const RE::NiPoint3 end = start + dir * WALL_CHECK_DISTANCE;
-					return FreeFraction(a_ref, ToWorld(a_ref, start), ToWorld(a_ref, end));
+					const RE::NiPoint3 start = RE::NiPoint3{ midX, midY, height } * scale;
+					const float toEdge = (sidesOnY ? (a_plus ? maxY - midY : midY - minY) : (a_plus ? maxX - midX : midX - minX)) * scale;
+					const float length = toEdge + WALL_CHECK_DISTANCE;
+					const float free = FreeFraction(a_ref, ToWorld(a_ref, start), ToWorld(a_ref, start + dir * length)) * length;
+					return std::clamp(free - toEdge, 0.0F, WALL_CHECK_DISTANCE);
 				};
-				const float nearSide = freeOutside(plus);
-				if (nearSide < 1.0F) {
-					const float farSide = freeOutside(!plus);
-					REX::INFO("Furniture: {:08X}: the near side is blocked {:.0f} units out; the other side {}", a_ref->GetFormID(),
-						nearSide * WALL_CHECK_DISTANCE, farSide < 1.0F ? std::format("is blocked {:.0f} out", farSide * WALL_CHECK_DISTANCE) : std::string("is free"));
-					if (farSide > nearSide) {
-						plus = !plus;
-					}
+				const float nearRoom = roomOutside(plus);
+				const float farRoom = roomOutside(!plus);
+				REX::INFO("Furniture: {:08X}: room beside the near side {:.0f}, the far side {:.0f} (of {:.0f})", a_ref->GetFormID(), nearRoom, farRoom,
+					WALL_CHECK_DISTANCE);
+				if (nearRoom < WALL_CHECK_DISTANCE && farRoom > nearRoom) {
+					plus = !plus;
 				}
 			}
 			if (sidesOnY) {

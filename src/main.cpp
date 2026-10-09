@@ -22,6 +22,16 @@ namespace
 
 	bool g_guardScenes = true;  // bGuardScenes: see GuardScenes
 
+	// Furniture kicks by the scene guard, per actor: when the last was, and
+	// how many in this scene (it gives up after a few, rather than replay
+	// the scene over and over).
+	struct GuardKicks
+	{
+		std::chrono::steady_clock::time_point last{};
+		int                                   count = 0;
+	};
+	std::unordered_map<std::uint32_t, GuardKicks> g_guardKicks;
+
 	// Papyrus-facing script name. Must be "FourStim", not "4Stim" -- Papyrus
 	// identifiers can't start with a digit. The plugin/project itself is
 	// still called 4Stim everywhere else (xmake project name, log text).
@@ -1125,19 +1135,36 @@ namespace
 	// chair...) stays in it under any idle we play, props and all: get them
 	// out on the spot, and give their AI a do-nothing package so it doesn't
 	// walk them back. Main thread. True if they were in something.
-	bool LeaveFurniture(RE::Actor* a_actor, bool a_doNothing)
+	// The furniture or idle marker a_actor is using, if any (nullptr if none
+	// or if the handle no longer resolves).
+	RE::NiPointer<RE::TESObjectREFR> FurnitureOf(RE::Actor* a_actor)
 	{
 		const auto process = a_actor ? a_actor->currentProcess : nullptr;
 		const auto data = process ? process->middleHigh : nullptr;
-		const bool inFurniture = data && (data->occupiedFurniture || data->currentFurniture);
-		if (inFurniture) {
+		if (!data) {
+			return nullptr;
+		}
+		if (auto ref = data->occupiedFurniture.get()) {
+			return ref;
+		}
+		return data->currentFurniture.get();
+	}
+
+	bool LeaveFurniture(RE::Actor* a_actor, bool a_doNothing)
+	{
+		const auto furniture = FurnitureOf(a_actor);
+		if (furniture) {
+			const auto base = furniture->GetObjectReference();
+			REX::INFO("Furniture use: {:08X} is using {:08X} (base {:08X} \"{}\"), taking them out", a_actor->GetFormID(), furniture->GetFormID(),
+				base ? base->GetFormID() : 0, base && base->GetFormEditorID() ? base->GetFormEditorID() : "");
 			a_actor->StopInteractingQuick(true, false, true);
 		}
-		if (a_doNothing || inFurniture) {
+		if (a_doNothing || furniture) {
 			a_actor->InitiateDoNothingPackage();
 		}
-		return inFurniture;
+		return furniture != nullptr;
 	}
+
 
 	void GuardScenes(float a_seconds)
 	{
@@ -1167,10 +1194,13 @@ namespace
 					continue;
 				}
 				data->packageIdleTimer = 30.0F;  // no package idle for a while; renewed every check
-				if (LeaveFurniture(actor, false) && !intruder) {
-					REX::INFO("Scene guard: {:08X} in \"{}\" went into furniture or an idle marker, taken out", id, active.sceneID);
-					intruder = data->currentIdle;
-					intruded = id;
+				if (auto& kicks = g_guardKicks[id]; kicks.count < 3 && now - kicks.last > std::chrono::seconds(5) && FurnitureOf(actor)) {
+					kicks.last = now;
+					if (++kicks.count == 3) {
+						REX::WARN("Scene guard: {:08X} keeps going back into furniture; leaving it be for this scene", id);
+					}
+					REX::INFO("Scene guard: {:08X} in \"{}\" went into furniture or an idle marker", id, active.sceneID);
+					LeaveFurniture(actor, false);
 					forceReplay = true;
 					continue;
 				}
@@ -1670,6 +1700,7 @@ namespace
 		// their AI to do until the scene ends (ReleaseFromScene's
 		// EvaluatePackage hands them back their routine).
 		F4SE::GetTaskInterface()->AddTask([id = a_actor->GetFormID()]() {
+			g_guardKicks.erase(id);  // a new scene: the guard starts over
 			const auto actor = RE::TESForm::GetFormByID<RE::Actor>(id);
 			if (actor && !IsPlayer(actor) && LeaveFurniture(actor, true)) {
 				REX::INFO("SuppressInteraction: {:08X} was in furniture or an idle marker, taken out", id);
