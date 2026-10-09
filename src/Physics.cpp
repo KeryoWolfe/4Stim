@@ -12,6 +12,10 @@
 #include "Bridge.h"
 #include "SceneRegistry.h"
 
+// CommonLibF4 declares this but doesn't define it; needed to derive a
+// callback (the game never calls it on its own functors through us).
+RE::BSScript::IStackCallbackFunctor::~IStackCallbackFunctor() = default;
+
 namespace Physics
 {
 	namespace
@@ -98,6 +102,34 @@ namespace Physics
 			REX::INFO("Physics: {} swap(s) from {} file(s)", g_swaps.size(), files.size());
 		}
 
+		// Logs what SwapPhysicsFile returned: false means FSMP found no active
+		// physics system on the actor using that file.
+		class SwapResult : public RE::BSScript::IStackCallbackFunctor
+		{
+		public:
+			SwapResult(std::uint32_t a_actor, std::string a_from, std::string a_to) :
+				_actor(a_actor), _from(std::move(a_from)), _to(std::move(a_to)) {}
+
+			void CallQueued() override {}
+			void CallCanceled() override { REX::WARN("Physics: {:08X} swap to \"{}\" canceled", _actor, _to); }
+			void StartMultiDispatch() override {}
+			void EndMultiDispatch() override {}
+			void operator()(RE::BSScript::Variable a_result) override
+			{
+				const bool ok = a_result.is<bool>() && RE::BSScript::get<bool>(a_result);
+				if (ok) {
+					REX::INFO("Physics: {:08X} now uses \"{}\"", _actor, _to);
+				} else {
+					REX::WARN("Physics: {:08X} not swapped: FSMP found no active physics using \"{}\" on it (not loaded, beyond maxActiveActors in FSMP's configs.xml, or a different file)", _actor, _from);
+				}
+			}
+
+		private:
+			std::uint32_t _actor;
+			std::string   _from;
+			std::string   _to;
+		};
+
 		bool CallSwap(RE::Actor* a_actor, const std::string& a_from, const std::string& a_to)
 		{
 			const auto vm = FourStim::GetVM();
@@ -105,7 +137,7 @@ namespace Physics
 				return false;
 			}
 			// FSMP: bool SwapPhysicsFile(Actor, String oldFile, String newFile, bool persist, bool verbose) global native
-			RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
+			RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback{ new SwapResult(a_actor->GetFormID(), a_from, a_to) };
 			const bool ok = vm->DispatchStaticCall("DynamicHDT"sv, "SwapPhysicsFile"sv, callback, a_actor, a_from, a_to, true, true);
 			REX::INFO("Physics: {:08X} \"{}\" -> \"{}\" (dispatch={})", a_actor->GetFormID(), a_from, a_to, ok);
 			if (!ok) {
