@@ -2,7 +2,7 @@
 
 4Stim reads scenes from JSON files. To add your animations you need two things, and no scripting:
 
-1. **A plugin with Idle records** for your animations (one Idle per actor role).
+1. **A plugin with Idle records** for your animations (one Idle per actor role and speed; see "The plugin: Idle records").
 2. **A JSON file** describing your scenes, placed in:
 
 ```
@@ -10,6 +10,31 @@ Data\F4SE\Plugins\4Stim\Scenes\YourPack.json
 ```
 
 Every `.json` file in that folder is loaded. Use a filename unique to your pack.
+
+## The plugin: Idle records
+
+Each animation clip is played through an **Idle** record (IDLE) in your plugin: one Idle per role, per speed. A two-actor scene with three speeds needs six Idles. The Idles aren't part of any idle tree; 4Stim plays them directly by form ID, so they need no conditions and no parent.
+
+| Field (xEdit / Creation Kit) | Value |
+|---|---|
+| Editor ID (`EDID`) | Anything unique, e.g. `MyPack_Cowgirl_S1_0` (scene, speed, role). It's what you type in the console to test: `player.playidle MyPack_Cowgirl_S1_0`. |
+| Behavior Graph (`DNAM`) | `Actors\Character\Behaviors\RaiderRootBehavior.hkx` (human actors). |
+| Animation Event (`ENAM`) | `dyn_ActivationLoop` for scenes that loop. **`dyn_Activation`** for transitions (see Transitions below). |
+| Animation file (`GNAM`) | The clip's path relative to `Data\Meshes\`, e.g. `Actors\Character\Animations\MyPack\Cowgirl_S1_0_fo4.hkx`. |
+| Related Idle Animations (`ANAM`) | None: parent and previous sibling both null. |
+| Conditions | None. |
+
+The clips themselves:
+
+- **Fallout 4 format.** Havok 2014 (`hk_2014`) animations for the Fallout 4 skeleton. Skyrim (OStim) clips have to be converted first; the Skyrim-to-FO4 converter writes the clips and a plugin with these Idles for you (`pipeline.py`).
+- **Put them under** `Data\Meshes\Actors\Character\Animations\<YourPack>\`, at the path the Idle's `GNAM` names.
+- **One shared origin.** All roles of a scene are authored around the same point (see "Two-actor scenes"). The actors are placed on that point with the same heading.
+- **Loops loop.** A clip for an ordinary scene should end in the pose it starts in.
+- **Transitions are different:** they play once (`dyn_Activation`), end with about 0.5 s of held last pose, and end on the destination's first pose (see Transitions).
+
+The plugin can be a light plugin (ESL-flagged). Scene files use the Idles' form IDs within your plugin, so load order doesn't matter (see "Form IDs").
+
+**Converter note:** the converter currently writes every Idle with `dyn_ActivationLoop`. After converting, change the transition Idles' animation event to `dyn_Activation` in xEdit, and pad the transition clips with `hold_end.py`. Regenerating the plugin undoes the event change.
 
 ## Example
 
@@ -75,8 +100,6 @@ A transition is a short animation between two poses, like turning around from co
 { "id": "MyPack_CowgirlToReverse", "name": "Turn around", "length": 1.95,
   "destination": "MyPack_ReverseCowgirl", "actors": [ ... ] }
 ```
-
-**Transition idles must use the one-shot `dyn_Activation` animation event** (the Idle record's animation event), not `dyn_ActivationLoop`. Switching from a looping idle replays the outgoing clip's first frames while it blends out: harmless between two loops, but a transition starts in the previous pose, so it shows as a jump back. A one-shot clip blends out from where it is.
 
 Navigate to the transition as to any scene (the player picks "turn around"); when its time is up, the scene moves on to the destination on its own, at the same speed where the destination has it. Time only counts while the game isn't paused. The scene moves on `fTransitionLead` seconds before the length (0 by default, in `4Stim.ini`); if the clip ends first (the game's "IdleStop"), it moves on the moment it does.
 
