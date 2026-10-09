@@ -679,8 +679,8 @@ namespace
 			// Strong at once, fading out quickly.
 			const float fade = (1.0F - t) * (1.0F - t);
 			std::uniform_real_distribution<float> unit(-1.0F, 1.0F);
-			const float move = 3.5F * shake.strength * fade;     // game units
-			const float turn = 0.012F * shake.strength * fade;   // radians
+			const float move = 0.6F * shake.strength * fade;     // game units
+			const float turn = 0.0025F * shake.strength * fade;  // radians
 			offset = { unit(g_shakeRandom) * move, unit(g_shakeRandom) * move, unit(g_shakeRandom) * move };
 			turnX = unit(g_shakeRandom) * turn;
 			turnY = unit(g_shakeRandom) * turn;
@@ -705,7 +705,7 @@ namespace
 				// Already shaking: restart it from where the camera is now.
 				g_climaxShake.start = std::chrono::steady_clock::now();
 			} else {
-				g_climaxShake = { true, std::chrono::steady_clock::now(), 1.2F, config.shake };
+				g_climaxShake = { true, std::chrono::steady_clock::now(), 0.8F, config.shake };
 			}
 			StartAutoplayTicks();
 		}

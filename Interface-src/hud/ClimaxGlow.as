@@ -6,8 +6,8 @@ package hud
 	import flash.geom.Matrix;
 	import flash.utils.getTimer;
 
-	// The climax flash: a faint white glow at the screen's edges (the middle
-	// stays clear), that rises, holds for a moment and fades out.
+	// The climax flash: a faint white glow along the screen's edges only
+	// (nothing in the middle), that rises, holds for a moment and fades out.
 	// Drawn over the whole visible screen, behind the HUD panels.
 	public class ClimaxGlow extends Shape
 	{
@@ -43,12 +43,21 @@ package hud
 			var y:Number = a_screen.y1;
 			var w:Number = a_screen.x2 - a_screen.x1;
 			var h:Number = a_screen.y2 - a_screen.y1;
+			var band:Number = Math.round(Math.min(w, h) * 0.07);  // how far in from each edge
 			graphics.clear();
-			// The edges: transparent in the middle, white toward the corners.
+			// A thin glow along each edge, gone well before the middle.
+			edge(x, y, w, band, Math.PI / 2, false);         // top: fades downward
+			edge(x, y + h - band, w, band, -Math.PI / 2, false);  // bottom: fades upward
+			edge(x, y, band, h, 0, true);                     // left: fades rightward
+			edge(x + w - band, y, band, h, Math.PI, true);    // right: fades leftward
+		}
+
+		private function edge(a_x:Number, a_y:Number, a_w:Number, a_h:Number, a_angle:Number, a_vertical:Boolean):void
+		{
 			var m:Matrix = new Matrix();
-			m.createGradientBox(w * 1.25, h * 1.25, 0, x - w * 0.125, y - h * 0.125);
-			graphics.beginGradientFill(GradientType.RADIAL, [0xFFFFFF, 0xFFFFFF, 0xFFFFFF], [0, 0.03, 0.22], [0, 165, 255], m);
-			graphics.drawRect(x, y, w, h);
+			m.createGradientBox(a_w, a_h, a_angle, a_x, a_y);
+			graphics.beginGradientFill(GradientType.LINEAR, [0xFFFFFF, 0xFFFFFF], [0.14, 0], [0, 255], m);
+			graphics.drawRect(a_x, a_y, a_w, a_h);
 			graphics.endFill();
 		}
 

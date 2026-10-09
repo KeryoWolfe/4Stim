@@ -248,7 +248,7 @@ Every function is on `Menu_mc`. All of them are required except where marked.
 | `SetPaused(paused:Boolean):void` | A game menu opened or closed over the HUD. |
 | `ProcessUserEvent(name:String, down:Boolean):Boolean` | Input while focused: `down` is `true` on press and `false` on release. Return `true` if you used it. Holding `Up` or `Down` repeats the press, so you don't need your own repeat timer. The names and their keys are below. |
 | `SetMeters(values:Array):void` | *Optional.* Faster update of just the actor meters, one `Number` per role, without resending names. Sent up to ten times a second while excitement changes; a HUD without it only gets the values with `SetActors`. |
-| `PlayClimax(strength:Number):void` | *Optional.* An actor in the focused scene climaxed: play a flash. `strength` is `0.0`–`1.0` (`fClimaxFlash`). The default HUD fades a faint white glow in at the screen's edges and out over about 1.5 s, behind its panels. |
+| `PlayClimax(strength:Number):void` | *Optional.* An actor in the focused scene climaxed: play a flash. `strength` is `0.0`–`1.0` (`fClimaxFlash`). The default HUD fades a faint white glow in along the screen's edges only and out over about 1.5 s, behind its panels. |
 
 Input names while the HUD is focused:
 
