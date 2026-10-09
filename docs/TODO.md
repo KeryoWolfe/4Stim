@@ -43,11 +43,11 @@ What OStim NG has that 4Stim doesn't yet, from a read of its source (October 202
 - Change furniture mid-scene, reset displaced clutter afterwards, auto-use the nearest furniture, a bed confirmation, more types (wall, shelf, chemistry / armor / power armor stations).
 
 ### Scene format
-- Fields OStim has and 4Stim doesn't: `defaultSpeed`, `autoTransitions`, `noRandomSelection`, `actions`, `requirements`, `intendedSex`, actor tags, `scale` / `scaleHeight`, `feetOnGround`, `look*`, `noStrip`, `muted`, `sosBend`.
+- Fields OStim has and 4Stim doesn't: `defaultSpeed`, other `autoTransitions` than climax, `noRandomSelection`, `requirements`, `intendedSex`, actor tags, `scale` / `scaleHeight`, `feetOnGround`, `look*`, `noStrip`, `muted`, `sosBend`. (`actions` and the actor `climax` scene are done.)
 
 ### For other mods
 - **Papyrus API.** A thread builder (actors, furniture, start scene or sequence, flags: no auto mode, no undress...), scene metadata queries, random scene by tags (OLibrary), per-actor data.
-- **More events.** Orgasm, furniture changed, NPC scene start / end, sequence end (above).
+- **More events.** Furniture changed, NPC scene start / end, sequence end (below). (Climax is done: `FourStim_OnClimax`.)
 - **A C++ plugin interface** for other F4SE plugins (start / stop, listeners, alignment).
 - **Save data.** Per-actor choices (voice set, equip objects, alignment) in the F4SE co-save; clean up scenes left running on load.
 
@@ -60,7 +60,6 @@ What OStim NG has that 4Stim doesn't yet, from a read of its source (October 202
 
 ## Later
 
-- Excitement system
 - PrismaUI
 - NPC greetings
 - Race filtering
