@@ -65,7 +65,6 @@ What OStim NG has that 4Stim doesn't yet, from a read of its source (October 202
     - Both: Enhanced Vanilla Bodies.
 - **In-game HUD editor.** Lets theme makers rearrange the HUD in game: drag the navigation list, tabs, logo, actor meters and speed meter where they want, resize them, then save the layout to a file they can put in their theme (`Data\Interface\4Stim\Themes\`, see HUD_API.md), so the theme ships with that positioning.
 - **YAML scene files.** Let animation authors write their scene files (scenes and sequences, `Scenes\`) as either JSON or YAML (`.yaml` / `.yml`), whichever they prefer, with the same fields; both load side by side from the same folder. YAML is easier to write by hand: comments, no quotes or trailing-comma errors.
-- PrismaUI
 - NPC greetings
 - Race filtering
 - Claim registry
