@@ -1,5 +1,6 @@
 package
 {
+	import flash.display.Graphics;
 	import flash.display.MovieClip;
 	import flash.display.Shape;
 	import flash.display.Sprite;
@@ -27,14 +28,16 @@ package
 		private static const STAGE_H:Number = 720;
 		// A small panel at the top center (like OStim's menus), not a
 		// screen-filling list.
-		private static const PANEL_W:Number = 400;
-		private static const PAD:Number = 10;
-		private static const ROW_H:Number = 24;
-		private static const VISIBLE_ROWS:int = 9;
-		private static const TOP_Y:Number = 36;
-		private static const TITLE_H:Number = 28;
-		private static const MALE:uint = 0x5AA9FF;
-		private static const FEMALE:uint = 0xFF6FA8;
+		// It grows with the list, up to VISIBLE_ROWS rows.
+		private static const PANEL_W:Number = 300;
+		private static const PAD:Number = 8;
+		private static const ROW_H:Number = 20;
+		private static const VISIBLE_ROWS:int = 8;
+		private static const TOP_Y:Number = 30;
+		private static const TITLE_H:Number = 22;
+		private static const LIST_Y:Number = PAD + TITLE_H + 4;
+		private static const DETAIL_H:Number = 17;
+		private static const FOOTER_H:Number = 15;
 
 		private var _scenes:Array = [];
 		private var _selected:int = 0;
@@ -48,8 +51,8 @@ package
 		private var _rows:Array = [];
 		private var _rowBgs:Array = [];
 		private var _rowLabels:Array = [];
-		private var _rowMarks:Array = [];
 		private var _scrollbar:Shape;
+		private var _frame:Shape;
 
 		public function PickerPanel()
 		{
@@ -105,17 +108,14 @@ package
 
 		private function build():void
 		{
-			var listH:Number = VISIBLE_ROWS * ROW_H;
-			var panelH:Number = PAD + TITLE_H + 6 + listH + 6 + 20 + 4 + 18 + PAD;
 			x = Math.round((STAGE_W - PANEL_W) / 2);
 			y = TOP_Y;
 
-			graphics.lineStyle(2, GREEN, 1);
-			graphics.beginFill(0x000000, 0.85);
-			graphics.drawRect(0, 0, PANEL_W, panelH);
-			graphics.endFill();
+			// Background and dividers, redrawn to fit the list (layout()).
+			_frame = new Shape();
+			addChild(_frame);
 
-			_title = makeText(19, GREEN);
+			_title = makeText(16, GREEN);
 			_title.x = PAD;
 			_title.y = PAD;
 			_title.width = PANEL_W - PAD * 2;
@@ -123,44 +123,25 @@ package
 			_title.text = "4Stim";
 			addChild(_title);
 
-			var listY:Number = PAD + TITLE_H + 6;
-			graphics.lineStyle(1, DIM, 1);
-			graphics.moveTo(PAD, listY - 4);
-			graphics.lineTo(PANEL_W - PAD, listY - 4);
-
 			for (var i:int = 0; i < VISIBLE_ROWS; i++) {
 				var row:Sprite = new Sprite();
 				row.x = PAD;
-				row.y = listY + i * ROW_H;
+				row.y = LIST_Y + i * ROW_H;
 				row.buttonMode = true;
 				row.mouseChildren = false;
 
 				var bg:Shape = new Shape();
 				bg.graphics.beginFill(GREEN, 1);
-				bg.graphics.drawRect(0, 0, PANEL_W - PAD * 2 - 10, ROW_H - 2);
+				bg.graphics.drawRect(0, 0, PANEL_W - PAD * 2 - 8, ROW_H - 2);
 				bg.graphics.endFill();
 				row.addChild(bg);
 
-				var label:TextField = makeText(15, GREEN);
-				label.x = 6;
-				label.y = 1;
-				label.width = PANEL_W - PAD * 2 - 24;
-				label.height = ROW_H - 2;
+				var label:TextField = makeText(13, GREEN);
+				label.x = 4;
+				label.y = 0;
+				label.width = PANEL_W - PAD * 2 - 16;
+				label.height = ROW_H;
 				row.addChild(label);
-
-				// Sex mark for actors (entry.mark "male"/"female"): a device
-				// font, since the game's UI font has no gender symbols.
-				var mark:TextField = new TextField();
-				mark.embedFonts = false;
-				mark.defaultTextFormat = new TextFormat("_sans", 15, GREEN, true);
-				mark.selectable = false;
-				mark.mouseEnabled = false;
-				mark.x = 4;
-				mark.y = 1;
-				mark.width = 20;
-				mark.height = ROW_H - 2;
-				mark.visible = false;
-				row.addChild(mark);
 
 				row.addEventListener(MouseEvent.MOUSE_OVER, onRowOver);
 				row.addEventListener(MouseEvent.CLICK, onRowClick);
@@ -168,43 +149,59 @@ package
 				_rows.push(row);
 				_rowBgs.push(bg);
 				_rowLabels.push(label);
-				_rowMarks.push(mark);
 			}
 
 			_scrollbar = new Shape();
 			addChild(_scrollbar);
 
-			_empty = makeText(15, GREEN);
-			_empty.x = PAD + 8;
-			_empty.y = listY + 8;
-			_empty.width = PANEL_W - PAD * 2 - 16;
-			_empty.height = 22;
+			_empty = makeText(13, GREEN);
+			_empty.x = PAD + 4;
+			_empty.y = LIST_Y;
+			_empty.width = PANEL_W - PAD * 2 - 8;
+			_empty.height = ROW_H;
 			_empty.text = "No scenes available for this pairing.";
 			_empty.visible = false;
 			addChild(_empty);
 
-			var detailY:Number = listY + listH + 6;
-			graphics.moveTo(PAD, detailY - 4);
-			graphics.lineTo(PANEL_W - PAD, detailY - 4);
-
-			_detail = makeText(13, GREEN);
+			_detail = makeText(11, GREEN);
 			_detail.x = PAD;
-			_detail.y = detailY;
 			_detail.width = PANEL_W - PAD * 2;
-			_detail.height = 20;
+			_detail.height = DETAIL_H;
 			addChild(_detail);
 
-			_footer = makeText(12, GREEN);
+			_footer = makeText(10, GREEN);
 			_footer.x = PAD;
-			_footer.y = detailY + 20 + 4;
 			_footer.width = PANEL_W - PAD * 2;
-			_footer.height = 18;
-			_footer.alpha = 0.7;
-			_footer.text = "Enter: choose    Esc: close    Arrows / wheel: browse";
+			_footer.height = FOOTER_H;
+			_footer.alpha = 0.6;
+			_footer.text = "Enter: choose   Esc: close";
 			addChild(_footer);
 
 			addEventListener(MouseEvent.MOUSE_WHEEL, onWheel);
 			refresh();
+		}
+
+		// Sizes the panel to a_rows rows of list.
+		private function layout(a_rows:int):void
+		{
+			var listH:Number = Math.max(1, a_rows) * ROW_H;
+			var detailY:Number = LIST_Y + listH + 4;
+			var panelH:Number = detailY + DETAIL_H + FOOTER_H + PAD;
+
+			var g:Graphics = _frame.graphics;
+			g.clear();
+			g.lineStyle(2, GREEN, 1);
+			g.beginFill(0x000000, 0.85);
+			g.drawRect(0, 0, PANEL_W, panelH);
+			g.endFill();
+			g.lineStyle(1, DIM, 1);
+			g.moveTo(PAD, LIST_Y - 3);
+			g.lineTo(PANEL_W - PAD, LIST_Y - 3);
+			g.moveTo(PAD, detailY - 2);
+			g.lineTo(PANEL_W - PAD, detailY - 2);
+
+			_detail.y = detailY;
+			_footer.y = detailY + DETAIL_H;
 		}
 
 		// Text in the game's UI font. The font name maps through the game's
@@ -234,43 +231,34 @@ package
 				var row:Sprite = _rows[i];
 				var label:TextField = _rowLabels[i];
 				var bg:Shape = _rowBgs[i];
-				var markField:TextField = _rowMarks[i];
 				if (index < count) {
 					row.visible = true;
 					label.text = String(_scenes[index].name);
 					var selected:Boolean = index == _selected;
 					bg.visible = selected;
 					label.textColor = selected ? 0x000000 : GREEN;
-					var sex:String = _scenes[index].mark != null ? String(_scenes[index].mark) : "";
-					markField.visible = sex == "male" || sex == "female";
-					if (markField.visible) {
-						markField.text = sex == "male" ? "\u2642" : "\u2640";
-						markField.textColor = selected ? 0x000000 : (sex == "male" ? MALE : FEMALE);
-						label.x = 24;
-					} else {
-						label.x = 6;
-					}
 				} else {
 					row.visible = false;
 				}
 			}
 
+			layout(Math.min(count, VISIBLE_ROWS));
 			_empty.visible = count == 0;
 			_detail.text = count > 0 ? String(_scenes[_selected].tags) : "";
 
 			// Scrollbar, only when the list is longer than the view.
 			_scrollbar.graphics.clear();
 			if (count > VISIBLE_ROWS) {
-				var trackX:Number = PANEL_W - PAD - 6;
-				var trackY:Number = PAD + TITLE_H + 6;
+				var trackX:Number = PANEL_W - PAD - 4;
+				var trackY:Number = LIST_Y;
 				var trackH:Number = VISIBLE_ROWS * ROW_H;
-				var thumbH:Number = Math.max(20, trackH * VISIBLE_ROWS / count);
+				var thumbH:Number = Math.max(16, trackH * VISIBLE_ROWS / count);
 				var thumbY:Number = trackY + (trackH - thumbH) * _top / (count - VISIBLE_ROWS);
 				_scrollbar.graphics.beginFill(DIM, 1);
-				_scrollbar.graphics.drawRect(trackX, trackY, 4, trackH);
+				_scrollbar.graphics.drawRect(trackX, trackY, 3, trackH);
 				_scrollbar.graphics.endFill();
 				_scrollbar.graphics.beginFill(GREEN, 1);
-				_scrollbar.graphics.drawRect(trackX, thumbY, 4, thumbH);
+				_scrollbar.graphics.drawRect(trackX, thumbY, 3, thumbH);
 				_scrollbar.graphics.endFill();
 			}
 		}
