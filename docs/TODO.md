@@ -14,6 +14,51 @@
 
 - **Rebuild the animation converter both ways: Skyrim to Fallout 4 and Fallout 4 to Skyrim.** One tool with a proper bone map and retargeting between the two skeletons, and the right Havok output for each game (FO4's hk_2014 and Skyrim SE's 64-bit hk_2010 packfiles). It should keep annotations and root motion, and build each game's plugin (FO4 IDLE records: one-shot for transitions, looping otherwise). It should also write 4Stim scene files and hold the last pose of transition clips. The two converter items above fold into this.
 
+## OStim parity
+
+What OStim NG has that 4Stim doesn't yet, from a read of its source (October 2026). Roughly in priority order within each group.
+
+### Core
+- **Actions.** Scene metadata for who does what to whom (actor / target / performer, e.g. vaginal sex, kissing), with action tags. Excitement, sounds, expressions and undressing all key off actions; 4Stim scenes only have free-form tags.
+- **Excitement and climax.** Per-actor excitement from actions, decay, climax (count, climax animations, reactions), end the scene on player / male / female / all climax, excitement bars in the HUD, and an orgasm event.
+- **Auto mode.** Random navigation by stage (foreplay, main, pull-out), auto speed from excitement, min/max time per scene; for the player (toggle hotkey) and for NPC scenes. Needs `noRandomSelection` on scenes.
+- **Concurrent scenes (threads).** Several scenes at once, NPC-only scenes started by hotkey or script, all tracked natively (the claim registry). Today the HUD follows one focused scene.
+- **Undressing.** Undress at start, partial undress per action (slot lists), weapons removed, redress at the end (optionally animated), a slot mask setting, `noStrip` scenes, a Papyrus override.
+
+### Presentation
+- **Alignment menu.** Live per-actor offsets (x, y, z, rotation, scale, penis bend) per scene and role, saved to JSON and keyed by sex / height / heels. Covers the penis-position pin above.
+- **Actor scaling and heels.** Scale actors to the animation's intended height (`scale`, `scaleHeight`), and remove or compensate heel offsets.
+- **Facial expressions.** Expression sets (default, excited, kissing, moan, climax, open mouth...) with phonemes, eyes and brows, by action and excitement; `look` directions and `expressionOverride` per scene.
+- **Sound.** Voice sets per actor / voice type (moans, muffled moans, climax sounds, comments, reactions, post-scene lines), action sounds (slaps on peaks), mute / muffle per actor or action.
+- **Peaks and events.** Distance- or loop-based peak signals per action, and annotation events (spank...) with sound, stimulation, camera shake and rumble.
+- **Lights.** Optional face / crotch light during scenes, only in the dark.
+- **Camera extras.** Freecam speed and FOV, first person after the scene, fades on start and on scene changes, screen shake.
+
+### Actors and roles
+- **Equip objects.** Strap-ons (equipped when a female takes a male role), tongues and other per-scene items, removed at the end.
+- **Futa and sex detection.** Detect sex from the body / genitals rather than the base sex; futa options (male role, male climax).
+- **Role choice.** Intended-sex-only filter (have it: `bMatchSex`), player always dominant or submissive, choose your role when several fit.
+- **Actor requirements and properties.** Per-role requirements (race, vampire / ghoul / super mutant, has a penis...), actor tags, perk-conditioned properties. Covers "Race filtering" below.
+
+### Furniture
+- Change furniture mid-scene, reset displaced clutter afterwards, auto-use the nearest furniture, a bed confirmation, more types (wall, shelf, chemistry / armor / power armor stations).
+
+### Scene format
+- Fields OStim has and 4Stim doesn't: `defaultSpeed`, `autoTransitions`, `noRandomSelection`, `actions`, `requirements`, `intendedSex`, actor tags, `scale` / `scaleHeight`, `feetOnGround`, `look*`, `noStrip`, `muted`, `sosBend`.
+
+### For other mods
+- **Papyrus API.** A thread builder (actors, furniture, start scene or sequence, flags: no auto mode, no undress...), scene metadata queries, random scene by tags (OLibrary), per-actor data.
+- **More events.** Orgasm, furniture changed, NPC scene start / end, sequence end (above).
+- **A C++ plugin interface** for other F4SE plugins (start / stop, listeners, alignment).
+- **Save data.** Per-actor choices (voice set, equip objects, alignment) in the F4SE co-save; clean up scenes left running on load.
+
+### Settings and UI
+- **MCM page** (Fallout 4's Mod Configuration Menu) for every INI setting plus hotkeys, with export / import.
+- **Hotkeys:** end scene, auto mode, pull out, hide UI, NPC-only scene start.
+- **Options in the HUD:** per-actor toggles (undress, strap-on, mute...).
+- **Translations** for the menu and HUD text.
+- **Sex toys** (device integration). Optional, last.
+
 ## Later
 
 - Excitement system
