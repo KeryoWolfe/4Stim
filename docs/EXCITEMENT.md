@@ -19,7 +19,7 @@ At 100 the actor climaxes:
 - **Counted:** `GetTimesClimaxed` goes up by one, and a man's excitement starts over at 0. A woman's starts at `fPostClimaxExcitement` times her climaxes so far, up to `fPostClimaxExcitementMax`.
 - **Animation:** if the actor's role in the scene has a `climax` scene (`SCENES.md`), it plays. That's usually a transition back to the scene, at the slowest speed for a man. Without one, a man's climax drops the scene to its slowest speed. Set `bClimaxScenes=0` to turn climax scenes off.
 - **Event:** registered scripts get `FourStim_OnClimax(Actor akActor, Actor[] akActors, String asSceneID, int aiTimes)` (see `SceneEvents.h` / `FourStim.RegisterForSceneEvents`).
-- **Effects:** if the player is in the scene, the camera shakes and the controller rumbles (`FourStimMenu.ClimaxEffects`).
+- **Effects:** if the player is in the scene or watching it, the moment the climax happens: the camera shakes (the free camera is shaken by the plugin, since the game's own shake doesn't move it), the screen blurs briefly, a white glow rises at the screen's edges and fades (the HUD's `PlayClimax`), and the controller rumbles. `fClimaxShake`, `fClimaxBlur`, `fClimaxFlash` and `bClimaxRumble` set or turn off each one.
 - **Ending:** the scene ends `fClimaxEndDelay` seconds later if the settings say so. Scenes with the player use `bEndOnPlayerClimax`, `bEndOnMaleClimax` and `bEndOnFemaleClimax`, or with `bEndOnAllClimax=1`, they end once everyone has climaxed. Scenes without the player use `bEndNPCScenesOnClimax`.
 
 A **stalled** actor (`StallClimax`) stays at 100 without climaxing until released. `Climax(akActor)` makes an actor climax right away.

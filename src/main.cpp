@@ -146,6 +146,14 @@ namespace
 					Excitement::Settings().endNPCScenes = std::stoi(value) != 0;
 				} else if (key == "fclimaxenddelay") {
 					Excitement::Settings().endDelay = std::clamp(std::stof(value), 0.0F, 60.0F);
+				} else if (key == "fclimaxshake") {
+					Excitement::Settings().shake = std::clamp(std::stof(value), 0.0F, 5.0F);
+				} else if (key == "fclimaxblur") {
+					Excitement::Settings().blur = std::clamp(std::stof(value), 0.0F, 1.0F);
+				} else if (key == "fclimaxflash") {
+					Excitement::Settings().flash = std::clamp(std::stof(value), 0.0F, 1.0F);
+				} else if (key == "bclimaxrumble") {
+					Excitement::Settings().rumble = std::stoi(value) != 0;
 				} else if (key == "ftransitionlead") {
 					g_settings.transitionLead = std::clamp(std::stof(value), -2.0F, 5.0F);
 				}
@@ -624,6 +632,99 @@ namespace
 
 	// ---- Excitement and climax (Excitement.h) ----
 
+	// Climax camera shake. The game's own shake (Game.ShakeCamera) only moves
+	// the normal cameras, and scenes use the free camera, so this jitters the
+	// free camera itself for a moment, then puts it back where it was. Run
+	// from the scene clock (main thread).
+	struct ClimaxShake
+	{
+		bool                                  active = false;
+		std::chrono::steady_clock::time_point start;
+		float                                 duration = 1.2F;
+		float                                 strength = 1.0F;
+		RE::NiPoint3                          moved{};     // offset applied now
+		float                                 turnedX = 0.0F;
+		float                                 turnedY = 0.0F;
+	};
+	ClimaxShake  g_climaxShake;
+	std::mt19937 g_shakeRandom{ std::random_device{}() };
+
+	RE::FreeCameraState* FreeCamera()
+	{
+		const auto camera = RE::PlayerCamera::GetSingleton();
+		if (!camera || !camera->QCameraEquals(RE::CameraState::kFree)) {
+			return nullptr;
+		}
+		return camera->GetState<RE::FreeCameraState>().get();
+	}
+
+	void UpdateClimaxShake()
+	{
+		auto& shake = g_climaxShake;
+		if (!shake.active) {
+			return;
+		}
+		const auto free = FreeCamera();
+		if (!free) {
+			// The free camera is gone (the scene ended): nothing to put back.
+			shake = {};
+			return;
+		}
+		const float t = std::chrono::duration<float>(std::chrono::steady_clock::now() - shake.start).count() / shake.duration;
+		RE::NiPoint3 offset{};
+		float        turnX = 0.0F;
+		float        turnY = 0.0F;
+		if (t < 1.0F) {
+			// Strong at once, fading out quickly.
+			const float fade = (1.0F - t) * (1.0F - t);
+			std::uniform_real_distribution<float> unit(-1.0F, 1.0F);
+			const float move = 3.5F * shake.strength * fade;     // game units
+			const float turn = 0.012F * shake.strength * fade;   // radians
+			offset = { unit(g_shakeRandom) * move, unit(g_shakeRandom) * move, unit(g_shakeRandom) * move };
+			turnX = unit(g_shakeRandom) * turn;
+			turnY = unit(g_shakeRandom) * turn;
+		} else {
+			shake.active = false;
+		}
+		free->translation += offset - shake.moved;
+		free->rotation.x += turnX - shake.turnedX;
+		free->rotation.y += turnY - shake.turnedY;
+		shake.moved = offset;
+		shake.turnedX = turnX;
+		shake.turnedY = turnY;
+	}
+
+	// The player's climax effects: shake, blur, glow, rumble (Excitement::Config).
+	void PlayClimaxEffects()
+	{
+		const auto& config = Excitement::Settings();
+		const bool  freeCamera = FreeCamera() != nullptr;
+		if (config.shake > 0.0F && freeCamera) {
+			if (g_climaxShake.active) {
+				// Already shaking: restart it from where the camera is now.
+				g_climaxShake.start = std::chrono::steady_clock::now();
+			} else {
+				g_climaxShake = { true, std::chrono::steady_clock::now(), 1.2F, config.shake };
+			}
+			StartAutoplayTicks();
+		}
+		if (config.blur > 0.0F) {
+			// Depth of field with no in-focus range: everything blurs, for
+			// a moment.
+			RE::ImageSpaceModifierInstanceDOF::Trigger(0.0F, 0.0F, 0.0F, 0.0F,
+				RE::ImageSpaceModifierInstanceDOF::DepthOfFieldMode::kFrontBack, std::min(config.blur, 1.0F), 0.7F);
+		}
+		if (config.flash > 0.0F) {
+			HUD::PlayClimax(std::min(config.flash, 1.0F));
+		}
+		// The normal cameras' shake and the rumble go through Papyrus.
+		const bool papyrusShake = config.shake > 0.0F && !freeCamera;
+		if ((papyrusShake || config.rumble) && g_vm) {
+			RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
+			g_vm->DispatchStaticCall("FourStimMenu"sv, "ClimaxEffects"sv, callback, papyrusShake ? config.shake : 0.0F, config.rumble);
+		}
+	}
+
 	// Hands a running scene's current scene and speed to the excitement
 	// system (rates come from its actions), and keeps the clock running.
 	void RefreshExcitement(const ActiveScene& a_scene)
@@ -698,9 +799,10 @@ namespace
 		SceneEvents::Climaxed(a_actorID, a_active.actors, a_active.sceneID, times);
 
 		const bool withPlayer = std::ranges::any_of(a_active.actors, [](std::uint32_t id) { return IsPlayer(RE::TESForm::GetFormByID<RE::Actor>(id)); });
-		if (withPlayer && g_vm) {
-			RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
-			g_vm->DispatchStaticCall("FourStimMenu"sv, "ClimaxEffects"sv, callback);
+		const auto focused = GetPlayerScene();
+		const bool watched = focused.Active() && focused.role0 == a_active.actors[0];
+		if (withPlayer || watched) {
+			PlayClimaxEffects();
 		}
 
 		bool end = false;
@@ -752,6 +854,7 @@ namespace
 					Excitement::Climaxed(id);
 				}
 			}
+			UpdateClimaxShake();
 			// Scenes ending after a climax. Ending goes through Papyrus,
 			// which removes the scene later (TrackSceneStop).
 			for (auto& active : g_activeScenes) {
@@ -768,7 +871,7 @@ namespace
 		const bool waiting = std::ranges::any_of(g_activeScenes, [](const ActiveScene& a_scene) {
 			return a_scene.remaining >= 0.0F || a_scene.endIn >= 0.0F || Excitement::Settings().enabled;
 		});
-		if (!waiting) {
+		if (!waiting && !g_climaxShake.active) {
 			g_autoplayTicking = false;
 		}
 	}

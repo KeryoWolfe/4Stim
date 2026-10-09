@@ -41,6 +41,7 @@ package hud
 		private var _meters:Meters = new Meters();
 		private var _f4seWait:int = 0;
 		private var _logo:IconSlot = new IconSlot(LOGO.size);
+		private var _glow:ClimaxGlow = new ClimaxGlow();  // full screen, behind the panels
 
 		private var _scene:Object = { id: "", name: "", actorCount: 0, tags: [] };
 		private var _navigation:Array = [];
@@ -56,6 +57,7 @@ package hud
 			super();
 			mouseEnabled = false;
 			mouseChildren = false;
+			addChild(_glow);
 			addChild(_root);
 			// Back to front: the L, tabs and list sit under the corner disc, so
 			// their corners tuck behind it.
@@ -82,6 +84,12 @@ package hud
 		{
 			_screen = { x1: a_left, y1: a_top, x2: a_right, y2: a_bottom };
 			position();
+		}
+
+		// Optional (HUD_API.md): a climax in the focused scene, a_strength 0-1.
+		public function PlayClimax(a_strength:Number):void
+		{
+			_glow.play(a_strength, _screen);
 		}
 
 		public function SetTheme(a_theme:Object):void

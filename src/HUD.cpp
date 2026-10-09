@@ -545,6 +545,11 @@ namespace HUD
 
 			// Invoke fails when the movie has no such function; that's logged
 			// once per function rather than every frame.
+			bool InvokeOptionalPublic(const char* a_name, const GValue* a_args, std::size_t a_count)
+			{
+				return InvokeOptional(a_name, a_args, a_count);
+			}
+
 			bool InvokeRequired(const char* a_name, const GValue* a_args, std::size_t a_count)
 			{
 				if (!Loaded()) {
@@ -917,6 +922,16 @@ namespace HUD
 		if (g_menu || (RE::UI::GetSingleton() && RE::UI::GetSingleton()->GetMenuOpen(MENU_NAME))) {
 			ShowMenu(false);
 		}
+	}
+
+	void PlayClimax(float a_strength)
+	{
+		F4SE::GetTaskInterface()->AddTask([a_strength]() {
+			if (g_menu && g_menu->Loaded()) {
+				GValue arg(static_cast<double>(a_strength));
+				g_menu->InvokeOptionalPublic("PlayClimax", &arg, 1);
+			}
+		});
 	}
 
 	bool IsOpen()

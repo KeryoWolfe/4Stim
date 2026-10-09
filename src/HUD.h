@@ -29,6 +29,10 @@ namespace HUD
 	// Closes the HUD and drops focus, e.g. when a save is loaded. Main thread.
 	void Reset();
 
+	// A climax in the focused scene: the movie's flash (optional HUD API
+	// function PlayClimax, HUD_API.md). a_strength 0-1. Any thread.
+	void PlayClimax(float a_strength);
+
 	[[nodiscard]] bool IsOpen();
 	[[nodiscard]] bool IsFocused();
 	void               SetFocus(bool a_focused);  // any thread

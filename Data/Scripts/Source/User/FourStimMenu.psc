@@ -39,10 +39,16 @@ Function EndSceneOf(int[] aiActorIDs) Global
 	FourStimScene.EndGroupScene(akActors, false)
 EndFunction
 
-; A climax in a scene the player is in: a short camera shake and rumble.
-Function ClimaxEffects() Global
-	Game.ShakeCamera(None, 0.6, 1.5)
-	Game.ShakeController(0.5, 0.5, 0.7)
+; A climax the player sees: the parts done through Papyrus. The plugin
+; shakes the free camera itself (the game's shake doesn't move it) and does
+; the blur and glow; this shakes a normal camera (afShake > 0) and rumbles.
+Function ClimaxEffects(float afShake, bool abRumble) Global
+	if afShake > 0.0
+		Game.ShakeCamera(None, 0.6 * afShake, 1.2)
+	endif
+	if abRumble
+		Game.ShakeController(0.6, 0.6, 0.8)
+	endif
 EndFunction
 
 ; Ends the scene the player is in. Called by the plugin when "End scene"
