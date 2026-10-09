@@ -60,7 +60,7 @@ What OStim NG has that 4Stim doesn't yet, from a read of its source (October 202
 
 ## Later
 
-- **YAML support.** Read scene, sequence, action, furniture and physics files written in YAML (`.yaml` / `.yml`) as well as JSON, from the same folders. YAML is easier to write by hand: comments, no quotes or trailing-comma errors.
+- **YAML scene files.** Let animation authors write their scene files (scenes and sequences, `Scenes\`) as either JSON or YAML (`.yaml` / `.yml`), whichever they prefer, with the same fields; both load side by side from the same folder. YAML is easier to write by hand: comments, no quotes or trailing-comma errors.
 - PrismaUI
 - NPC greetings
 - Race filtering
