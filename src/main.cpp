@@ -1,4 +1,5 @@
 #include <atomic>
+#include <functional>
 #include <chrono>
 #include <mutex>
 #include <random>
@@ -1937,9 +1938,37 @@ namespace
 		});
 	}
 
+	// A loading screen or a screen fade is up (a teleport, a cell load).
+	// Switching to the free camera then can leave the game stuck on the
+	// loading screen, so the scene camera waits for it to clear.
+	bool LoadingOrFading()
+	{
+		const auto ui = RE::UI::GetSingleton();
+		return ui && (ui->GetMenuOpen("LoadingMenu") || ui->GetMenuOpen("FaderMenu"));
+	}
+
+	// Runs a_task on the main thread once no loading screen or fade is up
+	// (or after 20 s regardless).
+	void AfterLoading(std::function<void()> a_task)
+	{
+		if (!LoadingOrFading()) {
+			F4SE::GetTaskInterface()->AddTask(std::move(a_task));
+			return;
+		}
+		REX::INFO("Scene camera: waiting for a loading screen / fade to clear");
+		std::thread([task = std::move(a_task)]() mutable {
+			for (int i = 0; i < 400 && LoadingOrFading(); ++i) {
+				std::this_thread::sleep_for(std::chrono::milliseconds(50));
+			}
+			// A little longer: the game finishes settling after the menu closes.
+			std::this_thread::sleep_for(std::chrono::milliseconds(250));
+			F4SE::GetTaskInterface()->AddTask(std::move(task));
+		}).detach();
+	}
+
 	void BeginSceneCamera(std::monostate)
 	{
-		F4SE::GetTaskInterface()->AddTask([]() {
+		AfterLoading([]() {
 			const auto camera = RE::PlayerCamera::GetSingleton();
 			if (!camera || g_sceneCameraActive) {
 				return;
