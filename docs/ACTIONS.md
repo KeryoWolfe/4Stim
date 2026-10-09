@@ -1,6 +1,6 @@
 # Actions
 
-An **action** says what the actors in a scene are doing to each other: kissing, a handjob, vaginal sex. Scenes list their actions (the `actions` field, see `SCENES.md`), and action **types** say what each action means. 4Stim uses them to decide who can take which role. Excitement, undressing, sounds and expressions will use them later.
+An **action** says what the actors in a scene are doing to each other: kissing, a handjob, vaginal sex. Scenes list their actions (the `actions` field, see `SCENES.md`), and action **types** say what each action means. 4Stim uses them to decide who can take which role and how excited each actor gets (`EXCITEMENT.md`). Undressing, sounds and expressions will use them later.
 
 The types and their ids follow OStim's. A scene converted from OStim keeps its `actions` list as it is.
 
@@ -48,7 +48,7 @@ Action types are defined in JSON files in `Data\F4SE\Plugins\4Stim\Actions\`. Al
 | `aliases` | Other ids scene files may use for this type. |
 | `tags` | Action tags: `sexual`, `sensual`, `romantic`, `oral`, `intercourse`, `vaginalpenetration`... Papyrus can query them (`SceneHasActionTag`). |
 | `actor`, `target`, `performer` | What the action means for that side. Each can have the three fields below. |
-| `stimulation` | Excitement per second for that side's actor. Not used yet; it's for the excitement system. |
+| `stimulation` | Excitement per second for that side's actor (`EXCITEMENT.md`). |
 | `maxStimulation` | Past this excitement, the action stops adding any (default 100). For example, kissing alone won't bring anyone to climax. |
 | `requirements` | Body parts that side needs (see below). |
 

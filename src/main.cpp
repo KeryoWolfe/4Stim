@@ -7,6 +7,7 @@
 #include <unordered_map>
 
 #include "Actions.h"
+#include "Excitement.h"
 #include "Bridge.h"
 #include "HUD.h"
 #include "SceneEvents.h"
@@ -117,6 +118,34 @@ namespace
 					g_settings.matchSex = std::stoi(value) != 0;
 				} else if (key == "bloganimevents") {
 					g_settings.logAnimEvents = std::stoi(value) != 0;
+				} else if (key == "benableexcitement") {
+					Excitement::Settings().enabled = std::stoi(value) != 0;
+				} else if (key == "fmaleexcitementmult") {
+					Excitement::Settings().maleMult = std::max(std::stof(value), 0.0F);
+				} else if (key == "ffemaleexcitementmult") {
+					Excitement::Settings().femaleMult = std::max(std::stof(value), 0.0F);
+				} else if (key == "fexcitementdecayrate") {
+					Excitement::Settings().decayRate = std::max(std::stof(value), 0.0F);
+				} else if (key == "fexcitementdecaygrace") {
+					Excitement::Settings().decayGrace = std::max(std::stof(value), 0.0F);
+				} else if (key == "fpostclimaxexcitement") {
+					Excitement::Settings().postClimax = std::clamp(std::stof(value), 0.0F, 99.0F);
+				} else if (key == "fpostclimaxexcitementmax") {
+					Excitement::Settings().postClimaxMax = std::clamp(std::stof(value), 0.0F, 99.0F);
+				} else if (key == "bclimaxscenes") {
+					Excitement::Settings().climaxScenes = std::stoi(value) != 0;
+				} else if (key == "bendonplayerclimax") {
+					Excitement::Settings().endOnPlayer = std::stoi(value) != 0;
+				} else if (key == "bendonmaleclimax") {
+					Excitement::Settings().endOnMale = std::stoi(value) != 0;
+				} else if (key == "bendonfemaleclimax") {
+					Excitement::Settings().endOnFemale = std::stoi(value) != 0;
+				} else if (key == "bendonallclimax") {
+					Excitement::Settings().endOnAll = std::stoi(value) != 0;
+				} else if (key == "bendnpcscenesonclimax") {
+					Excitement::Settings().endNPCScenes = std::stoi(value) != 0;
+				} else if (key == "fclimaxenddelay") {
+					Excitement::Settings().endDelay = std::clamp(std::stof(value), 0.0F, 60.0F);
 				} else if (key == "ftransitionlead") {
 					g_settings.transitionLead = std::clamp(std::stof(value), -2.0F, 5.0F);
 				}
@@ -130,6 +159,10 @@ namespace
 			g_settings.speedUpKey, g_settings.speedDownKey);
 		REX::INFO("Settings: HUD {}, theme \"{}\", transition lead {}s, match sex {}", g_settings.hudEnabled ? "on" : "off", g_settings.hudTheme, g_settings.transitionLead, g_settings.matchSex ? "on" : "off");
 		REX::INFO("Settings: furniture within {} (height {}), log {}", g_settings.furnitureRadius, g_settings.furnitureHeight, g_settings.logFurniture ? "on" : "off");
+		const auto& ex = Excitement::Settings();
+		REX::INFO("Settings: excitement {}, x{} male / x{} female, decay {}/s after {}s, climax scenes {}, end on climax: player {} male {} female {} all {} NPC scenes {} (after {}s)",
+			ex.enabled ? "on" : "off", ex.maleMult, ex.femaleMult, ex.decayRate, ex.decayGrace, ex.climaxScenes,
+			ex.endOnPlayer, ex.endOnMale, ex.endOnFemale, ex.endOnAll, ex.endNPCScenes, ex.endDelay);
 	}
 
 
@@ -332,6 +365,9 @@ namespace
 		// The furniture it's played on (0 / "" = none).
 		std::uint32_t furnitureRef = 0;
 		std::string   furnitureType;
+
+		// Game time left before it ends after a climax (< 0 = not ending).
+		float endIn = -1.0F;
 	};
 
 	// Remembers the outgoing speed when a scene enters a transition.
@@ -360,6 +396,8 @@ namespace
 
 	void ArmAutoplay(ActiveScene& a_scene);
 	void StartAutoplayTicks();
+	void RefreshExcitement(const ActiveScene& a_scene);
+	bool IsPlayer(const RE::Actor* a_actor);
 	void WatchAnimEvents(const std::vector<std::uint32_t>& a_actors, const std::string& a_sceneID);
 	bool PlayOnActiveScene(ActiveScene& a_active, const std::string& a_sceneID, int a_speed);
 
@@ -375,7 +413,13 @@ namespace
 	{
 		// An actor can only be in one scene: a new scene replaces an old one.
 		std::erase_if(g_activeScenes, [&](const ActiveScene& a_scene) {
-			return std::ranges::any_of(a_scene.actors, [&](std::uint32_t id) { return std::ranges::find(a_actors, id) != a_actors.end(); });
+			const bool replaced = std::ranges::any_of(a_scene.actors, [&](std::uint32_t id) { return std::ranges::find(a_actors, id) != a_actors.end(); });
+			if (replaced) {
+				std::vector<std::uint32_t> left;
+				std::ranges::copy_if(a_scene.actors, std::back_inserter(left), [&](std::uint32_t id) { return std::ranges::find(a_actors, id) == a_actors.end(); });
+				Excitement::Leave(left);
+			}
+			return replaced;
 		});
 		ActiveScene scene{ a_actors, a_sceneID };
 		if (const auto furniture = PendingFurnitureFor(a_actors, true)) {
@@ -404,6 +448,7 @@ namespace
 		SceneEvents::SceneStarted(a_actors, a_sceneID);
 		WatchAnimEvents(a_actors, a_sceneID);
 		auto& added = g_activeScenes.back();
+		RefreshExcitement(added);
 		if (added.sequence && added.sequence->entries.front().speed != 0) {
 			PlayOnActiveScene(added, added.sequence->entries.front().scene, added.sequence->entries.front().speed);
 		}
@@ -420,6 +465,7 @@ namespace
 		}
 		const auto ended = std::move(*it);
 		g_activeScenes.erase(it);
+		Excitement::Leave(ended.actors);
 		SceneEvents::SceneEnded(ended.actors, ended.sceneID);
 	}
 
@@ -439,6 +485,7 @@ namespace
 		}
 		scene->sceneID = a_sceneID;
 		scene->speed = a_speed;
+		RefreshExcitement(*scene);
 		if (moved) {
 			if (scene->sequence) {
 				REX::INFO("Sequence \"{}\": stopped, the scene was moved to \"{}\"", scene->sequence->id, a_sceneID);
@@ -510,6 +557,7 @@ namespace
 		NoteCarrySpeed(a_active, scene->id);
 		a_active.sceneID = scene->id;
 		a_active.speed = speed;
+		RefreshExcitement(a_active);
 
 		auto focused = GetPlayerScene();
 		if (focused.Active() && focused.role0 == a_active.actors[0]) {
@@ -574,6 +622,102 @@ namespace
 		}
 	}
 
+	// ---- Excitement and climax (Excitement.h) ----
+
+	// Hands a running scene's current scene and speed to the excitement
+	// system (rates come from its actions), and keeps the clock running.
+	void RefreshExcitement(const ActiveScene& a_scene)
+	{
+		const auto scene = SceneRegistry::Find(a_scene.sceneID);
+		if (!scene) {
+			return;
+		}
+		std::vector<SceneRegistry::Sex> sexes;
+		for (const auto id : a_scene.actors) {
+			sexes.push_back(SceneRegistry::SexOf(RE::TESForm::GetFormByID<RE::Actor>(id)));
+		}
+		Excitement::Enter(a_scene.actors, sexes, *scene, a_scene.speed);
+		if (Excitement::Settings().enabled) {
+			StartAutoplayTicks();
+		}
+	}
+
+	// Ends a running scene through Papyrus: the focused scene the way the
+	// HUD's "End scene" does, any other without touching the camera.
+	void EndActiveScene(const ActiveScene& a_scene)
+	{
+		if (!g_vm || a_scene.actors.empty()) {
+			return;
+		}
+		REX::INFO("Scene \"{}\": ending after a climax", a_scene.sceneID);
+		RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
+		const auto focused = GetPlayerScene();
+		if (focused.Active() && focused.role0 == a_scene.actors[0]) {
+			g_vm->DispatchStaticCall("FourStimMenu"sv, "EndPlayerScene"sv, callback);
+		} else {
+			std::vector<std::int32_t> ids;
+			for (const auto id : a_scene.actors) {
+				ids.push_back(static_cast<std::int32_t>(id));
+			}
+			g_vm->DispatchStaticCall("FourStimMenu"sv, "EndSceneOf"sv, callback, ids);
+		}
+	}
+
+	// a_actorID, in a_active, reached 100: climax (as OStim's). Plays their
+	// role's climax scene if it has one, else a man drops to the slowest
+	// speed; tells other mods; shakes the camera if the player is in it;
+	// and ends the scene if the settings say so.
+	void HandleClimax(ActiveScene& a_active, std::uint32_t a_actorID)
+	{
+		const auto& config = Excitement::Settings();
+		Excitement::Climaxed(a_actorID);
+		const int  times = Excitement::TimesClimaxed(a_actorID);
+		const auto actor = RE::TESForm::GetFormByID<RE::Actor>(a_actorID);
+		const auto sex = SceneRegistry::SexOf(actor);
+		const auto role = static_cast<std::size_t>(std::ranges::find(a_active.actors, a_actorID) - a_active.actors.begin());
+		const auto scene = SceneRegistry::Find(a_active.sceneID);
+		REX::INFO("Climax: {:08X} (role {}) in \"{}\", climax {}", a_actorID, role, a_active.sceneID, times);
+
+		bool played = false;
+		if (config.climaxScenes && scene && !scene->IsTransition() && role < scene->actors.size() && !scene->actors[role].climax.empty() &&
+			a_active.queuedScene.empty() && !a_active.sequence) {
+			played = PlayOnActiveScene(a_active, scene->actors[role].climax, 0);
+			if (played) {
+				if (sex == SceneRegistry::Sex::kMale) {
+					a_active.carrySpeed = 0;  // back at the slowest speed after it
+				}
+				ArmAutoplay(a_active);
+			}
+		}
+		if (!played && sex == SceneRegistry::Sex::kMale && a_active.speed > 0 && scene && !scene->IsTransition()) {
+			if (PlayOnActiveScene(a_active, a_active.sceneID, 0)) {
+				SceneEvents::SpeedChanged(a_active.actors, a_active.sceneID, 0, static_cast<int>(scene->speeds.size()));
+			}
+		}
+
+		SceneEvents::Climaxed(a_actorID, a_active.actors, a_active.sceneID, times);
+
+		const bool withPlayer = std::ranges::any_of(a_active.actors, [](std::uint32_t id) { return IsPlayer(RE::TESForm::GetFormByID<RE::Actor>(id)); });
+		if (withPlayer && g_vm) {
+			RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
+			g_vm->DispatchStaticCall("FourStimMenu"sv, "ClimaxEffects"sv, callback);
+		}
+
+		bool end = false;
+		if (!withPlayer) {
+			end = config.endNPCScenes;
+		} else if (config.endOnAll) {
+			end = std::ranges::all_of(a_active.actors, [](std::uint32_t id) { return Excitement::TimesClimaxed(id) > 0; });
+		} else {
+			end = (IsPlayer(actor) && config.endOnPlayer) ||
+			      (sex == SceneRegistry::Sex::kMale && config.endOnMale) ||
+			      (sex == SceneRegistry::Sex::kFemale && config.endOnFemale);
+		}
+		if (end && a_active.endIn < 0.0F) {
+			a_active.endIn = config.endDelay;
+		}
+	}
+
 	void AutoplayTick()
 	{
 		g_autoplayTickQueued = false;
@@ -585,8 +729,8 @@ namespace
 		const auto ui = RE::UI::GetSingleton();
 		const bool paused = ui && ui->menuMode > 0;
 		if (!paused) {
-			// AdvanceAutoplay can't add or remove running scenes, so the
-			// list is safe to walk while it runs.
+			// AdvanceAutoplay and HandleClimax can't add or remove running
+			// scenes, so the list is safe to walk while they run.
 			for (auto& active : g_activeScenes) {
 				if (active.remaining < 0.0F) {
 					continue;
@@ -596,8 +740,29 @@ namespace
 					AdvanceAutoplay(active);
 				}
 			}
+			for (const auto id : Excitement::Tick(elapsed)) {
+				if (const auto active = FindActiveScene(id)) {
+					HandleClimax(*active, id);
+				} else {
+					Excitement::Climaxed(id);
+				}
+			}
+			// Scenes ending after a climax. Ending goes through Papyrus,
+			// which removes the scene later (TrackSceneStop).
+			for (auto& active : g_activeScenes) {
+				if (active.endIn < 0.0F) {
+					continue;
+				}
+				active.endIn -= elapsed;
+				if (active.endIn <= 0.0F) {
+					active.endIn = -1.0F;
+					EndActiveScene(active);
+				}
+			}
 		}
-		const bool waiting = std::ranges::any_of(g_activeScenes, [](const ActiveScene& a_scene) { return a_scene.remaining >= 0.0F; });
+		const bool waiting = std::ranges::any_of(g_activeScenes, [](const ActiveScene& a_scene) {
+			return a_scene.remaining >= 0.0F || a_scene.endIn >= 0.0F || Excitement::Settings().enabled;
+		});
 		if (!waiting) {
 			g_autoplayTicking = false;
 		}
@@ -1259,6 +1424,69 @@ namespace
 	{
 		const auto type = Actions::Find(a_type);
 		return type && type->HasTag(a_tag);
+	}
+
+	// ---- Excitement (Excitement.h) ----
+
+	float GetExcitement(std::monostate, RE::Actor* a_actor)
+	{
+		return a_actor ? Excitement::Get(a_actor->GetFormID()) : -1.0F;
+	}
+
+	void SetExcitement(std::monostate, RE::Actor* a_actor, float a_value)
+	{
+		if (a_actor) {
+			Excitement::Set(a_actor->GetFormID(), a_value);
+		}
+	}
+
+	void AddExcitement(std::monostate, RE::Actor* a_actor, float a_value, bool a_useMultiplier)
+	{
+		if (a_actor) {
+			Excitement::Add(a_actor->GetFormID(), a_value, a_useMultiplier);
+		}
+	}
+
+	std::int32_t GetTimesClimaxed(std::monostate, RE::Actor* a_actor)
+	{
+		return a_actor ? Excitement::TimesClimaxed(a_actor->GetFormID()) : 0;
+	}
+
+	void Climax(std::monostate, RE::Actor* a_actor)
+	{
+		if (a_actor) {
+			Excitement::SetStalled(a_actor->GetFormID(), false);
+			Excitement::Set(a_actor->GetFormID(), 100.0F);
+		}
+	}
+
+	void StallClimax(std::monostate, RE::Actor* a_actor, bool a_stall)
+	{
+		if (a_actor) {
+			Excitement::SetStalled(a_actor->GetFormID(), a_stall);
+		}
+	}
+
+	bool IsClimaxStalled(std::monostate, RE::Actor* a_actor)
+	{
+		return a_actor && Excitement::IsStalled(a_actor->GetFormID());
+	}
+
+	float GetExcitementMultiplier(std::monostate, RE::Actor* a_actor)
+	{
+		return a_actor ? Excitement::Multiplier(a_actor->GetFormID()) : 1.0F;
+	}
+
+	void SetExcitementMultiplier(std::monostate, RE::Actor* a_actor, float a_multiplier)
+	{
+		if (a_actor) {
+			Excitement::SetMultiplier(a_actor->GetFormID(), a_multiplier);
+		}
+	}
+
+	float GetTimeUntilClimax(std::monostate, RE::Actor* a_actor)
+	{
+		return a_actor ? Excitement::TimeUntilClimax(a_actor->GetFormID()) : -1.0F;
 	}
 
 	// Re-reads all scene files (handy while authoring). Returns the count loaded.
@@ -2704,6 +2932,16 @@ namespace
 		a_vm->BindNativeMethod(SCRIPT_NAME, "GetActionName"sv, GetActionName);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "GetActionTags"sv, GetActionTags);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "ActionHasTag"sv, ActionHasTag);
+		a_vm->BindNativeMethod(SCRIPT_NAME, "GetExcitement"sv, GetExcitement);
+		a_vm->BindNativeMethod(SCRIPT_NAME, "SetExcitement"sv, SetExcitement);
+		a_vm->BindNativeMethod(SCRIPT_NAME, "AddExcitement"sv, AddExcitement);
+		a_vm->BindNativeMethod(SCRIPT_NAME, "GetTimesClimaxed"sv, GetTimesClimaxed);
+		a_vm->BindNativeMethod(SCRIPT_NAME, "Climax"sv, Climax);
+		a_vm->BindNativeMethod(SCRIPT_NAME, "StallClimax"sv, StallClimax);
+		a_vm->BindNativeMethod(SCRIPT_NAME, "IsClimaxStalled"sv, IsClimaxStalled);
+		a_vm->BindNativeMethod(SCRIPT_NAME, "GetExcitementMultiplier"sv, GetExcitementMultiplier);
+		a_vm->BindNativeMethod(SCRIPT_NAME, "SetExcitementMultiplier"sv, SetExcitementMultiplier);
+		a_vm->BindNativeMethod(SCRIPT_NAME, "GetTimeUntilClimax"sv, GetTimeUntilClimax);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "StopPair"sv, StopPair);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "SaveStartView"sv, SaveStartView);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "OpenScenePicker"sv, OpenScenePicker);
@@ -2742,6 +2980,7 @@ namespace
 			// Running scenes and their timers end with the old game.
 			F4SE::GetTaskInterface()->AddTask([]() {
 				g_activeScenes.clear();
+				Excitement::Clear();
 			});
 			{
 				std::scoped_lock lock(g_pendingSequenceLock);
@@ -2765,6 +3004,7 @@ namespace
 				// A loaded save starts with no scene running.
 				HUD::Reset();
 				g_activeScenes.clear();
+				Excitement::Clear();
 				g_focusNextScene = false;
 				SetPlayerScene({});
 				g_sceneCameraActive = false;

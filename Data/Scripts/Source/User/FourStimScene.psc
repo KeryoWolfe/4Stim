@@ -263,8 +263,12 @@ bool Function BeginGroupScene(Actor[] akActors, String asSceneID, bool abFreeCam
 	return true
 EndFunction
 
-Function EndGroupScene(Actor[] akActors) Global
-	FourStim.EndSceneCamera()  ; no-op if the scene camera wasn't used
+; abEndCamera false: leave the scene camera alone (for an NPC scene ending
+; while the player is in, or watching, another).
+Function EndGroupScene(Actor[] akActors, bool abEndCamera = true) Global
+	if abEndCamera
+		FourStim.EndSceneCamera()  ; no-op if the scene camera wasn't used
+	endif
 	FourStim.StopGroup(akActors)
 	int i = 0
 	while i < akActors.Length

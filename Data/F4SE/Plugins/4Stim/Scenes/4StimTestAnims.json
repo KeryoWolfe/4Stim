@@ -6465,7 +6465,8 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x0009CC"
+					"idle": "0x0009CC",
+					"climax": "4StimTest_OStim2PMissionaryClimaxMF"
 				},
 				{
 					"sex": "female",
@@ -6496,7 +6497,8 @@
 			"length": 2.0,
 			"actors": [
 				{
-					"sex": "male"
+					"sex": "male",
+					"climax": "4StimTest_OStim2PMissionaryClimaxMF"
 				},
 				{
 					"sex": "female"
@@ -6918,7 +6920,8 @@
 			"length": 2.0,
 			"actors": [
 				{
-					"sex": "male"
+					"sex": "male",
+					"climax": "4StimTest_OStim2PMissionaryClimaxMF"
 				},
 				{
 					"sex": "female"
@@ -7182,7 +7185,8 @@
 			"length": 2.0,
 			"actors": [
 				{
-					"sex": "male"
+					"sex": "male",
+					"climax": "4StimTest_OStim2PMissionaryClimaxMF"
 				},
 				{
 					"sex": "female"

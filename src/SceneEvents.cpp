@@ -110,4 +110,10 @@ namespace SceneEvents
 		Physics::SceneEnded(a_actors);
 		Send("FourStim_OnSceneEnd"sv, FourStim::ResolveActors(a_actors), a_sceneID);
 	}
+
+	void Climaxed(std::uint32_t a_actor, const std::vector<std::uint32_t>& a_actors, const std::string& a_sceneID, int a_times)
+	{
+		const auto who = FourStim::ResolveActors({ a_actor });
+		Send("FourStim_OnClimax"sv, who.front(), FourStim::ResolveActors(a_actors), a_sceneID, a_times);
+	}
 }

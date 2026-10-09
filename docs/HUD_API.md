@@ -240,14 +240,14 @@ Every function is on `Menu_mc`. All of them are required except where marked.
 | `SetScreen(left:Number, top:Number, right:Number, bottom:Number):void` | The visible area in your movie's coordinates. On a 16:9 screen it's 0, 0, 1280, 720; wider screens have a negative `left` and a `right` past 1280. |
 | `SetTheme(theme:Object):void` | The parsed theme JSON, with defaults filled in. |
 | `SetScene(scene:Object):void` | `{ id, name, actorCount, tags:Array }`. |
-| `SetActors(actors:Array):void` | One object per role, in role order: `{ role:int, name:String, sex:"male"\|"female"\|"other", isPlayer:Boolean, meter:Number }`. `meter` is `0.0`–`1.0`, or `-1` when nothing fills the meters (always `-1` until the excitement system exists). |
+| `SetActors(actors:Array):void` | One object per role, in role order: `{ role:int, name:String, sex:"male"\|"female"\|"other", isPlayer:Boolean, meter:Number }`. `meter` is `0.0`–`1.0`, the actor's excitement, or `-1` when nothing fills the meters (excitement off in `4Stim.ini`). |
 | `SetSpeed(level:int, count:int):void` | `level` 0 = slowest, `count` = number of speeds (1 if the scene has only one). |
 | `SetNavigation(entries:Array):void` | `{ id, label, icon, kind:"scene"\|"end" }` in display order. Labels already have actor names filled in. The `"end"` entry ("End scene") is always last. `icon` is a path under `Data\Interface\` ready for a `Loader` (e.g. `4Stim/Icons/MyPack/Kneel.dds`; mount a `.dds` with F4SE's `MountImage` and load it as `img://<name>`, see `hud\F4SE.as`), or empty. |
 | `SetUtility(entries:Array):void` | `{ id, label, icon }`, already sorted and filtered for this scene. `icon` as above. |
 | `SetFocus(focused:Boolean):void` | `true` while the HUD has the navigation keys. It gets them as soon as it opens; the 4Stim hotkey (or `Cancel`) gives them back to the game, and the hotkey takes them again. While not focused the HUD is display-only. |
 | `SetPaused(paused:Boolean):void` | A game menu opened or closed over the HUD. |
 | `ProcessUserEvent(name:String, down:Boolean):Boolean` | Input while focused: `down` is `true` on press and `false` on release. Return `true` if you used it. Holding `Up` or `Down` repeats the press, so you don't need your own repeat timer. The names and their keys are below. |
-| `SetMeters(values:Array):void` | *Optional.* Faster update of just the actor meters, one `Number` per role, without resending names. |
+| `SetMeters(values:Array):void` | *Optional.* Faster update of just the actor meters, one `Number` per role, without resending names. Sent up to ten times a second while excitement changes; a HUD without it only gets the values with `SetActors`. |
 
 Input names while the HUD is focused:
 

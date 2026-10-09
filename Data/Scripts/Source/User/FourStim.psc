@@ -45,6 +45,38 @@ String Function GetActionName(String asType) Global Native
 String[] Function GetActionTags(String asType) Global Native
 bool Function ActionHasTag(String asType, String asTag) Global Native
 
+; ---- Excitement ----
+; Every actor in a scene has an excitement from 0 to 100 that rises with the
+; scene's actions (their stimulation, docs\ACTIONS.md). At 100 they climax:
+; FourStim_OnClimax goes to registered scripts, and the scene may end
+; (4Stim.ini, [Excitement]). These work on actors in a running scene only.
+
+; 0-100, or -1 if the actor isn't in a scene.
+float Function GetExcitement(Actor akActor) Global Native
+Function SetExcitement(Actor akActor, float afValue) Global Native
+; abUseMultiplier: scale afValue by the actor's sex and own multipliers.
+Function AddExcitement(Actor akActor, float afValue, bool abUseMultiplier = true) Global Native
+
+; How many times the actor climaxed in this scene.
+int Function GetTimesClimaxed(Actor akActor) Global Native
+
+; Makes the actor climax now (even if it was stalled).
+Function Climax(Actor akActor) Global Native
+
+; While stalled, the actor's excitement stops at 100 without a climax,
+; until StallClimax(akActor, false) or Climax(akActor).
+Function StallClimax(Actor akActor, bool abStall) Global Native
+bool Function IsClimaxStalled(Actor akActor) Global Native
+
+; The actor's own multiplier on excitement gain (1 = normal), on top of the
+; ini's male / female multipliers. Reset when the scene ends.
+float Function GetExcitementMultiplier(Actor akActor) Global Native
+Function SetExcitementMultiplier(Actor akActor, float afMultiplier) Global Native
+
+; Seconds until the actor climaxes at the current rate, or -1 if the
+; current scene won't take them there.
+float Function GetTimeUntilClimax(Actor akActor) Global Native
+
 ; ---- Animation ----
 
 ; Plays role 0 of the scene on akActor (single-actor scenes). akUnused is

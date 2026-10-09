@@ -12,6 +12,7 @@
 //   Function FourStim_OnSceneChange(Actor[] akActors, String asOldID, String asNewID)
 //   Function FourStim_OnSpeedChange(Actor[] akActors, String asSceneID, int aiLevel, int aiCount)
 //   Function FourStim_OnSceneEnd(Actor[] akActors, String asSceneID)
+//   Function FourStim_OnClimax(Actor akActor, Actor[] akActors, String asSceneID, int aiTimes)
 //
 // Registrations aren't saved yet: they're cleared when a game loads, and
 // scripts register again on load.
@@ -25,4 +26,5 @@ namespace SceneEvents
 	void SceneChanged(const std::vector<std::uint32_t>& a_actors, const std::string& a_oldID, const std::string& a_newID);
 	void SpeedChanged(const std::vector<std::uint32_t>& a_actors, const std::string& a_sceneID, int a_level, int a_count);
 	void SceneEnded(const std::vector<std::uint32_t>& a_actors, const std::string& a_sceneID);
+	void Climaxed(std::uint32_t a_actor, const std::vector<std::uint32_t>& a_actors, const std::string& a_sceneID, int a_times);
 }

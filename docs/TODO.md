@@ -20,7 +20,7 @@ What OStim NG has that 4Stim doesn't yet, from a read of its source (October 202
 
 ### Core
 - ~~**Actions.**~~ Done: action types in `Actions\*.json`, `actions` in scene files, requirements in role matching, Papyrus queries (docs/ACTIONS.md). The converter should copy OStim scenes' `actions` (the test pack's were backfilled from OStim's scene files).
-- **Excitement and climax.** Per-actor excitement from actions, decay, climax (count, climax animations, reactions), end the scene on player / male / female / all climax, excitement bars in the HUD, and an orgasm event.
+- ~~**Excitement and climax.**~~ Done (docs/EXCITEMENT.md). Left for later: climax sounds and moans (with Sound, from the OStim sounds now in 4Stim Core\Sound), partner reactions, climax annotations in animations (OStim triggers the climax from the climax animation; 4Stim climaxes when the animation starts), slow motion / blur options.
 - **Auto mode.** Random navigation by stage (foreplay, main, pull-out), auto speed from excitement, min/max time per scene; for the player (toggle hotkey) and for NPC scenes. Needs `noRandomSelection` on scenes.
 - **Concurrent scenes (threads).** Several scenes at once, NPC-only scenes started by hotkey or script, all tracked natively (the claim registry). Today the HUD follows one focused scene.
 - **Undressing.** Undress at start, partial undress per action (slot lists), weapons removed, redress at the end (optionally animated), a slot mask setting, `noStrip` scenes, a Papyrus override.

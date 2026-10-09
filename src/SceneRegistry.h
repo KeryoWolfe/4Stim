@@ -31,6 +31,7 @@ namespace SceneRegistry
 	{
 		Sex                      sex = Sex::kAny;  // who may take this role
 		std::vector<std::string> requirements;     // what the role's actions need (penis, mouth...), lowercase
+		std::string              climax;           // scene to play when this role's actor climaxes, or ""
 	};
 
 	// One action in a scene: who does what to whom (docs/ACTIONS.md).

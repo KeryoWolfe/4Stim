@@ -8,6 +8,7 @@ An OStim-style scene framework for **Fallout 4** (1.11.240, "Anniversary Edition
 
 - **Scenes from JSON:** solo and two-actor scenes, multiple speeds, and navigation links between scenes ([docs/SCENES.md](docs/SCENES.md)).
 - **Actions:** scenes say who does what to whom (OStim's action types), and roles only go to actors who fit them ([docs/ACTIONS.md](docs/ACTIONS.md)).
+- **Excitement and climax:** actors get excited by what the scene's actions do to them, shown on the HUD's meters, and climax at 100, with climax animations and scene-end rules like OStim's ([docs/EXCITEMENT.md](docs/EXCITEMENT.md)).
 - **Transitions:** short "in-between" animations that play once and move on to their destination by themselves.
 - **Sequences:** fixed runs of scenes, each played for a set time, startable from the picker, the HUD or Papyrus.
 - **In-scene HUD:** a Scaleform HUD with a navigation list, scene icons (`.dds`), actor and speed meters, and keyboard and gamepad control.

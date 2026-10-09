@@ -176,6 +176,13 @@ namespace SceneRegistry
 				for (const auto& a : *actors) {
 					const auto sex = Lower(a.is_object() ? a.value("sex", std::string{ "any" }) : std::string{ "any" });
 					SceneActor role;
+					if (a.is_object()) {
+						// "climax": a scene id, or OStim's "autoTransitions": {"climax": id}
+						role.climax = a.value("climax", std::string{});
+						if (const auto auto_ = a.find("autoTransitions"); role.climax.empty() && auto_ != a.end() && auto_->is_object()) {
+							role.climax = auto_->value("climax", std::string{});
+						}
+					}
 					if (sex == "male" || sex == "m") {
 						role.sex = Sex::kMale;
 					} else if (sex == "female" || sex == "f") {
@@ -428,6 +435,22 @@ namespace SceneRegistry
 					}
 					return !good;
 				});
+			}
+			// Climax scenes: a loaded scene with the same actors.
+			for (auto& [key, scene] : g_scenes) {
+				for (auto& role : scene.actors) {
+					if (role.climax.empty()) {
+						continue;
+					}
+					const auto dest = g_scenes.find(Lower(role.climax));
+					if (dest == g_scenes.end() || dest->second.actors.size() != scene.actors.size()) {
+						REX::WARN("Scenes: {}: scene \"{}\" climax scene \"{}\" dropped (no such scene, or a different number of actors)",
+							scene.sourceFile, scene.id, role.climax);
+						role.climax.clear();
+					} else {
+						role.climax = dest->second.id;
+					}
+				}
 			}
 			// A transition moves on to its destination by itself, so it needs
 			// a real destination with the same actors, and a length.

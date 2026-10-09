@@ -9,6 +9,7 @@
 
 #include <nlohmann/json.hpp>
 
+#include "Excitement.h"
 #include "Bridge.h"
 #include "HUD.h"
 #include "SceneRegistry.h"
@@ -432,6 +433,7 @@ namespace HUD
 				}
 
 				RepeatHeldNavigation();
+				UpdateMeters(a_timeDelta);
 			}
 
 			void MapCodeObjectFunctions() override
@@ -556,6 +558,48 @@ namespace HUD
 			}
 
 		private:
+			// An actor's excitement as a meter fill, 0 to 1, or -1 for none.
+			static double MeterOf(std::uint32_t a_id)
+			{
+				if (!Excitement::Settings().enabled) {
+					return -1.0;
+				}
+				const float value = Excitement::Get(a_id);
+				return value < 0.0F ? -1.0 : static_cast<double>(value) / 100.0;
+			}
+
+			// Excitement changes all the time: the meters are refreshed ten
+			// times a second, when a value moved.
+			void UpdateMeters(float a_timeDelta)
+			{
+				_meterClock += a_timeDelta;
+				if (_meterClock < 0.1F) {
+					return;
+				}
+				_meterClock = 0.0F;
+				const auto focused = FourStim::GetFocusedScene();
+				if (!focused.Active()) {
+					_lastMeters.clear();
+					return;
+				}
+				std::vector<double> values;
+				for (const auto id : focused.ActorIDs()) {
+					values.push_back(MeterOf(id));
+				}
+				if (values == _lastMeters) {
+					return;
+				}
+				_lastMeters = values;
+				GValue list;
+				uiMovie->CreateArray(&list);
+				for (const auto v : values) {
+					list.PushBack(GValue(v));
+				}
+				InvokeOptional("SetMeters", &list, 1);
+			}
+
+			float                                 _meterClock = 0.0F;
+			std::vector<double>                   _lastMeters;
 			bool                                  _loaded = false;
 			bool                                  _paused = false;
 			Scaleform::Render::Rect<float>        _screen{};
@@ -669,7 +713,7 @@ namespace HUD
 					entry.SetMember("name"sv, GValue(name.c_str()));
 					entry.SetMember("sex"sv, GValue(sex));
 					entry.SetMember("isPlayer"sv, GValue(player));
-					entry.SetMember("meter"sv, GValue(-1.0));  // no excitement system yet
+					entry.SetMember("meter"sv, GValue(MeterOf(ids[role])));
 					list.PushBack(entry);
 				}
 				InvokeRequired("SetActors", &list, 1);

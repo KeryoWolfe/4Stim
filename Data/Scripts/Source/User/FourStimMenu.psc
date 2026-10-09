@@ -26,6 +26,25 @@ Function OnHotkey(int aiTargetMode, float afMaxDistance, float afCone, float afR
 	FourStim.OpenScenePicker(targetID)
 EndFunction
 
+; Ends a scene the player isn't watching (by its actors' form IDs, in
+; role order), leaving the camera alone. Called by the plugin when an NPC
+; scene ends after a climax.
+Function EndSceneOf(int[] aiActorIDs) Global
+	Actor[] akActors = new Actor[aiActorIDs.Length]
+	int i = 0
+	while i < aiActorIDs.Length
+		akActors[i] = Game.GetForm(aiActorIDs[i]) as Actor
+		i += 1
+	endwhile
+	FourStimScene.EndGroupScene(akActors, false)
+EndFunction
+
+; A climax in a scene the player is in: a short camera shake and rumble.
+Function ClimaxEffects() Global
+	Game.ShakeCamera(None, 0.6, 1.5)
+	Game.ShakeController(0.5, 0.5, 0.7)
+EndFunction
+
 ; Ends the scene the player is in. Called by the plugin when "End scene"
 ; is picked in the navigation menu.
 Function EndPlayerScene() Global
