@@ -136,12 +136,14 @@ namespace Physics
 			if (!vm || !a_actor) {
 				return false;
 			}
-			// FSMP: bool SwapPhysicsFile(Actor, String oldFile, String newFile, bool persist, bool verbose) global native
+			// FourStimPhysics.Swap(int, String, String) wraps FSMP's
+			// DynamicHDT.SwapPhysicsFile: an Actor passed straight from here
+			// arrived as a "type mismatch for argument 1".
 			RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback{ new SwapResult(a_actor->GetFormID(), a_from, a_to) };
-			const bool ok = vm->DispatchStaticCall("DynamicHDT"sv, "SwapPhysicsFile"sv, callback, a_actor, a_from, a_to, true, true);
+			const bool ok = vm->DispatchStaticCall("FourStimPhysics"sv, "Swap"sv, callback, static_cast<std::int32_t>(a_actor->GetFormID()), a_from, a_to);
 			REX::INFO("Physics: {:08X} \"{}\" -> \"{}\" (dispatch={})", a_actor->GetFormID(), a_from, a_to, ok);
 			if (!ok) {
-				REX::WARN("Physics: couldn't call DynamicHDT.SwapPhysicsFile: is Fallout 4 FSMP installed?");
+				REX::WARN("Physics: couldn't call FourStimPhysics.Swap: is FourStimPhysics.pex installed (and FO4 Faster HDT-SMP)?");
 			}
 			return ok;
 		}
