@@ -5,6 +5,8 @@
 #include <string_view>
 #include <vector>
 
+#include "SceneRegistry.h"
+
 // Furniture types: which object references a scene can be played on (beds,
 // chairs, tables...). Defined in JSON files under
 // Data\F4SE\Plugins\4Stim\Furniture\ (see docs/FURNITURE.md). A scene names
@@ -49,6 +51,11 @@ namespace Furniture
 	// loaded cells). With a_log, every candidate object is written to the
 	// log with its model, for writing type files.
 	std::vector<Found> FindNear(const RE::NiPoint3& a_center, float a_radius, float a_maxHeight, bool a_log);
+
+	// Whether a scene with no furniture of its own may play on furniture of
+	// a_type (one whose type chain reaches "none"): its "floorScenes" tag
+	// rules (a mattress only takes lying scenes). True for unknown types.
+	bool AllowsFloorScene(std::string_view a_type, const SceneRegistry::Scene& a_scene);
 
 	// Where a scene goes on a_ref, a piece of furniture of type a_type. For
 	// types anchored on an edge, the side nearest a_near is used.

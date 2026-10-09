@@ -1,5 +1,5 @@
 {
-	"_comment": "Furniture types for Fallout 4's own objects, recognized by their model paths. See docs/FURNITURE.md. Spots follow the OStim animations: bed scenes start on the mattress at a long edge facing out, bench scenes on the floor under the seat facing out, table scenes on the floor at a long edge facing the table. Heights and insets are first guesses to tune in game.",
+	"_comment": "Furniture types for Fallout 4's own objects, recognized by their model paths. See docs/FURNITURE.md. Spots follow the OStim animations: bed scenes start on the mattress at a long edge facing out; a mattress or sleeping bag on the floor takes lying floor scenes only, centered on it and lengthwise; bench scenes on the floor under the seat facing out, table scenes on the floor at a long edge facing the table. Heights and insets are first guesses to tune in game.",
 	"types": [
 		{
 			"id": "bed",
@@ -32,7 +32,7 @@
 		{
 			"id": "mattress",
 			"name": "Mattress",
-			"supertype": "bed",
+			"supertype": "none",
 			"priority": 5,
 			"forms": [
 				"FURN"
@@ -42,15 +42,22 @@
 				"sleepingbag"
 			],
 			"minMarkers": 1,
-			"anchor": "edge",
-			"edgeSide": "long",
-			"facing": "out",
-			"edgeInset": 15,
-			"markerHeight": true,
+			"anchor": "center",
+			"floorScenes": {
+				"needTags": [
+					"lying",
+					"lyingback",
+					"lyingfront",
+					"lyingside"
+				],
+				"excludeTags": [
+					"standing"
+				]
+			},
 			"offset": [
 				0,
 				0,
-				10
+				2
 			]
 		},
 		{

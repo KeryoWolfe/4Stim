@@ -324,6 +324,18 @@ namespace
 	// A scene with "furniture" plays on a piece of furniture of that type (or
 	// a subtype); one without plays anywhere but on furniture.
 
+	bool FurnitureFits(const std::string& a_sceneFurniture, const std::string& a_here);
+
+	// FurnitureFits, plus the furniture's own rules for floor scenes played
+	// on it (a mattress only takes lying scenes).
+	bool SceneFitsFurniture(const SceneRegistry::Scene& a_scene, const std::string& a_here)
+	{
+		if (!FurnitureFits(a_scene.furniture, a_here)) {
+			return false;
+		}
+		return !a_scene.furniture.empty() || a_here.empty() || Furniture::AllowsFloorScene(a_here, a_scene);
+	}
+
 	bool FurnitureFits(const std::string& a_sceneFurniture, const std::string& a_here)
 	{
 		if (a_sceneFurniture.empty()) {
@@ -787,7 +799,7 @@ namespace
 	bool ActiveCanPlay(const ActiveScene& a_active, const SceneRegistry::Scene& a_scene)
 	{
 		return a_scene.actors.size() == a_active.actors.size() && SexesFit(a_scene, a_active.actors) &&
-		       FurnitureFits(a_scene.furniture, a_active.furnitureType);
+		       SceneFitsFurniture(a_scene, a_active.furnitureType);
 	}
 
 	// Scenes reachable from a_from in up to a_steps navigations, each with
@@ -2570,7 +2582,7 @@ namespace
 			REX::WARN("NavigateScene: \"{}\" is for other sexes than this scene's actors (bMatchSex)", a_destination);
 			return false;
 		}
-		if (!FurnitureFits(to->furniture, current.furniture)) {
+		if (!SceneFitsFurniture(*to, current.furniture)) {
 			REX::WARN("NavigateScene: \"{}\" is for {} furniture, this scene is on {}", a_destination,
 				to->furniture.empty() ? "no" : to->furniture, current.furniture.empty() ? "none" : current.furniture);
 			return false;
@@ -2801,7 +2813,7 @@ namespace
 		std::vector<std::shared_ptr<const SceneRegistry::Scene>> out;
 		for (const auto& summary : SceneRegistry::List(a_cast.size(), SexFilter(a_cast, false))) {
 			const auto scene = SceneRegistry::Find(summary.id);
-			if (scene && FurnitureFits(scene->furniture, a_furniture)) {
+			if (scene && SceneFitsFurniture(*scene, a_furniture)) {
 				out.push_back(scene);
 			}
 		}
@@ -3016,7 +3028,13 @@ namespace
 			// furniture); a new one goes where the cast was placed.
 			const auto here = search ? GetPlayerScene().furniture : ChosenFurnitureType();
 			const auto found = search ? std::vector<Furniture::Found>{} : PickerFurniture();
-			std::erase_if(scenes, [&](SceneRegistry::SceneSummary& a_scene) { return !FurnitureFits(a_scene.furniture, here); });
+			std::erase_if(scenes, [&](SceneRegistry::SceneSummary& a_scene) {
+				if (!FurnitureFits(a_scene.furniture, here)) {
+					return true;
+				}
+				const auto full = a_scene.id.starts_with(SEQUENCE_PREFIX) ? nullptr : SceneRegistry::Find(a_scene.id);
+				return full && !SceneFitsFurniture(*full, here);
+			});
 			std::size_t sequencesLeft = 0;
 			for (const auto& scene : scenes) {
 				sequencesLeft += scene.id.starts_with(SEQUENCE_PREFIX) ? 1 : 0;
@@ -3267,7 +3285,7 @@ namespace
 				const auto settled = SceneRegistry::Settled(scene);
 				for (const auto& nav : settled->navigations) {
 					const auto dest = SceneRegistry::Find(nav.to);
-					if (dest && (!SexesFit(*dest, current.ActorIDs()) || !FurnitureFits(dest->furniture, current.furniture))) {
+					if (dest && (!SexesFit(*dest, current.ActorIDs()) || !SceneFitsFurniture(*dest, current.furniture))) {
 						continue;
 					}
 					add(nav.to, FormatNavLabel(nav.label, current), dest ? dest->name : nav.to);
@@ -3897,7 +3915,7 @@ namespace FourStim
 	bool FocusedCanPlay(const SceneRegistry::Scene& a_scene)
 	{
 		const auto focused = GetPlayerScene();
-		return SexesFit(a_scene, focused.ActorIDs()) && FurnitureFits(a_scene.furniture, focused.furniture);
+		return SexesFit(a_scene, focused.ActorIDs()) && SceneFitsFurniture(a_scene, focused.furniture);
 	}
 
 	std::vector<RE::Actor*> ResolveActors(const std::vector<std::uint32_t>& a_ids)

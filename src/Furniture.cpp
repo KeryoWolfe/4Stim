@@ -36,6 +36,14 @@ namespace Furniture
 			// "edge": on an edge of its bounding box (the side nearest the
 			// player), facing out from it or in toward it.
 			bool                           edge = false;
+			// "center": in the middle of its bounding box, turned along its
+			// long axis (for lying on a mattress or a sleeping bag).
+			bool                           center = false;
+			// Scenes without furniture of their own played on this one (its
+			// type chain reaches "none"): at least one actor must have one of
+			// needTags, and none of excludeTags (scene actor tags).
+			std::vector<std::string>       floorNeedTags;
+			std::vector<std::string>       floorExcludeTags;
 			bool                           edgeLong = true;      // a long side (else a short one)
 			bool                           edgeFacingOut = true;
 			float                          edgeInset = 0.0F;     // toward the middle; negative = outside
@@ -150,10 +158,16 @@ namespace Furniture
 					type.markerIndex = entry.value("marker", 0);
 					if (const auto anchor = Lower(entry.value("anchor", std::string{ "marker" })); anchor == "edge") {
 						type.edge = true;
+					} else if (anchor == "center") {
+						type.center = true;
 					} else if (anchor == "origin") {
 						type.useMarker = false;
 					} else if (anchor != "marker") {
-						REX::WARN("Furniture: {}: type \"{}\": unknown \"anchor\" \"{}\" (marker, origin or edge)", file, type.id, anchor);
+						REX::WARN("Furniture: {}: type \"{}\": unknown \"anchor\" \"{}\" (marker, origin, edge or center)", file, type.id, anchor);
+					}
+					if (const auto floor = entry.find("floorScenes"); floor != entry.end() && floor->is_object()) {
+						type.floorNeedTags = Strings(*floor, "needTags", true);
+						type.floorExcludeTags = Strings(*floor, "excludeTags", true);
 					}
 					type.edgeLong = Lower(entry.value("edgeSide", std::string{ "long" })) != "short";
 					type.edgeFacingOut = Lower(entry.value("facing", std::string{ "out" })) != "in";
@@ -467,8 +481,31 @@ namespace Furniture
 			}
 			REX::INFO("Furniture: {:08X} bounds ({}, {}, {}) to ({}, {}, {}); edge {} side, facing {}", a_ref->GetFormID(),
 				b.boundMin.x, b.boundMin.y, b.boundMin.z, b.boundMax.x, b.boundMax.y, b.boundMax.z, type.edgeLong ? "long" : "short", type.edgeFacingOut ? "out" : "in");
-		} else if (type.edge) {
-			REX::WARN("Furniture: {:08X}: no bounds to find an edge on", a_ref->GetFormID());
+		} else if (type.center && bound) {
+			// The middle of the bounding box, lengthwise, heading toward the
+			// end farther from the player (so the player is at the near end).
+			const auto& b = bound->boundData;
+			const float midX = (b.boundMin.x + b.boundMax.x) * 0.5F, midY = (b.boundMin.y + b.boundMax.y) * 0.5F;
+			const bool  alongX = (b.boundMax.x - b.boundMin.x) >= (b.boundMax.y - b.boundMin.y);
+			const auto  origin = a_ref->GetPosition();
+			const float dx = a_near.x - origin.x, dy = a_near.y - origin.y;
+			const float c0 = std::cos(yaw), s0 = std::sin(yaw);
+			const float nearX = dx * c0 - dy * s0;
+			const float nearY = dx * s0 + dy * c0;
+			local = { midX, midY, type.onFloor ? b.boundMin.z : b.boundMax.z };
+			if (alongX) {
+				localHeading = nearX >= midX * scale ? -3.14159265F * 0.5F : 3.14159265F * 0.5F;
+			} else {
+				localHeading = nearY >= midY * scale ? 3.14159265F : 0.0F;
+			}
+			if (type.markerHeight && !markers.empty()) {
+				local.z = markers[std::clamp(type.markerIndex, 0, static_cast<int>(markers.size()) - 1)].position.z;
+				zFromMarker = true;
+			}
+			REX::INFO("Furniture: {:08X} bounds ({}, {}, {}) to ({}, {}, {}); center, along {}", a_ref->GetFormID(),
+				b.boundMin.x, b.boundMin.y, b.boundMin.z, b.boundMax.x, b.boundMax.y, b.boundMax.z, alongX ? "x" : "y");
+		} else if (type.edge || type.center) {
+			REX::WARN("Furniture: {:08X}: no bounds to find an edge or center on", a_ref->GetFormID());
 		} else if (type.useMarker && !markers.empty()) {
 			used = std::clamp(type.markerIndex, 0, static_cast<int>(markers.size()) - 1);
 			const auto& marker = markers[used];
@@ -496,5 +533,28 @@ namespace Furniture
 			a_ref->GetFormID(), a_type, spot.position.x, spot.position.y, spot.position.z, spot.heading / DEG,
 			used >= 0 ? std::to_string(used) : std::string("none"), local.x, local.y, local.z, localHeading / DEG);
 		return spot;
+	}
+
+	bool AllowsFloorScene(std::string_view a_type, const SceneRegistry::Scene& a_scene)
+	{
+		Type type;
+		{
+			std::scoped_lock lock(g_lock);
+			EnsureLoaded();
+			const auto it = g_types.find(Lower(a_type));
+			if (it == g_types.end()) {
+				return true;
+			}
+			type = it->second;
+		}
+		auto anyActorHas = [&](const std::vector<std::string>& a_tags) {
+			return std::ranges::any_of(a_scene.actors, [&](const SceneRegistry::SceneActor& a_actor) {
+				return std::ranges::any_of(a_tags, [&](const std::string& a_tag) { return a_actor.HasTag(a_tag); });
+			});
+		};
+		if (!type.floorNeedTags.empty() && !anyActorHas(type.floorNeedTags)) {
+			return false;
+		}
+		return type.floorExcludeTags.empty() || !anyActorHas(type.floorExcludeTags);
 	}
 }
