@@ -208,7 +208,9 @@ namespace
 	bool FurnitureFits(const std::string& a_sceneFurniture, const std::string& a_here)
 	{
 		if (a_sceneFurniture.empty()) {
-			return a_here.empty();
+			// Off furniture; or on furniture whose type chain reaches "none"
+			// (beds, like OStim): scenes without furniture play there too.
+			return a_here.empty() || Furniture::IsA(a_here, "none");
 		}
 		return !a_here.empty() && Furniture::IsA(a_here, a_sceneFurniture);
 	}

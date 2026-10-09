@@ -32,7 +32,7 @@ With `bLogFurniture=1`, every object looked at is written to `4Stim.log`, with i
 |---|---|---|
 | `id` | yes | The type's ID, used in scene files (case-insensitive). |
 | `name` | no | Display name, shown in the picker. Defaults to the ID. |
-| `supertype` | no | The type this is a kind of. Scenes for the supertype can be played on this type too. |
+| `supertype` | no | The type this is a kind of. Scenes for the supertype can be played on this type too. `"none"` means scenes without any `furniture` (the ordinary floor scenes) can be played on it too, the way OStim treats beds: during a bed scene, navigation and search also offer the floor scenes, played on the bed. |
 | `priority` | no | When an object matches several types, the highest priority wins (default 0). Give subtypes a higher priority than their supertype. |
 | `forms` | no | Base object types it can be: `FURN` (furniture, the default), `STAT` (static), `MSTT` (movable static), `ACTI` (activator). Many tables are statics. |
 | `models` | one of `models` or `keywords` | It matches if its model path contains any of these (case-insensitive). |
