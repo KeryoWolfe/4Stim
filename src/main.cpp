@@ -20,6 +20,8 @@ namespace
 {
 	using namespace std::literals;
 
+	bool g_guardScenes = true;  // bGuardScenes: see GuardScenes
+
 	// Papyrus-facing script name. Must be "FourStim", not "4Stim" -- Papyrus
 	// identifiers can't start with a digit. The plugin/project itself is
 	// still called 4Stim everywhere else (xmake project name, log text).
@@ -1118,7 +1120,6 @@ namespace
 	// over anyway, play the scene again for everyone in it (all roles
 	// together, so they stay in sync). Not during transitions.
 
-	bool g_guardScenes = true;
 
 	void GuardScenes(float a_seconds)
 	{
