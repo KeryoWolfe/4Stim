@@ -482,8 +482,9 @@ namespace SceneRegistry
 			const int sequenceCount = BuildSequences(sequences);
 			g_sequences = std::move(sequences);
 
-			REX::INFO("Scenes: loaded {} scene(s) and {} sequence(s) from {} file(s), {} skipped, {} navigation(s) dropped, {} transition(s) ignored (see warnings above)",
-				loaded, sequenceCount, files.size(), skipped, dropped, brokenTransitions);
+			const auto withActions = std::ranges::count_if(g_scenes, [](const auto& a_entry) { return !a_entry.second.actions.empty(); });
+			REX::INFO("Scenes: loaded {} scene(s) and {} sequence(s) from {} file(s), {} skipped, {} navigation(s) dropped, {} transition(s) ignored (see warnings above); {} scene(s) have actions",
+				loaded, sequenceCount, files.size(), skipped, dropped, brokenTransitions, withActions);
 			Publish();
 			return loaded;
 		}
