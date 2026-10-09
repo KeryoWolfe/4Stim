@@ -1121,6 +1121,24 @@ namespace
 	// together, so they stay in sync). Not during transitions.
 
 
+	// An NPC using furniture or an idle marker (a workbench, a broom, a
+	// chair...) stays in it under any idle we play, props and all: get them
+	// out on the spot, and give their AI a do-nothing package so it doesn't
+	// walk them back. Main thread. True if they were in something.
+	bool LeaveFurniture(RE::Actor* a_actor, bool a_doNothing)
+	{
+		const auto process = a_actor ? a_actor->currentProcess : nullptr;
+		const auto data = process ? process->middleHigh : nullptr;
+		const bool inFurniture = data && (data->occupiedFurniture || data->currentFurniture);
+		if (inFurniture) {
+			a_actor->StopInteractingQuick(true, false, true);
+		}
+		if (a_doNothing || inFurniture) {
+			a_actor->InitiateDoNothingPackage();
+		}
+		return inFurniture;
+	}
+
 	void GuardScenes(float a_seconds)
 	{
 		static float clock = 0.0F;
@@ -1137,6 +1155,7 @@ namespace
 			const bool settled = active.remaining < 0.0F && !scene->IsTransition() && now - active.lastPlayed > std::chrono::milliseconds(1500);
 			const RE::TESIdleForm* intruder = nullptr;
 			std::uint32_t          intruded = 0;
+			bool                   forceReplay = false;
 			for (const auto id : active.actors) {
 				const auto actor = RE::TESForm::GetFormByID<RE::Actor>(id);
 				if (!actor || IsPlayer(actor)) {
@@ -1148,6 +1167,13 @@ namespace
 					continue;
 				}
 				data->packageIdleTimer = 30.0F;  // no package idle for a while; renewed every check
+				if (LeaveFurniture(actor, false) && !intruder) {
+					REX::INFO("Scene guard: {:08X} in \"{}\" went into furniture or an idle marker, taken out", id, active.sceneID);
+					intruder = data->currentIdle;
+					intruded = id;
+					forceReplay = true;
+					continue;
+				}
 				const auto current = data->currentIdle;
 				if (!settled || !current || intruder) {
 					continue;
@@ -1160,7 +1186,9 @@ namespace
 					intruded = id;
 				}
 			}
-			if (intruder) {
+			if (forceReplay) {
+				PlayOnActiveScene(active, active.sceneID, active.speed);
+			} else if (intruder) {
 				REX::INFO("Scene guard: {:08X} in \"{}\" was playing a game idle ({:08X} \"{}\"), playing the scene again", intruded, active.sceneID,
 					intruder->GetFormID(), intruder->GetFormEditorID() ? intruder->GetFormEditorID() : "");
 				PlayOnActiveScene(active, active.sceneID, active.speed);
@@ -1637,6 +1665,16 @@ namespace
 		const auto dialogueOk = CallActorMethod(a_actor, "Actor"sv, "AllowPCDialogue"sv, false);
 		REX::INFO("SuppressInteraction: {:08X} BlockActivation dispatch={}, AllowPCDialogue dispatch={}",
 			a_actor->GetFormID(), blockOk, dialogueOk);
+		// Out of any furniture or idle marker before they're placed (else
+		// they keep its pose and props under the scene), and nothing for
+		// their AI to do until the scene ends (ReleaseFromScene's
+		// EvaluatePackage hands them back their routine).
+		F4SE::GetTaskInterface()->AddTask([id = a_actor->GetFormID()]() {
+			const auto actor = RE::TESForm::GetFormByID<RE::Actor>(id);
+			if (actor && !IsPlayer(actor) && LeaveFurniture(actor, true)) {
+				REX::INFO("SuppressInteraction: {:08X} was in furniture or an idle marker, taken out", id);
+			}
+		});
 	}
 
 	void RestoreInteraction(std::monostate, RE::Actor* a_actor)
