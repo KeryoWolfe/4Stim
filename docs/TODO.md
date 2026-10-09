@@ -48,7 +48,7 @@ What OStim NG has that 4Stim doesn't yet, from a read of its source (October 202
 - Change furniture mid-scene, reset displaced clutter afterwards, auto-use the nearest furniture, a bed confirmation, more types (wall, shelf, chemistry / armor / power armor stations).
 
 ### Scene format
-- Fields OStim has and 4Stim doesn't yet, each to come with its feature: `scale` / `scaleHeight` and `feetOnGround` (actor scaling), `look*` (expressions), `noStrip` (undressing), `muted` (sound), `sosBend` (alignment). Done: `actions`, `defaultSpeed`, `noRandomSelection`, actor `tags`, `requirements`, `intendedSex`, `autoTransitions`.
+- Fields OStim has and 4Stim doesn't yet, each to come with its feature: `scale` / `scaleHeight` and `feetOnGround` (actor scaling), `look*` (expressions), `noStrip` (undressing), `muted` (sound), and OStim's `sosBend` as **`penisBend`** (alignment). In Fallout 4 the penis is part of the body mesh (A-Body, TWB...), not a separate Schlongs of Skyrim item, so 4Stim names it `penisBend`; the loader should also read `sosBend` from OStim-converted files as an alias. Done: `actions`, `defaultSpeed`, `noRandomSelection`, actor `tags`, `requirements`, `intendedSex`, `autoTransitions`.
 
 ### For other mods
 - **Papyrus API.** A thread builder (actors, furniture, start scene or sequence, flags: no auto mode, no undress...), scene metadata queries, random scene by tags (OLibrary), per-actor data.
