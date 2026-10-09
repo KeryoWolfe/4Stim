@@ -33,7 +33,7 @@ namespace Excitement
 
 		// What the player sees at a climax in a scene they're in or watching.
 		float shake = 1.0F;           // camera shake strength (0 = off)
-		float blur = 1.0F;            // brief full-screen blur strength (0 = off)
+		float blur = 0.5F;            // brief full-screen blur strength (0 = off)
 		float flash = 1.0F;           // white glow at the screen's edges (0 = off), from the HUD
 		bool  rumble = true;          // controller rumble
 	};

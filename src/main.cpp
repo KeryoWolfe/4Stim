@@ -712,7 +712,7 @@ namespace
 			// Depth of field with no in-focus range: everything blurs, for
 			// a moment.
 			RE::ImageSpaceModifierInstanceDOF::Trigger(0.0F, 0.0F, 0.0F, 0.0F,
-				RE::ImageSpaceModifierInstanceDOF::DepthOfFieldMode::kFrontBack, std::min(config.blur, 1.0F), 0.7F);
+				RE::ImageSpaceModifierInstanceDOF::DepthOfFieldMode::kFrontBack, std::min(config.blur, 1.0F), 0.5F);
 		}
 		if (config.flash > 0.0F) {
 			HUD::PlayClimax(std::min(config.flash, 1.0F));
@@ -1313,10 +1313,12 @@ namespace
 		REX::INFO("PlacePair: {:08X} + {:08X} -> ({:.1f}, {:.1f}, {:.1f}), heading {:.1f} deg",
 			a_actor0->GetFormID(), a_actor1->GetFormID(), x, y, z, headingDeg);
 
+		// Natively, like furniture placement: Papyrus SetPosition on the
+		// player is a teleport the game may fade the screen for, and with
+		// the script engine busy that fade can take very long to clear.
+		const Furniture::Spot spot{ RE::NiPoint3{ x, y, z }, headingDeg * PI_F / 180.0F };
 		for (auto* actor : { a_actor0, a_actor1 }) {
-			const auto moveOk = CallActorMethod(actor, "ObjectReference"sv, "SetPosition"sv, x, y, z);
-			const auto angleOk = CallActorMethod(actor, "ObjectReference"sv, "SetAngle"sv, 0.0f, 0.0f, headingDeg);
-			REX::INFO("PlacePair: {:08X} SetPosition dispatch={}, SetAngle dispatch={}", actor->GetFormID(), moveOk, angleOk);
+			PlaceActorAt(actor, spot);
 		}
 	}
 
