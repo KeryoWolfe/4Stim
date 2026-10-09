@@ -4,6 +4,7 @@
 #include <cctype>
 #include <cmath>
 #include <filesystem>
+#include <format>
 #include <fstream>
 #include <map>
 #include <mutex>
@@ -47,6 +48,7 @@ namespace Furniture
 			bool                           edgeLong = true;      // a long side (else a short one)
 			bool                           edgeFacingOut = true;
 			float                          edgeInset = 0.0F;     // toward the middle; negative = outside
+			bool                           checkWalls = true;    // edge: avoid a side with a wall right outside
 			bool                           markerHeight = false; // edge: at the marker's height, if it has one
 			bool                           onFloor = false;      // edge: at the bottom of its bounds (where it stands)
 			bool                           ignoreMarker[3] = { false, false, false };
@@ -172,6 +174,7 @@ namespace Furniture
 					type.edgeLong = Lower(entry.value("edgeSide", std::string{ "long" })) != "short";
 					type.edgeFacingOut = Lower(entry.value("facing", std::string{ "out" })) != "in";
 					type.edgeInset = entry.value("edgeInset", 0.0F);
+					type.checkWalls = entry.value("checkWalls", true);
 					type.markerHeight = entry.value("markerHeight", false);
 					type.onFloor = entry.value("onFloor", false);
 					if (const auto ignore = Strings(entry, "ignoreMarkerAxes", true); !ignore.empty()) {
@@ -416,6 +419,46 @@ namespace Furniture
 		return found;
 	}
 
+	namespace
+	{
+		// How far out from an edge there must be room (an actor beside a bed).
+		constexpr float WALL_CHECK_DISTANCE = 70.0F;
+
+		// A point in a_ref's own frame (x right, y forward, z up), in the world.
+		RE::NiPoint3 ToWorld(RE::TESObjectREFR* a_ref, const RE::NiPoint3& a_local)
+		{
+			const float yaw = a_ref->data.angle.z;
+			const float c = std::cos(yaw), s = std::sin(yaw);
+			const auto  origin = a_ref->GetPosition();
+			return { origin.x + a_local.x * c + a_local.y * s, origin.y - a_local.x * s + a_local.y * c, origin.z + a_local.z };
+		}
+
+		// How much of the line a_from -> a_to is free (1 = all of it), by a
+		// line-of-sight ray: walls, other furniture and clutter stop it;
+		// actors and a_self don't count.
+		float FreeFraction(RE::TESObjectREFR* a_self, const RE::NiPoint3& a_from, const RE::NiPoint3& a_to)
+		{
+			const auto cell = a_self->GetParentCell();
+			if (!cell) {
+				return 1.0F;
+			}
+			RE::bhkPickData pick;
+			pick.SetStartEnd(a_from, a_to);
+			pick.castQuery.m_filterData.m_collisionFilterInfo = static_cast<std::uint32_t>(RE::COL_LAYER::kLOS);
+			const auto hit = cell->Pick(pick);
+			if (!pick.HasHit()) {
+				return 1.0F;
+			}
+			if (hit) {
+				const auto ref = RE::TESObjectREFR::FindReferenceFor3D(hit);
+				if (ref == a_self || (ref && ref->As<RE::Actor>())) {
+					return 1.0F;
+				}
+			}
+			return std::clamp(pick.GetHitFraction(), 0.0F, 1.0F);
+		}
+	}
+
 	Spot SpotFor(RE::TESObjectREFR* a_ref, std::string_view a_type, const RE::NiPoint3& a_near)
 	{
 		Spot spot;
@@ -458,13 +501,35 @@ namespace Furniture
 			const float c0 = std::cos(yaw), s0 = std::sin(yaw);
 			const float nearX = dx * c0 - dy * s0;  // inverse of the rotation below
 			const float nearY = dx * s0 + dy * c0;
+			// The side nearer the player, unless a wall (or other furniture)
+			// stands right outside it and the other side is free.
+			bool plus = sidesOnY ? nearY >= midY * scale : nearX >= midX * scale;
+			if (type.checkWalls) {
+				auto freeOutside = [&](bool a_plus) {
+					// From just outside that side, outward, above the bed frame.
+					const float sign = a_plus ? 1.0F : -1.0F;
+					const RE::NiPoint3 dir = sidesOnY ? RE::NiPoint3{ 0.0F, sign, 0.0F } : RE::NiPoint3{ sign, 0.0F, 0.0F };
+					const RE::NiPoint3 edgePoint = sidesOnY ? RE::NiPoint3{ midX, a_plus ? maxY : minY, 0.0F } : RE::NiPoint3{ a_plus ? maxX : minX, midY, 0.0F };
+					const float height = static_cast<float>(b.boundMax.z) + 30.0F;
+					const RE::NiPoint3 start = edgePoint * scale + dir * 4.0F + RE::NiPoint3{ 0.0F, 0.0F, height * scale };
+					const RE::NiPoint3 end = start + dir * WALL_CHECK_DISTANCE;
+					return FreeFraction(a_ref, ToWorld(a_ref, start), ToWorld(a_ref, end));
+				};
+				const float nearSide = freeOutside(plus);
+				if (nearSide < 1.0F) {
+					const float farSide = freeOutside(!plus);
+					REX::INFO("Furniture: {:08X}: the near side is blocked {:.0f} units out; the other side {}", a_ref->GetFormID(),
+						nearSide * WALL_CHECK_DISTANCE, farSide < 1.0F ? std::format("is blocked {:.0f} out", farSide * WALL_CHECK_DISTANCE) : std::string("is free"));
+					if (farSide > nearSide) {
+						plus = !plus;
+					}
+				}
+			}
 			if (sidesOnY) {
-				const bool  plus = nearY >= midY * scale;
 				const float edgeY = plus ? maxY : minY;
 				local = { midX, edgeY + (plus ? -type.edgeInset : type.edgeInset), 0.0F };
 				localHeading = plus ? 0.0F : 3.14159265F;  // facing out along y
 			} else {
-				const bool  plus = nearX >= midX * scale;
 				const float edgeX = plus ? maxX : minX;
 				local = { edgeX + (plus ? -type.edgeInset : type.edgeInset), midY, 0.0F };
 				localHeading = plus ? 3.14159265F * 0.5F : -3.14159265F * 0.5F;  // facing out along x

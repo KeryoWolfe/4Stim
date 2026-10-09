@@ -39,6 +39,7 @@ What OStim NG has that 4Stim doesn't yet, from a read of its source (October 202
 - **Actor requirements and properties.** Per-role requirements (race, vampire / ghoul / super mutant, has a penis...), actor tags, perk-conditioned properties. Covers "Race filtering" below.
 
 ### Furniture
+- Done: edge-anchored furniture (beds, tables, benches) avoids a side against a wall (`checkWalls`, FURNITURE.md).
 - Change furniture mid-scene, reset displaced clutter afterwards, auto-use the nearest furniture, a bed confirmation, more types (wall, shelf, chemistry / armor / power armor stations).
 
 ### Scene format
