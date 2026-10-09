@@ -116,11 +116,25 @@ namespace Physics
 			void EndMultiDispatch() override {}
 			void operator()(RE::BSScript::Variable a_result) override
 			{
-				const bool ok = a_result.is<bool>() && RE::BSScript::get<bool>(a_result);
-				if (ok) {
-					REX::INFO("Physics: {:08X} now uses \"{}\"", _actor, _to);
-				} else {
-					REX::WARN("Physics: {:08X} not swapped: FSMP found no active physics using \"{}\" on it (not loaded, beyond maxActiveActors in FSMP's configs.xml, or a different file)", _actor, _from);
+				const int code = a_result.is<std::int32_t>() ? RE::BSScript::get<std::int32_t>(a_result) : -3;
+				switch (code) {
+				case 1:
+				case 2:
+				case 3:
+					REX::INFO("Physics: {:08X} now uses \"{}\" (spelling {})", _actor, _to, code);
+					break;
+				case 0:
+					REX::WARN("Physics: {:08X} not swapped: FSMP has no active physics on it (not loaded, or beyond maxActiveActors in FSMP's configs.xml)", _actor);
+					break;
+				case -1:
+					REX::WARN("Physics: {:08X} not swapped: it has physics, but none using \"{}\" (wrong file for this body?)", _actor, _from);
+					break;
+				case -2:
+					REX::WARN("Physics: {:08X} not swapped: actor not found", _actor);
+					break;
+				default:
+					REX::WARN("Physics: {:08X} not swapped: no answer from FourStimPhysics.Swap (old FourStimPhysics.pex?)", _actor);
+					break;
 				}
 			}
 
@@ -140,7 +154,14 @@ namespace Physics
 			// DynamicHDT.SwapPhysicsFile: an Actor passed straight from here
 			// arrived as a "type mismatch for argument 1".
 			RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback{ new SwapResult(a_actor->GetFormID(), a_from, a_to) };
-			const bool ok = vm->DispatchStaticCall("FourStimPhysics"sv, "Swap"sv, callback, static_cast<std::int32_t>(a_actor->GetFormID()), a_from, a_to);
+			// The same paths spelled three ways: as given, with "Meshes\" and
+			// without the "meshes\" prefix.
+			auto bare = [](const std::string& a_path) {
+				return Lower(a_path).starts_with("meshes\\") ? a_path.substr(7) : a_path;
+			};
+			const auto fromBare = bare(a_from), toBare = bare(a_to);
+			const bool ok = vm->DispatchStaticCall("FourStimPhysics"sv, "Swap"sv, callback, static_cast<std::int32_t>(a_actor->GetFormID()),
+				a_from, a_to, "Meshes\\" + fromBare, "Meshes\\" + toBare, fromBare, toBare);
 			REX::INFO("Physics: {:08X} \"{}\" -> \"{}\" (dispatch={})", a_actor->GetFormID(), a_from, a_to, ok);
 			if (!ok) {
 				REX::WARN("Physics: couldn't call FourStimPhysics.Swap: is FourStimPhysics.pex installed (and FO4 Faster HDT-SMP)?");
