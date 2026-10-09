@@ -25,10 +25,16 @@ package
 		private static const DIM:uint = 0x0D5C33;
 		private static const STAGE_W:Number = 1280;
 		private static const STAGE_H:Number = 720;
-		private static const PANEL_W:Number = 560;
-		private static const PAD:Number = 16;
-		private static const ROW_H:Number = 30;
-		private static const VISIBLE_ROWS:int = 14;
+		// A small panel at the top center (like OStim's menus), not a
+		// screen-filling list.
+		private static const PANEL_W:Number = 400;
+		private static const PAD:Number = 10;
+		private static const ROW_H:Number = 24;
+		private static const VISIBLE_ROWS:int = 9;
+		private static const TOP_Y:Number = 36;
+		private static const TITLE_H:Number = 28;
+		private static const MALE:uint = 0x5AA9FF;
+		private static const FEMALE:uint = 0xFF6FA8;
 
 		private var _scenes:Array = [];
 		private var _selected:int = 0;
@@ -42,6 +48,7 @@ package
 		private var _rows:Array = [];
 		private var _rowBgs:Array = [];
 		private var _rowLabels:Array = [];
+		private var _rowMarks:Array = [];
 		private var _scrollbar:Shape;
 
 		public function PickerPanel()
@@ -99,24 +106,24 @@ package
 		private function build():void
 		{
 			var listH:Number = VISIBLE_ROWS * ROW_H;
-			var panelH:Number = PAD + 36 + 8 + listH + 8 + 26 + 8 + 24 + PAD;
+			var panelH:Number = PAD + TITLE_H + 6 + listH + 6 + 20 + 4 + 18 + PAD;
 			x = Math.round((STAGE_W - PANEL_W) / 2);
-			y = Math.round((STAGE_H - panelH) / 2);
+			y = TOP_Y;
 
 			graphics.lineStyle(2, GREEN, 1);
 			graphics.beginFill(0x000000, 0.85);
 			graphics.drawRect(0, 0, PANEL_W, panelH);
 			graphics.endFill();
 
-			_title = makeText(24, GREEN);
+			_title = makeText(19, GREEN);
 			_title.x = PAD;
 			_title.y = PAD;
 			_title.width = PANEL_W - PAD * 2;
-			_title.height = 36;
+			_title.height = TITLE_H;
 			_title.text = "4Stim";
 			addChild(_title);
 
-			var listY:Number = PAD + 36 + 8;
+			var listY:Number = PAD + TITLE_H + 6;
 			graphics.lineStyle(1, DIM, 1);
 			graphics.moveTo(PAD, listY - 4);
 			graphics.lineTo(PANEL_W - PAD, listY - 4);
@@ -134,12 +141,26 @@ package
 				bg.graphics.endFill();
 				row.addChild(bg);
 
-				var label:TextField = makeText(18, GREEN);
-				label.x = 8;
-				label.y = 2;
-				label.width = PANEL_W - PAD * 2 - 26;
+				var label:TextField = makeText(15, GREEN);
+				label.x = 6;
+				label.y = 1;
+				label.width = PANEL_W - PAD * 2 - 24;
 				label.height = ROW_H - 2;
 				row.addChild(label);
+
+				// Sex mark for actors (entry.mark "male"/"female"): a device
+				// font, since the game's UI font has no gender symbols.
+				var mark:TextField = new TextField();
+				mark.embedFonts = false;
+				mark.defaultTextFormat = new TextFormat("_sans", 15, GREEN, true);
+				mark.selectable = false;
+				mark.mouseEnabled = false;
+				mark.x = 4;
+				mark.y = 1;
+				mark.width = 20;
+				mark.height = ROW_H - 2;
+				mark.visible = false;
+				row.addChild(mark);
 
 				row.addEventListener(MouseEvent.MOUSE_OVER, onRowOver);
 				row.addEventListener(MouseEvent.CLICK, onRowClick);
@@ -147,38 +168,39 @@ package
 				_rows.push(row);
 				_rowBgs.push(bg);
 				_rowLabels.push(label);
+				_rowMarks.push(mark);
 			}
 
 			_scrollbar = new Shape();
 			addChild(_scrollbar);
 
-			_empty = makeText(18, GREEN);
+			_empty = makeText(15, GREEN);
 			_empty.x = PAD + 8;
 			_empty.y = listY + 8;
 			_empty.width = PANEL_W - PAD * 2 - 16;
-			_empty.height = 28;
+			_empty.height = 22;
 			_empty.text = "No scenes available for this pairing.";
 			_empty.visible = false;
 			addChild(_empty);
 
-			var detailY:Number = listY + listH + 8;
+			var detailY:Number = listY + listH + 6;
 			graphics.moveTo(PAD, detailY - 4);
 			graphics.lineTo(PANEL_W - PAD, detailY - 4);
 
-			_detail = makeText(15, GREEN);
+			_detail = makeText(13, GREEN);
 			_detail.x = PAD;
 			_detail.y = detailY;
 			_detail.width = PANEL_W - PAD * 2;
-			_detail.height = 26;
+			_detail.height = 20;
 			addChild(_detail);
 
-			_footer = makeText(14, GREEN);
+			_footer = makeText(12, GREEN);
 			_footer.x = PAD;
-			_footer.y = detailY + 26 + 8;
+			_footer.y = detailY + 20 + 4;
 			_footer.width = PANEL_W - PAD * 2;
-			_footer.height = 24;
+			_footer.height = 18;
 			_footer.alpha = 0.7;
-			_footer.text = "Enter: start    Esc: close    Arrows / mouse wheel: browse";
+			_footer.text = "Enter: choose    Esc: close    Arrows / wheel: browse";
 			addChild(_footer);
 
 			addEventListener(MouseEvent.MOUSE_WHEEL, onWheel);
@@ -212,12 +234,22 @@ package
 				var row:Sprite = _rows[i];
 				var label:TextField = _rowLabels[i];
 				var bg:Shape = _rowBgs[i];
+				var markField:TextField = _rowMarks[i];
 				if (index < count) {
 					row.visible = true;
 					label.text = String(_scenes[index].name);
 					var selected:Boolean = index == _selected;
 					bg.visible = selected;
 					label.textColor = selected ? 0x000000 : GREEN;
+					var sex:String = _scenes[index].mark != null ? String(_scenes[index].mark) : "";
+					markField.visible = sex == "male" || sex == "female";
+					if (markField.visible) {
+						markField.text = sex == "male" ? "\u2642" : "\u2640";
+						markField.textColor = selected ? 0x000000 : (sex == "male" ? MALE : FEMALE);
+						label.x = 24;
+					} else {
+						label.x = 6;
+					}
 				} else {
 					row.visible = false;
 				}
@@ -230,7 +262,7 @@ package
 			_scrollbar.graphics.clear();
 			if (count > VISIBLE_ROWS) {
 				var trackX:Number = PANEL_W - PAD - 6;
-				var trackY:Number = PAD + 36 + 8;
+				var trackY:Number = PAD + TITLE_H + 6;
 				var trackH:Number = VISIBLE_ROWS * ROW_H;
 				var thumbH:Number = Math.max(20, trackH * VISIBLE_ROWS / count);
 				var thumbY:Number = trackY + (trackH - thumbH) * _top / (count - VISIBLE_ROWS);

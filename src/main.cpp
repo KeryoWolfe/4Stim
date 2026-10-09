@@ -1704,9 +1704,10 @@ namespace
 	};
 	struct Candidate
 	{
-		std::uint32_t id = 0;
-		std::string   name;
-		float         distance = 0.0F;
+		std::uint32_t      id = 0;
+		std::string        name;
+		float              distance = 0.0F;
+		SceneRegistry::Sex sex = SceneRegistry::Sex::kAny;
 	};
 	std::atomic<StartStep>     g_startStep = StartStep::kActors;
 	std::mutex                 g_castLock;
@@ -1780,7 +1781,7 @@ namespace
 				return RE::BSContainer::ForEachResult::kContinue;
 			}
 			const char* name = actor->GetDisplayFullName();
-			out.push_back({ actor->GetFormID(), name && *name ? name : std::format("{:08X}", actor->GetFormID()), center.GetDistance(actor->GetPosition()) });
+			out.push_back({ actor->GetFormID(), name && *name ? name : std::format("{:08X}", actor->GetFormID()), center.GetDistance(actor->GetPosition()), SceneRegistry::SexOf(actor) });
 			return RE::BSContainer::ForEachResult::kContinue;
 		});
 		std::ranges::sort(out, [](const Candidate& a, const Candidate& b) { return a.distance < b.distance; });
@@ -1992,7 +1993,10 @@ namespace
 		{
 			struct Row
 			{
-				std::string id, name, detail;
+				std::string id, name, detail, mark;  // mark: "male" / "female" shows a sex symbol
+			};
+			auto markOf = [](SceneRegistry::Sex a_sex) -> std::string {
+				return a_sex == SceneRegistry::Sex::kMale ? "male" : a_sex == SceneRegistry::Sex::kFemale ? "female" : "";
 			};
 			std::vector<Row> rows;
 			std::string      title;
@@ -2015,13 +2019,13 @@ namespace
 				rows.push_back({ "@go", picked.empty() ? "Continue alone" : std::format("Continue with {}", picked.size() + 1), who });
 				for (const auto& c : candidates) {
 					if (std::ranges::find(picked, c.id) != picked.end()) {
-						rows.push_back({ std::format("@drop:{:X}", c.id), "[x] " + c.name, "picked: choose to remove" });
+						rows.push_back({ std::format("@drop:{:X}", c.id), "[x] " + c.name, std::format("picked, {:.0f} m away: choose to remove", c.distance / 70.0F), markOf(c.sex) });
 					}
 				}
 				if (picked.size() + 1 < maxCast) {
 					for (const auto& c : candidates) {
 						if (std::ranges::find(picked, c.id) == picked.end()) {
-							rows.push_back({ std::format("@add:{:X}", c.id), c.name, std::format("{:.0f} m away", c.distance / 70.0F) });
+							rows.push_back({ std::format("@add:{:X}", c.id), c.name, std::format("{:.0f} m away", c.distance / 70.0F), markOf(c.sex) });
 						}
 					}
 				}
@@ -2049,14 +2053,16 @@ namespace
 			Scaleform::GFx::Value list;
 			uiMovie->CreateArray(&list);
 			for (const auto& row : rows) {
-				Scaleform::GFx::Value entry, id, name, tags;
+				Scaleform::GFx::Value entry, id, name, tags, mark;
 				uiMovie->CreateObject(&entry);
 				id = row.id.c_str();
 				name = row.name.c_str();
 				tags = row.detail.c_str();
+				mark = row.mark.c_str();
 				entry.SetMember("id"sv, id);
 				entry.SetMember("name"sv, name);
 				entry.SetMember("tags"sv, tags);
+				entry.SetMember("mark"sv, mark);
 				list.PushBack(entry);
 			}
 			Scaleform::GFx::Value args[2];
