@@ -1,0 +1,12 @@
+{
+	"_comment": "A-Body (Male Body Replacer): rigid genitals during scenes, as A-Body itself does for AAF scenes. The first role gets MaleBodyHard.xml, the others MaleBodyHardBottom.xml (rigid, but still moving). Needs Fallout 4 FSMP. See docs/PHYSICS.md.",
+	"swaps": [
+		{
+			"id": "A-Body",
+			"sex": "male",
+			"from": "meshes\\A-Body\\body\\MaleBody.xml",
+			"to": "meshes\\A-Body\\body\\MaleBodyHard.xml",
+			"toReceiving": "meshes\\A-Body\\body\\MaleBodyHardBottom.xml"
+		}
+	]
+}

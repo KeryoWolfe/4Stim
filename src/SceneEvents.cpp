@@ -2,6 +2,7 @@
 #include <mutex>
 
 #include "Bridge.h"
+#include "Physics.h"
 #include "SceneEvents.h"
 
 namespace SceneEvents
@@ -89,6 +90,7 @@ namespace SceneEvents
 
 	void SceneStarted(const std::vector<std::uint32_t>& a_actors, const std::string& a_sceneID)
 	{
+		Physics::SceneStarted(a_actors, a_sceneID);
 		Send("FourStim_OnSceneStart"sv, FourStim::ResolveActors(a_actors), a_sceneID);
 	}
 
@@ -105,6 +107,7 @@ namespace SceneEvents
 
 	void SceneEnded(const std::vector<std::uint32_t>& a_actors, const std::string& a_sceneID)
 	{
+		Physics::SceneEnded(a_actors);
 		Send("FourStim_OnSceneEnd"sv, FourStim::ResolveActors(a_actors), a_sceneID);
 	}
 }
