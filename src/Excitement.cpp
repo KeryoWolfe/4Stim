@@ -1,6 +1,7 @@
 #include "Excitement.h"
 
 #include <algorithm>
+#include <functional>
 #include <mutex>
 #include <unordered_map>
 
