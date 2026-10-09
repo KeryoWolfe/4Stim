@@ -2021,6 +2021,12 @@ namespace
 
 	// ---- Auto mode and scene details ----
 
+	// Whether a_actor is in a running scene (one actor, one scene).
+	bool IsInScene(std::monostate, RE::Actor* a_actor)
+	{
+		return a_actor && FindActiveScene(a_actor->GetFormID()) != nullptr;
+	}
+
 	void SetAutoMode(std::monostate, RE::Actor* a_actor, bool a_on)
 	{
 		if (!a_actor) {
@@ -2630,6 +2636,67 @@ namespace
 
 	constexpr auto PICKER_MENU = "FourStimPickerMenu";
 	constexpr auto END_SCENE_ID = "__end__";
+	constexpr auto STOP_WATCHING_ID = "__stopwatching__";
+
+	// ---- Concurrent scenes: watching one ----
+	// Any number of scenes run at once; the HUD and the free camera follow
+	// the focused one (the player's, or one the player watches).
+
+	bool PlayerInAScene()
+	{
+		const auto player = RE::PlayerCharacter::GetSingleton();
+		return player && FindActiveScene(player->GetFormID()) != nullptr;
+	}
+
+	// Main thread. Makes a running NPC scene the focused one, with the free
+	// camera, as if the player had started it to watch.
+	void WatchScene(std::uint32_t a_role0)
+	{
+		const auto active = FindActiveScene(a_role0);
+		if (!active) {
+			return;
+		}
+		if (PlayerInAScene()) {
+			Notify("4Stim: you're in a scene; end it to watch another");
+			return;
+		}
+		auto focus = FocusFor(active->actors, active->sceneID);
+		focus.speed = active->speed;
+		focus.furniture = active->furnitureType;
+		SetPlayerScene(focus);
+		BeginSceneCamera({});
+		REX::INFO("Watching \"{}\"", active->sceneID);
+	}
+
+	// Main thread. Stops watching the focused NPC scene (it keeps running).
+	void StopWatching()
+	{
+		const auto focused = GetPlayerScene();
+		if (!focused.Active() || PlayerInAScene()) {
+			return;
+		}
+		SetPlayerScene({});
+		EndSceneCamera({});
+		REX::INFO("Stopped watching \"{}\"", focused.sceneID);
+	}
+
+	// The picker's commands for a running scene (role 0's form ID). Main thread.
+	void RunningSceneCommand(const std::string& a_command, std::uint32_t a_role0)
+	{
+		const auto active = FindActiveScene(a_role0);
+		if (!active) {
+			Notify("4Stim: that scene has ended");
+			return;
+		}
+		if (a_command == "@watch") {
+			WatchScene(a_role0);
+		} else if (a_command == "@auto") {
+			active->autoMode.on ? StopAutoMode(*active) : StartAutoMode(*active);
+			Notify(active->autoMode.on ? "Auto mode on" : "Auto mode off");
+		} else if (a_command == "@endscene") {
+			EndActiveScene(*active);
+		}
+	}
 
 	enum class PickerMode
 	{
@@ -2648,7 +2715,19 @@ namespace
 	{
 		kActors,
 		kPlace,
-		kBrowse
+		kBrowse,
+		kRunning,  // the scenes running now (to watch, end, or put in auto mode)
+		kScene     // one of them
+	};
+	// A running scene as the picker shows it (copied on the main thread when
+	// the picker opens).
+	struct RunningScene
+	{
+		std::vector<std::uint32_t> actors;
+		std::string                sceneID;
+		std::string                label;  // "Missionary: Settler, Lily"
+		bool                       autoMode = false;
+		bool                       withPlayer = false;
 	};
 	struct Candidate
 	{
@@ -2659,18 +2738,48 @@ namespace
 	};
 	std::atomic<StartStep>     g_startStep = StartStep::kActors;
 	std::mutex                 g_castLock;
-	std::vector<std::uint32_t> g_cast;            // NPCs picked, in pick order (the player is always in)
+	std::vector<std::uint32_t> g_cast;            // NPCs picked, in pick order
+	bool                       g_includePlayer = true;  // the player is in the new scene
+	std::vector<RunningScene>  g_running;         // scenes running when the picker opened
+	std::uint32_t              g_selectedScene = 0;  // kScene: its role 0
 	std::vector<Candidate>     g_candidates;      // eligible NPCs near the player
 	int                        g_placeChoice = -1;  // index into PickerFurniture(); -1 = right here
 	std::size_t                g_maxCast = 2;       // the most actors any scene has
 
-	// The player, then the picked NPCs.
+	// The player (unless left out), then the picked NPCs.
 	std::vector<std::uint32_t> CastIDs()
 	{
-		std::vector<std::uint32_t> ids{ RE::PlayerCharacter::GetSingleton()->GetFormID() };
+		std::vector<std::uint32_t> ids;
 		std::scoped_lock lock(g_castLock);
+		if (g_includePlayer) {
+			ids.push_back(RE::PlayerCharacter::GetSingleton()->GetFormID());
+		}
 		ids.insert(ids.end(), g_cast.begin(), g_cast.end());
 		return ids;
+	}
+
+	// Snapshot of the running scenes for the picker. Main thread.
+	std::vector<RunningScene> SnapshotRunning()
+	{
+		std::vector<RunningScene> out;
+		for (const auto& active : g_activeScenes) {
+			RunningScene r;
+			r.actors = active.actors;
+			r.sceneID = active.sceneID;
+			r.autoMode = active.autoMode.on;
+			const auto scene = SceneRegistry::Find(active.sceneID);
+			r.label = scene ? scene->name : active.sceneID;
+			std::string names;
+			for (const auto id : active.actors) {
+				const auto actor = RE::TESForm::GetFormByID<RE::Actor>(id);
+				r.withPlayer = r.withPlayer || IsPlayer(actor);
+				const char* name = actor ? actor->GetDisplayFullName() : nullptr;
+				names += (names.empty() ? "" : ", ") + std::string(name && *name ? name : "?");
+			}
+			r.label += ": " + names;
+			out.push_back(std::move(r));
+		}
+		return out;
 	}
 
 	// The furniture type picked for the new scene ("" = right here).
@@ -2954,24 +3063,37 @@ namespace
 				std::vector<Candidate> candidates;
 				std::vector<std::uint32_t> picked;
 				std::size_t maxCast;
+				bool        withMe;
+				std::size_t running;
 				{
 					std::scoped_lock lock(g_castLock);
 					candidates = g_candidates;
 					picked = g_cast;
 					maxCast = g_maxCast;
+					withMe = g_includePlayer;
+					running = g_running.size();
 				}
-				std::string who = "You";
+				std::string who = withMe ? "You" : "";
 				for (const auto id : picked) {
 					const auto it = std::ranges::find_if(candidates, [&](const Candidate& c) { return c.id == id; });
-					who += ", " + (it != candidates.end() ? withSex(*it) : std::format("{:08X}", id));
+					who += (who.empty() ? "" : ", ") + (it != candidates.end() ? withSex(*it) : std::format("{:08X}", id));
 				}
-				rows.push_back({ "@go", picked.empty() ? "Continue alone" : std::format("Continue with {}", picked.size() + 1), who });
+				const std::size_t castSize = picked.size() + (withMe ? 1 : 0);
+				if (castSize == 0) {
+					rows.push_back({ "@none", "Pick someone first", "a scene without you needs at least one NPC" });
+				} else {
+					rows.push_back({ "@go", castSize == 1 && withMe ? "Continue alone" : std::format("Continue with {}", castSize), who });
+				}
+				rows.push_back({ "@me", withMe ? "You: in the scene" : "You: not in it (NPCs only)", "choose to switch" });
 				for (const auto& c : candidates) {
 					if (std::ranges::find(picked, c.id) != picked.end()) {
 						rows.push_back({ std::format("@drop:{:X}", c.id), "[x] " + withSex(c), std::format("picked, {:.0f} m away: choose to remove", c.distance / 70.0F) });
 					}
 				}
-				if (picked.size() + 1 < maxCast) {
+				if (running > 0) {
+					rows.push_back({ "@running", std::format("Running scenes ({})...", running), "watch, end or auto-play a scene" });
+				}
+				if (castSize < maxCast) {
 					for (const auto& c : candidates) {
 						if (std::ranges::find(picked, c.id) == picked.end()) {
 							rows.push_back({ std::format("@add:{:X}", c.id), withSex(c), std::format("{:.0f} m away", c.distance / 70.0F) });
@@ -2979,11 +3101,37 @@ namespace
 					}
 				}
 				title = picked.empty() ? "Who's in the scene?" : "Add someone else?";
+			} else if (g_startStep == StartStep::kRunning || g_startStep == StartStep::kScene) {
+				std::vector<RunningScene> running;
+				std::uint32_t             selected;
+				{
+					std::scoped_lock lock(g_castLock);
+					running = g_running;
+					selected = g_selectedScene;
+				}
+				const auto it = std::ranges::find_if(running, [&](const RunningScene& r) { return !r.actors.empty() && r.actors.front() == selected; });
+				if (g_startStep == StartStep::kScene && it != running.end()) {
+					if (!it->withPlayer) {
+						rows.push_back({ "@watch", "Watch", "follow it with the free camera and the HUD" });
+					}
+					rows.push_back({ "@auto", it->autoMode ? "Auto mode: on" : "Auto mode: off", "choose to switch" });
+					rows.push_back({ "@endscene", "End scene", "" });
+					rows.push_back({ "@running", "Back", "all running scenes" });
+					title = it->label;
+				} else {
+					for (const auto& r : running) {
+						rows.push_back({ std::format("@scene:{:X}", r.actors.front()), r.label,
+							std::string(r.withPlayer ? "you're in it" : "NPCs") + (r.autoMode ? ", auto mode" : "") });
+					}
+					rows.push_back({ "@back", "Back", "start a scene" });
+					title = "Running scenes";
+				}
 			} else {
 				// Where: right here, or a piece of furniture near, if any
 				// scene fits this cast there.
 				if (!ScenesForCast(cast, {}).empty()) {
-					rows.push_back({ "@here", "Right here", "no furniture" });
+					const bool withMe = std::ranges::find(cast, RE::PlayerCharacter::GetSingleton()->GetFormID()) != cast.end();
+					rows.push_back({ "@here", withMe ? "Right here" : "Where they are", "no furniture" });
 				}
 				const auto found = PickerFurniture();
 				for (std::size_t i = 0; i < found.size(); ++i) {
@@ -3034,6 +3182,28 @@ namespace
 				std::erase(g_cast, hex(a_id.substr(6)));
 			} else if (a_id == "@go") {
 				g_startStep = StartStep::kPlace;
+			} else if (a_id == "@none") {
+				// nothing to do yet
+			} else if (a_id == "@me") {
+				std::scoped_lock lock(g_castLock);
+				g_includePlayer = !g_includePlayer;
+			} else if (a_id == "@running") {
+				g_startStep = StartStep::kRunning;
+			} else if (a_id.starts_with("@scene:")) {
+				{
+					std::scoped_lock lock(g_castLock);
+					g_selectedScene = hex(a_id.substr(7));
+				}
+				g_startStep = StartStep::kScene;
+			} else if (a_id == "@watch" || a_id == "@auto" || a_id == "@endscene") {
+				std::uint32_t selected;
+				{
+					std::scoped_lock lock(g_castLock);
+					selected = g_selectedScene;
+				}
+				Close();
+				F4SE::GetTaskInterface()->AddTask([a_id, selected]() { RunningSceneCommand(a_id, selected); });
+				return true;
 			} else if (a_id == "@back") {
 				g_startStep = StartStep::kActors;
 			} else if (a_id == "@browse") {
@@ -3194,7 +3364,15 @@ namespace
 			}
 			if (g_vm) {
 				RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
-				g_vm->DispatchStaticCall("FourStimMenu"sv, "StartPickedCast"sv, callback, std::move(a_sceneID), ordered);
+				// Without the player, the scene goes where the first NPC picked stands.
+				std::int32_t anchor = 0;
+				{
+					std::scoped_lock lock(g_castLock);
+					if (!g_includePlayer && !g_cast.empty()) {
+						anchor = static_cast<std::int32_t>(g_cast.front());
+					}
+				}
+				g_vm->DispatchStaticCall("FourStimMenu"sv, "StartPickedCast"sv, callback, std::move(a_sceneID), ordered, anchor);
 			}
 		}
 	};
@@ -3231,9 +3409,17 @@ namespace
 		F4SE::GetTaskInterface()->AddTask([a_targetID]() {
 			{
 				auto candidates = FindCandidates(g_settings.actorRadius);
+				auto running = SnapshotRunning();
 				std::scoped_lock lock(g_castLock);
 				g_cast.clear();
 				g_placeChoice = -1;
+				g_includePlayer = true;
+				g_running = std::move(running);
+				// The hotkey found someone already in a scene: that scene's options.
+				if (const auto active = a_targetID ? FindActiveScene(static_cast<std::uint32_t>(a_targetID)) : nullptr) {
+					g_selectedScene = active->actors.front();
+					g_startStep = StartStep::kScene;
+				}
 				const auto target = static_cast<std::uint32_t>(a_targetID);
 				if (target != 0 && std::ranges::any_of(candidates, [&](const Candidate& c) { return c.id == target; })) {
 					g_cast.push_back(target);  // the one the hotkey found: already picked
@@ -3574,6 +3760,7 @@ namespace
 		a_vm->BindNativeMethod(SCRIPT_NAME, "SetExcitementMultiplier"sv, SetExcitementMultiplier);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "GetTimeUntilClimax"sv, GetTimeUntilClimax);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "SetAutoMode"sv, SetAutoMode);
+		a_vm->BindNativeMethod(SCRIPT_NAME, "IsInScene"sv, IsInScene);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "IsAutoMode"sv, IsAutoMode);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "AutoTransition"sv, AutoTransition);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "SceneActorHasTag"sv, SceneActorHasTag);
@@ -3678,6 +3865,10 @@ namespace FourStim
 	{
 		if (a_sceneID == END_SCENE_ID) {
 			EndFocusedScene();
+			return true;
+		}
+		if (a_sceneID == STOP_WATCHING_ID) {
+			F4SE::GetTaskInterface()->AddTask([]() { StopWatching(); });
 			return true;
 		}
 		return NavigateSceneImpl(a_sceneID);

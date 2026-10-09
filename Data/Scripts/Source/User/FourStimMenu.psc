@@ -75,8 +75,10 @@ Function EndPlayerScene() Global
 EndFunction
 
 ; Called by the plugin when a new scene starts from the picker: the cast's
-; form IDs already in role order (the player among them).
-Function StartPickedCast(String asSceneID, int[] aiActorIDs) Global
+; form IDs already in role order. With the player in the cast the scene is
+; built on the player's spot; without (an NPC-only scene) on the spot of
+; aiAnchorID, the first NPC picked.
+Function StartPickedCast(String asSceneID, int[] aiActorIDs, int aiAnchorID = 0) Global
 	Actor akPlayer = Game.GetPlayer()
 	int count = aiActorIDs.Length
 	Actor[] akActors = new Actor[count]
@@ -90,11 +92,19 @@ Function StartPickedCast(String asSceneID, int[] aiActorIDs) Global
 		i += 1
 	endwhile
 
+	Actor akAnchor = akPlayer
+	if aiAnchorID != 0
+		akAnchor = Game.GetForm(aiAnchorID) as Actor
+		if akAnchor == None
+			akAnchor = akActors[0]
+		endif
+	endif
+
 	bool bStarted
 	if count == 1
-		bStarted = FourStimScene.BeginScene(akActors[0], None, 0.0, 0.0, asSceneID)
+		bStarted = FourStimScene.BeginScene(akActors[0], akAnchor, 0.0, 0.0, asSceneID)
 	elseif count == 2
-		bStarted = FourStimScene.BeginPairScene(akActors[0], akActors[1], asSceneID, akPlayer, 0.0, 0.0)
+		bStarted = FourStimScene.BeginPairScene(akActors[0], akActors[1], asSceneID, akAnchor, 0.0, 0.0)
 	else
 		bStarted = FourStimScene.BeginGroupScene(akActors, asSceneID)
 	endif
@@ -144,7 +154,9 @@ Actor Function FindTarget(int aiMode, float afMaxDistance, float afCone, float a
 	int i = 0
 	while i < akRefs.Length
 		Actor akCandidate = akRefs[i] as Actor
-		if akCandidate && akCandidate != akPlayer && FourStimScene.CanUseActor(akCandidate, true)
+		; Someone in a scene counts too: the picker then offers that scene's
+		; options (watch, auto mode, end).
+		if akCandidate && akCandidate != akPlayer && (FourStim.IsInScene(akCandidate) || FourStimScene.CanUseActor(akCandidate, true))
 			float fScore = -1.0
 			if aiMode == 1
 				fScore = akPlayer.GetDistance(akCandidate)

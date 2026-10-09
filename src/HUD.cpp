@@ -25,6 +25,7 @@ namespace HUD
 		constexpr auto UTILITY_DIR = "Data/F4SE/Plugins/4Stim/Utility"sv;
 		constexpr auto ICON_DIR = "4Stim/Icons/"sv;  // icon paths are under Data\Interface\4Stim\Icons\ (HUD_API.md)
 		constexpr auto END_ID = "__end__"sv;
+		constexpr auto STOP_WATCHING_ID = "__stopwatching__"sv;  // main.cpp handles it in NavigateFocused
 
 		// The built-in "Color" theme. Every theme is laid over this, so a
 		// theme file only needs the fields it changes. Kept in step with
@@ -766,6 +767,12 @@ namespace HUD
 					}
 				}
 				if (a_focused.Active()) {
+					// Watching an NPC scene: leave it running and go back to the game.
+					const auto player = RE::PlayerCharacter::GetSingleton();
+					const auto ids = a_focused.ActorIDs();
+					if (player && std::ranges::find(ids, player->GetFormID()) == ids.end()) {
+						AddEntry(list, std::string(STOP_WATCHING_ID), "Stop watching", "", "end");
+					}
 					AddEntry(list, std::string(END_ID), "End scene", "", "end");
 				}
 				InvokeRequired("SetNavigation", &list, 1);

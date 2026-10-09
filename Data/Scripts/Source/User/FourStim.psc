@@ -77,6 +77,13 @@ Function SetExcitementMultiplier(Actor akActor, float afMultiplier) Global Nativ
 ; current scene won't take them there.
 float Function GetTimeUntilClimax(Actor akActor) Global Native
 
+; ---- Running scenes ----
+; Any number of scenes can run at once, each with its own actors (an actor is
+; in one scene at most).
+
+; Whether akActor is in a running scene.
+bool Function IsInScene(Actor akActor) Global Native
+
 ; ---- Auto mode ----
 ; The scene moves on by itself, as OStim's auto mode (docs\AUTOMODE.md).
 ; NPC-only scenes start in auto mode, player scenes don't (4Stim.ini).

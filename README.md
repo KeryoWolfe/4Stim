@@ -16,6 +16,7 @@ An OStim-style scene framework for **Fallout 4** (1.11.240, "Anniversary Edition
 - **Customizable HUD:** themes, a replaceable logo animation, Utility entries, or a complete replacement HUD ([docs/HUD_API.md](docs/HUD_API.md)).
 - **Starting a scene, like OStim:** the hotkey lists the NPCs near you (the one you're looking at already picked); add as many as a scene allows, then pick where (right here, or a bed, chair, table... near you), and a fitting idle scene starts. Or browse every scene that fits.
 - **Group scenes:** three or more actors, as the scenes allow.
+- **Several scenes at once:** start scenes with or without yourself in them ("You: not in it" in the picker), and any number run side by side, each with its own excitement and auto mode. "Running scenes" in the picker, or the hotkey aimed at someone in a scene, lets you watch one (free camera and HUD; "Stop watching" leaves it running), switch its auto mode or end it. An actor is never in two scenes at once.
 - **Free camera** during scenes, with the player's controls locked to what a scene allows.
 - **Scene events for other mods:** start, change, speed change and end, delivered to Papyrus.
 

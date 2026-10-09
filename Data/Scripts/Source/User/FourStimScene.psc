@@ -46,6 +46,10 @@ bool Function CanUseActor(Actor akActor, bool abQuiet = false) Global
 		sReason = "actor is dead"
 	elseif akActor.IsInCombat()
 		sReason = "actor is in combat"
+	elseif FourStim.IsInScene(akActor)
+		; One scene per actor: several scenes can run at once, but never
+		; share anyone.
+		sReason = "actor is already in a scene"
 	endif
 	if sReason != ""
 		if !abQuiet
@@ -131,7 +135,7 @@ bool Function BeginScene(Actor akTarget, Actor akAnchor, Float afDistance, Float
 		PrepareSceneCamera()
 	endif
 	PrepareActor(akTarget)
-	if bMove
+	if bMove && akAnchor != akTarget  ; its own anchor: played where it stands
 		FourStim.MoveActorTo(akTarget, akAnchor, afDistance, afAngleOffset)
 		Utility.Wait(0.1)  ; let the queued SetPosition/SetAngle resolve
 	endif
