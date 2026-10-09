@@ -2,7 +2,7 @@
 
 Bodies with SMP physics (through [Fallout 4 FSMP](https://www.nexusmods.com/fallout4/)) get their physics from an XML file named in the body mesh. A physics swap tells 4Stim to swap that file for another one for the length of a scene, and back when the scene ends. For example, A-Body's floppy genital physics (`MaleBody.xml`) becomes its rigid version (`MaleBodyHard.xml`). The swap goes through FSMP's `DynamicHDT.SwapPhysicsFile`, the same call A-Body makes for AAF scenes, wrapped in 4Stim's `FourStimPhysics` script. FSMP must be installed (and its `DynamicHDT.psc` source is needed to compile `FourStimPhysics.psc`). Each swap's result is logged: `now uses` when it worked, `not swapped` when FSMP found no active physics using the `from` file on that actor (not loaded, or beyond `maxActiveActors` in FSMP's `configs.xml`).
 
-Swaps are defined in JSON files in `Data\F4SE\Plugins\4Stim\Physics\`. 4Stim ships `A-Body.json`, for A-Body, a male body. Other bodies (male: BodyTalk, Super Hero Bodies, Muscular Body, Atomic Muscle; female: TWB, CBBE, JaneBod, Fusion Girl; both: Enhanced Vanilla Bodies) need their own swap files, written the same way, if their SMP setup has states to swap between.
+Swaps are defined in JSON files in `Data\F4SE\Plugins\4Stim\Physics\`. 4Stim ships `A-Body.json`, for A-Body, a male body. Other bodies (male: BodyTalk, Super Hero Bodies, Muscular Body, Atomic Muscle; female: TWB, CBBE, JaneBod, Fusion Girl, Atomic Beauty; both: Enhanced Vanilla Bodies) need their own swap files, written the same way, if their SMP setup has states to swap between.
 
 ```json
 {
