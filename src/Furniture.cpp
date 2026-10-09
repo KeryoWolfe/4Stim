@@ -40,6 +40,7 @@ namespace Furniture
 			bool                           edgeFacingOut = true;
 			float                          edgeInset = 0.0F;     // toward the middle; negative = outside
 			bool                           markerHeight = false; // edge: at the marker's height, if it has one
+			bool                           onFloor = false;      // edge: at the bottom of its bounds (where it stands)
 			bool                           ignoreMarker[3] = { false, false, false };
 			RE::NiPoint3                   offset;            // in the furniture's own frame
 			float                          rotation = 0.0F;   // radians
@@ -158,6 +159,7 @@ namespace Furniture
 					type.edgeFacingOut = Lower(entry.value("facing", std::string{ "out" })) != "in";
 					type.edgeInset = entry.value("edgeInset", 0.0F);
 					type.markerHeight = entry.value("markerHeight", false);
+					type.onFloor = entry.value("onFloor", false);
 					if (const auto ignore = Strings(entry, "ignoreMarkerAxes", true); !ignore.empty()) {
 						for (const auto& axis : ignore) {
 							if (axis == "x" || axis == "y" || axis == "z") {
@@ -427,7 +429,7 @@ namespace Furniture
 		}
 		int        used = -1;
 		bool       zFromMarker = false;
-		const auto bound = a_ref->GetObjectReference() ? a_ref->GetObjectReference()->As<RE::TESBoundObject>() : nullptr;
+		const auto bound = a_ref->GetObjectReference();  // already the base object's bounds holder
 		if (type.edge && bound) {
 			// The bounding box, in the object's frame.
 			const auto& b = bound->boundData;
@@ -456,12 +458,17 @@ namespace Furniture
 			if (!type.edgeFacingOut) {
 				localHeading += 3.14159265F;
 			}
+			if (type.onFloor) {
+				local.z = b.boundMin.z;
+			}
 			if (type.markerHeight && !markers.empty()) {
 				local.z = markers[std::clamp(type.markerIndex, 0, static_cast<int>(markers.size()) - 1)].position.z;
 				zFromMarker = true;  // instead of the offset's height
 			}
 			REX::INFO("Furniture: {:08X} bounds ({}, {}, {}) to ({}, {}, {}); edge {} side, facing {}", a_ref->GetFormID(),
 				b.boundMin.x, b.boundMin.y, b.boundMin.z, b.boundMax.x, b.boundMax.y, b.boundMax.z, type.edgeLong ? "long" : "short", type.edgeFacingOut ? "out" : "in");
+		} else if (type.edge) {
+			REX::WARN("Furniture: {:08X}: no bounds to find an edge on", a_ref->GetFormID());
 		} else if (type.useMarker && !markers.empty()) {
 			used = std::clamp(type.markerIndex, 0, static_cast<int>(markers.size()) - 1);
 			const auto& marker = markers[used];

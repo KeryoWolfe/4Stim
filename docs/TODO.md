@@ -8,6 +8,8 @@
 
 - **Scene events' actor arrays.** Actors passed from native code to Papyrus arrived as a "type mismatch" in the physics swap (fixed there by passing form IDs). The scene events (`FourStim_OnSceneStart` and the rest) pass `Actor[]` the same way; check them with a listening script, and pass form IDs if they're broken too.
 
+- **Penis position adjustments per animation.** With rigid SMP genitals (physics swaps), some animations need the penis angle or offset adjusted per scene or role so it lines up with the partner. Pinned for later.
+
 ## Converter rebuild
 
 - **Rebuild the animation converter both ways: Skyrim to Fallout 4 and Fallout 4 to Skyrim.** One tool with a proper bone map and retargeting between the two skeletons, and the right Havok output for each game (FO4's hk_2014 and Skyrim SE's 64-bit hk_2010 packfiles). It should keep annotations and root motion, and build each game's plugin (FO4 IDLE records: one-shot for transitions, looping otherwise). It should also write 4Stim scene files and hold the last pose of transition clips. The two converter items above fold into this.

@@ -45,6 +45,7 @@ With `bLogFurniture=1`, every object looked at is written to `4Stim.log`, with i
 | `edgeSide` | no | `"edge"`: a `"long"` side (default) or a `"short"` one. Of the two, the one nearer the player is used. |
 | `facing` | no | `"edge"`: the scene faces `"out"` from the object (default; sitting on a bed's edge) or `"in"` toward it (standing at a table). |
 | `edgeInset` | no | `"edge"`: how far in from the edge the spot is (default 0); negative is outside the object. |
+| `onFloor` | no | `"edge"`: put the spot at the bottom of its bounds, where it stands (tables, benches), whatever height its origin is at. |
 | `markerHeight` | no | `"edge"`: take the height from the marker (when the model has one) instead of `offset`'s z, e.g. a bed's mattress. |
 | `ignoreMarkerAxes` | no | `"marker"`: axes of the marker's position to ignore (`"x"`, `"y"`, `"z"`), so the scene sits on the object's center line along that axis instead. For example, `["z"]` keeps the actors on the floor in front of a chair. |
 | `offset` | no | `[x, y, z]` added to the spot, in the object's own frame: x to its right, y forward, z up. Scaled with the object. |

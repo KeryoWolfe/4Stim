@@ -103,7 +103,8 @@
 				0,
 				0,
 				0
-			]
+			],
+			"onFloor": true
 		},
 		{
 			"id": "table",
@@ -137,7 +138,8 @@
 				0,
 				0,
 				0
-			]
+			],
+			"onFloor": true
 		},
 		{
 			"id": "cookingpot",
