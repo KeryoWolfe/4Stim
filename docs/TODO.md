@@ -48,7 +48,7 @@ What OStim NG has that 4Stim doesn't yet, from a read of its source (October 202
 - Change furniture mid-scene, reset displaced clutter afterwards, auto-use the nearest furniture, a bed confirmation, more types (wall, shelf, chemistry / armor / power armor stations).
 
 ### Scene format
-- Fields OStim has and 4Stim doesn't yet, each to come with its feature: `scale` / `scaleHeight` and `feetOnGround` (actor scaling), `look*` (expressions), `noStrip` (undressing), `muted` (sound), and OStim's `sosBend` as **`penisBend`** (alignment). In Fallout 4 the penis is part of the body mesh (A-Body, TWB...), not a separate Schlongs of Skyrim item, so 4Stim names it `penisBend`; the loader should also read `sosBend` from OStim-converted files as an alias. Done: `actions`, `defaultSpeed`, `noRandomSelection`, actor `tags`, `requirements`, `intendedSex`, `autoTransitions`.
+- Fields OStim has and 4Stim doesn't yet, each to come with its feature: `scale` / `scaleHeight` and `feetOnGround` (actor scaling), `look*` (expressions), `noStrip` (undressing), `muted` (sound), and OStim's `sosBend` as **`penisBend`** (alignment). In Fallout 4 the penis is part of the male body mesh (A-Body), not a separate Schlongs of Skyrim item, so 4Stim names it `penisBend`; the loader should also read `sosBend` from OStim-converted files as an alias. Done: `actions`, `defaultSpeed`, `noRandomSelection`, actor `tags`, `requirements`, `intendedSex`, `autoTransitions`.
 
 ### For other mods
 - **Papyrus API.** A thread builder (actors, furniture, start scene or sequence, flags: no auto mode, no undress...), scene metadata queries, random scene by tags (OLibrary), per-actor data.
@@ -65,7 +65,7 @@ What OStim NG has that 4Stim doesn't yet, from a read of its source (October 202
 
 ## Later
 
-- **Automatic mesh detection.** Detect each actor's body mesh and its size (e.g. A-Body, TWB, SMP builds and their sliders) and adjust scene positions to match, so bigger or smaller bodies line up with their partners without hand alignment.
+- **Automatic mesh detection.** Detect each actor's body mesh and its size (A-Body for men, TWB for women, their SMP builds and BodySlide sliders) and adjust scene positions to match, so bigger or smaller bodies line up with their partners without hand alignment.
 - **In-game HUD editor.** Lets theme makers rearrange the HUD in game: drag the navigation list, tabs, logo, actor meters and speed meter where they want, resize them, then save the layout to a file they can put in their theme (`Data\Interface\4Stim\Themes\`, see HUD_API.md), so the theme ships with that positioning.
 - **YAML scene files.** Let animation authors write their scene files (scenes and sequences, `Scenes\`) as either JSON or YAML (`.yaml` / `.yml`), whichever they prefer, with the same fields; both load side by side from the same folder. YAML is easier to write by hand: comments, no quotes or trailing-comma errors.
 - PrismaUI
