@@ -93,6 +93,7 @@ The first scene has two speeds and one navigation option. The second uses the si
 | `furnitureOffset` | scene | no | `[x, y, z]` or `[x, y, z, degrees]`: moves this scene from its furniture type's spot, in the spot's own frame (x to the right, y forward, z up), and turns it. For scenes whose animation starts somewhere other than the rest on that furniture. |
 | `defaultSpeed` | scene | no | The speed auto mode starts this scene at, 0 = slowest (OStim's convention; sequences count from 1). Navigating by hand keeps the current speed. |
 | `noRandomSelection` | scene | no | `true`: auto mode never picks this scene at random (it can still walk through it). For scenes that only make sense from a particular other one. |
+| `noStrip` | scene | no | `true`: no one undresses in this scene, whatever its actions (UNDRESS.md). Scenes after it still undress as usual. |
 
 ## Speeds and navigation in game
 

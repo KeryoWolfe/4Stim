@@ -1,6 +1,6 @@
 # Actions
 
-An **action** says what the actors in a scene are doing to each other: kissing, a handjob, vaginal sex. Scenes list their actions (the `actions` field, see `SCENES.md`), and action **types** say what each action means. 4Stim uses them to decide who can take which role and how excited each actor gets (`EXCITEMENT.md`). Undressing, sounds and expressions will use them later.
+An **action** says what the actors in a scene are doing to each other: kissing, a handjob, vaginal sex. Scenes list their actions (the `actions` field, see `SCENES.md`), and action **types** say what each action means. 4Stim uses them to decide who can take which role, how excited each actor gets (`EXCITEMENT.md`) and what they take off (`UNDRESS.md`). Sounds and expressions will use them later.
 
 The types and their ids follow OStim's. A scene converted from OStim keeps its `actions` list as it is.
 
@@ -51,6 +51,8 @@ Action types are defined in JSON files in `Data\F4SE\Plugins\4Stim\Actions\`. Al
 | `stimulation` | Excitement per second for that side's actor (`EXCITEMENT.md`). |
 | `maxStimulation` | Past this excitement, the action stops adding any (default 100). For example, kissing alone won't bring anyone to climax. |
 | `requirements` | Body parts that side needs (see below). |
+| `fullStrip` | `true`: that side's actor takes everything off (UNDRESS.md). |
+| `undressSlots` | Otherwise, the Fallout 4 biped slots (30–61) that side's actor takes off, e.g. `[34, 35]` for gloves. |
 
 ## Requirements
 

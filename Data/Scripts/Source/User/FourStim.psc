@@ -77,6 +77,17 @@ Function SetExcitementMultiplier(Actor akActor, float afMultiplier) Global Nativ
 ; current scene won't take them there.
 float Function GetTimeUntilClimax(Actor akActor) Global Native
 
+; ---- Undressing ----
+; Scene actors take off what the scene's actions need, and put it back on
+; when the scene ends (4Stim.ini [Undress], docs\UNDRESS.md).
+
+; Takes off everything in the undress slots / puts back on what 4Stim took off.
+Function UndressActor(Actor akActor) Global Native
+Function RedressActor(Actor akActor) Global Native
+
+; Used by FourStimUndress: what it took off.
+Function NoteStripped(Actor akActor, Form[] akItems) Global Native
+
 ; ---- Running scenes ----
 ; Any number of scenes can run at once, each with its own actors (an actor is
 ; in one scene at most).

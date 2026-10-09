@@ -160,6 +160,7 @@ namespace SceneRegistry
 				}
 				scene.sourceFile = file;
 				scene.noRandomSelection = entry.value("noRandomSelection", false);
+				scene.noStrip = entry.value("noStrip", false);
 				if (const auto ds = entry.find("defaultSpeed"); ds != entry.end()) {
 					if (ds->is_number_integer() && ds->get<int>() >= 0) {
 						scene.defaultSpeed = ds->get<int>();

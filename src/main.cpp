@@ -9,6 +9,7 @@
 
 #include "Actions.h"
 #include "Excitement.h"
+#include "Undress.h"
 #include "Bridge.h"
 #include "HUD.h"
 #include "SceneEvents.h"
@@ -180,6 +181,35 @@ namespace
 					Excitement::Settings().flash = std::clamp(std::stof(value), 0.0F, 1.0F);
 				} else if (key == "bclimaxrumble") {
 					Excitement::Settings().rumble = std::stoi(value) != 0;
+				} else if (key == "bundress") {
+					Undress::Settings().enabled = std::stoi(value) != 0;
+				} else if (key == "bundressatstart") {
+					Undress::Settings().atStart = std::stoi(value) != 0;
+				} else if (key == "bpartialundress") {
+					Undress::Settings().partial = std::stoi(value) != 0;
+				} else if (key == "bfullundressmidscene") {
+					Undress::Settings().fullMidScene = std::stoi(value) != 0;
+				} else if (key == "bundressplayer") {
+					Undress::Settings().player = std::stoi(value) != 0;
+				} else if (key == "bredress") {
+					Undress::Settings().redress = std::stoi(value) != 0;
+				} else if (key == "sundressslots") {
+					std::vector<int> slots;
+					std::string      token;
+					for (const char ch : value + ",") {
+						if (ch == ',' || ch == ' ') {
+							if (!token.empty()) {
+								const int slot = std::stoi(token);
+								if (slot >= 30 && slot <= 61) {
+									slots.push_back(slot);
+								}
+								token.clear();
+							}
+						} else {
+							token += ch;
+						}
+					}
+					Undress::Settings().slots = std::move(slots);
 				} else if (key == "bautomodeplayer") {
 					g_autoConfig.player = std::stoi(value) != 0;
 				} else if (key == "bautomodenpc") {
@@ -235,6 +265,9 @@ namespace
 		REX::INFO("Settings: excitement {}, x{} male / x{} female, decay {}/s after {}s, climax scenes {}, end on climax: player {} male {} female {} all {} NPC scenes {} (after {}s)",
 			ex.enabled ? "on" : "off", ex.maleMult, ex.femaleMult, ex.decayRate, ex.decayGrace, ex.climaxScenes,
 			ex.endOnPlayer, ex.endOnMale, ex.endOnFemale, ex.endOnAll, ex.endNPCScenes, ex.endDelay);
+		const auto& un = Undress::Settings();
+		REX::INFO("Settings: undress {} (at start {}, partial {}, full mid-scene {}, player {}, redress {}), {} slot(s)",
+			un.enabled, un.atStart, un.partial, un.fullMidScene, un.player, un.redress, un.slots.size());
 		auto& ac = g_autoConfig;
 		ac.sceneMax = std::max(ac.sceneMax, ac.sceneMin);
 		ac.foreplayMax = std::max(ac.foreplayMax, ac.foreplayMin);
@@ -532,6 +565,9 @@ namespace
 				std::vector<std::uint32_t> left;
 				std::ranges::copy_if(a_scene.actors, std::back_inserter(left), [&](std::uint32_t id) { return std::ranges::find(a_actors, id) == a_actors.end(); });
 				Excitement::Leave(left);
+				for (const auto id : left) {
+					Undress::Redress(id);
+				}
 			}
 			return replaced;
 		});
@@ -563,6 +599,9 @@ namespace
 		WatchAnimEvents(a_actors, a_sceneID);
 		auto& added = g_activeScenes.back();
 		RefreshExcitement(added);
+		if (const auto first = SceneRegistry::Find(added.sceneID)) {
+			Undress::SceneEntered(added.actors, *first, true);
+		}
 		if (added.sequence && added.sequence->entries.front().speed != 0) {
 			PlayOnActiveScene(added, added.sequence->entries.front().scene, added.sequence->entries.front().speed);
 		}
@@ -584,6 +623,9 @@ namespace
 		const auto ended = std::move(*it);
 		g_activeScenes.erase(it);
 		Excitement::Leave(ended.actors);
+		for (const auto id : ended.actors) {
+			Undress::Redress(id);
+		}
 		SceneEvents::SceneEnded(ended.actors, ended.sceneID);
 	}
 
@@ -604,6 +646,9 @@ namespace
 		scene->sceneID = a_sceneID;
 		scene->speed = a_speed;
 		RefreshExcitement(*scene);
+		if (const auto entered = moved ? SceneRegistry::Find(a_sceneID) : nullptr) {
+			Undress::SceneEntered(scene->actors, *entered, false);
+		}
 		if (moved) {
 			if (scene->sequence) {
 				REX::INFO("Sequence \"{}\": stopped, the scene was moved to \"{}\"", scene->sequence->id, a_sceneID);
@@ -680,6 +725,9 @@ namespace
 		a_active.sceneID = scene->id;
 		a_active.speed = speed;
 		RefreshExcitement(a_active);
+		if (_stricmp(previous.c_str(), scene->id.c_str()) != 0) {
+			Undress::SceneEntered(a_active.actors, *scene, false);
+		}
 
 		auto focused = GetPlayerScene();
 		if (focused.Active() && focused.role0 == a_active.actors[0]) {
@@ -2029,6 +2077,37 @@ namespace
 	float GetTimeUntilClimax(std::monostate, RE::Actor* a_actor)
 	{
 		return a_actor ? Excitement::TimeUntilClimax(a_actor->GetFormID()) : -1.0F;
+	}
+
+	// ---- Undressing (Undress.h) ----
+
+	// FourStimUndress.Strip reports what it took off.
+	void NoteStripped(std::monostate, RE::Actor* a_actor, std::vector<RE::TESForm*> a_items)
+	{
+		if (!a_actor) {
+			return;
+		}
+		std::vector<std::uint32_t> ids;
+		for (const auto item : a_items) {
+			if (item) {
+				ids.push_back(item->GetFormID());
+			}
+		}
+		Undress::NoteStripped(a_actor->GetFormID(), ids);
+	}
+
+	void UndressActor(std::monostate, RE::Actor* a_actor)
+	{
+		if (a_actor) {
+			Undress::StripAll(a_actor->GetFormID());
+		}
+	}
+
+	void RedressActor(std::monostate, RE::Actor* a_actor)
+	{
+		if (a_actor) {
+			Undress::Redress(a_actor->GetFormID(), true);
+		}
 	}
 
 	// ---- Auto mode and scene details ----
@@ -3778,6 +3857,9 @@ namespace
 		a_vm->BindNativeMethod(SCRIPT_NAME, "SetExcitementMultiplier"sv, SetExcitementMultiplier);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "GetTimeUntilClimax"sv, GetTimeUntilClimax);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "SetAutoMode"sv, SetAutoMode);
+		a_vm->BindNativeMethod(SCRIPT_NAME, "NoteStripped"sv, NoteStripped);
+		a_vm->BindNativeMethod(SCRIPT_NAME, "UndressActor"sv, UndressActor);
+		a_vm->BindNativeMethod(SCRIPT_NAME, "RedressActor"sv, RedressActor);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "IsInScene"sv, IsInScene);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "IsAutoMode"sv, IsAutoMode);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "AutoTransition"sv, AutoTransition);
@@ -3822,6 +3904,7 @@ namespace
 			F4SE::GetTaskInterface()->AddTask([]() {
 				g_activeScenes.clear();
 				Excitement::Clear();
+				Undress::Clear();
 			});
 			{
 				std::scoped_lock lock(g_pendingSequenceLock);
@@ -3846,6 +3929,7 @@ namespace
 				HUD::Reset();
 				g_activeScenes.clear();
 				Excitement::Clear();
+				Undress::Clear();
 				g_focusNextScene = false;
 				SetPlayerScene({});
 				g_sceneCameraActive = false;

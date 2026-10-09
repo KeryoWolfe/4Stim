@@ -55,6 +55,14 @@ namespace Actions
 				side.maxStimulation = v->get<float>();
 			}
 			side.requirements = LowerList(*it, "requirements");
+			side.fullStrip = it->value("fullStrip", false);
+			if (const auto v = it->find("undressSlots"); v != it->end() && v->is_array()) {
+				for (const auto& slot : *v) {
+					if (slot.is_number_integer() && slot.get<int>() >= 30 && slot.get<int>() <= 61) {
+						side.undressSlots.push_back(slot.get<int>());
+					}
+				}
+			}
 			return side;
 		}
 

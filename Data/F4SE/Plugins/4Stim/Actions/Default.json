@@ -1,5 +1,5 @@
 {
-	"_comment": "Action types, adapted from OStim NG's actions (GPL-3.0, github.com/VersuchDrei/OStimNG). See docs/ACTIONS.md.",
+	"_comment": "Action types, adapted from OStim NG's actions (GPL-3.0, github.com/VersuchDrei/OStimNG). See docs/ACTIONS.md. undressSlots are Fallout 4 biped slots (30-61) mapped from OStim's Skyrim strippingSlots (docs/UNDRESS.md).",
 	"actions": [
 		{
 			"id": "analfingering",
@@ -18,13 +18,18 @@
 				"maxStimulation": 50,
 				"requirements": [
 					"hand"
+				],
+				"undressSlots": [
+					34,
+					35
 				]
 			},
 			"target": {
 				"stimulation": 0.2,
 				"requirements": [
 					"anus"
-				]
+				],
+				"fullStrip": true
 			}
 		},
 		{
@@ -41,13 +46,18 @@
 				"maxStimulation": 50,
 				"requirements": [
 					"hand"
+				],
+				"undressSlots": [
+					34,
+					35
 				]
 			},
 			"target": {
 				"stimulation": 0.2,
 				"requirements": [
 					"anus"
-				]
+				],
+				"fullStrip": true
 			}
 		},
 		{
@@ -68,13 +78,18 @@
 				"maxStimulation": 50,
 				"requirements": [
 					"mouth"
+				],
+				"undressSlots": [
+					46,
+					49
 				]
 			},
 			"target": {
 				"stimulation": 0.3,
 				"requirements": [
 					"anus"
-				]
+				],
+				"fullStrip": true
 			}
 		},
 		{
@@ -93,13 +108,15 @@
 				"stimulation": 1.0,
 				"requirements": [
 					"penis"
-				]
+				],
+				"fullStrip": true
 			},
 			"target": {
 				"stimulation": 0.3,
 				"requirements": [
 					"anus"
-				]
+				],
+				"fullStrip": true
 			}
 		},
 		{
@@ -122,7 +139,8 @@
 				"stimulation": 0.3,
 				"requirements": [
 					"anus"
-				]
+				],
+				"fullStrip": true
 			}
 		},
 		{
@@ -142,7 +160,8 @@
 				"stimulation": 0.3,
 				"requirements": [
 					"anus"
-				]
+				],
+				"fullStrip": true
 			}
 		},
 		{
@@ -150,7 +169,26 @@
 			"name": "Bathing",
 			"aliases": [
 				"bathe"
-			]
+			],
+			"target": {
+				"undressSlots": [
+					33,
+					34,
+					35,
+					36,
+					37,
+					38,
+					39,
+					40,
+					41,
+					42,
+					43,
+					44,
+					45,
+					46,
+					49
+				]
+			}
 		},
 		{
 			"id": "blowjob",
@@ -175,13 +213,18 @@
 				"maxStimulation": 75,
 				"requirements": [
 					"mouth"
+				],
+				"undressSlots": [
+					46,
+					49
 				]
 			},
 			"target": {
 				"stimulation": 1.4,
 				"requirements": [
 					"penis"
-				]
+				],
+				"fullStrip": true
 			}
 		},
 		{
@@ -204,13 +247,15 @@
 				"maxStimulation": 50,
 				"requirements": [
 					"breast"
-				]
+				],
+				"fullStrip": true
 			},
 			"target": {
 				"stimulation": 0.8,
 				"requirements": [
 					"penis"
-				]
+				],
+				"fullStrip": true
 			}
 		},
 		{
@@ -225,6 +270,21 @@
 			"actor": {
 				"requirements": [
 					"hand"
+				],
+				"undressSlots": [
+					34,
+					35
+				]
+			},
+			"target": {
+				"undressSlots": [
+					33,
+					36,
+					39,
+					40,
+					41,
+					44,
+					45
 				]
 			}
 		},
@@ -244,11 +304,21 @@
 				"maxStimulation": 50,
 				"requirements": [
 					"breast"
-				]
+				],
+				"fullStrip": true
 			},
 			"target": {
 				"stimulation": 0.1,
-				"maxStimulation": 50
+				"maxStimulation": 50,
+				"undressSlots": [
+					33,
+					36,
+					39,
+					40,
+					41,
+					44,
+					45
+				]
 			}
 		},
 		{
@@ -266,11 +336,24 @@
 				"maxStimulation": 50,
 				"requirements": [
 					"breast"
+				],
+				"undressSlots": [
+					33,
+					36,
+					39,
+					40,
+					41,
+					44,
+					45
 				]
 			},
 			"target": {
 				"stimulation": 0.3,
-				"maxStimulation": 75
+				"maxStimulation": 75,
+				"undressSlots": [
+					46,
+					49
+				]
 			}
 		},
 		{
@@ -286,13 +369,15 @@
 			],
 			"actor": {
 				"stimulation": 0.1,
-				"maxStimulation": 50
+				"maxStimulation": 50,
+				"fullStrip": true
 			},
 			"target": {
 				"stimulation": 0.8,
 				"requirements": [
 					"penis"
-				]
+				],
+				"fullStrip": true
 			}
 		},
 		{
@@ -309,11 +394,24 @@
 				"maxStimulation": 50,
 				"requirements": [
 					"breast"
+				],
+				"undressSlots": [
+					33,
+					36,
+					39,
+					40,
+					41,
+					44,
+					45
 				]
 			},
 			"target": {
 				"stimulation": 0.3,
-				"maxStimulation": 75
+				"maxStimulation": 75,
+				"undressSlots": [
+					46,
+					49
+				]
 			}
 		},
 		{
@@ -325,6 +423,10 @@
 			"actor": {
 				"requirements": [
 					"hand"
+				],
+				"undressSlots": [
+					34,
+					35
 				]
 			},
 			"target": {
@@ -352,7 +454,11 @@
 			"actor": {
 				"requirements": [
 					"penis"
-				]
+				],
+				"fullStrip": true
+			},
+			"target": {
+				"fullStrip": true
 			}
 		},
 		{
@@ -365,7 +471,11 @@
 			"actor": {
 				"requirements": [
 					"penis"
-				]
+				],
+				"fullStrip": true
+			},
+			"target": {
+				"fullStrip": true
 			}
 		},
 		{
@@ -378,12 +488,14 @@
 			"actor": {
 				"requirements": [
 					"penis"
-				]
+				],
+				"fullStrip": true
 			},
 			"target": {
 				"requirements": [
 					"vagina"
-				]
+				],
+				"fullStrip": true
 			}
 		},
 		{
@@ -407,13 +519,18 @@
 				"maxStimulation": 75,
 				"requirements": [
 					"mouth"
+				],
+				"undressSlots": [
+					46,
+					49
 				]
 			},
 			"target": {
 				"stimulation": 1.4,
 				"requirements": [
 					"penis"
-				]
+				],
+				"fullStrip": true
 			}
 		},
 		{
@@ -433,6 +550,13 @@
 			"actor": {
 				"requirements": [
 					"penis"
+				],
+				"fullStrip": true
+			},
+			"target": {
+				"undressSlots": [
+					46,
+					49
 				]
 			}
 		},
@@ -446,13 +570,18 @@
 				"stimulation": 0.0,
 				"requirements": [
 					"hand"
+				],
+				"undressSlots": [
+					34,
+					35
 				]
 			},
 			"target": {
 				"stimulation": 0.9,
 				"requirements": [
 					"vagina"
-				]
+				],
+				"fullStrip": true
 			}
 		},
 		{
@@ -479,7 +608,8 @@
 				"stimulation": 0.9,
 				"requirements": [
 					"penis"
-				]
+				],
+				"fullStrip": true
 			}
 		},
 		{
@@ -497,6 +627,10 @@
 				"maxStimulation": 50,
 				"requirements": [
 					"mouth"
+				],
+				"undressSlots": [
+					46,
+					49
 				]
 			},
 			"target": {
@@ -504,6 +638,10 @@
 				"maxStimulation": 50,
 				"requirements": [
 					"mouth"
+				],
+				"undressSlots": [
+					46,
+					49
 				]
 			}
 		},
@@ -521,7 +659,8 @@
 				"stimulation": 0.6,
 				"requirements": [
 					"vagina"
-				]
+				],
+				"fullStrip": true
 			},
 			"target": {
 				"stimulation": 0.2,
@@ -539,7 +678,8 @@
 				"stimulation": 0.6,
 				"requirements": [
 					"vagina"
-				]
+				],
+				"fullStrip": true
 			}
 		},
 		{
@@ -559,13 +699,15 @@
 				"stimulation": 0.75,
 				"requirements": [
 					"vagina"
-				]
+				],
+				"fullStrip": true
 			},
 			"target": {
 				"stimulation": 0.75,
 				"requirements": [
 					"penis"
-				]
+				],
+				"fullStrip": true
 			}
 		},
 		{
@@ -581,11 +723,21 @@
 				"stimulation": 0.6,
 				"requirements": [
 					"vagina"
-				]
+				],
+				"fullStrip": true
 			},
 			"target": {
 				"stimulation": 0.2,
-				"maxStimulation": 75
+				"maxStimulation": 75,
+				"undressSlots": [
+					33,
+					36,
+					39,
+					40,
+					41,
+					44,
+					45
+				]
 			}
 		},
 		{
@@ -624,6 +776,10 @@
 				"maxStimulation": 50,
 				"requirements": [
 					"hand"
+				],
+				"undressSlots": [
+					34,
+					35
 				]
 			},
 			"target": {
@@ -658,6 +814,10 @@
 				"maxStimulation": 50,
 				"requirements": [
 					"hand"
+				],
+				"undressSlots": [
+					34,
+					35
 				]
 			},
 			"target": {
@@ -693,6 +853,10 @@
 				"maxStimulation": 50,
 				"requirements": [
 					"hand"
+				],
+				"undressSlots": [
+					34,
+					35
 				]
 			},
 			"target": {
@@ -700,7 +864,8 @@
 				"maxStimulation": 50,
 				"requirements": [
 					"testicles"
-				]
+				],
+				"fullStrip": true
 			}
 		},
 		{
@@ -719,13 +884,18 @@
 				"maxStimulation": 50,
 				"requirements": [
 					"hand"
+				],
+				"undressSlots": [
+					34,
+					35
 				]
 			},
 			"target": {
 				"stimulation": 0.9,
 				"requirements": [
 					"penis"
-				]
+				],
+				"fullStrip": true
 			}
 		},
 		{
@@ -739,6 +909,10 @@
 			"actor": {
 				"requirements": [
 					"hand"
+				],
+				"undressSlots": [
+					34,
+					35
 				]
 			}
 		},
@@ -751,6 +925,10 @@
 			"actor": {
 				"requirements": [
 					"hand"
+				],
+				"undressSlots": [
+					34,
+					35
 				]
 			}
 		},
@@ -766,6 +944,15 @@
 			"actor": {
 				"requirements": [
 					"hand"
+				],
+				"undressSlots": [
+					34,
+					35
+				]
+			},
+			"target": {
+				"undressSlots": [
+					46
 				]
 			}
 		},
@@ -780,6 +967,10 @@
 			"actor": {
 				"requirements": [
 					"hand"
+				],
+				"undressSlots": [
+					34,
+					35
 				]
 			},
 			"target": {
@@ -802,11 +993,19 @@
 			"actor": {
 				"requirements": [
 					"hand"
+				],
+				"undressSlots": [
+					34,
+					35
 				]
 			},
 			"target": {
 				"requirements": [
 					"hand"
+				],
+				"undressSlots": [
+					34,
+					35
 				]
 			}
 		},
@@ -819,6 +1018,15 @@
 			"actor": {
 				"requirements": [
 					"hand"
+				],
+				"undressSlots": [
+					34,
+					35
+				]
+			},
+			"target": {
+				"undressSlots": [
+					46
 				]
 			}
 		},
@@ -836,6 +1044,10 @@
 			"actor": {
 				"requirements": [
 					"hand"
+				],
+				"undressSlots": [
+					34,
+					35
 				]
 			}
 		},
@@ -850,6 +1062,10 @@
 			"actor": {
 				"requirements": [
 					"hand"
+				],
+				"undressSlots": [
+					34,
+					35
 				]
 			}
 		},
@@ -862,6 +1078,10 @@
 			"actor": {
 				"requirements": [
 					"hand"
+				],
+				"undressSlots": [
+					34,
+					35
 				]
 			},
 			"target": {
@@ -883,6 +1103,10 @@
 			"actor": {
 				"requirements": [
 					"hand"
+				],
+				"undressSlots": [
+					34,
+					35
 				]
 			}
 		},
@@ -911,6 +1135,10 @@
 				"maxStimulation": 50,
 				"requirements": [
 					"mouth"
+				],
+				"undressSlots": [
+					46,
+					49
 				]
 			},
 			"target": {
@@ -918,6 +1146,10 @@
 				"maxStimulation": 50,
 				"requirements": [
 					"mouth"
+				],
+				"undressSlots": [
+					46,
+					49
 				]
 			}
 		},
@@ -938,11 +1170,19 @@
 				"maxStimulation": 25,
 				"requirements": [
 					"mouth"
+				],
+				"undressSlots": [
+					46,
+					49
 				]
 			},
 			"target": {
 				"stimulation": 0.1,
-				"maxStimulation": 25
+				"maxStimulation": 25,
+				"undressSlots": [
+					46,
+					49
+				]
 			}
 		},
 		{
@@ -961,6 +1201,10 @@
 				"maxStimulation": 50,
 				"requirements": [
 					"mouth"
+				],
+				"undressSlots": [
+					46,
+					49
 				]
 			},
 			"target": {
@@ -988,11 +1232,21 @@
 				"maxStimulation": 25,
 				"requirements": [
 					"mouth"
+				],
+				"undressSlots": [
+					34,
+					35,
+					46,
+					49
 				]
 			},
 			"target": {
 				"stimulation": 0.1,
-				"maxStimulation": 25
+				"maxStimulation": 25,
+				"undressSlots": [
+					34,
+					35
+				]
 			}
 		},
 		{
@@ -1010,11 +1264,18 @@
 				"maxStimulation": 50,
 				"requirements": [
 					"mouth"
+				],
+				"undressSlots": [
+					46,
+					49
 				]
 			},
 			"target": {
 				"stimulation": 0.1,
-				"maxStimulation": 50
+				"maxStimulation": 50,
+				"undressSlots": [
+					50
+				]
 			}
 		},
 		{
@@ -1046,13 +1307,18 @@
 				"maxStimulation": 50,
 				"requirements": [
 					"mouth"
+				],
+				"undressSlots": [
+					46,
+					49
 				]
 			},
 			"target": {
 				"stimulation": 0.6,
 				"requirements": [
 					"nipple"
-				]
+				],
+				"fullStrip": true
 			}
 		},
 		{
@@ -1065,13 +1331,18 @@
 				"stimulation": 0.0,
 				"requirements": [
 					"hand"
+				],
+				"undressSlots": [
+					34,
+					35
 				]
 			},
 			"target": {
 				"stimulation": 0.9,
 				"requirements": [
 					"penis"
-				]
+				],
+				"fullStrip": true
 			}
 		},
 		{
@@ -1086,11 +1357,32 @@
 			"actor": {
 				"requirements": [
 					"hand"
+				],
+				"undressSlots": [
+					34,
+					35
 				]
 			},
 			"target": {
 				"stimulation": 0.1,
-				"maxStimulation": 50
+				"maxStimulation": 50,
+				"undressSlots": [
+					33,
+					34,
+					35,
+					36,
+					37,
+					38,
+					39,
+					40,
+					41,
+					42,
+					43,
+					44,
+					45,
+					46,
+					49
+				]
 			}
 		},
 		{
@@ -1104,7 +1396,24 @@
 			],
 			"target": {
 				"stimulation": 0.1,
-				"maxStimulation": 50
+				"maxStimulation": 50,
+				"undressSlots": [
+					33,
+					34,
+					35,
+					36,
+					37,
+					38,
+					39,
+					40,
+					41,
+					42,
+					43,
+					44,
+					45,
+					46,
+					49
+				]
 			}
 		},
 		{
@@ -1125,6 +1434,10 @@
 			"actor": {
 				"requirements": [
 					"hand"
+				],
+				"undressSlots": [
+					34,
+					35
 				]
 			},
 			"target": {
@@ -1132,6 +1445,10 @@
 				"maxStimulation": 50,
 				"requirements": [
 					"mouth"
+				],
+				"undressSlots": [
+					46,
+					49
 				]
 			}
 		},
@@ -1151,6 +1468,10 @@
 				"maxStimulation": 75,
 				"requirements": [
 					"mouth"
+				],
+				"undressSlots": [
+					46,
+					49
 				]
 			}
 		},
@@ -1163,6 +1484,15 @@
 			"actor": {
 				"requirements": [
 					"hand"
+				],
+				"undressSlots": [
+					34,
+					35
+				]
+			},
+			"target": {
+				"undressSlots": [
+					46
 				]
 			}
 		},
@@ -1187,13 +1517,18 @@
 				"maxStimulation": 50,
 				"requirements": [
 					"mouth"
+				],
+				"undressSlots": [
+					46,
+					49
 				]
 			},
 			"target": {
 				"stimulation": 1.4,
 				"requirements": [
 					"penis"
-				]
+				],
+				"fullStrip": true
 			}
 		},
 		{
@@ -1210,11 +1545,18 @@
 				"maxStimulation": 50,
 				"requirements": [
 					"hand"
+				],
+				"undressSlots": [
+					34,
+					35
 				]
 			},
 			"target": {
 				"stimulation": 0.1,
-				"maxStimulation": 50
+				"maxStimulation": 50,
+				"undressSlots": [
+					46
+				]
 			}
 		},
 		{
@@ -1231,6 +1573,10 @@
 				"maxStimulation": 50,
 				"requirements": [
 					"hand"
+				],
+				"undressSlots": [
+					34,
+					35
 				]
 			},
 			"target": {
@@ -1270,13 +1616,18 @@
 				"maxStimulation": 50,
 				"requirements": [
 					"mouth"
+				],
+				"undressSlots": [
+					46,
+					49
 				]
 			},
 			"target": {
 				"stimulation": 0.3,
 				"requirements": [
 					"anus"
-				]
+				],
+				"fullStrip": true
 			}
 		},
 		{
@@ -1294,11 +1645,16 @@
 				"stimulation": 0.75,
 				"requirements": [
 					"penis"
-				]
+				],
+				"fullStrip": true
 			},
 			"target": {
 				"stimulation": 0.1,
-				"maxStimulation": 50
+				"maxStimulation": 50,
+				"undressSlots": [
+					46,
+					49
+				]
 			}
 		},
 		{
@@ -1311,6 +1667,10 @@
 			"actor": {
 				"requirements": [
 					"hand"
+				],
+				"undressSlots": [
+					34,
+					35
 				]
 			}
 		},
@@ -1342,6 +1702,15 @@
 			"actor": {
 				"requirements": [
 					"hand"
+				],
+				"undressSlots": [
+					34,
+					35
+				]
+			},
+			"target": {
+				"undressSlots": [
+					46
 				]
 			}
 		},
@@ -1357,6 +1726,10 @@
 			"actor": {
 				"requirements": [
 					"hand"
+				],
+				"undressSlots": [
+					34,
+					35
 				]
 			},
 			"target": {
@@ -1384,13 +1757,18 @@
 				"maxStimulation": 50,
 				"requirements": [
 					"mouth"
+				],
+				"undressSlots": [
+					46,
+					49
 				]
 			},
 			"target": {
 				"stimulation": 0.6,
 				"requirements": [
 					"nipple"
-				]
+				],
+				"fullStrip": true
 			}
 		},
 		{
@@ -1415,7 +1793,8 @@
 				"stimulation": 0.9,
 				"requirements": [
 					"penis"
-				]
+				],
+				"fullStrip": true
 			}
 		},
 		{
@@ -1440,13 +1819,18 @@
 				"maxStimulation": 50,
 				"requirements": [
 					"mouth"
+				],
+				"undressSlots": [
+					46,
+					49
 				]
 			},
 			"target": {
 				"stimulation": 0.4,
 				"requirements": [
 					"testicles"
-				]
+				],
+				"fullStrip": true
 			}
 		},
 		{
@@ -1461,13 +1845,15 @@
 				"sexual"
 			],
 			"actor": {
-				"stimulation": 0.2
+				"stimulation": 0.2,
+				"fullStrip": true
 			},
 			"target": {
 				"stimulation": 0.9,
 				"requirements": [
 					"penis"
-				]
+				],
+				"fullStrip": true
 			}
 		},
 		{
@@ -1501,13 +1887,15 @@
 				"stimulation": 1.0,
 				"requirements": [
 					"vagina"
-				]
+				],
+				"fullStrip": true
 			},
 			"target": {
 				"stimulation": 1.0,
 				"requirements": [
 					"vagina"
-				]
+				],
+				"fullStrip": true
 			}
 		},
 		{
@@ -1528,13 +1916,18 @@
 				"maxStimulation": 50,
 				"requirements": [
 					"hand"
+				],
+				"undressSlots": [
+					34,
+					35
 				]
 			},
 			"target": {
 				"stimulation": 0.6,
 				"requirements": [
 					"vagina"
-				]
+				],
+				"fullStrip": true
 			}
 		},
 		{
@@ -1554,13 +1947,18 @@
 				"maxStimulation": 50,
 				"requirements": [
 					"hand"
+				],
+				"undressSlots": [
+					34,
+					35
 				]
 			},
 			"target": {
 				"stimulation": 0.6,
 				"requirements": [
 					"vagina"
-				]
+				],
+				"fullStrip": true
 			}
 		},
 		{
@@ -1579,13 +1977,15 @@
 				"stimulation": 1.0,
 				"requirements": [
 					"penis"
-				]
+				],
+				"fullStrip": true
 			},
 			"target": {
 				"stimulation": 1.0,
 				"requirements": [
 					"vagina"
-				]
+				],
+				"fullStrip": true
 			}
 		},
 		{
@@ -1608,7 +2008,8 @@
 				"stimulation": 1.0,
 				"requirements": [
 					"vagina"
-				]
+				],
+				"fullStrip": true
 			}
 		},
 		{
@@ -1631,7 +2032,8 @@
 				"stimulation": 1.0,
 				"requirements": [
 					"vagina"
-				]
+				],
+				"fullStrip": true
 			}
 		},
 		{
@@ -1661,6 +2063,10 @@
 				"requirements": [
 					"mouth",
 					"vampire"
+				],
+				"undressSlots": [
+					46,
+					49
 				]
 			},
 			"target": {
@@ -1687,13 +2093,18 @@
 				"maxStimulation": 50,
 				"requirements": [
 					"mouth"
+				],
+				"undressSlots": [
+					46,
+					49
 				]
 			},
 			"target": {
 				"stimulation": 1.4,
 				"requirements": [
 					"vagina"
-				]
+				],
+				"fullStrip": true
 			}
 		},
 		{
@@ -1723,13 +2134,18 @@
 				"maxStimulation": 50,
 				"requirements": [
 					"mouth"
+				],
+				"undressSlots": [
+					46,
+					49
 				]
 			},
 			"target": {
 				"stimulation": 1.4,
 				"requirements": [
 					"vagina"
-				]
+				],
+				"fullStrip": true
 			}
 		},
 		{
@@ -1754,13 +2170,18 @@
 				"maxStimulation": 50,
 				"requirements": [
 					"hand"
+				],
+				"undressSlots": [
+					34,
+					35
 				]
 			},
 			"target": {
 				"stimulation": 1.3,
 				"requirements": [
 					"vagina"
-				]
+				],
+				"fullStrip": true
 			}
 		},
 		{
@@ -1768,7 +2189,26 @@
 			"name": "Washing",
 			"aliases": [
 				"wash"
-			]
+			],
+			"target": {
+				"undressSlots": [
+					33,
+					34,
+					35,
+					36,
+					37,
+					38,
+					39,
+					40,
+					41,
+					42,
+					43,
+					44,
+					45,
+					46,
+					49
+				]
+			}
 		}
 	]
 }

@@ -71,6 +71,7 @@ namespace SceneRegistry
 		std::string                                destination;    // transition: the scene it moves on to after `length`
 		int                                        defaultSpeed = 0;   // 0-based speed it starts at (auto mode, new scenes)
 		bool                                       noRandomSelection = false;  // auto mode never picks it
+		bool                                       noStrip = false;            // no undressing in this scene
 		std::string                                furniture;      // furniture type it's played on (lowercase); "" = anywhere
 		std::array<float, 4>                       furnitureOffset{};  // x, y, z, degrees from the furniture's spot
 		std::string                                sourceFile;

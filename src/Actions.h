@@ -20,6 +20,8 @@ namespace Actions
 		float                    stimulation = 0.0F;       // per second, for this side's actor
 		float                    maxStimulation = 100.0F;  // no stimulation from this action past this
 		std::vector<std::string> requirements;             // body parts this side needs (lowercase): penis, vagina, mouth...
+		bool                     fullStrip = false;        // undress this side's actor completely (docs/UNDRESS.md)
+		std::vector<int>         undressSlots;             // else take off what's in these biped slots (30-61)
 	};
 
 	struct Type
