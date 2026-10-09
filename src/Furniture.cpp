@@ -492,7 +492,7 @@ namespace Furniture
 			const float c0 = std::cos(yaw), s0 = std::sin(yaw);
 			const float nearX = dx * c0 - dy * s0;
 			const float nearY = dx * s0 + dy * c0;
-			local = { midX, midY, type.onFloor ? b.boundMin.z : b.boundMax.z };
+			local = { midX, midY, static_cast<float>(type.onFloor ? b.boundMin.z : b.boundMax.z) };
 			if (alongX) {
 				localHeading = nearX >= midX * scale ? -3.14159265F * 0.5F : 3.14159265F * 0.5F;
 			} else {
