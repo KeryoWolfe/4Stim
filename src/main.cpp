@@ -181,6 +181,8 @@ namespace
 					Excitement::Settings().flash = std::clamp(std::stof(value), 0.0F, 1.0F);
 				} else if (key == "bclimaxrumble") {
 					Excitement::Settings().rumble = std::stoi(value) != 0;
+				} else if (key == "bguardscenes") {
+					g_guardScenes = std::stoi(value) != 0;
 				} else if (key == "bundress") {
 					Undress::Settings().enabled = std::stoi(value) != 0;
 				} else if (key == "bundressatstart") {
@@ -494,6 +496,10 @@ namespace
 		// Game time left before it ends after a climax (< 0 = not ending).
 		float endIn = -1.0F;
 
+		// When its idles were last played (the scene guard leaves it alone
+		// for a moment after).
+		std::chrono::steady_clock::time_point lastPlayed = std::chrono::steady_clock::now();
+
 		// Auto mode (see "Auto mode" below).
 		struct Auto
 		{
@@ -645,6 +651,7 @@ namespace
 		}
 		scene->sceneID = a_sceneID;
 		scene->speed = a_speed;
+		scene->lastPlayed = std::chrono::steady_clock::now();
 		RefreshExcitement(*scene);
 		if (const auto entered = moved ? SceneRegistry::Find(a_sceneID) : nullptr) {
 			Undress::SceneEntered(scene->actors, *entered, false);
@@ -724,6 +731,7 @@ namespace
 		NoteCarrySpeed(a_active, scene->id);
 		a_active.sceneID = scene->id;
 		a_active.speed = speed;
+		a_active.lastPlayed = std::chrono::steady_clock::now();
 		RefreshExcitement(a_active);
 		if (_stricmp(previous.c_str(), scene->id.c_str()) != 0) {
 			Undress::SceneEntered(a_active.actors, *scene, false);
@@ -1102,6 +1110,63 @@ namespace
 		}
 	}
 
+	// ---- Scene guard ----
+	// NPCs' AI keeps running during a scene (only their movement is held),
+	// and their packages play the game's own idles (sandbox fidgets, idle
+	// markers) over the scene's. Four times a second, for every NPC in a
+	// scene: push back the package's next idle, and if a game idle took
+	// over anyway, play the scene again for everyone in it (all roles
+	// together, so they stay in sync). Not during transitions.
+
+	bool g_guardScenes = true;
+
+	void GuardScenes(float a_seconds)
+	{
+		static float clock = 0.0F;
+		if (!g_guardScenes || (clock += a_seconds) < 0.25F) {
+			return;
+		}
+		clock = 0.0F;
+		const auto now = std::chrono::steady_clock::now();
+		for (auto& active : g_activeScenes) {
+			const auto scene = SceneRegistry::Find(active.sceneID);
+			if (!scene) {
+				continue;
+			}
+			const bool settled = active.remaining < 0.0F && !scene->IsTransition() && now - active.lastPlayed > std::chrono::milliseconds(1500);
+			const RE::TESIdleForm* intruder = nullptr;
+			std::uint32_t          intruded = 0;
+			for (const auto id : active.actors) {
+				const auto actor = RE::TESForm::GetFormByID<RE::Actor>(id);
+				if (!actor || IsPlayer(actor)) {
+					continue;
+				}
+				const auto process = actor->currentProcess;
+				const auto data = process ? process->middleHigh : nullptr;
+				if (!data) {
+					continue;
+				}
+				data->packageIdleTimer = 30.0F;  // no package idle for a while; renewed every check
+				const auto current = data->currentIdle;
+				if (!settled || !current || intruder) {
+					continue;
+				}
+				const bool ours = std::ranges::any_of(scene->speeds, [&](const auto& a_idles) {
+					return std::ranges::find(a_idles, current) != a_idles.end();
+				});
+				if (!ours) {
+					intruder = current;
+					intruded = id;
+				}
+			}
+			if (intruder) {
+				REX::INFO("Scene guard: {:08X} in \"{}\" was playing a game idle ({:08X} \"{}\"), playing the scene again", intruded, active.sceneID,
+					intruder->GetFormID(), intruder->GetFormEditorID() ? intruder->GetFormEditorID() : "");
+				PlayOnActiveScene(active, active.sceneID, active.speed);
+			}
+		}
+	}
+
 	// ---- Excitement and climax (Excitement.h) ----
 
 	// Climax camera shake. The game's own shake (Game.ShakeCamera) only moves
@@ -1332,6 +1397,7 @@ namespace
 				}
 			}
 			UpdateClimaxShake();
+			GuardScenes(elapsed);
 			for (auto& active : g_activeScenes) {
 				AutoModeTick(active, elapsed);
 			}
