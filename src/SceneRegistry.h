@@ -30,8 +30,15 @@ namespace SceneRegistry
 	struct SceneActor
 	{
 		Sex                      sex = Sex::kAny;  // who may take this role
-		std::vector<std::string> requirements;     // what the role's actions need (penis, mouth...), lowercase
-		std::string              climax;           // scene to play when this role's actor climaxes, or ""
+		std::vector<std::string> requirements;     // what the role needs (penis, mouth...): its own and its actions', lowercase
+		std::vector<std::string> tags;             // what the role is doing: standing, kneeling, lyingback... lowercase
+		// Scenes to move to on an event for this role's actor (OStim's
+		// autoTransitions): "climax", "pullout"... key lowercase.
+		std::vector<std::pair<std::string, std::string>> autoTransitions;
+
+		[[nodiscard]] bool HasTag(std::string_view a_tag) const;
+		// The scene for a_event, or "".
+		[[nodiscard]] std::string AutoTransition(std::string_view a_event) const;
 	};
 
 	// One action in a scene: who does what to whom (docs/ACTIONS.md).
@@ -62,6 +69,8 @@ namespace SceneRegistry
 		std::string                                icon;  // HUD icon under Data\Interface\4Stim\Icons\, or empty
 		float                                      length = 0.0F;  // seconds of one play-through; 0 = not given
 		std::string                                destination;    // transition: the scene it moves on to after `length`
+		int                                        defaultSpeed = 0;   // 0-based speed it starts at (auto mode, new scenes)
+		bool                                       noRandomSelection = false;  // auto mode never picks it
 		std::string                                furniture;      // furniture type it's played on (lowercase); "" = anywhere
 		std::array<float, 4>                       furnitureOffset{};  // x, y, z, degrees from the furniture's spot
 		std::string                                sourceFile;

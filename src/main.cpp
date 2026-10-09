@@ -56,6 +56,31 @@ namespace
 	};
 	Settings g_settings;
 
+	// [AutoMode] in 4Stim.ini (see "Auto mode" below).
+	struct AutoConfig
+	{
+		bool          player = false;        // scenes with the player start in auto mode
+		bool          npc = true;            // scenes without the player do
+		std::uint32_t key = 0;               // toggles it for the scene you're in / watching (0 = no key)
+		float         sceneMin = 15.0F;      // seconds in each scene
+		float         sceneMax = 30.0F;
+		int           foreplayChance = 35;   // % of scenes that start with foreplay
+		float         foreplayMin = 15.0F;   // excitement that ends it
+		float         foreplayMax = 35.0F;
+		int           pulloutChance = 75;    // % of scenes where a man pulls out before climaxing
+		float         pulloutMin = 80.0F;    // at this excitement
+		float         pulloutMax = 95.0F;
+		int           maxSteps = 10;         // navigations auto mode walks through to reach a scene
+		bool          limitToNavigation = true;  // during sex, only pick scenes reachable by navigation
+		bool          standingOnFloor = true;    // off furniture prefer standing scenes, on a bed lying ones
+		bool          autoSpeed = true;      // speed up as excitement rises
+		float         speedIntervalMin = 5.0F;
+		float         speedIntervalMax = 10.0F;
+		float         speedExcitementMin = 20.0F;  // no speed-ups below this excitement...
+		float         speedExcitementMax = 80.0F;  // ...always at or above this
+	};
+	AutoConfig g_autoConfig;
+
 	void LoadSettings()
 	{
 		std::ifstream in("Data/F4SE/Plugins/4Stim.ini");
@@ -155,6 +180,44 @@ namespace
 					Excitement::Settings().flash = std::clamp(std::stof(value), 0.0F, 1.0F);
 				} else if (key == "bclimaxrumble") {
 					Excitement::Settings().rumble = std::stoi(value) != 0;
+				} else if (key == "bautomodeplayer") {
+					g_autoConfig.player = std::stoi(value) != 0;
+				} else if (key == "bautomodenpc") {
+					g_autoConfig.npc = std::stoi(value) != 0;
+				} else if (key == "iautomodekey") {
+					g_autoConfig.key = static_cast<std::uint32_t>(std::stoul(value, nullptr, 0));
+				} else if (key == "fautomodescenemin") {
+					g_autoConfig.sceneMin = std::max(std::stof(value), 2.0F);
+				} else if (key == "fautomodescenemax") {
+					g_autoConfig.sceneMax = std::max(std::stof(value), 2.0F);
+				} else if (key == "iforeplaychance") {
+					g_autoConfig.foreplayChance = std::clamp(std::stoi(value), 0, 100);
+				} else if (key == "fforeplayendmin") {
+					g_autoConfig.foreplayMin = std::clamp(std::stof(value), 0.0F, 100.0F);
+				} else if (key == "fforeplayendmax") {
+					g_autoConfig.foreplayMax = std::clamp(std::stof(value), 0.0F, 100.0F);
+				} else if (key == "ipulloutchance") {
+					g_autoConfig.pulloutChance = std::clamp(std::stoi(value), 0, 100);
+				} else if (key == "fpulloutmin") {
+					g_autoConfig.pulloutMin = std::clamp(std::stof(value), 0.0F, 100.0F);
+				} else if (key == "fpulloutmax") {
+					g_autoConfig.pulloutMax = std::clamp(std::stof(value), 0.0F, 100.0F);
+				} else if (key == "iautomodemaxsteps") {
+					g_autoConfig.maxSteps = std::clamp(std::stoi(value), 1, 50);
+				} else if (key == "bautomodelimittonavigation") {
+					g_autoConfig.limitToNavigation = std::stoi(value) != 0;
+				} else if (key == "bautomodestandingonfloor") {
+					g_autoConfig.standingOnFloor = std::stoi(value) != 0;
+				} else if (key == "bautospeed") {
+					g_autoConfig.autoSpeed = std::stoi(value) != 0;
+				} else if (key == "fautospeedintervalmin") {
+					g_autoConfig.speedIntervalMin = std::max(std::stof(value), 0.5F);
+				} else if (key == "fautospeedintervalmax") {
+					g_autoConfig.speedIntervalMax = std::max(std::stof(value), 0.5F);
+				} else if (key == "fautospeedexcitementmin") {
+					g_autoConfig.speedExcitementMin = std::clamp(std::stof(value), 0.0F, 100.0F);
+				} else if (key == "fautospeedexcitementmax") {
+					g_autoConfig.speedExcitementMax = std::clamp(std::stof(value), 0.0F, 100.0F);
 				} else if (key == "ftransitionlead") {
 					g_settings.transitionLead = std::clamp(std::stof(value), -2.0F, 5.0F);
 				}
@@ -172,6 +235,14 @@ namespace
 		REX::INFO("Settings: excitement {}, x{} male / x{} female, decay {}/s after {}s, climax scenes {}, end on climax: player {} male {} female {} all {} NPC scenes {} (after {}s)",
 			ex.enabled ? "on" : "off", ex.maleMult, ex.femaleMult, ex.decayRate, ex.decayGrace, ex.climaxScenes,
 			ex.endOnPlayer, ex.endOnMale, ex.endOnFemale, ex.endOnAll, ex.endNPCScenes, ex.endDelay);
+		auto& ac = g_autoConfig;
+		ac.sceneMax = std::max(ac.sceneMax, ac.sceneMin);
+		ac.foreplayMax = std::max(ac.foreplayMax, ac.foreplayMin);
+		ac.pulloutMax = std::max(ac.pulloutMax, ac.pulloutMin);
+		ac.speedIntervalMax = std::max(ac.speedIntervalMax, ac.speedIntervalMin);
+		REX::INFO("Settings: auto mode player {} NPC {} key 0x{:X}, {}-{}s per scene, foreplay {}% (to {}-{}), pull-out {}% (at {}-{}), {} steps, auto speed {}",
+			ac.player, ac.npc, ac.key, ac.sceneMin, ac.sceneMax, ac.foreplayChance, ac.foreplayMin, ac.foreplayMax,
+			ac.pulloutChance, ac.pulloutMin, ac.pulloutMax, ac.maxSteps, ac.autoSpeed);
 	}
 
 
@@ -377,6 +448,25 @@ namespace
 
 		// Game time left before it ends after a climax (< 0 = not ending).
 		float endIn = -1.0F;
+
+		// Auto mode (see "Auto mode" below).
+		struct Auto
+		{
+			enum class Stage
+			{
+				kNone,
+				kForeplay,  // no intercourse yet, until excitement passes foreplayUntil
+				kMain,      // intercourse
+				kPullout    // pulled out before the climax, waiting for it
+			};
+			bool  on = false;
+			Stage stage = Stage::kNone;
+			float foreplayUntil = 0.0F;
+			float pulloutAt = 0.0F;  // a man's excitement that makes him pull out (0 = never)
+			float cooldown = 0.0F;   // seconds until it moves on
+			float speedCooldown = 0.0F;
+		};
+		Auto autoMode;
 	};
 
 	// Remembers the outgoing speed when a scene enters a transition.
@@ -404,6 +494,9 @@ namespace
 	std::optional<PendingSequence> g_pendingSequence;
 
 	void ArmAutoplay(ActiveScene& a_scene);
+	void StartAutoMode(ActiveScene& a_active);
+	void AutoModeTick(ActiveScene& a_active, float a_seconds);
+	bool IsPlayer(const RE::Actor* a_actor);
 	void StartAutoplayTicks();
 	void RefreshExcitement(const ActiveScene& a_scene);
 	bool IsPlayer(const RE::Actor* a_actor);
@@ -462,6 +555,10 @@ namespace
 			PlayOnActiveScene(added, added.sequence->entries.front().scene, added.sequence->entries.front().speed);
 		}
 		ArmAutoplay(added);
+		const bool withPlayer = std::ranges::any_of(added.actors, [](std::uint32_t id) { return IsPlayer(RE::TESForm::GetFormByID<RE::Actor>(id)); });
+		if (withPlayer ? g_autoConfig.player : g_autoConfig.npc) {
+			StartAutoMode(added);
+		}
 	}
 
 	void TrackSceneStop(std::uint32_t a_actorID)
@@ -501,6 +598,10 @@ namespace
 				scene->sequence.reset();
 			}
 			ArmAutoplay(*scene);
+			if (scene->autoMode.on) {
+				// Picked by the player: auto mode stays a while before moving on.
+				scene->autoMode.cooldown = std::max(scene->autoMode.cooldown, g_autoConfig.sceneMin);
+			}
 		}
 	}
 
@@ -628,6 +729,316 @@ namespace
 			ArmAutoplay(a_active);
 		} else {
 			a_active.remaining = -1.0F;
+		}
+	}
+
+	// A corner message, through Papyrus (Debug.Notification).
+	void Notify(const std::string& a_text)
+	{
+		if (g_vm) {
+			RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
+			g_vm->DispatchStaticCall("Debug"sv, "Notification"sv, callback, a_text);
+		}
+	}
+
+	// ---- Auto mode (OStim's) ----
+	// Moves a scene on by itself: a random fitting scene every so often,
+	// foreplay first in some scenes, then intercourse, sometimes pulling out
+	// before a man's climax, and speeding up as excitement rises. Scenes are
+	// reached by walking the navigation links (through transitions) when
+	// they're close enough, else played directly. Main thread (scene clock).
+
+	using AutoStage = ActiveScene::Auto::Stage;
+	std::mt19937 g_autoRandom{ std::random_device{}() };
+
+	float AutoRandom(float a_min, float a_max)
+	{
+		return a_max <= a_min ? a_min : std::uniform_real_distribution<float>(a_min, a_max)(g_autoRandom);
+	}
+
+	bool AutoChance(int a_percent)
+	{
+		return std::uniform_int_distribution<int>(1, 100)(g_autoRandom) <= a_percent;
+	}
+
+	bool HasAnyAction(const SceneRegistry::Scene& a_scene, std::initializer_list<std::string_view> a_types)
+	{
+		return std::ranges::any_of(a_types, [&](std::string_view a_type) { return a_scene.HasAction(a_type); });
+	}
+
+	bool IsIntercourse(const SceneRegistry::Scene& a_scene)
+	{
+		return HasAnyAction(a_scene, { "analsex", "tribbing", "vaginalsex" });
+	}
+
+	float MaxExcitement(const ActiveScene& a_active, bool a_menOnly)
+	{
+		float most = 0.0F;
+		for (const auto id : a_active.actors) {
+			if (a_menOnly && SceneRegistry::SexOf(RE::TESForm::GetFormByID<RE::Actor>(id)) != SceneRegistry::Sex::kMale) {
+				continue;
+			}
+			most = std::max(most, Excitement::Get(id));
+		}
+		return most;
+	}
+
+	// Whether a_active's actors, in their roles, may play a_scene where they are.
+	bool ActiveCanPlay(const ActiveScene& a_active, const SceneRegistry::Scene& a_scene)
+	{
+		return a_scene.actors.size() == a_active.actors.size() && SexesFit(a_scene, a_active.actors) &&
+		       FurnitureFits(a_scene.furniture, a_active.furnitureType);
+	}
+
+	// Scenes reachable from a_from in up to a_steps navigations, each with
+	// the scenes on the way there (transitions included), the scene last.
+	std::vector<std::pair<std::shared_ptr<const SceneRegistry::Scene>, std::vector<std::string>>> Reachable(
+		const ActiveScene& a_active, const std::shared_ptr<const SceneRegistry::Scene>& a_from, int a_steps)
+	{
+		using Route = std::vector<std::string>;
+		std::vector<std::pair<std::shared_ptr<const SceneRegistry::Scene>, Route>> found;
+		std::vector<std::string> visited{ a_from->id };
+		std::vector<std::pair<std::shared_ptr<const SceneRegistry::Scene>, Route>> frontier{ { a_from, {} } };
+		for (int step = 0; step < a_steps && !frontier.empty(); ++step) {
+			std::vector<std::pair<std::shared_ptr<const SceneRegistry::Scene>, Route>> next;
+			for (const auto& [scene, route] : frontier) {
+				for (const auto& nav : scene->navigations) {
+					auto dest = SceneRegistry::Find(nav.to);
+					Route path = route;
+					// Through transitions to where they settle.
+					for (int hop = 0; dest && hop < 8; ++hop) {
+						path.push_back(dest->id);
+						if (!dest->IsTransition()) {
+							break;
+						}
+						dest = SceneRegistry::Find(dest->destination);
+					}
+					if (!dest || dest->IsTransition() || !ActiveCanPlay(a_active, *dest) ||
+						std::ranges::find(visited, dest->id) != visited.end()) {
+						continue;
+					}
+					visited.push_back(dest->id);
+					found.emplace_back(dest, path);
+					next.emplace_back(dest, std::move(path));
+				}
+			}
+			frontier = std::move(next);
+		}
+		return found;
+	}
+
+	// Moves a_active to a_target: along a_route if there is one (a short
+	// sequence: transitions for their length, other scenes in between for
+	// half a second), else directly. Returns the seconds the way takes.
+	float AutoGoTo(ActiveScene& a_active, const std::shared_ptr<const SceneRegistry::Scene>& a_target, const std::vector<std::string>& a_route)
+	{
+		const int finalSpeed = a_target->defaultSpeed;
+		if (a_route.size() <= 1) {
+			REX::INFO("Auto mode: \"{}\" -> \"{}\"{}", a_active.sceneID, a_target->id, a_route.empty() ? " (no route, played directly)" : "");
+			if (PlayOnActiveScene(a_active, a_target->id, finalSpeed)) {
+				ArmAutoplay(a_active);
+			}
+			return 0.0F;
+		}
+		auto  sequence = std::make_shared<SceneRegistry::Sequence>();
+		float total = 0.0F;
+		sequence->id = "auto mode";
+		sequence->name = "auto mode";
+		sequence->actorCount = a_active.actors.size();
+		for (std::size_t i = 0; i < a_route.size(); ++i) {
+			const auto scene = SceneRegistry::Find(a_route[i]);
+			if (!scene) {
+				return 0.0F;
+			}
+			const bool last = i + 1 == a_route.size();
+			const float duration = scene->IsTransition() && scene->length > 0.0F ? scene->length : last ? 0.1F : 0.5F;
+			const int   speed = last ? finalSpeed : std::min(a_active.speed, static_cast<int>(scene->speeds.size()) - 1);
+			sequence->entries.push_back({ scene->id, duration, speed });
+			total += duration;
+		}
+		REX::INFO("Auto mode: \"{}\" -> \"{}\" in {} step(s)", a_active.sceneID, a_target->id, a_route.size());
+		const auto& first = sequence->entries.front();
+		if (!PlayOnActiveScene(a_active, first.scene, first.speed)) {
+			return 0.0F;
+		}
+		a_active.sequence = std::move(sequence);
+		a_active.step = 0;
+		ArmAutoplay(a_active);
+		return total;
+	}
+
+	// Moves a_active on to a random scene for auto mode's stage.
+	void AutoProgress(ActiveScene& a_active)
+	{
+		auto& state = a_active.autoMode;
+		state.cooldown = AutoRandom(g_autoConfig.sceneMin, g_autoConfig.sceneMax);
+		const auto current = SceneRegistry::Find(a_active.sceneID);
+		if (!current) {
+			return;
+		}
+
+		std::function<bool(const SceneRegistry::Scene&)> wanted;
+		if (a_active.actors.size() == 1) {
+			const bool male = SceneRegistry::SexOf(RE::TESForm::GetFormByID<RE::Actor>(a_active.actors[0])) == SceneRegistry::Sex::kMale;
+			wanted = [male](const SceneRegistry::Scene& s) { return s.HasAction(male ? "malemasturbation" : "femalemasturbation"); };
+		} else if (state.stage == AutoStage::kForeplay) {
+			wanted = [](const SceneRegistry::Scene& s) { return !IsIntercourse(s) && s.HasActionTag("sexual"); };
+		} else {
+			wanted = [](const SceneRegistry::Scene& s) { return IsIntercourse(s); };
+		}
+
+		const auto reachable = Reachable(a_active, current, g_autoConfig.maxSteps);
+		std::vector<std::pair<std::shared_ptr<const SceneRegistry::Scene>, std::vector<std::string>>> candidates;
+		auto consider = [&](const std::shared_ptr<const SceneRegistry::Scene>& a_scene, std::vector<std::string> a_route) {
+			if (a_scene->id != current->id && !a_scene->noRandomSelection && !a_scene->IsTransition() && wanted(*a_scene)) {
+				candidates.emplace_back(a_scene, std::move(a_route));
+			}
+		};
+		if (current->HasActionTag("sexual") && g_autoConfig.limitToNavigation) {
+			for (const auto& [scene, route] : reachable) {
+				consider(scene, route);
+			}
+		} else {
+			for (const auto& summary : SceneRegistry::List(a_active.actors.size())) {
+				const auto scene = SceneRegistry::Find(summary.id);
+				if (!scene || !ActiveCanPlay(a_active, *scene)) {
+					continue;
+				}
+				const auto it = std::ranges::find_if(reachable, [&](const auto& a_entry) { return a_entry.first->id == scene->id; });
+				consider(scene, it != reachable.end() ? it->second : std::vector<std::string>{});
+			}
+		}
+		// As OStim: off furniture standing scenes, on a bed lying ones, when there are any.
+		if (g_autoConfig.standingOnFloor && a_active.actors.size() > 1) {
+			const bool onBed = !a_active.furnitureType.empty() && Furniture::IsA(a_active.furnitureType, "bed");
+			const bool offFurniture = a_active.furnitureType.empty();
+			if (onBed || offFurniture) {
+				auto preferred = candidates;
+				std::erase_if(preferred, [&](const auto& a_entry) {
+					const bool standing = std::ranges::any_of(a_entry.first->actors, [](const SceneRegistry::SceneActor& a) { return a.HasTag("standing"); });
+					return offFurniture ? !standing : standing;
+				});
+				if (!preferred.empty()) {
+					candidates = std::move(preferred);
+				}
+			}
+		}
+		if (candidates.empty()) {
+			REX::INFO("Auto mode: nothing to move \"{}\" on to ({})", a_active.sceneID,
+				state.stage == AutoStage::kForeplay ? "foreplay" : a_active.actors.size() == 1 ? "solo" : "intercourse");
+			return;
+		}
+		const auto& pick = candidates[std::uniform_int_distribution<std::size_t>(0, candidates.size() - 1)(g_autoRandom)];
+		state.cooldown += AutoGoTo(a_active, pick.first, pick.second);
+	}
+
+	// A man is about to climax: out to his "pullout" scene, else to a nearby
+	// scene with no intercourse where he finishes by hand.
+	bool AutoPullOut(ActiveScene& a_active)
+	{
+		const auto current = SceneRegistry::Find(a_active.sceneID);
+		if (!current) {
+			return false;
+		}
+		for (const auto& role : current->actors) {
+			if (const auto dest = role.AutoTransition("pullout"); !dest.empty()) {
+				if (const auto scene = SceneRegistry::Find(dest); scene && ActiveCanPlay(a_active, *scene)) {
+					REX::INFO("Auto mode: pulling out to \"{}\"", dest);
+					AutoGoTo(a_active, scene, {});
+					return true;
+				}
+			}
+		}
+		auto near = Reachable(a_active, current, 3);
+		std::erase_if(near, [](const auto& a_entry) {
+			return a_entry.first->noRandomSelection || IsIntercourse(*a_entry.first) || !a_entry.first->HasAction("malemasturbation");
+		});
+		if (near.empty()) {
+			return false;
+		}
+		const auto& pick = near[std::uniform_int_distribution<std::size_t>(0, near.size() - 1)(g_autoRandom)];
+		REX::INFO("Auto mode: pulling out");
+		AutoGoTo(a_active, pick.first, pick.second);
+		return true;
+	}
+
+	void StartAutoMode(ActiveScene& a_active)
+	{
+		auto& state = a_active.autoMode;
+		if (state.on) {
+			return;
+		}
+		if (state.stage == AutoStage::kNone) {
+			if (a_active.actors.size() == 1) {
+				state.stage = AutoStage::kMain;
+			} else {
+				if (AutoChance(g_autoConfig.foreplayChance)) {
+					state.stage = AutoStage::kForeplay;
+					state.foreplayUntil = AutoRandom(g_autoConfig.foreplayMin, g_autoConfig.foreplayMax);
+				} else {
+					state.stage = AutoStage::kMain;
+				}
+				state.pulloutAt = AutoChance(g_autoConfig.pulloutChance) ? AutoRandom(g_autoConfig.pulloutMin, g_autoConfig.pulloutMax) : 0.0F;
+			}
+		}
+		state.on = true;
+		const auto scene = SceneRegistry::Find(a_active.sceneID);
+		// Already in a sexual scene: stay a while. Otherwise move on now.
+		state.cooldown = scene && scene->HasActionTag("sexual") ? AutoRandom(g_autoConfig.sceneMin, g_autoConfig.sceneMax) : 0.0F;
+		state.speedCooldown = AutoRandom(g_autoConfig.speedIntervalMin, g_autoConfig.speedIntervalMax);
+		REX::INFO("Auto mode: on for \"{}\" ({}{})", a_active.sceneID,
+			state.stage == AutoStage::kForeplay ? std::format("foreplay to {:.0f}", state.foreplayUntil) : std::string("intercourse"),
+			state.pulloutAt > 0.0F ? std::format(", pull-out at {:.0f}", state.pulloutAt) : std::string{});
+		StartAutoplayTicks();
+	}
+
+	void StopAutoMode(ActiveScene& a_active)
+	{
+		if (a_active.autoMode.on) {
+			a_active.autoMode.on = false;
+			REX::INFO("Auto mode: off for \"{}\"", a_active.sceneID);
+		}
+	}
+
+	void AutoModeTick(ActiveScene& a_active, float a_seconds)
+	{
+		auto& state = a_active.autoMode;
+		// Not while it's moving (a transition or a route), or ending.
+		if (!state.on || a_active.sequence || a_active.remaining >= 0.0F || !a_active.queuedScene.empty() || a_active.endIn >= 0.0F) {
+			return;
+		}
+		const auto scene = SceneRegistry::Find(a_active.sceneID);
+		if (!scene) {
+			return;
+		}
+
+		// Faster as excitement rises.
+		if (g_autoConfig.autoSpeed && (state.speedCooldown -= a_seconds) <= 0.0F) {
+			state.speedCooldown = AutoRandom(g_autoConfig.speedIntervalMin, g_autoConfig.speedIntervalMax);
+			const float excitement = MaxExcitement(a_active, false);
+			const float span = std::max(g_autoConfig.speedExcitementMax - g_autoConfig.speedExcitementMin, 1.0F);
+			const int   chance = static_cast<int>(std::clamp((excitement - g_autoConfig.speedExcitementMin) * 100.0F / span, 0.0F, 100.0F));
+			const int   count = static_cast<int>(scene->speeds.size());
+			if (a_active.speed + 1 < count && AutoChance(chance) && PlayOnActiveScene(a_active, scene->id, a_active.speed + 1)) {
+				SceneEvents::SpeedChanged(a_active.actors, scene->id, a_active.speed, count);
+			}
+		}
+
+		if (state.stage == AutoStage::kPullout) {
+			return;  // until the climax (HandleClimax)
+		}
+		if (state.stage == AutoStage::kForeplay && MaxExcitement(a_active, false) > state.foreplayUntil) {
+			REX::INFO("Auto mode: foreplay over for \"{}\"", a_active.sceneID);
+			state.stage = AutoStage::kMain;
+			state.cooldown = 0.0F;
+		}
+		if (state.stage == AutoStage::kMain && state.pulloutAt > 0.0F && IsIntercourse(*scene) && MaxExcitement(a_active, true) > state.pulloutAt) {
+			state.stage = AutoStage::kPullout;
+			AutoPullOut(a_active);
+			return;
+		}
+		if ((state.cooldown -= a_seconds) < 0.0F) {
+			AutoProgress(a_active);
 		}
 	}
 
@@ -773,6 +1184,10 @@ namespace
 	{
 		const auto& config = Excitement::Settings();
 		Excitement::Climaxed(a_actorID);
+		if (a_active.autoMode.on && a_active.autoMode.stage == ActiveScene::Auto::Stage::kPullout) {
+			a_active.autoMode.stage = ActiveScene::Auto::Stage::kMain;
+			a_active.autoMode.cooldown = std::min(a_active.autoMode.cooldown, 3.0F);
+		}
 		const int  times = Excitement::TimesClimaxed(a_actorID);
 		const auto actor = RE::TESForm::GetFormByID<RE::Actor>(a_actorID);
 		const auto sex = SceneRegistry::SexOf(actor);
@@ -781,9 +1196,10 @@ namespace
 		REX::INFO("Climax: {:08X} (role {}) in \"{}\", climax {}", a_actorID, role, a_active.sceneID, times);
 
 		bool played = false;
-		if (config.climaxScenes && scene && !scene->IsTransition() && role < scene->actors.size() && !scene->actors[role].climax.empty() &&
+		const auto climaxScene = scene && role < scene->actors.size() ? scene->actors[role].AutoTransition("climax") : std::string{};
+		if (config.climaxScenes && scene && !scene->IsTransition() && !climaxScene.empty() &&
 			a_active.queuedScene.empty() && !a_active.sequence) {
-			played = PlayOnActiveScene(a_active, scene->actors[role].climax, 0);
+			played = PlayOnActiveScene(a_active, climaxScene, 0);
 			if (played) {
 				if (sex == SceneRegistry::Sex::kMale) {
 					a_active.carrySpeed = 0;  // back at the slowest speed after it
@@ -856,6 +1272,9 @@ namespace
 				}
 			}
 			UpdateClimaxShake();
+			for (auto& active : g_activeScenes) {
+				AutoModeTick(active, elapsed);
+			}
 			// Scenes ending after a climax. Ending goes through Papyrus,
 			// which removes the scene later (TrackSceneStop).
 			for (auto& active : g_activeScenes) {
@@ -870,7 +1289,7 @@ namespace
 			}
 		}
 		const bool waiting = std::ranges::any_of(g_activeScenes, [](const ActiveScene& a_scene) {
-			return a_scene.remaining >= 0.0F || a_scene.endIn >= 0.0F || Excitement::Settings().enabled;
+			return a_scene.remaining >= 0.0F || a_scene.endIn >= 0.0F || a_scene.autoMode.on || Excitement::Settings().enabled;
 		});
 		if (!waiting && !g_climaxShake.active) {
 			g_autoplayTicking = false;
@@ -1598,6 +2017,66 @@ namespace
 	float GetTimeUntilClimax(std::monostate, RE::Actor* a_actor)
 	{
 		return a_actor ? Excitement::TimeUntilClimax(a_actor->GetFormID()) : -1.0F;
+	}
+
+	// ---- Auto mode and scene details ----
+
+	void SetAutoMode(std::monostate, RE::Actor* a_actor, bool a_on)
+	{
+		if (!a_actor) {
+			return;
+		}
+		const auto id = a_actor->GetFormID();
+		F4SE::GetTaskInterface()->AddTask([id, a_on]() {
+			if (const auto active = FindActiveScene(id)) {
+				a_on ? StartAutoMode(*active) : StopAutoMode(*active);
+			}
+		});
+	}
+
+	bool IsAutoMode(std::monostate, RE::Actor* a_actor)
+	{
+		// Read from a Papyrus thread: a plain copy of the flag is fine.
+		const auto active = a_actor ? FindActiveScene(a_actor->GetFormID()) : nullptr;
+		return active && active->autoMode.on;
+	}
+
+	// Plays the a_event auto transition ("climax", "pullout"...) of the
+	// scene a_actor is in: a_role's (or the first role that has one, -1).
+	bool AutoTransition(std::monostate, RE::Actor* a_actor, std::string a_event, std::int32_t a_role)
+	{
+		const auto active = a_actor ? FindActiveScene(a_actor->GetFormID()) : nullptr;
+		const auto scene = active ? SceneRegistry::Find(active->sceneID) : nullptr;
+		if (!scene) {
+			return false;
+		}
+		std::string dest;
+		for (std::size_t role = 0; role < scene->actors.size() && dest.empty(); ++role) {
+			if (a_role < 0 || static_cast<std::size_t>(a_role) == role) {
+				dest = scene->actors[role].AutoTransition(a_event);
+			}
+		}
+		if (dest.empty()) {
+			return false;
+		}
+		F4SE::GetTaskInterface()->AddTask([id = a_actor->GetFormID(), dest]() {
+			if (const auto active = FindActiveScene(id); active && PlayOnActiveScene(*active, dest, 0)) {
+				ArmAutoplay(*active);
+			}
+		});
+		return true;
+	}
+
+	bool SceneActorHasTag(std::monostate, std::string a_sceneID, std::int32_t a_role, std::string a_tag)
+	{
+		const auto scene = SceneRegistry::Find(a_sceneID);
+		return scene && a_role >= 0 && static_cast<std::size_t>(a_role) < scene->actors.size() && scene->actors[a_role].HasTag(a_tag);
+	}
+
+	std::vector<std::string> GetSceneActorTags(std::monostate, std::string a_sceneID, std::int32_t a_role)
+	{
+		const auto scene = SceneRegistry::Find(a_sceneID);
+		return scene && a_role >= 0 && static_cast<std::size_t>(a_role) < scene->actors.size() ? scene->actors[a_role].tags : std::vector<std::string>{};
 	}
 
 	// Re-reads all scene files (handy while authoring). Returns the count loaded.
@@ -2889,6 +3368,19 @@ namespace
 			}
 			return;
 		}
+		// Auto mode key: on / off for the scene you're in or watching.
+		if (g_autoConfig.key != 0 && static_cast<std::uint32_t>(a_event->idCode) == g_autoConfig.key) {
+			const auto focused = GetPlayerScene();
+			if (const auto active = focused.Active() ? FindActiveScene(focused.role0) : nullptr) {
+				if (active->autoMode.on) {
+					StopAutoMode(*active);
+				} else {
+					StartAutoMode(*active);
+				}
+				Notify(active->autoMode.on ? "Auto mode on" : "Auto mode off");
+			}
+			return;
+		}
 		if (static_cast<std::uint32_t>(a_event->idCode) != g_settings.hotkey) {
 			return;
 		}
@@ -3081,6 +3573,11 @@ namespace
 		a_vm->BindNativeMethod(SCRIPT_NAME, "GetExcitementMultiplier"sv, GetExcitementMultiplier);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "SetExcitementMultiplier"sv, SetExcitementMultiplier);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "GetTimeUntilClimax"sv, GetTimeUntilClimax);
+		a_vm->BindNativeMethod(SCRIPT_NAME, "SetAutoMode"sv, SetAutoMode);
+		a_vm->BindNativeMethod(SCRIPT_NAME, "IsAutoMode"sv, IsAutoMode);
+		a_vm->BindNativeMethod(SCRIPT_NAME, "AutoTransition"sv, AutoTransition);
+		a_vm->BindNativeMethod(SCRIPT_NAME, "SceneActorHasTag"sv, SceneActorHasTag);
+		a_vm->BindNativeMethod(SCRIPT_NAME, "GetSceneActorTags"sv, GetSceneActorTags);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "StopPair"sv, StopPair);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "SaveStartView"sv, SaveStartView);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "OpenScenePicker"sv, OpenScenePicker);

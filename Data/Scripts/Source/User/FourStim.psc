@@ -77,6 +77,23 @@ Function SetExcitementMultiplier(Actor akActor, float afMultiplier) Global Nativ
 ; current scene won't take them there.
 float Function GetTimeUntilClimax(Actor akActor) Global Native
 
+; ---- Auto mode ----
+; The scene moves on by itself, as OStim's auto mode (docs\AUTOMODE.md).
+; NPC-only scenes start in auto mode, player scenes don't (4Stim.ini).
+
+; Turns auto mode on / off for the scene akActor is in.
+Function SetAutoMode(Actor akActor, bool abOn) Global Native
+bool Function IsAutoMode(Actor akActor) Global Native
+
+; Plays the scene akActor is in on to its asEvent auto transition ("climax",
+; "pullout"... from the scene file), of role aiRole or, with -1, the first
+; role that has one. False if there's none.
+bool Function AutoTransition(Actor akActor, String asEvent, int aiRole = -1) Global Native
+
+; A scene role's tags ("standing", "kneeling", "lyingback"...).
+bool Function SceneActorHasTag(String asSceneID, int aiRole, String asTag) Global Native
+String[] Function GetSceneActorTags(String asSceneID, int aiRole) Global Native
+
 ; ---- Animation ----
 
 ; Plays role 0 of the scene on akActor (single-actor scenes). akUnused is

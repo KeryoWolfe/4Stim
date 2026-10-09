@@ -26,7 +26,7 @@ What OStim NG has that 4Stim doesn't yet, from a read of its source (October 202
 ### Core
 - ~~**Actions.**~~ Done: action types in `Actions\*.json`, `actions` in scene files, requirements in role matching, Papyrus queries (docs/ACTIONS.md). The converter should copy OStim scenes' `actions` (the test pack's were backfilled from OStim's scene files).
 - ~~**Excitement and climax.**~~ Done (docs/EXCITEMENT.md). Left for later: climax sounds and moans (with Sound, from the OStim sounds now in 4Stim Core\Sound), partner reactions, climax annotations in animations (OStim triggers the climax from the climax animation; 4Stim climaxes when the animation starts), slow motion / blur options.
-- **Auto mode.** Random navigation by stage (foreplay, main, pull-out), auto speed from excitement, min/max time per scene; for the player (toggle hotkey) and for NPC scenes. Needs `noRandomSelection` on scenes.
+- ~~**Auto mode.**~~ Done (docs/AUTOMODE.md): stages, routes through navigations, auto speed, pull-out, toggle key, Papyrus. With it, these scene fields: `defaultSpeed`, `noRandomSelection`, actor `tags`, actor `requirements`, `intendedSex`, `autoTransitions` (any event).
 - **Concurrent scenes (threads).** Several scenes at once, NPC-only scenes started by hotkey or script, all tracked natively (the claim registry). Today the HUD follows one focused scene.
 - **Undressing.** Undress at start, partial undress per action (slot lists), weapons removed, redress at the end (optionally animated), a slot mask setting, `noStrip` scenes, a Papyrus override.
 
@@ -48,7 +48,7 @@ What OStim NG has that 4Stim doesn't yet, from a read of its source (October 202
 - Change furniture mid-scene, reset displaced clutter afterwards, auto-use the nearest furniture, a bed confirmation, more types (wall, shelf, chemistry / armor / power armor stations).
 
 ### Scene format
-- Fields OStim has and 4Stim doesn't: `defaultSpeed`, other `autoTransitions` than climax, `noRandomSelection`, `requirements`, `intendedSex`, actor tags, `scale` / `scaleHeight`, `feetOnGround`, `look*`, `noStrip`, `muted`, `sosBend`. (`actions` and the actor `climax` scene are done.)
+- Fields OStim has and 4Stim doesn't yet, each to come with its feature: `scale` / `scaleHeight` and `feetOnGround` (actor scaling), `look*` (expressions), `noStrip` (undressing), `muted` (sound), `sosBend` (alignment). Done: `actions`, `defaultSpeed`, `noRandomSelection`, actor `tags`, `requirements`, `intendedSex`, `autoTransitions`.
 
 ### For other mods
 - **Papyrus API.** A thread builder (actors, furniture, start scene or sequence, flags: no auto mode, no undress...), scene metadata queries, random scene by tags (OLibrary), per-actor data.
@@ -57,7 +57,7 @@ What OStim NG has that 4Stim doesn't yet, from a read of its source (October 202
 - **Save data.** Per-actor choices (voice set, equip objects, alignment) in the F4SE co-save; clean up scenes left running on load.
 
 ### Settings and UI
-- **MCM page** (Fallout 4's Mod Configuration Menu) for every INI setting plus hotkeys, with export / import.
+- **MCM page** (Fallout 4's Mod Configuration Menu) for every INI setting plus hotkeys, with export / import. Include a setting for each climax effect (shake, blur, edge glow strength and size, rumble), so players can tune them in game.
 - **Hotkeys:** end scene, auto mode, pull out, hide UI, NPC-only scene start.
 - **Options in the HUD:** per-actor toggles (undress, strap-on, mute...).
 - **Translations** for the menu and HUD text.
@@ -65,6 +65,7 @@ What OStim NG has that 4Stim doesn't yet, from a read of its source (October 202
 
 ## Later
 
+- **Automatic mesh detection.** Detect each actor's body mesh and its size (e.g. A-Body, TWB, SMP builds and their sliders) and adjust scene positions to match, so bigger or smaller bodies line up with their partners without hand alignment.
 - **In-game HUD editor.** Lets theme makers rearrange the HUD in game: drag the navigation list, tabs, logo, actor meters and speed meter where they want, resize them, then save the layout to a file they can put in their theme (`Data\Interface\4Stim\Themes\`, see HUD_API.md), so the theme ships with that positioning.
 - **YAML scene files.** Let animation authors write their scene files (scenes and sequences, `Scenes\`) as either JSON or YAML (`.yaml` / `.yml`), whichever they prefer, with the same fields; both load side by side from the same folder. YAML is easier to write by hand: comments, no quotes or trailing-comma errors.
 - PrismaUI

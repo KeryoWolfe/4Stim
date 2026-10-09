@@ -128,7 +128,10 @@
 			"actors": [
 				{
 					"sex": "female",
-					"idle": "0x000808"
+					"idle": "0x000808",
+					"tags": [
+						"sitting"
+					]
 				}
 			],
 			"tags": [
@@ -158,7 +161,10 @@
 			"actors": [
 				{
 					"sex": "female",
-					"idle": "0x000809"
+					"idle": "0x000809",
+					"tags": [
+						"standing"
+					]
 				}
 			],
 			"tags": [
@@ -177,7 +183,10 @@
 			"actors": [
 				{
 					"sex": "female",
-					"idle": "0x00080A"
+					"idle": "0x00080A",
+					"tags": [
+						"standing"
+					]
 				}
 			],
 			"tags": [
@@ -207,7 +216,10 @@
 			"actors": [
 				{
 					"sex": "female",
-					"idle": "0x00080B"
+					"idle": "0x00080B",
+					"tags": [
+						"standing"
+					]
 				}
 			],
 			"tags": [
@@ -226,7 +238,10 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x00080C"
+					"idle": "0x00080C",
+					"tags": [
+						"standing"
+					]
 				}
 			],
 			"tags": [
@@ -249,7 +264,10 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x00080D"
+					"idle": "0x00080D",
+					"tags": [
+						"sitting"
+					]
 				}
 			],
 			"tags": [
@@ -278,7 +296,10 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x00080E"
+					"idle": "0x00080E",
+					"tags": [
+						"standing"
+					]
 				}
 			],
 			"tags": [
@@ -307,11 +328,17 @@
 			"actors": [
 				{
 					"sex": "female",
-					"idle": "0x00080F"
+					"idle": "0x00080F",
+					"tags": [
+						"kneeling"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x000810"
+					"idle": "0x000810",
+					"tags": [
+						"lyingback"
+					]
 				}
 			],
 			"tags": [
@@ -358,11 +385,17 @@
 			"actors": [
 				{
 					"sex": "female",
-					"idle": "0x000811"
+					"idle": "0x000811",
+					"tags": [
+						"sitting"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x000812"
+					"idle": "0x000812",
+					"tags": [
+						"sitting"
+					]
 				}
 			],
 			"tags": [
@@ -413,11 +446,17 @@
 			"actors": [
 				{
 					"sex": "female",
-					"idle": "0x000813"
+					"idle": "0x000813",
+					"tags": [
+						"standing"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x000814"
+					"idle": "0x000814",
+					"tags": [
+						"standing"
+					]
 				}
 			],
 			"tags": [
@@ -451,11 +490,17 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x000815"
+					"idle": "0x000815",
+					"tags": [
+						"lyingback"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x000816"
+					"idle": "0x000816",
+					"tags": [
+						"lyingback"
+					]
 				}
 			],
 			"tags": [
@@ -501,11 +546,19 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x000817"
+					"idle": "0x000817",
+					"tags": [
+						"lyingback",
+						"onbottom"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x000818"
+					"idle": "0x000818",
+					"tags": [
+						"kneeling",
+						"ontop"
+					]
 				}
 			],
 			"tags": [
@@ -561,11 +614,20 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x000819"
+					"idle": "0x000819",
+					"tags": [
+						"lyingback",
+						"onbottom"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x00081A"
+					"idle": "0x00081A",
+					"tags": [
+						"kneeling",
+						"facingaway",
+						"ontop"
+					]
 				}
 			],
 			"tags": [
@@ -589,11 +651,18 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x00081B"
+					"idle": "0x00081B",
+					"tags": [
+						"kneeling"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x00081C"
+					"idle": "0x00081C",
+					"tags": [
+						"allfours",
+						"facingaway"
+					]
 				}
 			],
 			"tags": [
@@ -636,11 +705,17 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x00081D"
+					"idle": "0x00081D",
+					"tags": [
+						"lyingback"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x00081E"
+					"idle": "0x00081E",
+					"tags": [
+						"kneeling"
+					]
 				}
 			],
 			"tags": [
@@ -687,11 +762,17 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x00081F"
+					"idle": "0x00081F",
+					"tags": [
+						"lyingfront"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x000820"
+					"idle": "0x000820",
+					"tags": [
+						"lyingback"
+					]
 				}
 			],
 			"tags": [
@@ -737,11 +818,19 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x000821"
+					"idle": "0x000821",
+					"tags": [
+						"kneeling",
+						"ontop"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x000822"
+					"idle": "0x000822",
+					"tags": [
+						"lyingback",
+						"onbottom"
+					]
 				}
 			],
 			"tags": [
@@ -790,11 +879,18 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x000823"
+					"idle": "0x000823",
+					"tags": [
+						"kneeling"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x000824"
+					"idle": "0x000824",
+					"tags": [
+						"lyingback",
+						"lyingside"
+					]
 				}
 			],
 			"tags": [
@@ -812,11 +908,20 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x000825"
+					"idle": "0x000825",
+					"tags": [
+						"lyingback",
+						"onbottom"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x000826"
+					"idle": "0x000826",
+					"tags": [
+						"facingaway",
+						"kneeling",
+						"ontop"
+					]
 				}
 			],
 			"tags": [
@@ -867,11 +972,19 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x000827"
+					"idle": "0x000827",
+					"tags": [
+						"lyingback",
+						"onbottom"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x000828"
+					"idle": "0x000828",
+					"tags": [
+						"kneeling",
+						"ontop"
+					]
 				}
 			],
 			"tags": [
@@ -895,11 +1008,17 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x000829"
+					"idle": "0x000829",
+					"tags": [
+						"kneeling"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x00082A"
+					"idle": "0x00082A",
+					"tags": [
+						"lyingside"
+					]
 				}
 			],
 			"tags": [
@@ -943,11 +1062,17 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x00082B"
+					"idle": "0x00082B",
+					"tags": [
+						"sitting"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x00082C"
+					"idle": "0x00082C",
+					"tags": [
+						"kneeling"
+					]
 				}
 			],
 			"tags": [
@@ -1008,11 +1133,17 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x00082D"
+					"idle": "0x00082D",
+					"tags": [
+						"sitting"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x00082E"
+					"idle": "0x00082E",
+					"tags": [
+						"sitting"
+					]
 				}
 			],
 			"tags": [
@@ -1078,11 +1209,17 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x00082F"
+					"idle": "0x00082F",
+					"tags": [
+						"sitting"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x000830"
+					"idle": "0x000830",
+					"tags": [
+						"sitting"
+					]
 				}
 			],
 			"tags": [
@@ -1131,11 +1268,18 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x000831"
+					"idle": "0x000831",
+					"tags": [
+						"facingaway",
+						"standing"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x000832"
+					"idle": "0x000832",
+					"tags": [
+						"standing"
+					]
 				}
 			],
 			"tags": [
@@ -1165,11 +1309,17 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x000833"
+					"idle": "0x000833",
+					"tags": [
+						"standing"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x000834"
+					"idle": "0x000834",
+					"tags": [
+						"standing"
+					]
 				}
 			],
 			"tags": [
@@ -1254,11 +1404,17 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x000835"
+					"idle": "0x000835",
+					"tags": [
+						"standing"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x000836"
+					"idle": "0x000836",
+					"tags": [
+						"standing"
+					]
 				}
 			],
 			"tags": [
@@ -1277,11 +1433,17 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x000837"
+					"idle": "0x000837",
+					"tags": [
+						"standing"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x000838"
+					"idle": "0x000838",
+					"tags": [
+						"standing"
+					]
 				}
 			],
 			"tags": [
@@ -1301,11 +1463,17 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x000839"
+					"idle": "0x000839",
+					"tags": [
+						"standing"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x00083A"
+					"idle": "0x00083A",
+					"tags": [
+						"standing"
+					]
 				}
 			],
 			"tags": [
@@ -1324,11 +1492,18 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x00083B"
+					"idle": "0x00083B",
+					"tags": [
+						"standing"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x00083C"
+					"idle": "0x00083C",
+					"tags": [
+						"facingaway",
+						"standing"
+					]
 				}
 			],
 			"tags": [
@@ -1411,11 +1586,17 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x00083D"
+					"idle": "0x00083D",
+					"tags": [
+						"standing"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x00083E"
+					"idle": "0x00083E",
+					"tags": [
+						"standing"
+					]
 				}
 			],
 			"tags": [
@@ -1441,11 +1622,17 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x00083F"
+					"idle": "0x00083F",
+					"tags": [
+						"standing"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x000840"
+					"idle": "0x000840",
+					"tags": [
+						"standing"
+					]
 				}
 			],
 			"tags": [
@@ -1522,11 +1709,17 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x000841"
+					"idle": "0x000841",
+					"tags": [
+						"standing"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x000842"
+					"idle": "0x000842",
+					"tags": [
+						"standing"
+					]
 				}
 			],
 			"tags": [
@@ -1545,11 +1738,17 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x000843"
+					"idle": "0x000843",
+					"tags": [
+						"standing"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x000844"
+					"idle": "0x000844",
+					"tags": [
+						"standing"
+					]
 				}
 			],
 			"tags": [
@@ -1575,11 +1774,18 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x000845"
+					"idle": "0x000845",
+					"tags": [
+						"facingaway",
+						"standing"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x000846"
+					"idle": "0x000846",
+					"tags": [
+						"kneeling"
+					]
 				}
 			],
 			"tags": [
@@ -1610,11 +1816,17 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x000847"
+					"idle": "0x000847",
+					"tags": [
+						"standing"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x000848"
+					"idle": "0x000848",
+					"tags": [
+						"kneeling"
+					]
 				}
 			],
 			"tags": [
@@ -1674,11 +1886,17 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x000849"
+					"idle": "0x000849",
+					"tags": [
+						"standing"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x00084A"
+					"idle": "0x00084A",
+					"tags": [
+						"squatting"
+					]
 				}
 			],
 			"tags": [
@@ -1734,11 +1952,17 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x00084B"
+					"idle": "0x00084B",
+					"tags": [
+						"standing"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x00084C"
+					"idle": "0x00084C",
+					"tags": [
+						"squatting"
+					]
 				}
 			],
 			"tags": [
@@ -1758,11 +1982,17 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x00084D"
+					"idle": "0x00084D",
+					"tags": [
+						"standing"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x00084E"
+					"idle": "0x00084E",
+					"tags": [
+						"standing"
+					]
 				}
 			],
 			"tags": [
@@ -1780,11 +2010,18 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x00084F"
+					"idle": "0x00084F",
+					"tags": [
+						"standing"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x000850"
+					"idle": "0x000850",
+					"tags": [
+						"facingaway",
+						"standing"
+					]
 				}
 			],
 			"tags": [
@@ -1836,11 +2073,17 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x000851"
+					"idle": "0x000851",
+					"tags": [
+						"standing"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x000852"
+					"idle": "0x000852",
+					"tags": [
+						"standing"
+					]
 				}
 			],
 			"tags": [
@@ -1891,11 +2134,17 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x000853"
+					"idle": "0x000853",
+					"tags": [
+						"standing"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x000854"
+					"idle": "0x000854",
+					"tags": [
+						"standing"
+					]
 				}
 			],
 			"tags": [
@@ -1936,11 +2185,17 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x000855"
+					"idle": "0x000855",
+					"tags": [
+						"standing"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x000856"
+					"idle": "0x000856",
+					"tags": [
+						"standing"
+					]
 				}
 			],
 			"tags": [
@@ -2001,11 +2256,17 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x000857"
+					"idle": "0x000857",
+					"tags": [
+						"standing"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x000858"
+					"idle": "0x000858",
+					"tags": [
+						"standing"
+					]
 				}
 			],
 			"tags": [
@@ -2047,11 +2308,17 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x000859"
+					"idle": "0x000859",
+					"tags": [
+						"standing"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x00085A"
+					"idle": "0x00085A",
+					"tags": [
+						"standing"
+					]
 				}
 			],
 			"tags": [
@@ -2069,11 +2336,17 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x00085B"
+					"idle": "0x00085B",
+					"tags": [
+						"standing"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x00085C"
+					"idle": "0x00085C",
+					"tags": [
+						"standing"
+					]
 				}
 			],
 			"tags": [
@@ -2139,11 +2412,17 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x00085D"
+					"idle": "0x00085D",
+					"tags": [
+						"standing"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x00085E"
+					"idle": "0x00085E",
+					"tags": [
+						"standing"
+					]
 				}
 			],
 			"tags": [
@@ -2229,11 +2508,17 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x00085F"
+					"idle": "0x00085F",
+					"tags": [
+						"standing"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x000860"
+					"idle": "0x000860",
+					"tags": [
+						"standing"
+					]
 				}
 			],
 			"tags": [
@@ -2290,11 +2575,17 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x000861"
+					"idle": "0x000861",
+					"tags": [
+						"standing"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x000862"
+					"idle": "0x000862",
+					"tags": [
+						"standing"
+					]
 				}
 			],
 			"tags": [
@@ -2319,11 +2610,18 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x000863"
+					"idle": "0x000863",
+					"tags": [
+						"standing"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x000864"
+					"idle": "0x000864",
+					"tags": [
+						"facingaway",
+						"standing"
+					]
 				}
 			],
 			"tags": [
@@ -2375,11 +2673,17 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x000865"
+					"idle": "0x000865",
+					"tags": [
+						"standing"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x000866"
+					"idle": "0x000866",
+					"tags": [
+						"standing"
+					]
 				}
 			],
 			"tags": [
@@ -2445,11 +2749,17 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x000869"
+					"idle": "0x000869",
+					"tags": [
+						"standing"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x00086A"
+					"idle": "0x00086A",
+					"tags": [
+						"standing"
+					]
 				}
 			],
 			"tags": [
@@ -2530,11 +2840,17 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x00086B"
+					"idle": "0x00086B",
+					"tags": [
+						"standing"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x00086C"
+					"idle": "0x00086C",
+					"tags": [
+						"standing"
+					]
 				}
 			],
 			"tags": [
@@ -2610,11 +2926,17 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x00086D"
+					"idle": "0x00086D",
+					"tags": [
+						"standing"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x00086E"
+					"idle": "0x00086E",
+					"tags": [
+						"standing"
+					]
 				}
 			],
 			"tags": [
@@ -2700,11 +3022,19 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x00086F"
+					"idle": "0x00086F",
+					"tags": [
+						"standing"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x000870"
+					"idle": "0x000870",
+					"tags": [
+						"bendover",
+						"facingaway",
+						"standing"
+					]
 				}
 			],
 			"tags": [
@@ -2756,11 +3086,17 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x000871"
+					"idle": "0x000871",
+					"tags": [
+						"standing"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x000872"
+					"idle": "0x000872",
+					"tags": [
+						"standing"
+					]
 				}
 			],
 			"tags": [
@@ -2783,10 +3119,17 @@
 			"length": 2.0,
 			"actors": [
 				{
-					"sex": "male"
+					"sex": "male",
+					"tags": [
+						"squatting"
+					]
 				},
 				{
-					"sex": "female"
+					"sex": "female",
+					"tags": [
+						"standing",
+						"facingaway"
+					]
 				}
 			],
 			"speeds": [
@@ -2858,10 +3201,17 @@
 			"length": 2.0,
 			"actors": [
 				{
-					"sex": "male"
+					"sex": "male",
+					"tags": [
+						"standing"
+					]
 				},
 				{
-					"sex": "female"
+					"sex": "female",
+					"tags": [
+						"facingaway",
+						"standing"
+					]
 				}
 			],
 			"speeds": [
@@ -2950,10 +3300,16 @@
 			"length": 2.0,
 			"actors": [
 				{
-					"sex": "male"
+					"sex": "male",
+					"tags": [
+						"standing"
+					]
 				},
 				{
-					"sex": "female"
+					"sex": "female",
+					"tags": [
+						"standing"
+					]
 				}
 			],
 			"speeds": [
@@ -3014,10 +3370,17 @@
 			"length": 2.0,
 			"actors": [
 				{
-					"sex": "male"
+					"sex": "male",
+					"tags": [
+						"standing"
+					]
 				},
 				{
-					"sex": "female"
+					"sex": "female",
+					"tags": [
+						"facingaway",
+						"standing"
+					]
 				}
 			],
 			"speeds": [
@@ -3099,10 +3462,16 @@
 			"length": 2.0,
 			"actors": [
 				{
-					"sex": "male"
+					"sex": "male",
+					"tags": [
+						"standing"
+					]
 				},
 				{
-					"sex": "female"
+					"sex": "female",
+					"tags": [
+						"standing"
+					]
 				}
 			],
 			"speeds": [
@@ -3163,10 +3532,16 @@
 			"length": 2.0,
 			"actors": [
 				{
-					"sex": "male"
+					"sex": "male",
+					"tags": [
+						"standing"
+					]
 				},
 				{
-					"sex": "female"
+					"sex": "female",
+					"tags": [
+						"standing"
+					]
 				}
 			],
 			"speeds": [
@@ -3272,10 +3647,18 @@
 			"length": 2.0,
 			"actors": [
 				{
-					"sex": "male"
+					"sex": "male",
+					"tags": [
+						"lyingback",
+						"onbottom"
+					]
 				},
 				{
-					"sex": "female"
+					"sex": "female",
+					"tags": [
+						"kneeling",
+						"ontop"
+					]
 				}
 			],
 			"speeds": [
@@ -3356,10 +3739,18 @@
 			"length": 2.0,
 			"actors": [
 				{
-					"sex": "male"
+					"sex": "male",
+					"tags": [
+						"lyingback",
+						"onbottom"
+					]
 				},
 				{
-					"sex": "female"
+					"sex": "female",
+					"tags": [
+						"kneeling",
+						"ontop"
+					]
 				}
 			],
 			"speeds": [
@@ -3440,10 +3831,18 @@
 			"length": 2.0,
 			"actors": [
 				{
-					"sex": "male"
+					"sex": "male",
+					"tags": [
+						"lyingback",
+						"onbottom"
+					]
 				},
 				{
-					"sex": "female"
+					"sex": "female",
+					"tags": [
+						"kneeling",
+						"ontop"
+					]
 				}
 			],
 			"speeds": [
@@ -3524,10 +3923,19 @@
 			"length": 2.0,
 			"actors": [
 				{
-					"sex": "male"
+					"sex": "male",
+					"tags": [
+						"lyingback",
+						"onbottom"
+					]
 				},
 				{
-					"sex": "female"
+					"sex": "female",
+					"tags": [
+						"kneeling",
+						"facingaway",
+						"ontop"
+					]
 				}
 			],
 			"speeds": [
@@ -3588,10 +3996,19 @@
 			"length": 2.0,
 			"actors": [
 				{
-					"sex": "male"
+					"sex": "male",
+					"tags": [
+						"lyingback",
+						"onbottom"
+					]
 				},
 				{
-					"sex": "female"
+					"sex": "female",
+					"tags": [
+						"kneeling",
+						"facingaway",
+						"ontop"
+					]
 				}
 			],
 			"speeds": [
@@ -3664,11 +4081,20 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x0008CB"
+					"idle": "0x0008CB",
+					"tags": [
+						"lyingback",
+						"onbottom"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x0008CC"
+					"idle": "0x0008CC",
+					"tags": [
+						"kneeling",
+						"facingaway",
+						"ontop"
+					]
 				}
 			],
 			"tags": [
@@ -3693,11 +4119,20 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x0008CD"
+					"idle": "0x0008CD",
+					"tags": [
+						"lyingback",
+						"onbottom"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x0008CE"
+					"idle": "0x0008CE",
+					"tags": [
+						"kneeling",
+						"facingaway",
+						"ontop"
+					]
 				}
 			],
 			"tags": [
@@ -3720,10 +4155,17 @@
 			"length": 2.0,
 			"actors": [
 				{
-					"sex": "male"
+					"sex": "male",
+					"tags": [
+						"kneeling"
+					]
 				},
 				{
-					"sex": "female"
+					"sex": "female",
+					"tags": [
+						"kneeling",
+						"facingaway"
+					]
 				}
 			],
 			"speeds": [
@@ -3798,10 +4240,18 @@
 			"length": 2.0,
 			"actors": [
 				{
-					"sex": "male"
+					"sex": "male",
+					"tags": [
+						"kneeling"
+					]
 				},
 				{
-					"sex": "female"
+					"sex": "female",
+					"tags": [
+						"kneeling",
+						"facingaway",
+						"bendover"
+					]
 				}
 			],
 			"speeds": [
@@ -3866,10 +4316,17 @@
 			"length": 2.0,
 			"actors": [
 				{
-					"sex": "male"
+					"sex": "male",
+					"tags": [
+						"kneeling"
+					]
 				},
 				{
-					"sex": "female"
+					"sex": "female",
+					"tags": [
+						"allfours",
+						"facingaway"
+					]
 				}
 			],
 			"speeds": [
@@ -3949,10 +4406,17 @@
 			"length": 2.0,
 			"actors": [
 				{
-					"sex": "male"
+					"sex": "male",
+					"tags": [
+						"kneeling"
+					]
 				},
 				{
-					"sex": "female"
+					"sex": "female",
+					"tags": [
+						"allfours",
+						"facingaway"
+					]
 				}
 			],
 			"speeds": [
@@ -4032,10 +4496,17 @@
 			"length": 2.0,
 			"actors": [
 				{
-					"sex": "male"
+					"sex": "male",
+					"tags": [
+						"kneeling"
+					]
 				},
 				{
-					"sex": "female"
+					"sex": "female",
+					"tags": [
+						"allfours",
+						"facingaway"
+					]
 				}
 			],
 			"speeds": [
@@ -4115,10 +4586,17 @@
 			"length": 2.0,
 			"actors": [
 				{
-					"sex": "male"
+					"sex": "male",
+					"tags": [
+						"kneeling"
+					]
 				},
 				{
-					"sex": "female"
+					"sex": "female",
+					"tags": [
+						"allfours",
+						"facingaway"
+					]
 				}
 			],
 			"speeds": [
@@ -4203,10 +4681,17 @@
 			"length": 2.0,
 			"actors": [
 				{
-					"sex": "male"
+					"sex": "male",
+					"tags": [
+						"kneeling"
+					]
 				},
 				{
-					"sex": "female"
+					"sex": "female",
+					"tags": [
+						"allfours",
+						"facingaway"
+					]
 				}
 			],
 			"speeds": [
@@ -4277,10 +4762,17 @@
 			"length": 2.0,
 			"actors": [
 				{
-					"sex": "male"
+					"sex": "male",
+					"tags": [
+						"squatting"
+					]
 				},
 				{
-					"sex": "female"
+					"sex": "female",
+					"tags": [
+						"allfours",
+						"facingaway"
+					]
 				}
 			],
 			"speeds": [
@@ -4355,10 +4847,17 @@
 			"length": 2.0,
 			"actors": [
 				{
-					"sex": "male"
+					"sex": "male",
+					"tags": [
+						"kneeling"
+					]
 				},
 				{
-					"sex": "female"
+					"sex": "female",
+					"tags": [
+						"allfours",
+						"facingaway"
+					]
 				}
 			],
 			"speeds": [
@@ -4428,10 +4927,17 @@
 			"length": 2.0,
 			"actors": [
 				{
-					"sex": "male"
+					"sex": "male",
+					"tags": [
+						"squatting"
+					]
 				},
 				{
-					"sex": "female"
+					"sex": "female",
+					"tags": [
+						"allfours",
+						"facingaway"
+					]
 				}
 			],
 			"speeds": [
@@ -4507,10 +5013,17 @@
 			"length": 2.0,
 			"actors": [
 				{
-					"sex": "male"
+					"sex": "male",
+					"tags": [
+						"sitting"
+					]
 				},
 				{
-					"sex": "female"
+					"sex": "female",
+					"tags": [
+						"facingaway",
+						"kneeling"
+					]
 				}
 			],
 			"speeds": [
@@ -4578,10 +5091,16 @@
 			"length": 2.0,
 			"actors": [
 				{
-					"sex": "male"
+					"sex": "male",
+					"tags": [
+						"lyingback"
+					]
 				},
 				{
-					"sex": "female"
+					"sex": "female",
+					"tags": [
+						"kneeling"
+					]
 				}
 			],
 			"speeds": [
@@ -4651,10 +5170,17 @@
 			"length": 2.0,
 			"actors": [
 				{
-					"sex": "male"
+					"sex": "male",
+					"tags": [
+						"lyingback"
+					]
 				},
 				{
-					"sex": "female"
+					"sex": "female",
+					"tags": [
+						"kneeling",
+						"facingaway"
+					]
 				}
 			],
 			"speeds": [
@@ -4725,10 +5251,17 @@
 			"length": 2.0,
 			"actors": [
 				{
-					"sex": "male"
+					"sex": "male",
+					"tags": [
+						"kneeling"
+					]
 				},
 				{
-					"sex": "female"
+					"sex": "female",
+					"tags": [
+						"standing",
+						"facingaway"
+					]
 				}
 			],
 			"speeds": [
@@ -4795,10 +5328,17 @@
 			"length": 2.0,
 			"actors": [
 				{
-					"sex": "male"
+					"sex": "male",
+					"tags": [
+						"squatting"
+					]
 				},
 				{
-					"sex": "female"
+					"sex": "female",
+					"tags": [
+						"standing",
+						"facingaway"
+					]
 				}
 			],
 			"speeds": [
@@ -4865,10 +5405,17 @@
 			"length": 2,
 			"actors": [
 				{
-					"sex": "male"
+					"sex": "male",
+					"tags": [
+						"kneeling"
+					]
 				},
 				{
-					"sex": "female"
+					"sex": "female",
+					"tags": [
+						"facingaway",
+						"standing"
+					]
 				}
 			],
 			"speeds": [
@@ -4935,10 +5482,16 @@
 			"length": 2.0,
 			"actors": [
 				{
-					"sex": "male"
+					"sex": "male",
+					"tags": [
+						"standing"
+					]
 				},
 				{
-					"sex": "female"
+					"sex": "female",
+					"tags": [
+						"kneeling"
+					]
 				}
 			],
 			"speeds": [
@@ -5029,10 +5582,16 @@
 			"length": 2.0,
 			"actors": [
 				{
-					"sex": "male"
+					"sex": "male",
+					"tags": [
+						"standing"
+					]
 				},
 				{
-					"sex": "female"
+					"sex": "female",
+					"tags": [
+						"kneeling"
+					]
 				}
 			],
 			"speeds": [
@@ -5128,10 +5687,16 @@
 			"length": 2.0,
 			"actors": [
 				{
-					"sex": "male"
+					"sex": "male",
+					"tags": [
+						"standing"
+					]
 				},
 				{
-					"sex": "female"
+					"sex": "female",
+					"tags": [
+						"kneeling"
+					]
 				}
 			],
 			"speeds": [
@@ -5222,10 +5787,16 @@
 			"length": 2.0,
 			"actors": [
 				{
-					"sex": "male"
+					"sex": "male",
+					"tags": [
+						"standing"
+					]
 				},
 				{
-					"sex": "female"
+					"sex": "female",
+					"tags": [
+						"sitting"
+					]
 				}
 			],
 			"speeds": [
@@ -5317,10 +5888,16 @@
 			"length": 2.0,
 			"actors": [
 				{
-					"sex": "male"
+					"sex": "male",
+					"tags": [
+						"standing"
+					]
 				},
 				{
-					"sex": "female"
+					"sex": "female",
+					"tags": [
+						"kneeling"
+					]
 				}
 			],
 			"speeds": [
@@ -5406,10 +5983,16 @@
 			"length": 2.0,
 			"actors": [
 				{
-					"sex": "male"
+					"sex": "male",
+					"tags": [
+						"standing"
+					]
 				},
 				{
-					"sex": "female"
+					"sex": "female",
+					"tags": [
+						"kneeling"
+					]
 				}
 			],
 			"speeds": [
@@ -5515,10 +6098,16 @@
 			"length": 2.0,
 			"actors": [
 				{
-					"sex": "male"
+					"sex": "male",
+					"tags": [
+						"standing"
+					]
 				},
 				{
-					"sex": "female"
+					"sex": "female",
+					"tags": [
+						"kneeling"
+					]
 				}
 			],
 			"speeds": [
@@ -5594,10 +6183,16 @@
 			"length": 2.0,
 			"actors": [
 				{
-					"sex": "male"
+					"sex": "male",
+					"tags": [
+						"standing"
+					]
 				},
 				{
-					"sex": "female"
+					"sex": "female",
+					"tags": [
+						"kneeling"
+					]
 				}
 			],
 			"speeds": [
@@ -5669,10 +6264,16 @@
 			"length": 2.0,
 			"actors": [
 				{
-					"sex": "male"
+					"sex": "male",
+					"tags": [
+						"standing"
+					]
 				},
 				{
-					"sex": "female"
+					"sex": "female",
+					"tags": [
+						"kneeling"
+					]
 				}
 			],
 			"speeds": [
@@ -5750,10 +6351,18 @@
 			"length": 2.0,
 			"actors": [
 				{
-					"sex": "male"
+					"sex": "male",
+					"tags": [
+						"lyingback",
+						"onbottom"
+					]
 				},
 				{
-					"sex": "female"
+					"sex": "female",
+					"tags": [
+						"kneeling",
+						"ontop"
+					]
 				}
 			],
 			"speeds": [
@@ -5814,10 +6423,16 @@
 			"length": 2.0,
 			"actors": [
 				{
-					"sex": "male"
+					"sex": "male",
+					"tags": [
+						"lyingfront"
+					]
 				},
 				{
-					"sex": "female"
+					"sex": "female",
+					"tags": [
+						"lyingback"
+					]
 				}
 			],
 			"speeds": [
@@ -5888,10 +6503,16 @@
 			"length": 2.0,
 			"actors": [
 				{
-					"sex": "male"
+					"sex": "male",
+					"tags": [
+						"lyingfront"
+					]
 				},
 				{
-					"sex": "female"
+					"sex": "female",
+					"tags": [
+						"lyingback"
+					]
 				}
 			],
 			"speeds": [
@@ -5957,10 +6578,16 @@
 			"length": 2.0,
 			"actors": [
 				{
-					"sex": "male"
+					"sex": "male",
+					"tags": [
+						"lyingfront"
+					]
 				},
 				{
-					"sex": "female"
+					"sex": "female",
+					"tags": [
+						"lyingback"
+					]
 				}
 			],
 			"speeds": [
@@ -6026,10 +6653,16 @@
 			"length": 2.0,
 			"actors": [
 				{
-					"sex": "male"
+					"sex": "male",
+					"tags": [
+						"kneeling"
+					]
 				},
 				{
-					"sex": "female"
+					"sex": "female",
+					"tags": [
+						"allfours"
+					]
 				}
 			],
 			"speeds": [
@@ -6101,11 +6734,17 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x0009B0"
+					"idle": "0x0009B0",
+					"tags": [
+						"kneeling"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x0009B1"
+					"idle": "0x0009B1",
+					"tags": [
+						"allfours"
+					]
 				}
 			],
 			"tags": [
@@ -6160,10 +6799,18 @@
 			"length": 2.0,
 			"actors": [
 				{
-					"sex": "male"
+					"sex": "male",
+					"tags": [
+						"sitting",
+						"onbottom"
+					]
 				},
 				{
-					"sex": "female"
+					"sex": "female",
+					"tags": [
+						"kneeling",
+						"ontop"
+					]
 				}
 			],
 			"speeds": [
@@ -6244,10 +6891,18 @@
 			"length": 2.0,
 			"actors": [
 				{
-					"sex": "male"
+					"sex": "male",
+					"tags": [
+						"lyingback",
+						"onbottom"
+					]
 				},
 				{
-					"sex": "female"
+					"sex": "female",
+					"tags": [
+						"lyingfront",
+						"ontop"
+					]
 				}
 			],
 			"speeds": [
@@ -6324,11 +6979,19 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x0009C2"
+					"idle": "0x0009C2",
+					"tags": [
+						"sitting",
+						"onbottom"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x0009C3"
+					"idle": "0x0009C3",
+					"tags": [
+						"kneeling",
+						"ontop"
+					]
 				}
 			],
 			"tags": [
@@ -6388,10 +7051,18 @@
 			"length": 2.0,
 			"actors": [
 				{
-					"sex": "male"
+					"sex": "male",
+					"tags": [
+						"sitting",
+						"onbottom"
+					]
 				},
 				{
-					"sex": "female"
+					"sex": "female",
+					"tags": [
+						"lyingfront",
+						"ontop"
+					]
 				}
 			],
 			"speeds": [
@@ -6466,11 +7137,19 @@
 				{
 					"sex": "male",
 					"idle": "0x0009CC",
-					"climax": "4StimTest_OStim2PMissionaryClimaxMF"
+					"climax": "4StimTest_OStim2PMissionaryClimaxMF",
+					"tags": [
+						"kneeling",
+						"ontop"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x0009CD"
+					"idle": "0x0009CD",
+					"tags": [
+						"lyingback",
+						"onbottom"
+					]
 				}
 			],
 			"tags": [
@@ -6498,10 +7177,18 @@
 			"actors": [
 				{
 					"sex": "male",
-					"climax": "4StimTest_OStim2PMissionaryClimaxMF"
+					"climax": "4StimTest_OStim2PMissionaryClimaxMF",
+					"tags": [
+						"kneeling",
+						"ontop"
+					]
 				},
 				{
-					"sex": "female"
+					"sex": "female",
+					"tags": [
+						"lyingback",
+						"onbottom"
+					]
 				}
 			],
 			"speeds": [
@@ -6581,10 +7268,18 @@
 			"length": 2.0,
 			"actors": [
 				{
-					"sex": "male"
+					"sex": "male",
+					"tags": [
+						"kneeling",
+						"ontop"
+					]
 				},
 				{
-					"sex": "female"
+					"sex": "female",
+					"tags": [
+						"lyingback",
+						"onbottom"
+					]
 				}
 			],
 			"speeds": [
@@ -6651,10 +7346,18 @@
 			"length": 2.0,
 			"actors": [
 				{
-					"sex": "male"
+					"sex": "male",
+					"tags": [
+						"kneeling",
+						"ontop"
+					]
 				},
 				{
-					"sex": "female"
+					"sex": "female",
+					"tags": [
+						"lyingback",
+						"onbottom"
+					]
 				}
 			],
 			"speeds": [
@@ -6729,10 +7432,18 @@
 			"length": 2.0,
 			"actors": [
 				{
-					"sex": "male"
+					"sex": "male",
+					"tags": [
+						"kneeling",
+						"ontop"
+					]
 				},
 				{
-					"sex": "female"
+					"sex": "female",
+					"tags": [
+						"lyingback",
+						"onbottom"
+					]
 				}
 			],
 			"speeds": [
@@ -6827,10 +7538,18 @@
 			"length": 2.0,
 			"actors": [
 				{
-					"sex": "male"
+					"sex": "male",
+					"tags": [
+						"kneeling",
+						"ontop"
+					]
 				},
 				{
-					"sex": "female"
+					"sex": "female",
+					"tags": [
+						"lyingback",
+						"onbottom"
+					]
 				}
 			],
 			"speeds": [
@@ -6921,10 +7640,18 @@
 			"actors": [
 				{
 					"sex": "male",
-					"climax": "4StimTest_OStim2PMissionaryClimaxMF"
+					"climax": "4StimTest_OStim2PMissionaryClimaxMF",
+					"tags": [
+						"kneeling",
+						"ontop"
+					]
 				},
 				{
-					"sex": "female"
+					"sex": "female",
+					"tags": [
+						"lyingback",
+						"onbottom"
+					]
 				}
 			],
 			"speeds": [
@@ -7019,10 +7746,18 @@
 			"length": 2.0,
 			"actors": [
 				{
-					"sex": "male"
+					"sex": "male",
+					"tags": [
+						"kneeling",
+						"ontop"
+					]
 				},
 				{
-					"sex": "female"
+					"sex": "female",
+					"tags": [
+						"lyingback",
+						"onbottom"
+					]
 				}
 			],
 			"speeds": [
@@ -7102,10 +7837,18 @@
 			"length": 2.0,
 			"actors": [
 				{
-					"sex": "male"
+					"sex": "male",
+					"tags": [
+						"kneeling",
+						"ontop"
+					]
 				},
 				{
-					"sex": "female"
+					"sex": "female",
+					"tags": [
+						"lyingback",
+						"onbottom"
+					]
 				}
 			],
 			"speeds": [
@@ -7186,10 +7929,18 @@
 			"actors": [
 				{
 					"sex": "male",
-					"climax": "4StimTest_OStim2PMissionaryClimaxMF"
+					"climax": "4StimTest_OStim2PMissionaryClimaxMF",
+					"tags": [
+						"kneeling",
+						"ontop"
+					]
 				},
 				{
-					"sex": "female"
+					"sex": "female",
+					"tags": [
+						"lyingback",
+						"onbottom"
+					]
 				}
 			],
 			"speeds": [
@@ -7284,10 +8035,19 @@
 			"length": 2.0,
 			"actors": [
 				{
-					"sex": "male"
+					"sex": "male",
+					"tags": [
+						"lyingfront",
+						"ontop"
+					]
 				},
 				{
-					"sex": "female"
+					"sex": "female",
+					"tags": [
+						"lyingfront",
+						"facingaway",
+						"onbottom"
+					]
 				}
 			],
 			"speeds": [
@@ -7358,10 +8118,19 @@
 			"length": 2.0,
 			"actors": [
 				{
-					"sex": "male"
+					"sex": "male",
+					"tags": [
+						"lyingfront",
+						"ontop"
+					]
 				},
 				{
-					"sex": "female"
+					"sex": "female",
+					"tags": [
+						"lyingfront",
+						"facingaway",
+						"onbottom"
+					]
 				}
 			],
 			"speeds": [
@@ -7433,11 +8202,20 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x000A20"
+					"idle": "0x000A20",
+					"tags": [
+						"kneeling",
+						"ontop"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x000A21"
+					"idle": "0x000A21",
+					"tags": [
+						"lyingfront",
+						"facingaway",
+						"onbottom"
+					]
 				}
 			],
 			"tags": [
@@ -7497,10 +8275,19 @@
 			"length": 2.0,
 			"actors": [
 				{
-					"sex": "male"
+					"sex": "male",
+					"tags": [
+						"lyingfront",
+						"ontop"
+					]
 				},
 				{
-					"sex": "female"
+					"sex": "female",
+					"tags": [
+						"lyingfront",
+						"facingaway",
+						"onbottom"
+					]
 				}
 			],
 			"speeds": [
@@ -7566,10 +8353,19 @@
 			"length": 2.0,
 			"actors": [
 				{
-					"sex": "male"
+					"sex": "male",
+					"tags": [
+						"kneeling",
+						"ontop"
+					]
 				},
 				{
-					"sex": "female"
+					"sex": "female",
+					"tags": [
+						"lyingfront",
+						"facingaway",
+						"onbottom"
+					]
 				}
 			],
 			"speeds": [
@@ -7636,10 +8432,19 @@
 			"length": 2.0,
 			"actors": [
 				{
-					"sex": "male"
+					"sex": "male",
+					"tags": [
+						"kneeling",
+						"ontop"
+					]
 				},
 				{
-					"sex": "female"
+					"sex": "female",
+					"tags": [
+						"lyingfront",
+						"facingaway",
+						"onbottom"
+					]
 				}
 			],
 			"speeds": [
@@ -7710,10 +8515,19 @@
 			"length": 2.0,
 			"actors": [
 				{
-					"sex": "male"
+					"sex": "male",
+					"tags": [
+						"lyingfront",
+						"ontop"
+					]
 				},
 				{
-					"sex": "female"
+					"sex": "female",
+					"tags": [
+						"lyingfront",
+						"facingaway",
+						"onbottom"
+					]
 				}
 			],
 			"speeds": [
@@ -7794,10 +8608,18 @@
 			"length": 2,
 			"actors": [
 				{
-					"sex": "male"
+					"sex": "male",
+					"tags": [
+						"kneeling",
+						"ontop"
+					]
 				},
 				{
-					"sex": "female"
+					"sex": "female",
+					"tags": [
+						"lyingside",
+						"onbottom"
+					]
 				}
 			],
 			"speeds": [
@@ -7868,10 +8690,18 @@
 			"length": 2,
 			"actors": [
 				{
-					"sex": "male"
+					"sex": "male",
+					"tags": [
+						"kneeling",
+						"ontop"
+					]
 				},
 				{
-					"sex": "female"
+					"sex": "female",
+					"tags": [
+						"lyingside",
+						"onbottom"
+					]
 				}
 			],
 			"speeds": [
@@ -7942,10 +8772,18 @@
 			"length": 2.0,
 			"actors": [
 				{
-					"sex": "male"
+					"sex": "male",
+					"tags": [
+						"kneeling",
+						"ontop"
+					]
 				},
 				{
-					"sex": "female"
+					"sex": "female",
+					"tags": [
+						"lyingside",
+						"onbottom"
+					]
 				}
 			],
 			"speeds": [
@@ -8008,10 +8846,18 @@
 			"length": 2,
 			"actors": [
 				{
-					"sex": "male"
+					"sex": "male",
+					"tags": [
+						"kneeling",
+						"ontop"
+					]
 				},
 				{
-					"sex": "female"
+					"sex": "female",
+					"tags": [
+						"lyingside",
+						"onbottom"
+					]
 				}
 			],
 			"speeds": [
@@ -8082,10 +8928,16 @@
 			"length": 2.0,
 			"actors": [
 				{
-					"sex": "male"
+					"sex": "male",
+					"tags": [
+						"standing"
+					]
 				},
 				{
-					"sex": "female"
+					"sex": "female",
+					"tags": [
+						"squatting"
+					]
 				}
 			],
 			"speeds": [
@@ -8161,10 +9013,16 @@
 			"length": 2.0,
 			"actors": [
 				{
-					"sex": "male"
+					"sex": "male",
+					"tags": [
+						"standing"
+					]
 				},
 				{
-					"sex": "female"
+					"sex": "female",
+					"tags": [
+						"squatting"
+					]
 				}
 			],
 			"speeds": [
@@ -8234,10 +9092,16 @@
 			"length": 2.0,
 			"actors": [
 				{
-					"sex": "male"
+					"sex": "male",
+					"tags": [
+						"standing"
+					]
 				},
 				{
-					"sex": "female"
+					"sex": "female",
+					"tags": [
+						"squatting"
+					]
 				}
 			],
 			"speeds": [
@@ -8318,10 +9182,16 @@
 			"length": 2.0,
 			"actors": [
 				{
-					"sex": "male"
+					"sex": "male",
+					"tags": [
+						"standing"
+					]
 				},
 				{
-					"sex": "female"
+					"sex": "female",
+					"tags": [
+						"squatting"
+					]
 				}
 			],
 			"speeds": [
@@ -8393,10 +9263,16 @@
 			"length": 2.0,
 			"actors": [
 				{
-					"sex": "male"
+					"sex": "male",
+					"tags": [
+						"standing"
+					]
 				},
 				{
-					"sex": "female"
+					"sex": "female",
+					"tags": [
+						"squatting"
+					]
 				}
 			],
 			"speeds": [
@@ -8462,10 +9338,16 @@
 			"length": 2.0,
 			"actors": [
 				{
-					"sex": "male"
+					"sex": "male",
+					"tags": [
+						"standing"
+					]
 				},
 				{
-					"sex": "female"
+					"sex": "female",
+					"tags": [
+						"squatting"
+					]
 				}
 			],
 			"speeds": [
@@ -8561,10 +9443,16 @@
 			"length": 2.0,
 			"actors": [
 				{
-					"sex": "male"
+					"sex": "male",
+					"tags": [
+						"standing"
+					]
 				},
 				{
-					"sex": "female"
+					"sex": "female",
+					"tags": [
+						"standing"
+					]
 				}
 			],
 			"speeds": [
@@ -8630,10 +9518,18 @@
 			"length": 2.0,
 			"actors": [
 				{
-					"sex": "male"
+					"sex": "male",
+					"tags": [
+						"standing"
+					]
 				},
 				{
-					"sex": "female"
+					"sex": "female",
+					"tags": [
+						"bendover",
+						"facingaway",
+						"standing"
+					]
 				}
 			],
 			"speeds": [
@@ -8722,10 +9618,18 @@
 			"length": 2.0,
 			"actors": [
 				{
-					"sex": "male"
+					"sex": "male",
+					"tags": [
+						"standing"
+					]
 				},
 				{
-					"sex": "female"
+					"sex": "female",
+					"tags": [
+						"bendover",
+						"facingaway",
+						"standing"
+					]
 				}
 			],
 			"speeds": [
@@ -8807,10 +9711,18 @@
 			"length": 2.0,
 			"actors": [
 				{
-					"sex": "male"
+					"sex": "male",
+					"tags": [
+						"standing"
+					]
 				},
 				{
-					"sex": "female"
+					"sex": "female",
+					"tags": [
+						"bendover",
+						"facingaway",
+						"standing"
+					]
 				}
 			],
 			"speeds": [
@@ -8898,10 +9810,18 @@
 			"length": 2.0,
 			"actors": [
 				{
-					"sex": "male"
+					"sex": "male",
+					"tags": [
+						"standing"
+					]
 				},
 				{
-					"sex": "female"
+					"sex": "female",
+					"tags": [
+						"bendover",
+						"facingaway",
+						"standing"
+					]
 				}
 			],
 			"speeds": [
@@ -8982,10 +9902,18 @@
 			"length": 2.0,
 			"actors": [
 				{
-					"sex": "male"
+					"sex": "male",
+					"tags": [
+						"standing"
+					]
 				},
 				{
-					"sex": "female"
+					"sex": "female",
+					"tags": [
+						"bendover",
+						"facingaway",
+						"standing"
+					]
 				}
 			],
 			"speeds": [
@@ -9082,10 +10010,18 @@
 			"length": 2.0,
 			"actors": [
 				{
-					"sex": "male"
+					"sex": "male",
+					"tags": [
+						"standing"
+					]
 				},
 				{
-					"sex": "female"
+					"sex": "female",
+					"tags": [
+						"bendover",
+						"facingaway",
+						"standing"
+					]
 				}
 			],
 			"speeds": [
@@ -9172,10 +10108,17 @@
 			"length": 2,
 			"actors": [
 				{
-					"sex": "male"
+					"sex": "male",
+					"tags": [
+						"standing"
+					]
 				},
 				{
-					"sex": "female"
+					"sex": "female",
+					"tags": [
+						"facingaway",
+						"standing"
+					]
 				}
 			],
 			"speeds": [
@@ -9253,10 +10196,17 @@
 			"length": 2.0,
 			"actors": [
 				{
-					"sex": "male"
+					"sex": "male",
+					"tags": [
+						"standing"
+					]
 				},
 				{
-					"sex": "female"
+					"sex": "female",
+					"tags": [
+						"facingaway",
+						"standing"
+					]
 				}
 			],
 			"speeds": [
@@ -9328,10 +10278,16 @@
 			"length": 2.0,
 			"actors": [
 				{
-					"sex": "male"
+					"sex": "male",
+					"tags": [
+						"kneeling"
+					]
 				},
 				{
-					"sex": "female"
+					"sex": "female",
+					"tags": [
+						"standing"
+					]
 				}
 			],
 			"speeds": [
@@ -9397,10 +10353,17 @@
 			"length": 2.0,
 			"actors": [
 				{
-					"sex": "male"
+					"sex": "male",
+					"tags": [
+						"standing"
+					]
 				},
 				{
-					"sex": "female"
+					"sex": "female",
+					"tags": [
+						"facingaway",
+						"standing"
+					]
 				}
 			],
 			"speeds": [
@@ -9477,10 +10440,16 @@
 			"length": 2.0,
 			"actors": [
 				{
-					"sex": "male"
+					"sex": "male",
+					"tags": [
+						"standing"
+					]
 				},
 				{
-					"sex": "female"
+					"sex": "female",
+					"tags": [
+						"standing"
+					]
 				}
 			],
 			"speeds": [
@@ -9566,10 +10535,16 @@
 			"length": 2.0,
 			"actors": [
 				{
-					"sex": "male"
+					"sex": "male",
+					"tags": [
+						"standing"
+					]
 				},
 				{
-					"sex": "female"
+					"sex": "female",
+					"tags": [
+						"standing"
+					]
 				}
 			],
 			"speeds": [
@@ -9650,10 +10625,16 @@
 			"length": 2.0,
 			"actors": [
 				{
-					"sex": "male"
+					"sex": "male",
+					"tags": [
+						"standing"
+					]
 				},
 				{
-					"sex": "female"
+					"sex": "female",
+					"tags": [
+						"standing"
+					]
 				}
 			],
 			"speeds": [
@@ -9711,13 +10692,20 @@
 		{
 			"id": "4StimTest_OStim2PStandingSittingJerkToFaceMasturbationMF",
 			"name": "Standing Sitting Jerk To Face Masturbation (MF)",
+			"defaultSpeed": 1,
 			"length": 2,
 			"actors": [
 				{
-					"sex": "male"
+					"sex": "male",
+					"tags": [
+						"standing"
+					]
 				},
 				{
-					"sex": "female"
+					"sex": "female",
+					"tags": [
+						"sitting"
+					]
 				}
 			],
 			"speeds": [
@@ -9814,11 +10802,17 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x000AFF"
+					"idle": "0x000AFF",
+					"tags": [
+						"standing"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x000B00"
+					"idle": "0x000B00",
+					"tags": [
+						"standing"
+					]
 				}
 			],
 			"tags": [
@@ -9834,11 +10828,17 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x000B01"
+					"idle": "0x000B01",
+					"tags": [
+						"standing"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x000B02"
+					"idle": "0x000B02",
+					"tags": [
+						"squatting"
+					]
 				}
 			],
 			"tags": [
@@ -9854,11 +10854,17 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x000B03"
+					"idle": "0x000B03",
+					"tags": [
+						"standing"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x000B04"
+					"idle": "0x000B04",
+					"tags": [
+						"standing"
+					]
 				}
 			],
 			"tags": [
@@ -9874,11 +10880,17 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x000B05"
+					"idle": "0x000B05",
+					"tags": [
+						"standing"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x000B06"
+					"idle": "0x000B06",
+					"tags": [
+						"standing"
+					]
 				}
 			],
 			"tags": [
@@ -9894,11 +10906,17 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x000B07"
+					"idle": "0x000B07",
+					"tags": [
+						"standing"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x000B08"
+					"idle": "0x000B08",
+					"tags": [
+						"standing"
+					]
 				}
 			],
 			"tags": [
@@ -9914,11 +10932,17 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x000B09"
+					"idle": "0x000B09",
+					"tags": [
+						"standing"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x000B0A"
+					"idle": "0x000B0A",
+					"tags": [
+						"standing"
+					]
 				}
 			],
 			"tags": [
@@ -9935,11 +10959,17 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x000B0B"
+					"idle": "0x000B0B",
+					"tags": [
+						"standing"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x000B0C"
+					"idle": "0x000B0C",
+					"tags": [
+						"standing"
+					]
 				}
 			],
 			"tags": [
@@ -9957,11 +10987,18 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x000B0D"
+					"idle": "0x000B0D",
+					"tags": [
+						"drowsy",
+						"standing"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x000B0E"
+					"idle": "0x000B0E",
+					"tags": [
+						"standing"
+					]
 				}
 			],
 			"tags": [
@@ -9985,11 +11022,17 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x000B0F"
+					"idle": "0x000B0F",
+					"tags": [
+						"standing"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x000B10"
+					"idle": "0x000B10",
+					"tags": [
+						"standing"
+					]
 				}
 			],
 			"tags": [
@@ -10031,11 +11074,18 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x000B11"
+					"idle": "0x000B11",
+					"tags": [
+						"drowsy",
+						"standing"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x000B12"
+					"idle": "0x000B12",
+					"tags": [
+						"standing"
+					]
 				}
 			],
 			"tags": [
@@ -10054,11 +11104,17 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x000B13"
+					"idle": "0x000B13",
+					"tags": [
+						"standing"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x000B14"
+					"idle": "0x000B14",
+					"tags": [
+						"standing"
+					]
 				}
 			],
 			"tags": [
@@ -10076,11 +11132,18 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x000B15"
+					"idle": "0x000B15",
+					"tags": [
+						"standing"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x000B16"
+					"idle": "0x000B16",
+					"tags": [
+						"drowsy",
+						"standing"
+					]
 				}
 			],
 			"tags": [
@@ -10104,11 +11167,17 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x000B17"
+					"idle": "0x000B17",
+					"tags": [
+						"standing"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x000B18"
+					"idle": "0x000B18",
+					"tags": [
+						"standing"
+					]
 				}
 			],
 			"tags": [
@@ -10150,11 +11219,18 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x000B19"
+					"idle": "0x000B19",
+					"tags": [
+						"standing"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x000B1A"
+					"idle": "0x000B1A",
+					"tags": [
+						"drowsy",
+						"standing"
+					]
 				}
 			],
 			"tags": [
@@ -10172,11 +11248,17 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x000B1B"
+					"idle": "0x000B1B",
+					"tags": [
+						"kneeling"
+					]
 				},
 				{
 					"sex": "male",
-					"idle": "0x000B1C"
+					"idle": "0x000B1C",
+					"tags": [
+						"lying"
+					]
 				}
 			],
 			"tags": [
@@ -10223,11 +11305,17 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x000B1D"
+					"idle": "0x000B1D",
+					"tags": [
+						"kneeling"
+					]
 				},
 				{
 					"sex": "male",
-					"idle": "0x000B1E"
+					"idle": "0x000B1E",
+					"tags": [
+						"lyingback"
+					]
 				}
 			],
 			"tags": [
@@ -10280,11 +11368,17 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x000B1F"
+					"idle": "0x000B1F",
+					"tags": [
+						"kneeling"
+					]
 				},
 				{
 					"sex": "male",
-					"idle": "0x000B20"
+					"idle": "0x000B20",
+					"tags": [
+						"kneeling"
+					]
 				}
 			],
 			"tags": [
@@ -10303,11 +11397,17 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x000B21"
+					"idle": "0x000B21",
+					"tags": [
+						"lyingback"
+					]
 				},
 				{
 					"sex": "male",
-					"idle": "0x000B22"
+					"idle": "0x000B22",
+					"tags": [
+						"kneeling"
+					]
 				}
 			],
 			"tags": [
@@ -10354,11 +11454,17 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x000B23"
+					"idle": "0x000B23",
+					"tags": [
+						"standing"
+					]
 				},
 				{
 					"sex": "male",
-					"idle": "0x000B24"
+					"idle": "0x000B24",
+					"tags": [
+						"standing"
+					]
 				}
 			],
 			"tags": [
@@ -10392,15 +11498,24 @@
 			"actors": [
 				{
 					"sex": "female",
-					"idle": "0x000B25"
+					"idle": "0x000B25",
+					"tags": [
+						"lyingback"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x000B26"
+					"idle": "0x000B26",
+					"tags": [
+						"kneeling"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x000B27"
+					"idle": "0x000B27",
+					"tags": [
+						"kneeling"
+					]
 				}
 			],
 			"tags": [
@@ -10439,15 +11554,24 @@
 			"actors": [
 				{
 					"sex": "female",
-					"idle": "0x000B28"
+					"idle": "0x000B28",
+					"tags": [
+						"standing"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x000B29"
+					"idle": "0x000B29",
+					"tags": [
+						"standing"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x000B2A"
+					"idle": "0x000B2A",
+					"tags": [
+						"standing"
+					]
 				}
 			],
 			"tags": [
@@ -10486,15 +11610,24 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x000B2B"
+					"idle": "0x000B2B",
+					"tags": [
+						"lyingback"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x000B2C"
+					"idle": "0x000B2C",
+					"tags": [
+						"kneeling"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x000B2D"
+					"idle": "0x000B2D",
+					"tags": [
+						"kneeling"
+					]
 				}
 			],
 			"tags": [
@@ -10533,15 +11666,24 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x000B2E"
+					"idle": "0x000B2E",
+					"tags": [
+						"standing"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x000B2F"
+					"idle": "0x000B2F",
+					"tags": [
+						"standing"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x000B30"
+					"idle": "0x000B30",
+					"tags": [
+						"standing"
+					]
 				}
 			],
 			"tags": [
@@ -10580,15 +11722,24 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x000B31"
+					"idle": "0x000B31",
+					"tags": [
+						"lyingback"
+					]
 				},
 				{
 					"sex": "male",
-					"idle": "0x000B32"
+					"idle": "0x000B32",
+					"tags": [
+						"lyingback"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x000B33"
+					"idle": "0x000B33",
+					"tags": [
+						"lyingback"
+					]
 				}
 			],
 			"tags": [
@@ -10627,15 +11778,24 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x000B34"
+					"idle": "0x000B34",
+					"tags": [
+						"standing"
+					]
 				},
 				{
 					"sex": "male",
-					"idle": "0x000B35"
+					"idle": "0x000B35",
+					"tags": [
+						"standing"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x000B36"
+					"idle": "0x000B36",
+					"tags": [
+						"standing"
+					]
 				}
 			],
 			"tags": [
@@ -10674,15 +11834,24 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x000B37"
+					"idle": "0x000B37",
+					"tags": [
+						"lyingback"
+					]
 				},
 				{
 					"sex": "male",
-					"idle": "0x000B38"
+					"idle": "0x000B38",
+					"tags": [
+						"kneeling"
+					]
 				},
 				{
 					"sex": "male",
-					"idle": "0x000B39"
+					"idle": "0x000B39",
+					"tags": [
+						"kneeling"
+					]
 				}
 			],
 			"tags": [
@@ -10721,15 +11890,24 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x000B3A"
+					"idle": "0x000B3A",
+					"tags": [
+						"standing"
+					]
 				},
 				{
 					"sex": "male",
-					"idle": "0x000B3B"
+					"idle": "0x000B3B",
+					"tags": [
+						"standing"
+					]
 				},
 				{
 					"sex": "male",
-					"idle": "0x000B3C"
+					"idle": "0x000B3C",
+					"tags": [
+						"standing"
+					]
 				}
 			],
 			"tags": [
@@ -10768,19 +11946,31 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x000B3D"
+					"idle": "0x000B3D",
+					"tags": [
+						"lyingback"
+					]
 				},
 				{
 					"sex": "male",
-					"idle": "0x000B3E"
+					"idle": "0x000B3E",
+					"tags": [
+						"lyingback"
+					]
 				},
 				{
 					"sex": "male",
-					"idle": "0x000B3F"
+					"idle": "0x000B3F",
+					"tags": [
+						"sitting"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x000B40"
+					"idle": "0x000B40",
+					"tags": [
+						"lyingback"
+					]
 				}
 			],
 			"tags": [
@@ -10804,19 +11994,31 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x000B41"
+					"idle": "0x000B41",
+					"tags": [
+						"standing"
+					]
 				},
 				{
 					"sex": "male",
-					"idle": "0x000B42"
+					"idle": "0x000B42",
+					"tags": [
+						"standing"
+					]
 				},
 				{
 					"sex": "male",
-					"idle": "0x000B43"
+					"idle": "0x000B43",
+					"tags": [
+						"standing"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x000B44"
+					"idle": "0x000B44",
+					"tags": [
+						"standing"
+					]
 				}
 			],
 			"tags": [
@@ -10840,23 +12042,38 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x000B45"
+					"idle": "0x000B45",
+					"tags": [
+						"lyingback"
+					]
 				},
 				{
 					"sex": "male",
-					"idle": "0x000B46"
+					"idle": "0x000B46",
+					"tags": [
+						"lyingback"
+					]
 				},
 				{
 					"sex": "male",
-					"idle": "0x000B47"
+					"idle": "0x000B47",
+					"tags": [
+						"sitting"
+					]
 				},
 				{
 					"sex": "male",
-					"idle": "0x000B48"
+					"idle": "0x000B48",
+					"tags": [
+						"sitting"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x000B49"
+					"idle": "0x000B49",
+					"tags": [
+						"lyingback"
+					]
 				}
 			],
 			"tags": [
@@ -10880,23 +12097,38 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x000B4A"
+					"idle": "0x000B4A",
+					"tags": [
+						"standing"
+					]
 				},
 				{
 					"sex": "male",
-					"idle": "0x000B4B"
+					"idle": "0x000B4B",
+					"tags": [
+						"standing"
+					]
 				},
 				{
 					"sex": "male",
-					"idle": "0x000B4C"
+					"idle": "0x000B4C",
+					"tags": [
+						"standing"
+					]
 				},
 				{
 					"sex": "male",
-					"idle": "0x000B4D"
+					"idle": "0x000B4D",
+					"tags": [
+						"standing"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x000B4E"
+					"idle": "0x000B4E",
+					"tags": [
+						"standing"
+					]
 				}
 			],
 			"tags": [
@@ -11010,11 +12242,17 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x000B57"
+					"idle": "0x000B57",
+					"tags": [
+						"sitting"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x000B58"
+					"idle": "0x000B58",
+					"tags": [
+						"sitting"
+					]
 				}
 			],
 			"tags": [
@@ -11032,11 +12270,17 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x000B59"
+					"idle": "0x000B59",
+					"tags": [
+						"sitting"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x000B5A"
+					"idle": "0x000B5A",
+					"tags": [
+						"kneeling"
+					]
 				}
 			],
 			"tags": [
@@ -11055,11 +12299,19 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x000B5B"
+					"idle": "0x000B5B",
+					"tags": [
+						"sitting",
+						"onbottom"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x000B5C"
+					"idle": "0x000B5C",
+					"tags": [
+						"kneeling",
+						"ontop"
+					]
 				}
 			],
 			"tags": [
@@ -11077,11 +12329,18 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x000B5D"
+					"idle": "0x000B5D",
+					"tags": [
+						"sitting"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x000B5E"
+					"idle": "0x000B5E",
+					"tags": [
+						"facingaway",
+						"standing"
+					]
 				}
 			],
 			"tags": [
@@ -11100,11 +12359,17 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x000B5F"
+					"idle": "0x000B5F",
+					"tags": [
+						"sitting"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x000B60"
+					"idle": "0x000B60",
+					"tags": [
+						"standing"
+					]
 				}
 			],
 			"tags": [
@@ -11123,11 +12388,17 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x000B61"
+					"idle": "0x000B61",
+					"tags": [
+						"standing"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x000B62"
+					"idle": "0x000B62",
+					"tags": [
+						"allfours"
+					]
 				}
 			],
 			"tags": [
@@ -11145,11 +12416,17 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x000B63"
+					"idle": "0x000B63",
+					"tags": [
+						"standing"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x000B64"
+					"idle": "0x000B64",
+					"tags": [
+						"sitting"
+					]
 				}
 			],
 			"tags": [
@@ -11168,11 +12445,17 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x000B65"
+					"idle": "0x000B65",
+					"tags": [
+						"sitting"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x000B66"
+					"idle": "0x000B66",
+					"tags": [
+						"sitting"
+					]
 				}
 			],
 			"tags": [
@@ -11206,10 +12489,18 @@
 			"furniture": "bed",
 			"actors": [
 				{
-					"sex": "male"
+					"sex": "male",
+					"tags": [
+						"sitting",
+						"onbottom"
+					]
 				},
 				{
-					"sex": "female"
+					"sex": "female",
+					"tags": [
+						"kneeling",
+						"ontop"
+					]
 				}
 			],
 			"speeds": [
@@ -11269,10 +12560,16 @@
 			"furniture": "bed",
 			"actors": [
 				{
-					"sex": "male"
+					"sex": "male",
+					"tags": [
+						"sitting"
+					]
 				},
 				{
-					"sex": "female"
+					"sex": "female",
+					"tags": [
+						"kneeling"
+					]
 				}
 			],
 			"speeds": [
@@ -11365,11 +12662,17 @@
 			"actors": [
 				{
 					"sex": "female",
-					"idle": "0x000B79"
+					"idle": "0x000B79",
+					"tags": [
+						"sitting"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x000B7A"
+					"idle": "0x000B7A",
+					"tags": [
+						"sitting"
+					]
 				}
 			],
 			"tags": [
@@ -11469,11 +12772,17 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x000B81"
+					"idle": "0x000B81",
+					"tags": [
+						"sitting"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x000B82"
+					"idle": "0x000B82",
+					"tags": [
+						"sitting"
+					]
 				}
 			],
 			"tags": [
@@ -11618,11 +12927,17 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x000B8D"
+					"idle": "0x000B8D",
+					"tags": [
+						"sitting"
+					]
 				},
 				{
 					"sex": "male",
-					"idle": "0x000B8E"
+					"idle": "0x000B8E",
+					"tags": [
+						"sitting"
+					]
 				}
 			],
 			"tags": [
@@ -11807,7 +13122,10 @@
 			"actors": [
 				{
 					"sex": "female",
-					"idle": "0x000B9F"
+					"idle": "0x000B9F",
+					"tags": [
+						"standing"
+					]
 				}
 			],
 			"tags": [
@@ -11832,7 +13150,10 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x000BA0"
+					"idle": "0x000BA0",
+					"tags": [
+						"standing"
+					]
 				}
 			],
 			"tags": [
@@ -11857,11 +13178,18 @@
 			"actors": [
 				{
 					"sex": "female",
-					"idle": "0x000BA1"
+					"idle": "0x000BA1",
+					"tags": [
+						"standing"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x000BA2"
+					"idle": "0x000BA2",
+					"tags": [
+						"facingaway",
+						"standing"
+					]
 				}
 			],
 			"tags": [
@@ -11892,11 +13220,18 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x000BA3"
+					"idle": "0x000BA3",
+					"tags": [
+						"standing"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x000BA4"
+					"idle": "0x000BA4",
+					"tags": [
+						"facingaway",
+						"standing"
+					]
 				}
 			],
 			"tags": [
@@ -11922,11 +13257,18 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x000BA5"
+					"idle": "0x000BA5",
+					"tags": [
+						"standing"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x000BA6"
+					"idle": "0x000BA6",
+					"tags": [
+						"facingaway",
+						"standing"
+					]
 				}
 			],
 			"tags": [
@@ -11961,11 +13303,18 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x000BA7"
+					"idle": "0x000BA7",
+					"tags": [
+						"standing"
+					]
 				},
 				{
 					"sex": "male",
-					"idle": "0x000BA8"
+					"idle": "0x000BA8",
+					"tags": [
+						"facingaway",
+						"standing"
+					]
 				}
 			],
 			"tags": [
@@ -11996,7 +13345,11 @@
 			"actors": [
 				{
 					"sex": "female",
-					"idle": "0x000BA9"
+					"idle": "0x000BA9",
+					"tags": [
+						"bendover",
+						"standing"
+					]
 				}
 			],
 			"tags": [
@@ -12022,7 +13375,10 @@
 			"actors": [
 				{
 					"sex": "female",
-					"idle": "0x000BAA"
+					"idle": "0x000BAA",
+					"tags": [
+						"standing"
+					]
 				}
 			],
 			"tags": [
@@ -12053,7 +13409,10 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x000BAB"
+					"idle": "0x000BAB",
+					"tags": [
+						"standing"
+					]
 				}
 			],
 			"tags": [
@@ -12079,11 +13438,18 @@
 			"actors": [
 				{
 					"sex": "female",
-					"idle": "0x000BAC"
+					"idle": "0x000BAC",
+					"tags": [
+						"standing"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x000BAD"
+					"idle": "0x000BAD",
+					"tags": [
+						"facingaway",
+						"standing"
+					]
 				}
 			],
 			"tags": [
@@ -12119,11 +13485,19 @@
 			"actors": [
 				{
 					"sex": "female",
-					"idle": "0x000BAE"
+					"idle": "0x000BAE",
+					"tags": [
+						"standing"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x000BAF"
+					"idle": "0x000BAF",
+					"tags": [
+						"bendover",
+						"facingaway",
+						"standing"
+					]
 				}
 			],
 			"tags": [
@@ -12154,11 +13528,18 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x000BB0"
+					"idle": "0x000BB0",
+					"tags": [
+						"standing"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x000BB1"
+					"idle": "0x000BB1",
+					"tags": [
+						"facingaway",
+						"standing"
+					]
 				}
 			],
 			"tags": [
@@ -12194,11 +13575,19 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x000BB2"
+					"idle": "0x000BB2",
+					"tags": [
+						"standing"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x000BB3"
+					"idle": "0x000BB3",
+					"tags": [
+						"bendover",
+						"facingaway",
+						"standing"
+					]
 				}
 			],
 			"tags": [
@@ -12229,11 +13618,18 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x000BB4"
+					"idle": "0x000BB4",
+					"tags": [
+						"standing"
+					]
 				},
 				{
 					"sex": "male",
-					"idle": "0x000BB5"
+					"idle": "0x000BB5",
+					"tags": [
+						"facingaway",
+						"standing"
+					]
 				}
 			],
 			"tags": [
@@ -12264,7 +13660,10 @@
 			"actors": [
 				{
 					"sex": "female",
-					"idle": "0x000BB6"
+					"idle": "0x000BB6",
+					"tags": [
+						"sitting"
+					]
 				}
 			],
 			"tags": [
@@ -12290,7 +13689,10 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x000BB7"
+					"idle": "0x000BB7",
+					"tags": [
+						"sitting"
+					]
 				}
 			],
 			"tags": [
@@ -12316,11 +13718,18 @@
 			"actors": [
 				{
 					"sex": "female",
-					"idle": "0x000BB8"
+					"idle": "0x000BB8",
+					"tags": [
+						"standing"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x000BB9"
+					"idle": "0x000BB9",
+					"tags": [
+						"facingaway",
+						"standing"
+					]
 				}
 			],
 			"tags": [
@@ -12351,11 +13760,17 @@
 			"actors": [
 				{
 					"sex": "female",
-					"idle": "0x000BBA"
+					"idle": "0x000BBA",
+					"tags": [
+						"standing"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x000BBB"
+					"idle": "0x000BBB",
+					"tags": [
+						"standing"
+					]
 				}
 			],
 			"tags": [
@@ -12397,11 +13812,17 @@
 			"actors": [
 				{
 					"sex": "female",
-					"idle": "0x000BBC"
+					"idle": "0x000BBC",
+					"tags": [
+						"standing"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x000BBD"
+					"idle": "0x000BBD",
+					"tags": [
+						"sitting"
+					]
 				}
 			],
 			"tags": [
@@ -12433,11 +13854,18 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x000BBE"
+					"idle": "0x000BBE",
+					"tags": [
+						"standing"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x000BBF"
+					"idle": "0x000BBF",
+					"tags": [
+						"facingaway",
+						"standing"
+					]
 				}
 			],
 			"tags": [
@@ -12468,11 +13896,17 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x000BC0"
+					"idle": "0x000BC0",
+					"tags": [
+						"standing"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x000BC1"
+					"idle": "0x000BC1",
+					"tags": [
+						"standing"
+					]
 				}
 			],
 			"tags": [
@@ -12514,11 +13948,17 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x000BC2"
+					"idle": "0x000BC2",
+					"tags": [
+						"standing"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x000BC3"
+					"idle": "0x000BC3",
+					"tags": [
+						"sitting"
+					]
 				}
 			],
 			"tags": [
@@ -12550,11 +13990,17 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x000BC4"
+					"idle": "0x000BC4",
+					"tags": [
+						"standing"
+					]
 				},
 				{
 					"sex": "male",
-					"idle": "0x000BC5"
+					"idle": "0x000BC5",
+					"tags": [
+						"standing"
+					]
 				}
 			],
 			"tags": [
@@ -12586,7 +14032,10 @@
 			"actors": [
 				{
 					"sex": "female",
-					"idle": "0x000BC6"
+					"idle": "0x000BC6",
+					"tags": [
+						"standing"
+					]
 				}
 			],
 			"tags": [
@@ -12612,7 +14061,10 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x000BC7"
+					"idle": "0x000BC7",
+					"tags": [
+						"standing"
+					]
 				}
 			],
 			"tags": [
@@ -12638,11 +14090,17 @@
 			"actors": [
 				{
 					"sex": "female",
-					"idle": "0x000BC8"
+					"idle": "0x000BC8",
+					"tags": [
+						"standing"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x000BC9"
+					"idle": "0x000BC9",
+					"tags": [
+						"standing"
+					]
 				}
 			],
 			"tags": [
@@ -12674,11 +14132,17 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x000BCA"
+					"idle": "0x000BCA",
+					"tags": [
+						"standing"
+					]
 				},
 				{
 					"sex": "female",
-					"idle": "0x000BCB"
+					"idle": "0x000BCB",
+					"tags": [
+						"standing"
+					]
 				}
 			],
 			"tags": [
@@ -12710,11 +14174,17 @@
 			"actors": [
 				{
 					"sex": "male",
-					"idle": "0x000BCC"
+					"idle": "0x000BCC",
+					"tags": [
+						"standing"
+					]
 				},
 				{
 					"sex": "male",
-					"idle": "0x000BCD"
+					"idle": "0x000BCD",
+					"tags": [
+						"standing"
+					]
 				}
 			],
 			"tags": [

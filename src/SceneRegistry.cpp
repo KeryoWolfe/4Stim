@@ -159,6 +159,14 @@ namespace SceneRegistry
 					}
 				}
 				scene.sourceFile = file;
+				scene.noRandomSelection = entry.value("noRandomSelection", false);
+				if (const auto ds = entry.find("defaultSpeed"); ds != entry.end()) {
+					if (ds->is_number_integer() && ds->get<int>() >= 0) {
+						scene.defaultSpeed = ds->get<int>();
+					} else {
+						REX::WARN("Scenes: {}: scene \"{}\" \"defaultSpeed\" must be a speed index (0 = slowest), ignored", file, id);
+					}
+				}
 				if (const auto tags = entry.find("tags"); tags != entry.end() && tags->is_array()) {
 					for (const auto& tag : *tags) {
 						if (tag.is_string()) {
@@ -174,13 +182,37 @@ namespace SceneRegistry
 					continue;
 				}
 				for (const auto& a : *actors) {
-					const auto sex = Lower(a.is_object() ? a.value("sex", std::string{ "any" }) : std::string{ "any" });
+					// "sex", or OStim's "intendedSex".
+					auto sexValue = std::string{ "any" };
+					if (a.is_object()) {
+						sexValue = a.value("sex", a.value("intendedSex", std::string{ "any" }));
+					}
+					const auto sex = Lower(sexValue);
 					SceneActor role;
 					if (a.is_object()) {
-						// "climax": a scene id, or OStim's "autoTransitions": {"climax": id}
-						role.climax = a.value("climax", std::string{});
-						if (const auto auto_ = a.find("autoTransitions"); role.climax.empty() && auto_ != a.end() && auto_->is_object()) {
-							role.climax = auto_->value("climax", std::string{});
+						auto lowerList = [&](const char* a_key) {
+							std::vector<std::string> out;
+							if (const auto it = a.find(a_key); it != a.end() && it->is_array()) {
+								for (const auto& v : *it) {
+									if (v.is_string() && std::ranges::find(out, Lower(v.get<std::string>())) == out.end()) {
+										out.push_back(Lower(v.get<std::string>()));
+									}
+								}
+							}
+							return out;
+						};
+						role.tags = lowerList("tags");
+						role.requirements = lowerList("requirements");
+						// "autoTransitions": {"climax": id, ...}; "climax": id is short for the climax one.
+						if (const auto auto_ = a.find("autoTransitions"); auto_ != a.end() && auto_->is_object()) {
+							for (const auto& [event, dest] : auto_->items()) {
+								if (dest.is_string() && !dest.get<std::string>().empty()) {
+									role.autoTransitions.emplace_back(Lower(event), dest.get<std::string>());
+								}
+							}
+						}
+						if (const auto climax = a.value("climax", std::string{}); !climax.empty() && role.AutoTransition("climax").empty()) {
+							role.autoTransitions.emplace_back("climax", climax);
 						}
 					}
 					if (sex == "male" || sex == "m") {
@@ -296,6 +328,8 @@ namespace SceneRegistry
 						}
 					}
 				}
+
+				scene.defaultSpeed = std::min(scene.defaultSpeed, static_cast<int>(scene.speeds.size()) - 1);
 
 				const auto key = Lower(id);
 				if (const auto existing = g_scenes.find(key); existing != g_scenes.end()) {
@@ -436,20 +470,19 @@ namespace SceneRegistry
 					return !good;
 				});
 			}
-			// Climax scenes: a loaded scene with the same actors.
+			// Auto transitions (climax scenes...): a loaded scene with the same actors.
 			for (auto& [key, scene] : g_scenes) {
 				for (auto& role : scene.actors) {
-					if (role.climax.empty()) {
-						continue;
-					}
-					const auto dest = g_scenes.find(Lower(role.climax));
-					if (dest == g_scenes.end() || dest->second.actors.size() != scene.actors.size()) {
-						REX::WARN("Scenes: {}: scene \"{}\" climax scene \"{}\" dropped (no such scene, or a different number of actors)",
-							scene.sourceFile, scene.id, role.climax);
-						role.climax.clear();
-					} else {
-						role.climax = dest->second.id;
-					}
+					std::erase_if(role.autoTransitions, [&](auto& a_entry) {
+						const auto dest = g_scenes.find(Lower(a_entry.second));
+						if (dest == g_scenes.end() || dest->second.actors.size() != scene.actors.size()) {
+							REX::WARN("Scenes: {}: scene \"{}\" {} scene \"{}\" dropped (no such scene, or a different number of actors)",
+								scene.sourceFile, scene.id, a_entry.first, a_entry.second);
+							return true;
+						}
+						a_entry.second = dest->second.id;
+						return false;
+					});
 				}
 			}
 			// A transition moves on to its destination by itself, so it needs
@@ -561,6 +594,18 @@ namespace SceneRegistry
 			}
 		}
 		return true;
+	}
+
+	bool SceneActor::HasTag(std::string_view a_tag) const
+	{
+		return std::ranges::find(tags, Lower(a_tag)) != tags.end();
+	}
+
+	std::string SceneActor::AutoTransition(std::string_view a_event) const
+	{
+		const auto event = Lower(a_event);
+		const auto it = std::ranges::find_if(autoTransitions, [&](const auto& a_entry) { return a_entry.first == event; });
+		return it != autoTransitions.end() ? it->second : std::string{};
 	}
 
 	bool Scene::HasAction(std::string_view a_type) const
