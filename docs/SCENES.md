@@ -81,7 +81,7 @@ The first scene has two speeds and one navigation option. The second uses the si
 | `speeds` | scene | one of `speeds` or actor `idle` | List of speeds, slowest first. Each has `idles`: one Idle form ID per role, in role order. |
 | `idle` | actor | one of `speeds` or actor `idle` | Single-speed shorthand: the Idle form ID for this role. |
 | `navigations` | scene | no | Scenes the player can move to from this one, in display order. Each has `to` (destination scene ID) and `label`. In a label, `{0}`, `{1}` and so on are replaced by the name of the actor in that role. |
-| `tags` | scene | no | Free-form tags for future filtering. |
+| `tags` | scene | no | Free-form tags. One has a meaning: **`idle`** marks a scene a new scene can start with. After the player picks who and where, 4Stim starts a random `idle` scene that fits them (any fitting scene if none is tagged), like OStim. Tag your neutral standing, sitting or lying poses `idle`, not transitions. |
 | `icon` | scene or navigation | no | HUD icon: a `.dds` (or `.swf`) under `Data\Interface\4Stim\Icons\`, extension optional, so `"4Stim/positional/standup_f"` is `Icons\4Stim\positional\standup_f.dds` (see `HUD_API.md`). On a navigation entry it overrides the destination scene's icon. |
 | `length` | scene | for transitions | Seconds one play-through of the animation takes. A transition moves on after this long; a sequence uses it when an entry has no `duration`. |
 | `destination` | scene | no | Makes the scene a **transition**: it plays once (for `length` seconds) and then moves on to this scene by itself. Must have the same number of actors. |

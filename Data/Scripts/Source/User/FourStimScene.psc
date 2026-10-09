@@ -211,6 +211,80 @@ bool Function BeginPairScene(Actor akActor0, Actor akActor1, String asSceneID, A
 	return true
 EndFunction
 
+; ---- Group scenes (three or more actors) ----
+
+; akActors play the roles of asSceneID in order, together on one spot: the
+; furniture picked for it, else the player's own spot (or the first actor's).
+bool Function BeginGroupScene(Actor[] akActors, String asSceneID, bool abFreeCamera = false) Global
+	if akActors == None || akActors.Length < 1
+		return false
+	endif
+	if FourStim.GetSceneActorCount(asSceneID) != akActors.Length
+		Debug.Trace("FourStimScene: no " + akActors.Length + "-actor scene '" + asSceneID + "' loaded (see 4Stim.log)")
+		return false
+	endif
+	bool bWithPlayer = false
+	int i = 0
+	while i < akActors.Length
+		if !CanUseActor(akActors[i])
+			return false
+		endif
+		if IsPlayer(akActors[i])
+			bWithPlayer = true
+		endif
+		i += 1
+	endwhile
+
+	if abFreeCamera || bWithPlayer
+		PrepareSceneCamera()
+	endif
+	i = 0
+	while i < akActors.Length
+		PrepareActor(akActors[i])
+		i += 1
+	endwhile
+
+	; Before placing them on one spot, or their capsules push them apart.
+	FourStim.IgnoreGroupCollision(akActors)
+	Utility.Wait(0.1)
+	FourStim.PlaceGroup(akActors)
+	Utility.Wait(0.1)
+
+	i = 0
+	while i < akActors.Length
+		LockForScene(akActors[i])
+		i += 1
+	endwhile
+
+	FourStim.PlayGroupIdles(akActors, asSceneID)
+	if abFreeCamera || bWithPlayer
+		FourStim.BeginSceneCamera()
+	endif
+	return true
+EndFunction
+
+Function EndGroupScene(Actor[] akActors) Global
+	FourStim.EndSceneCamera()  ; no-op if the scene camera wasn't used
+	FourStim.StopGroup(akActors)
+	int i = 0
+	while i < akActors.Length
+		FourStim.RestoreCollision(akActors[i])
+		i += 1
+	endwhile
+	Utility.Wait(0.5)
+	i = 0
+	while i < akActors.Length
+		ReleaseFromScene(akActors[i])
+		i += 1
+	endwhile
+	Utility.Wait(1.0)
+	i = 0
+	while i < akActors.Length
+		RestoreActorInteraction(akActors[i])
+		i += 1
+	endwhile
+EndFunction
+
 ; ---- Sequences ----
 
 ; Like BeginScene, but plays sequence asSequenceID: its scenes one after

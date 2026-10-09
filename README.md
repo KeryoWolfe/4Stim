@@ -11,7 +11,8 @@ An OStim-style scene framework for **Fallout 4** (1.11.240, "Anniversary Edition
 - **Sequences:** fixed runs of scenes, each played for a set time, startable from the picker, the HUD or Papyrus.
 - **In-scene HUD:** a Scaleform HUD with a navigation list, scene icons (`.dds`), actor and speed meters, and keyboard and gamepad control.
 - **Customizable HUD:** themes, a replaceable logo animation, Utility entries, or a complete replacement HUD ([docs/HUD_API.md](docs/HUD_API.md)).
-- **Scene picker:** the hotkey opens a list of scenes for you and the actor you're looking at.
+- **Starting a scene, like OStim:** the hotkey lists the NPCs near you (the one you're looking at already picked); add as many as a scene allows, then pick where (right here, or a bed, chair, table... near you), and a fitting idle scene starts. Or browse every scene that fits.
+- **Group scenes:** three or more actors, as the scenes allow.
 - **Free camera** during scenes, with the player's controls locked to what a scene allows.
 - **Scene events for other mods:** start, change, speed change and end, delivered to Papyrus.
 
@@ -27,7 +28,7 @@ Children are never eligible for scenes.
 
 | Key | Action |
 |---|---|
-| `N` (hotkey) | Out of a scene: open the scene picker. In a scene: give the HUD the arrow keys / d-pad, or hand them back. |
+| `N` (hotkey) | Out of a scene: start one (who, where, then an idle). In a scene: give the HUD the arrow keys / d-pad, or hand them back. |
 | Arrow keys / d-pad | Move through the HUD (tabs, navigation list) |
 | Enter / A | Choose |
 | Esc or Backspace / B | Back, or hand the keys back to the game |

@@ -1,6 +1,7 @@
 #include <atomic>
 #include <chrono>
 #include <mutex>
+#include <random>
 #include <thread>
 #include <fstream>
 #include <unordered_map>
@@ -45,6 +46,7 @@ namespace
 		bool          logAnimEvents = false;  // log scene actors' animation events (for authors)
 		float         transitionLead = 0.0F;   // seconds before a transition's length to move on (see 4Stim.ini)
 		bool          matchSex = true;         // only offer scenes whose roles' sexes the actors fit
+		float         actorRadius = 1500.0F;     // how far from the player to list NPCs for a new scene
 		float         furnitureRadius = 500.0F;  // how far from the player to look for furniture
 		float         furnitureHeight = 100.0F;  // and how far up or down
 		bool          logFurniture = false;      // log every candidate object when looking
@@ -102,6 +104,8 @@ namespace
 					g_settings.hudTheme = value;
 				} else if (key == "benablehud") {
 					g_settings.hudEnabled = std::stoi(value) != 0;
+				} else if (key == "factorradius") {
+					g_settings.actorRadius = std::stof(value);
 				} else if (key == "ffurnitureradius") {
 					g_settings.furnitureRadius = std::stof(value);
 				} else if (key == "ffurnitureheight") {
@@ -165,7 +169,8 @@ namespace
 	void ClearFocusIfIn(std::uint32_t a_actorID)
 	{
 		const auto focused = GetPlayerScene();
-		if (focused.Active() && (focused.role0 == a_actorID || focused.role1 == a_actorID)) {
+		const auto ids = focused.ActorIDs();
+		if (focused.Active() && std::ranges::find(ids, a_actorID) != ids.end()) {
 			SetPlayerScene({});
 		}
 	}
@@ -1201,6 +1206,140 @@ namespace
 		});
 	}
 
+	// ---- Group scenes (any number of actors) ----
+	// The pair natives above, for a whole cast: all actors in role order.
+
+	PlayerScene FocusFor(const std::vector<std::uint32_t>& a_ids, const std::string& a_sceneID)
+	{
+		PlayerScene scene;
+		scene.role0 = a_ids.size() > 0 ? a_ids[0] : 0;
+		scene.role1 = a_ids.size() > 1 ? a_ids[1] : 0;
+		if (a_ids.size() > 2) {
+			scene.more.assign(a_ids.begin() + 2, a_ids.end());
+		}
+		scene.sceneID = a_sceneID;
+		return scene;
+	}
+
+	void IgnoreGroupCollision(std::monostate, std::vector<RE::Actor*> a_actors)
+	{
+		std::erase(a_actors, nullptr);
+		if (a_actors.size() < 2) {
+			return;
+		}
+		F4SE::GetTaskInterface()->AddTask([a_actors]() {
+			std::uint32_t group = 0;
+			for (const auto actor : a_actors) {
+				const auto c = GetCharController(actor);
+				const auto b = c ? c->GetBodyImpl() : nullptr;
+				if (!b) {
+					REX::WARN("IgnoreGroupCollision: {:08X} has no character controller", actor->GetFormID());
+					continue;
+				}
+				const auto f = b->m_collisionFilterInfo;
+				g_savedFilters.try_emplace(actor->GetFormID(), f);
+				RE::CFilter cf{};
+				cf.filter = f;
+				if (group == 0) {
+					group = cf.GetSystemGroup() != 0 ? cf.GetSystemGroup() : 0xF5A1;
+				}
+				cf.SetSystemGroup(group);
+				const auto ok = c->SetCollisionFilterInfo(cf);
+				REX::INFO("IgnoreGroupCollision: {:08X} filter {:08X} -> {:08X} ({})", actor->GetFormID(), f, cf.filter, ok);
+			}
+		});
+	}
+
+	// Puts the whole cast on the pending furniture's spot, or else on the
+	// player's own spot (or the first actor's, without the player).
+	void PlaceGroup(std::monostate, std::vector<RE::Actor*> a_actors)
+	{
+		std::erase(a_actors, nullptr);
+		if (a_actors.empty() || PlaceOnPendingFurniture(a_actors)) {
+			return;
+		}
+		RE::Actor* anchor = a_actors.front();
+		for (const auto actor : a_actors) {
+			if (IsPlayer(actor)) {
+				anchor = actor;
+			}
+		}
+		Furniture::Spot spot{ anchor->data.location, anchor->data.angle.z };
+		for (const auto actor : a_actors) {
+			if (actor != anchor) {
+				PlaceActorAt(actor, spot);
+			}
+		}
+	}
+
+	void PlayGroupIdles(std::monostate, std::vector<RE::Actor*> a_actors, std::string a_sceneID)
+	{
+		std::erase(a_actors, nullptr);
+		const auto scene = SceneRegistry::Find(a_sceneID);
+		if (!scene || scene->actors.size() != a_actors.size()) {
+			REX::WARN("PlayGroupIdles: no {}-actor scene \"{}\"", a_actors.size(), a_sceneID);
+			g_focusNextScene = false;
+			return;
+		}
+		const auto idles = scene->speeds[0];
+		const auto sceneID = scene->id;
+		std::vector<std::uint32_t> ids;
+		for (const auto actor : a_actors) {
+			ids.push_back(actor->GetFormID());
+		}
+		F4SE::GetTaskInterface()->AddTask([ids, idles, sceneID]() {
+			bool        any = false;
+			bool        withPlayer = false;
+			std::string results;
+			for (std::size_t role = 0; role < ids.size(); ++role) {
+				const auto actor = RE::TESForm::GetFormByID<RE::Actor>(ids[role]);
+				const auto process = actor ? actor->currentProcess : nullptr;
+				const bool ok = process && process->PlayIdle(*actor, idles[role], nullptr);
+				any = any || ok;
+				withPlayer = withPlayer || IsPlayer(actor);
+				results += std::format("{}{:08X} {}", role ? ", " : "", ids[role], ok ? "ok" : "refused");
+			}
+			REX::INFO("PlayGroupIdles: \"{}\": {}", sceneID, results);
+			const bool focus = g_focusNextScene.exchange(false) || withPlayer;
+			if (!any) {
+				return;
+			}
+			TrackSceneStart(ids, sceneID);
+			if (focus) {
+				auto focused = FocusFor(ids, sceneID);
+				if (const auto active = FindActiveScene(ids.front())) {
+					focused.furniture = active->furnitureType;
+				}
+				SetPlayerScene(std::move(focused));
+			}
+		});
+	}
+
+	void StopGroup(std::monostate, std::vector<RE::Actor*> a_actors)
+	{
+		std::erase(a_actors, nullptr);
+		const auto handler = RE::TESDataHandler::GetSingleton();
+		const auto idle = handler ? handler->LookupForm<RE::TESIdleForm>(0x00E9855, "Fallout4.esm"sv) : nullptr;
+		if (!idle) {
+			REX::WARN("StopGroup: could not find IdleStop in Fallout4.esm");
+			return;
+		}
+		std::vector<std::uint32_t> ids;
+		for (const auto actor : a_actors) {
+			ids.push_back(actor->GetFormID());
+		}
+		F4SE::GetTaskInterface()->AddTask([ids, idle]() {
+			for (const auto id : ids) {
+				const auto actor = RE::TESForm::GetFormByID<RE::Actor>(id);
+				const auto process = actor ? actor->currentProcess : nullptr;
+				const bool ok = process && process->PlayIdle(*actor, idle, nullptr);
+				REX::INFO("StopGroup: {:08X} IdleStop returned {}", id, ok);
+				ClearFocusIfIn(id);
+				TrackSceneStop(id);
+			}
+		});
+	}
+
 	// ---- Player controls during scenes ----
 	// A dedicated input-enable layer, held for the whole scene, blocks
 	// everything a scene shouldn't allow (menus, favorites, combat, activate,
@@ -1417,12 +1556,12 @@ namespace
 			// The scene may have ended or moved on since this was queued (an
 			// End right after a speed key, say): then don't bring it back.
 			const auto now = GetPlayerScene();
-			if (now.role0 != previous.role0 || now.role1 != previous.role1 || now.sceneID != previous.sceneID || now.speed != previous.speed) {
+			if (now.ActorIDs() != previous.ActorIDs() || now.sceneID != previous.sceneID || now.speed != previous.speed) {
 				REX::INFO("Player scene: change to \"{}\" speed {} dropped, the scene changed first", next.sceneID, next.speed + 1);
 				return;
 			}
-			const std::uint32_t ids[2] = { next.role0, next.role1 };
-			for (std::size_t role = 0; role < idles.size() && role < 2; ++role) {
+			const auto ids = next.ActorIDs();
+			for (std::size_t role = 0; role < idles.size() && role < ids.size(); ++role) {
 				const auto actor = RE::TESForm::GetFormByID<RE::Actor>(ids[role]);
 				const auto process = actor ? actor->currentProcess : nullptr;
 				if (process) {
@@ -1507,8 +1646,8 @@ namespace
 	// and capitalizes the first letter.
 	std::string FormatNavLabel(std::string a_label, const PlayerScene& a_scene)
 	{
-		const std::uint32_t ids[2] = { a_scene.role0, a_scene.role1 };
-		for (int role = 0; role < 2; ++role) {
+		const auto ids = a_scene.ActorIDs();
+		for (std::size_t role = 0; role < ids.size(); ++role) {
 			const std::string token = "{" + std::to_string(role) + "}";
 			std::string       name = "partner";
 			if (const auto actor = RE::TESForm::GetFormByID<RE::Actor>(ids[role])) {
@@ -1546,12 +1685,107 @@ namespace
 
 	enum class PickerMode
 	{
-		kStart,     // start a new scene with g_pickerTarget (0 = solo)
+		kStart,     // start a new scene: who, where, then an idle (see StartStep)
 		kNavigate,  // the focused scene's navigation links, plus "End scene" (used when the HUD isn't available)
 		kSearch     // every scene with the focused scene's actor count; picking one moves the scene there
 	};
-	std::atomic<std::uint32_t> g_pickerTarget = 0;  // form ID of the partner, 0 = solo
 	std::atomic<PickerMode>    g_pickerMode = PickerMode::kStart;
+
+	// ---- Starting a scene: who, where, then an idle (like OStim) ----
+	// kStart walks through steps in the same picker list: the actors (the
+	// player plus any nearby NPCs picked, one at a time), then where (right
+	// here or a piece of furniture near), and then starts a random "idle"
+	// scene that fits them; or the full list of scenes that fit, to browse.
+	enum class StartStep
+	{
+		kActors,
+		kPlace,
+		kBrowse
+	};
+	struct Candidate
+	{
+		std::uint32_t id = 0;
+		std::string   name;
+		float         distance = 0.0F;
+	};
+	std::atomic<StartStep>     g_startStep = StartStep::kActors;
+	std::mutex                 g_castLock;
+	std::vector<std::uint32_t> g_cast;            // NPCs picked, in pick order (the player is always in)
+	std::vector<Candidate>     g_candidates;      // eligible NPCs near the player
+	int                        g_placeChoice = -1;  // index into PickerFurniture(); -1 = right here
+	std::size_t                g_maxCast = 2;       // the most actors any scene has
+
+	// The player, then the picked NPCs.
+	std::vector<std::uint32_t> CastIDs()
+	{
+		std::vector<std::uint32_t> ids{ RE::PlayerCharacter::GetSingleton()->GetFormID() };
+		std::scoped_lock lock(g_castLock);
+		ids.insert(ids.end(), g_cast.begin(), g_cast.end());
+		return ids;
+	}
+
+	// The furniture type picked for the new scene ("" = right here).
+	std::string ChosenFurnitureType()
+	{
+		int choice;
+		{
+			std::scoped_lock lock(g_castLock);
+			choice = g_placeChoice;
+		}
+		const auto found = PickerFurniture();
+		return choice >= 0 && static_cast<std::size_t>(choice) < found.size() ? found[choice].type : std::string{};
+	}
+
+	// Every scene these actors (any role order) can start with, here or on
+	// furniture of type a_furniture.
+	std::vector<std::shared_ptr<const SceneRegistry::Scene>> ScenesForCast(const std::vector<std::uint32_t>& a_cast, const std::string& a_furniture)
+	{
+		std::vector<std::shared_ptr<const SceneRegistry::Scene>> out;
+		for (const auto& summary : SceneRegistry::List(a_cast.size(), SexFilter(a_cast, false))) {
+			const auto scene = SceneRegistry::Find(summary.id);
+			if (scene && FurnitureFits(scene->furniture, a_furniture)) {
+				out.push_back(scene);
+			}
+		}
+		return out;
+	}
+
+	bool HasTag(const SceneRegistry::Scene& a_scene, std::string_view a_tag)
+	{
+		return std::ranges::any_of(a_scene.tags, [&](const std::string& t) { return _stricmp(t.c_str(), std::string(a_tag).c_str()) == 0; });
+	}
+
+	// Eligible NPCs near the player, nearest first (main thread).
+	std::vector<Candidate> FindCandidates(float a_radius)
+	{
+		std::vector<Candidate> out;
+		const auto player = RE::PlayerCharacter::GetSingleton();
+		const auto tes = RE::TES::GetSingleton();
+		if (!player || !tes) {
+			return out;
+		}
+		const auto center = player->GetPosition();
+		tes->ForEachReferenceInRange(center, a_radius, [&](RE::TESObjectREFR* a_ref) {
+			const auto actor = a_ref ? a_ref->As<RE::Actor>() : nullptr;
+			if (!actor || actor == player || actor->GetDelete() || (actor->formFlags & 0x800) != 0 || !actor->Get3D()) {
+				return RE::BSContainer::ForEachResult::kContinue;
+			}
+			// Same rules as FourStimScene.CanUseActor; children never.
+			if (actor->IsChild() || actor->IsDead(false) || actor->IsInCombat() || FindActiveScene(actor->GetFormID())) {
+				return RE::BSContainer::ForEachResult::kContinue;
+			}
+			const auto npc = actor->GetNPC();
+			const bool human = (actor->race && actor->race->HasKeywordString("ActorTypeNPC")) || (npc && npc->HasKeywordString("ActorTypeNPC"));
+			if (!human) {
+				return RE::BSContainer::ForEachResult::kContinue;
+			}
+			const char* name = actor->GetDisplayFullName();
+			out.push_back({ actor->GetFormID(), name && *name ? name : std::format("{:08X}", actor->GetFormID()), center.GetDistance(actor->GetPosition()) });
+			return RE::BSContainer::ForEachResult::kContinue;
+		});
+		std::ranges::sort(out, [](const Candidate& a, const Candidate& b) { return a.distance < b.distance; });
+		return out;
+	}
 
 	class PickerMenu : public RE::IMenu
 	{
@@ -1664,7 +1898,10 @@ namespace
 				break;
 			case 1:
 				if (a_params.argCount > 0 && a_params.args[0].IsString()) {
-					StartPicked(a_params.args[0].GetString());
+					const std::string id = a_params.args[0].GetString();
+					if (!HandleStartPick(id)) {
+						StartPicked(id);
+					}
 				}
 				break;
 			case 2:
@@ -1696,20 +1933,16 @@ namespace
 				SendNavigation();
 				return;
 			}
-			const bool  search = mode == PickerMode::kSearch;
-			const auto  focusedIDs = GetPlayerScene().ActorIDs();
-			const auto  focusedCount = focusedIDs.size();
-			const bool  solo = search ? focusedCount == 1 : g_pickerTarget == 0;
-			const auto  actorCount = search ? focusedCount : solo ? 1 : 2;
-			// Only what these actors can play: a running scene's in its role
-			// order, a new one's in any.
-			std::vector<std::uint32_t> ids = focusedIDs;
-			if (!search) {
-				ids = { RE::PlayerCharacter::GetSingleton()->GetFormID() };
-				if (!solo) {
-					ids.push_back(g_pickerTarget);
-				}
+			if (mode == PickerMode::kStart && g_startStep != StartStep::kBrowse) {
+				SendStartStep();
+				return;
 			}
+			const bool search = mode == PickerMode::kSearch;
+			// Only what these actors can play: a running scene's in its role
+			// order, a new one's (the cast picked) in any.
+			const auto ids = search ? GetPlayerScene().ActorIDs() : CastIDs();
+			const auto actorCount = ids.size();
+			const bool solo = actorCount == 1;
 			const auto filter = SexFilter(ids, search);
 			// Sequences first, as "Sequence: <name>" with SEQUENCE_PREFIX on
 			// the ID, then the scenes.
@@ -1722,23 +1955,10 @@ namespace
 			std::ranges::move(SceneRegistry::List(actorCount, filter), std::back_inserter(scenes));
 
 			// Furniture: a running scene stays on what it's on (or off
-			// furniture); a new one can use what's near the player.
-			const auto focusedFurniture = GetPlayerScene().furniture;
+			// furniture); a new one goes where the cast was placed.
+			const auto here = search ? GetPlayerScene().furniture : ChosenFurnitureType();
 			const auto found = search ? std::vector<Furniture::Found>{} : PickerFurniture();
-			std::erase_if(scenes, [&](SceneRegistry::SceneSummary& a_scene) {
-				if (search) {
-					return !FurnitureFits(a_scene.furniture, focusedFurniture);
-				}
-				if (a_scene.furniture.empty()) {
-					return false;
-				}
-				const auto piece = FurnitureFor(found, a_scene.furniture);
-				if (!piece) {
-					return true;
-				}
-				a_scene.tags = a_scene.tags.empty() ? piece->name : piece->name + ", " + a_scene.tags;
-				return false;
-			});
+			std::erase_if(scenes, [&](SceneRegistry::SceneSummary& a_scene) { return !FurnitureFits(a_scene.furniture, here); });
 			std::size_t sequencesLeft = 0;
 			for (const auto& scene : scenes) {
 				sequencesLeft += scene.id.starts_with(SEQUENCE_PREFIX) ? 1 : 0;
@@ -1759,11 +1979,144 @@ namespace
 				list.PushBack(entry);
 			}
 
+			const std::string title = search ? "Change scene" : solo ? "Solo scenes" : std::format("Scenes for {}", actorCount);
 			Scaleform::GFx::Value args[2];
 			args[0] = list;
-			args[1] = search ? "Change scene" : solo ? "Solo scenes" : "Scenes with your partner";
+			args[1] = title.c_str();
 			menuObj.Invoke("SetScenes", nullptr, args, 2);
-			REX::INFO("Picker: sent {} scene(s) and {} sequence(s) ({}{}), {} furniture piece(s) near", scenes.size() - sequencesLeft, sequencesLeft, search ? "search, " : "", solo ? "solo" : "pair", found.size());
+			REX::INFO("Picker: sent {} scene(s) and {} sequence(s) ({}{} actor(s)), {} furniture piece(s) near", scenes.size() - sequencesLeft, sequencesLeft, search ? "search, " : "", actorCount, found.size());
+		}
+
+		// The start steps before browsing: who, then where.
+		void SendStartStep()
+		{
+			struct Row
+			{
+				std::string id, name, detail;
+			};
+			std::vector<Row> rows;
+			std::string      title;
+			const auto       cast = CastIDs();
+			if (g_startStep == StartStep::kActors) {
+				std::vector<Candidate> candidates;
+				std::vector<std::uint32_t> picked;
+				std::size_t maxCast;
+				{
+					std::scoped_lock lock(g_castLock);
+					candidates = g_candidates;
+					picked = g_cast;
+					maxCast = g_maxCast;
+				}
+				std::string who = "You";
+				for (const auto id : picked) {
+					const auto it = std::ranges::find_if(candidates, [&](const Candidate& c) { return c.id == id; });
+					who += ", " + (it != candidates.end() ? it->name : std::format("{:08X}", id));
+				}
+				rows.push_back({ "@go", picked.empty() ? "Continue alone" : std::format("Continue with {}", picked.size() + 1), who });
+				for (const auto& c : candidates) {
+					if (std::ranges::find(picked, c.id) != picked.end()) {
+						rows.push_back({ std::format("@drop:{:X}", c.id), "[x] " + c.name, "picked: choose to remove" });
+					}
+				}
+				if (picked.size() + 1 < maxCast) {
+					for (const auto& c : candidates) {
+						if (std::ranges::find(picked, c.id) == picked.end()) {
+							rows.push_back({ std::format("@add:{:X}", c.id), c.name, std::format("{:.0f} m away", c.distance / 70.0F) });
+						}
+					}
+				}
+				title = picked.empty() ? "Who's in the scene?" : "Add someone else?";
+			} else {
+				// Where: right here, or a piece of furniture near, if any
+				// scene fits this cast there.
+				if (!ScenesForCast(cast, {}).empty()) {
+					rows.push_back({ "@here", "Right here", "no furniture" });
+				}
+				const auto found = PickerFurniture();
+				for (std::size_t i = 0; i < found.size(); ++i) {
+					if (!ScenesForCast(cast, found[i].type).empty()) {
+						rows.push_back({ std::format("@furn:{}", i), found[i].name, std::format("{:.0f} m away", found[i].distance / 70.0F) });
+					}
+				}
+				if (rows.empty()) {
+					rows.push_back({ "@back", "No scenes for this cast", "choose to go back" });
+				}
+				rows.push_back({ "@browse", "Browse all scenes...", std::format("for {} actor(s)", cast.size()) });
+				rows.push_back({ "@back", "Back", "change who's in it" });
+				title = "Where?";
+			}
+
+			Scaleform::GFx::Value list;
+			uiMovie->CreateArray(&list);
+			for (const auto& row : rows) {
+				Scaleform::GFx::Value entry, id, name, tags;
+				uiMovie->CreateObject(&entry);
+				id = row.id.c_str();
+				name = row.name.c_str();
+				tags = row.detail.c_str();
+				entry.SetMember("id"sv, id);
+				entry.SetMember("name"sv, name);
+				entry.SetMember("tags"sv, tags);
+				list.PushBack(entry);
+			}
+			Scaleform::GFx::Value args[2];
+			args[0] = list;
+			args[1] = title.c_str();
+			menuObj.Invoke("SetScenes", nullptr, args, 2);
+		}
+
+		// A pick in the start steps (ids starting with '@'). True if it was
+		// one; the list is resent, or the scene started.
+		bool HandleStartPick(const std::string& a_id)
+		{
+			if (g_pickerMode != PickerMode::kStart || !a_id.starts_with("@")) {
+				return false;
+			}
+			auto hex = [](const std::string& a_text) { return static_cast<std::uint32_t>(std::stoul(a_text, nullptr, 16)); };
+			if (a_id.starts_with("@add:")) {
+				std::scoped_lock lock(g_castLock);
+				g_cast.push_back(hex(a_id.substr(5)));
+			} else if (a_id.starts_with("@drop:")) {
+				std::scoped_lock lock(g_castLock);
+				std::erase(g_cast, hex(a_id.substr(6)));
+			} else if (a_id == "@go") {
+				g_startStep = StartStep::kPlace;
+			} else if (a_id == "@back") {
+				g_startStep = StartStep::kActors;
+			} else if (a_id == "@browse") {
+				g_startStep = StartStep::kBrowse;
+			} else if (a_id == "@here" || a_id.starts_with("@furn:")) {
+				{
+					std::scoped_lock lock(g_castLock);
+					g_placeChoice = a_id == "@here" ? -1 : std::stoi(a_id.substr(6));
+				}
+				StartIdleScene();
+				return true;
+			}
+			SendScenes();
+			return true;
+		}
+
+		// Like OStim: a random scene tagged "idle" that fits the cast and the
+		// place (any fitting scene if none is tagged).
+		static void StartIdleScene()
+		{
+			const auto cast = CastIDs();
+			const auto here = ChosenFurnitureType();
+			auto       scenes = ScenesForCast(cast, here);
+			std::erase_if(scenes, [](const auto& a_scene) { return a_scene->IsTransition(); });
+			std::vector<std::shared_ptr<const SceneRegistry::Scene>> idles;
+			std::ranges::copy_if(scenes, std::back_inserter(idles), [](const auto& a_scene) { return HasTag(*a_scene, "idle"); });
+			const auto& pool = idles.empty() ? scenes : idles;
+			if (pool.empty()) {
+				REX::WARN("Picker: no scene fits {} actor(s) {}", cast.size(), here.empty() ? "here" : "on " + here);
+				Close();
+				return;
+			}
+			static std::mt19937 rng{ std::random_device{}() };
+			const auto& scene = pool[std::uniform_int_distribution<std::size_t>(0, pool.size() - 1)(rng)];
+			REX::INFO("Picker: starting idle \"{}\" ({} of {} {} scene(s))", scene->id, idles.empty() ? "any" : "idle", pool.size(), here.empty() ? "floor" : here);
+			StartPicked(scene->id);
 		}
 
 		// Navigation mode: the current scene's links, then "End scene".
@@ -1827,12 +2180,7 @@ namespace
 				}
 				// Start its first scene the usual way; the sequence attaches
 				// when that scene starts.
-				const auto player = RE::PlayerCharacter::GetSingleton();
-				std::vector<std::uint32_t> actors{ player->GetFormID() };
-				if (g_pickerTarget != 0) {
-					actors.push_back(g_pickerTarget);
-				}
-				QueueSequence(sequence, std::move(actors));
+				QueueSequence(sequence, CastIDs());
 				a_sceneID = sequence->entries.front().scene;
 			}
 			if (g_pickerMode == PickerMode::kSearch) {
@@ -1850,51 +2198,50 @@ namespace
 				}
 				return;
 			}
-			// On furniture: the nearest piece it fits, for when it starts.
+			// A new scene: the cast picked, on the place picked.
+			const auto cast = CastIDs();
+			const auto scene = SceneRegistry::Find(a_sceneID);
+			if (!scene) {
+				return;
+			}
+			if (roles.empty()) {
+				roles = scene->actors;
+			}
 			{
-				if (furnitureType.empty() && !a_sceneID.starts_with(SEQUENCE_PREFIX)) {
-					if (const auto scene = SceneRegistry::Find(a_sceneID)) {
-						furnitureType = scene->furniture;
-					}
-				}
 				std::scoped_lock lock(g_pendingFurnitureLock);
 				g_pendingFurniture.reset();
-				if (!furnitureType.empty()) {
-					const auto found = PickerFurniture();
-					if (const auto piece = FurnitureFor(found, furnitureType)) {
-						PendingFurniture pending{ piece->ref, piece->type, { RE::PlayerCharacter::GetSingleton()->GetFormID() } };
-						if (const auto scene = SceneRegistry::Find(a_sceneID)) {
-							pending.offset = scene->furnitureOffset;
-						}
-						if (const auto target = g_pickerTarget.load(); target != 0) {
-							pending.actors.push_back(target);
-						}
-						std::ranges::sort(pending.actors);
-						REX::INFO("Picker: \"{}\" goes on {:08X} ({}, {:.0f} away)", a_sceneID, piece->ref, piece->type, piece->distance);
-						g_pendingFurniture = std::move(pending);
-					} else {
-						REX::WARN("Picker: no {} near for \"{}\"", furnitureType, a_sceneID);
-					}
+				int choice;
+				{
+					std::scoped_lock castLock(g_castLock);
+					choice = g_placeChoice;
+				}
+				const auto found = PickerFurniture();
+				if (choice >= 0 && static_cast<std::size_t>(choice) < found.size()) {
+					const auto& piece = found[choice];
+					PendingFurniture pending{ piece.ref, piece.type, cast };
+					pending.offset = scene->furnitureOffset;
+					std::ranges::sort(pending.actors);
+					REX::INFO("Picker: \"{}\" goes on {:08X} ({}, {:.0f} away)", a_sceneID, piece.ref, piece.type, piece.distance);
+					g_pendingFurniture = std::move(pending);
 				}
 			}
 
-			// Who takes which role: the player first unless only the other
-			// way round fits the scene (e.g. a female player and a male
-			// partner in a scene whose first role is male).
-			bool targetFirst = false;
-			if (const auto target = g_pickerTarget.load(); target != 0) {
-				if (roles.empty()) {
-					if (const auto scene = SceneRegistry::Find(a_sceneID)) {
-						roles = scene->actors;
-					}
+			// Who takes which role: the cast's own order (the player first)
+			// unless only another order fits the roles' sexes.
+			auto order = SceneRegistry::AssignRoles(roles, SexesOf(cast));
+			if (order.size() != cast.size()) {
+				order.resize(cast.size());
+				for (std::size_t i = 0; i < order.size(); ++i) {
+					order[i] = i;
 				}
-				const auto order = SceneRegistry::AssignRoles(roles, SexesOf({ RE::PlayerCharacter::GetSingleton()->GetFormID(), target }));
-				targetFirst = !order.empty() && order.front() == 1;
+			}
+			std::vector<std::int32_t> ordered;
+			for (const auto index : order) {
+				ordered.push_back(static_cast<std::int32_t>(cast[index]));
 			}
 			if (g_vm) {
 				RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
-				g_vm->DispatchStaticCall("FourStimMenu"sv, "StartPickedScene"sv, callback,
-					std::move(a_sceneID), static_cast<std::int32_t>(g_pickerTarget.load()), targetFirst);
+				g_vm->DispatchStaticCall("FourStimMenu"sv, "StartPickedCast"sv, callback, std::move(a_sceneID), ordered);
 			}
 		}
 	};
@@ -1925,10 +2272,28 @@ namespace
 	void OpenScenePicker(std::monostate, std::int32_t a_targetID)
 	{
 		g_pickerMode = PickerMode::kStart;
-		g_pickerTarget = static_cast<std::uint32_t>(a_targetID);
-		// Look for furniture first (on the main thread: it walks the loaded
-		// cells), then open the picker.
-		F4SE::GetTaskInterface()->AddTask([]() {
+		g_startStep = StartStep::kActors;
+		// Look for actors and furniture first (on the main thread: it walks
+		// the loaded cells), then open the picker.
+		F4SE::GetTaskInterface()->AddTask([a_targetID]() {
+			{
+				auto candidates = FindCandidates(g_settings.actorRadius);
+				std::scoped_lock lock(g_castLock);
+				g_cast.clear();
+				g_placeChoice = -1;
+				const auto target = static_cast<std::uint32_t>(a_targetID);
+				if (target != 0 && std::ranges::any_of(candidates, [&](const Candidate& c) { return c.id == target; })) {
+					g_cast.push_back(target);  // the one the hotkey found: already picked
+				}
+				g_candidates = std::move(candidates);
+				g_maxCast = 1;
+				for (std::size_t count = 2; count <= 8; ++count) {
+					if (!SceneRegistry::List(count).empty()) {
+						g_maxCast = count;
+					}
+				}
+				REX::INFO("Picker: {} actor(s) near, {} picked, scenes for up to {}", g_candidates.size(), g_cast.size(), g_maxCast);
+			}
 			std::vector<Furniture::Found> found;
 			if (const auto player = RE::PlayerCharacter::GetSingleton()) {
 				Furniture::Reload();
@@ -1962,12 +2327,18 @@ namespace
 		return actor ? static_cast<std::int32_t>(actor->GetFormID()) : 0;
 	}
 
-	// Form ID of the actor in the given role (0 or 1) of the scene the
-	// player is in, or 0 if the player isn't in a scene / the role is empty.
+	// Form ID of the actor in the given role of the scene the player is in,
+	// or 0 if the player isn't in a scene / there's no such role.
 	std::int32_t GetPlayerSceneActorID(std::monostate, std::int32_t a_role)
 	{
-		const auto scene = GetPlayerScene();
-		return static_cast<std::int32_t>(a_role == 0 ? scene.role0 : a_role == 1 ? scene.role1 : 0);
+		const auto ids = GetPlayerScene().ActorIDs();
+		return a_role >= 0 && static_cast<std::size_t>(a_role) < ids.size() ? static_cast<std::int32_t>(ids[a_role]) : 0;
+	}
+
+	// How many actors the scene the player is in has (0 = none).
+	std::int32_t GetPlayerSceneActorCount(std::monostate)
+	{
+		return static_cast<std::int32_t>(GetPlayerScene().ActorIDs().size());
 	}
 
 	// ---- Hotkey ----
@@ -2227,6 +2598,11 @@ namespace
 		a_vm->BindNativeMethod(SCRIPT_NAME, "LockPlayerControls"sv, LockPlayerControls);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "UnlockPlayerControls"sv, UnlockPlayerControls);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "GetPlayerSceneActorID"sv, GetPlayerSceneActorID);
+		a_vm->BindNativeMethod(SCRIPT_NAME, "GetPlayerSceneActorCount"sv, GetPlayerSceneActorCount);
+		a_vm->BindNativeMethod(SCRIPT_NAME, "IgnoreGroupCollision"sv, IgnoreGroupCollision);
+		a_vm->BindNativeMethod(SCRIPT_NAME, "PlaceGroup"sv, PlaceGroup);
+		a_vm->BindNativeMethod(SCRIPT_NAME, "PlayGroupIdles"sv, PlayGroupIdles);
+		a_vm->BindNativeMethod(SCRIPT_NAME, "StopGroup"sv, StopGroup);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "RegisterForSceneEvents"sv, RegisterForSceneEvents);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "UnregisterForSceneEvents"sv, UnregisterForSceneEvents);
 		REX::INFO("Papyrus functions bound");

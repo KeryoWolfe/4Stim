@@ -60,6 +60,17 @@ Function IgnorePairCollision(Actor akActor0, Actor akActor1) Global Native
 ; Restores the actor's original collision filter saved by IgnorePairCollision.
 Function RestoreCollision(Actor akActor) Global Native
 
+; ---- Group scenes (any number of actors, in role order) ----
+; The pair natives above for a whole cast. FourStimScene.BeginGroupScene and
+; EndGroupScene wrap them.
+Function IgnoreGroupCollision(Actor[] akActors) Global Native
+; On the furniture picked for the scene, else on the player's spot (or the
+; first actor's).
+Function PlaceGroup(Actor[] akActors) Global Native
+; Starts every role of asSceneID on the same frame.
+Function PlayGroupIdles(Actor[] akActors, String asSceneID) Global Native
+Function StopGroup(Actor[] akActors) Global Native
+
 ; ---- Camera and HUD ----
 
 ; Notes whether the player is in first person, so a scene can force third
@@ -138,6 +149,9 @@ Function UnlockPlayerControls() Global Native
 ; Form ID of the actor in role 0 or 1 of the focused scene, or 0 if there
 ; isn't one (or the role is empty). Use Game.GetForm(id).
 int Function GetPlayerSceneActorID(int aiRole) Global Native
+
+; How many actors the scene the player is in has (0 = not in a scene).
+int Function GetPlayerSceneActorCount() Global Native
 
 ; ---- Scene events, for other mods ----
 

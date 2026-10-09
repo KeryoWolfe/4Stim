@@ -21,6 +21,5 @@
 - NPC greetings
 - Race filtering
 - Claim registry
-- Group scenes
 - First-person camera
 - A sequence-end event for other mods

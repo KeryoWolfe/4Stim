@@ -22,6 +22,7 @@ namespace FourStim
 		std::string   sceneID;
 		int           speed = 0;  // index into the scene's speeds
 		std::string   furniture;  // furniture type the scene is on, "" = none
+		std::vector<std::uint32_t> more;  // roles 2 and up (group scenes)
 
 		[[nodiscard]] bool Active() const { return role0 != 0; }
 
@@ -34,6 +35,7 @@ namespace FourStim
 			if (role1) {
 				ids.push_back(role1);
 			}
+			ids.insert(ids.end(), more.begin(), more.end());
 			return ids;
 		}
 	};
