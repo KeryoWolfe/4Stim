@@ -123,11 +123,14 @@ namespace Physics
 				case 3:
 					REX::INFO("Physics: {:08X} now uses \"{}\" (spelling {})", _actor, _to, code);
 					break;
+				case 4:
+					REX::INFO("Physics: {:08X} now uses \"{}\" (on its skin's body addon)", _actor, _to);
+					break;
 				case 0:
 					REX::WARN("Physics: {:08X} not swapped: FSMP has no active physics on it (not loaded, or beyond maxActiveActors in FSMP's configs.xml)", _actor);
 					break;
 				case -1:
-					REX::WARN("Physics: {:08X} not swapped: it has physics, but none using \"{}\" (wrong file for this body?)", _actor, _from);
+					REX::WARN("Physics: {:08X} not swapped: it has physics, but none using \"{}\" (Papyrus.0.log lists the files its skin uses)", _actor, _from);
 					break;
 				case -2:
 					REX::WARN("Physics: {:08X} not swapped: actor not found", _actor);
@@ -160,8 +163,23 @@ namespace Physics
 				return Lower(a_path).starts_with("meshes\\") ? a_path.substr(7) : a_path;
 			};
 			const auto fromBare = bare(a_from), toBare = bare(a_to);
+			// The actor's skin (its own, else its race's): its addons are the
+			// body meshes the physics file is attached to.
+			std::vector<std::int32_t> addons;
+			const auto npc = a_actor->GetNPC();
+			RE::TESObjectARMO* skin = npc ? npc->formSkin : nullptr;
+			if (!skin && a_actor->race) {
+				skin = a_actor->race->formSkin;
+			}
+			if (skin) {
+				for (const auto& entry : skin->modelArray) {
+					if (entry.armorAddon) {
+						addons.push_back(static_cast<std::int32_t>(entry.armorAddon->GetFormID()));
+					}
+				}
+			}
 			const bool ok = vm->DispatchStaticCall("FourStimPhysics"sv, "Swap"sv, callback, static_cast<std::int32_t>(a_actor->GetFormID()),
-				a_from, a_to, "Meshes\\" + fromBare, "Meshes\\" + toBare, fromBare, toBare);
+				a_from, a_to, "Meshes\\" + fromBare, "Meshes\\" + toBare, fromBare, toBare, addons);
 			REX::INFO("Physics: {:08X} \"{}\" -> \"{}\" (dispatch={})", a_actor->GetFormID(), a_from, a_to, ok);
 			if (!ok) {
 				REX::WARN("Physics: couldn't call FourStimPhysics.Swap: is FourStimPhysics.pex installed (and FO4 Faster HDT-SMP)?");
