@@ -728,6 +728,11 @@ namespace
 
 		const auto ui = RE::UI::GetSingleton();
 		const bool paused = ui && ui->menuMode > 0;
+		static bool wasPaused = false;
+		if (paused != wasPaused) {
+			wasPaused = paused;
+			REX::INFO("Scene clock: {} (menu mode {})", paused ? "paused" : "running", ui ? static_cast<int>(ui->menuMode) : -1);
+		}
 		if (!paused) {
 			// AdvanceAutoplay and HandleClimax can't add or remove running
 			// scenes, so the list is safe to walk while they run.

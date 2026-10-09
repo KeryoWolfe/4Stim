@@ -110,6 +110,9 @@ namespace Actions
 				const auto ptr = std::make_shared<const Type>(std::move(type));
 				a_out[id] = ptr;
 				for (const auto& alias : LowerList(entry, "aliases")) {
+					if (alias == id) {
+						continue;
+					}
 					const auto taken = a_out.find(alias);
 					if (taken != a_out.end() && taken->second->id == alias) {
 						REX::WARN("Actions: {}: alias \"{}\" of \"{}\" is another action's id, ignored", file, alias, id);

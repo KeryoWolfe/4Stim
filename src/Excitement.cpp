@@ -22,6 +22,7 @@ namespace Excitement
 			int   climaxes = 0;
 			bool  stalled = false;
 			bool  climaxing = false;  // reported by Tick, waiting for Climaxed
+			int   logged = 0;         // last quarter logged
 		};
 
 		Config                                  g_config;
@@ -85,6 +86,8 @@ namespace Excitement
 			}
 			state.base = base * speedMod;
 			state.ceiling = std::min(ceiling, 100.0F);
+			REX::INFO("Excitement: {:08X} in \"{}\" speed {}: +{:.2f}/s up to {:.0f} (now {:.1f})",
+				a_ids[role], a_scene.id, a_speed + 1, Rate(state), state.ceiling, state.excitement);
 		}
 	}
 
@@ -123,6 +126,11 @@ namespace Excitement
 			} else if (const float rate = Rate(s); rate > 0.0F) {
 				s.excitement = std::min(s.excitement + rate * a_seconds, s.ceiling);
 				s.cooldown = g_config.decayGrace;
+			}
+			// A log line every 25 points, to follow it without the HUD.
+			if (const int step = static_cast<int>(s.excitement) / 25; step != s.logged) {
+				s.logged = step;
+				REX::INFO("Excitement: {:08X} at {:.0f}", id, s.excitement);
 			}
 			if (s.excitement >= 100.0F) {
 				s.excitement = 100.0F;

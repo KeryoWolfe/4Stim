@@ -8,6 +8,10 @@
 
 - **Scene events' actor arrays.** Actors passed from native code to Papyrus arrived as a "type mismatch" in the physics swap (fixed there by passing form IDs). The scene events (`FourStim_OnSceneStart` and the rest) pass `Actor[]` the same way; check them with a listening script, and pass form IDs if they're broken too.
 
+- **No idle chatter during scenes.** NPCs in a scene still talk: idle lines, greetings and comments to each other. Silence scene actors (and keep bystanders from greeting them) for the scene's length; `SuppressInteraction` only blocks the player's Activate / Talk.
+- **No animation markers mid-scene.** NPCs in a scene can be pulled off by their AI packages to use furniture or idle markers (sandboxing), snapping out of the scene. Keep their AI from picking markers or furniture until the scene ends.
+- **Lock actors in place.** Scene actors get pushed around by other NPCs walking into them and slide on uneven terrain. Hold each actor at its scene position and heading for the whole scene (no collision pushes, no slope sliding, no gravity drift).
+
 - **Penis position adjustments per animation.** With rigid SMP genitals (physics swaps), some animations need the penis angle or offset adjusted per scene or role so it lines up with the partner. Pinned for later.
 
 ## Converter rebuild

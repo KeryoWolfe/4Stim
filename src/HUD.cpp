@@ -570,13 +570,15 @@ namespace HUD
 
 			// Excitement changes all the time: the meters are refreshed ten
 			// times a second, when a value moved.
-			void UpdateMeters(float a_timeDelta)
+			void UpdateMeters(float)
 			{
-				_meterClock += a_timeDelta;
-				if (_meterClock < 0.1F) {
+				// Wall-clock time: the frame delta the game passes a HUD-depth
+				// menu isn't reliable.
+				const auto now = std::chrono::steady_clock::now();
+				if (now - _meterLast < std::chrono::milliseconds(100)) {
 					return;
 				}
-				_meterClock = 0.0F;
+				_meterLast = now;
 				const auto focused = FourStim::GetFocusedScene();
 				if (!focused.Active()) {
 					_lastMeters.clear();
@@ -595,10 +597,15 @@ namespace HUD
 				for (const auto v : values) {
 					list.PushBack(GValue(v));
 				}
-				InvokeOptional("SetMeters", &list, 1);
+				const bool ok = InvokeOptional("SetMeters", &list, 1);
+				if (!_metersLogged) {
+					_metersLogged = true;
+					REX::INFO("HUD: meters {} ({} value(s), first {:.2f})", ok ? "updating" : "NOT updating: SetMeters failed", values.size(), values.empty() ? -1.0 : values[0]);
+				}
 			}
 
-			float                                 _meterClock = 0.0F;
+			std::chrono::steady_clock::time_point _meterLast{};
+			bool                                  _metersLogged = false;
 			std::vector<double>                   _lastMeters;
 			bool                                  _loaded = false;
 			bool                                  _paused = false;
