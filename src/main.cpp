@@ -3790,6 +3790,8 @@ namespace
 	// frame during normal play. Registering a BSInputEventUser with
 	// MenuControls::RegisterHandler succeeded but never received any input.
 
+	bool g_shiftDown = false;  // main thread (the input hook)
+
 	void HandleButton(const RE::ButtonEvent* a_event)
 	{
 		// Hold-to-scroll tracking for the picker: arrow keys and d-pad up/down.
@@ -3821,6 +3823,15 @@ namespace
 													ui->menuMode == 0 && !ui->GetMenuOpen("Console")) {
 			if (HUD::HandleInput(a_event)) {
 				return;
+			}
+		}
+
+		// Shift (either one), held or not, for Shift + the hotkey. Keyboard
+		// codes are Windows virtual-key codes: 0x10 Shift, 0xA0 / 0xA1 left / right.
+		if (a_event->device.get() == RE::INPUT_DEVICE::kKeyboard) {
+			const auto code = static_cast<std::uint32_t>(a_event->idCode);
+			if (code == 0x10 || code == 0xA0 || code == 0xA1) {
+				g_shiftDown = a_event->QPressed();
 			}
 		}
 
@@ -3875,7 +3886,7 @@ namespace
 		// without you, whether or not you're in one.
 		{
 			const auto code = static_cast<std::uint32_t>(a_event->idCode);
-			const bool shift = (::GetAsyncKeyState(VK_SHIFT) & 0x8000) != 0;
+			const bool shift = g_shiftDown;
 			if (g_vm && (g_settings.npcSceneKey != 0 ? code == g_settings.npcSceneKey : (code == g_settings.hotkey && shift))) {
 				REX::INFO("NPC scene key pressed");
 				RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
