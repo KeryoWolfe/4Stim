@@ -36,6 +36,7 @@ package
 		public function SetNavigation(a_entries:Array):void { Menu_mc.SetNavigation(a_entries); }
 		public function SetUtility(a_entries:Array):void { Menu_mc.SetUtility(a_entries); }
 		public function SetFocus(a_focused:Boolean):void { Menu_mc.SetFocus(a_focused); }
+		public function SetAlign(a_data:Object):void { Menu_mc.SetAlign(a_data); }
 		public function SetPaused(a_paused:Boolean):void { Menu_mc.SetPaused(a_paused); }
 		public function PlayClimax(a_strength:Number):void { Menu_mc.PlayClimax(a_strength); }
 		public function ProcessUserEvent(a_name:String, a_down:Boolean):Boolean { return Menu_mc.ProcessUserEvent(a_name, a_down); }

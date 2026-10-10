@@ -3,6 +3,8 @@
 #include <string>
 #include <vector>
 
+#include "Alignment.h"
+
 namespace SceneRegistry
 {
 	struct Scene;
@@ -65,6 +67,14 @@ namespace FourStim
 	// Whether the focused scene's actors (in their roles) may play a_scene:
 	// its roles' sexes, unless bMatchSex is off.
 	bool FocusedCanPlay(const SceneRegistry::Scene& a_scene);
+
+	// Alignment of the focused scene (docs/ALIGNMENT.md), for the HUD's Align
+	// tab: role a_role's offset in the scene it's in (for a transition, the
+	// scene it goes to) and that scene's id. False if there's no such role.
+	bool GetFocusedAlignment(std::size_t a_role, Alignment::Offset& a_offset, std::string& a_sceneID);
+
+	// Sets it, saves it, and moves the actor there now. Main thread.
+	void SetFocusedAlignment(std::size_t a_role, const Alignment::Offset& a_offset);
 
 	// Form IDs to actors, keeping role order. An actor that can't be found
 	// stays in its slot as nullptr (None in Papyrus).

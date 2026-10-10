@@ -51,15 +51,15 @@ Anything goes, but these are new and the least tested:
 - **Several scenes at once,** with and without you in them, including starting one with `Shift` + `N` while you're in your own.
 - **Saving and loading mid-scene.** Scenes running when you save should start again a few seconds after the save loads (`bResumeScenes`).
 - **Undressing by hand:** Undress / Dress for each actor in the HUD's Utility tab.
+- **The Align tab** in the HUD: move, turn and resize each actor in a scene (docs/ALIGNMENT.md). Does it stay fixed the next time that scene plays? Does anyone get pushed off their spot during a scene?
 - **Animated undressing:** from Standing apart (MF), the "take off her top / bottoms / gloves / hat / boots" options. And after a scene, NPCs dressing a body part at a time with redress animations.
 - **Your body and outfit mods.** Anything that doesn't line up, clips badly or doesn't undress.
 
 ## Known problems
 
 - NPCs in scenes still talk (idle chatter, greetings).
-- Actors can get pushed by passers-by or slide on slopes.
 - Picking a transition can hitch for a moment the first time.
-- No sounds or facial expressions yet, and no alignment menu (positions can't be adjusted in game).
+- No sounds or facial expressions yet.
 - Strap-ons aren't in yet, so roles that need a penis only go to men.
 
 ## Reporting a problem

@@ -10,6 +10,7 @@
 #include "Actions.h"
 #include "Excitement.h"
 #include "Undress.h"
+#include "Alignment.h"
 #include "Bridge.h"
 #include "HUD.h"
 #include "SceneEvents.h"
@@ -531,6 +532,8 @@ namespace
 		RE::NiPoint3                          center{};
 		float                                 heading = 0.0F;  // radians
 		std::chrono::steady_clock::time_point lastRelock{};
+		std::vector<float>                    baseScale;     // per role: the actor's own scale when the scene started
+		std::vector<float>                    appliedScale;  // per role: the scale the alignment last set (0 = none)
 
 		// Auto mode (see "Auto mode" below).
 		struct Auto
@@ -588,8 +591,9 @@ namespace
 	std::mutex                   g_pendingResumeLock;
 	std::optional<PendingResume> g_pendingResume;
 
-	void LockScene(const ActiveScene& a_active);
+	void LockScene(ActiveScene& a_active);
 	void UnlockActors(const std::vector<std::uint32_t>& a_ids);
+	void RestoreScales(const ActiveScene& a_active);
 	void ArmAutoplay(ActiveScene& a_scene);
 	void StartAutoMode(ActiveScene& a_active);
 	void StopAutoMode(ActiveScene& a_active);
@@ -619,6 +623,7 @@ namespace
 				std::ranges::copy_if(a_scene.actors, std::back_inserter(left), [&](std::uint32_t id) { return std::ranges::find(a_actors, id) == a_actors.end(); });
 				Excitement::Leave(left);
 				UnlockActors(left);
+				RestoreScales(a_scene);
 				for (const auto id : left) {
 					Undress::Redress(id, false, true);
 				}
@@ -653,6 +658,11 @@ namespace
 		if (const auto first = RE::TESForm::GetFormByID<RE::Actor>(a_actors.front())) {
 			scene.center = first->data.location;
 			scene.heading = first->data.angle.z;
+		}
+		for (const auto id : a_actors) {
+			const auto actor = RE::TESForm::GetFormByID<RE::Actor>(id);
+			scene.baseScale.push_back(actor && actor->refScale ? actor->refScale / 100.0F : 1.0F);
+			scene.appliedScale.push_back(0.0F);
 		}
 		g_activeScenes.push_back(std::move(scene));
 		LockScene(g_activeScenes.back());
@@ -707,6 +717,7 @@ namespace
 		const auto ended = std::move(*it);
 		g_activeScenes.erase(it);
 		UnlockActors(ended.actors);
+		RestoreScales(ended);
 		Excitement::Leave(ended.actors);
 		for (const auto id : ended.actors) {
 			Undress::Redress(id, false, true);
@@ -734,6 +745,7 @@ namespace
 		RefreshExcitement(*scene);
 		if (const auto entered = moved ? SceneRegistry::Find(a_sceneID) : nullptr) {
 			Undress::SceneEntered(scene->actors, *entered, false);
+			LockScene(*scene);  // this scene's alignment
 		}
 		if (moved) {
 			if (scene->sequence) {
@@ -814,6 +826,7 @@ namespace
 		RefreshExcitement(a_active);
 		if (_stricmp(previous.c_str(), scene->id.c_str()) != 0) {
 			Undress::SceneEntered(a_active.actors, *scene, false);
+			LockScene(a_active);  // this scene's alignment
 		}
 
 		auto focused = GetPlayerScene();
@@ -1208,21 +1221,73 @@ namespace
 	// frame, whatever pushes on it, until StopTranslation. The scene guard
 	// checks four times a second and locks again if anyone got off the spot.
 	// The Alignment menu's offsets will be added to each actor's spot here.
-	void LockScene(const ActiveScene& a_active)
+	template <class... Args>
+	bool CallActorMethod(RE::Actor* a_actor, std::string_view a_scriptName, std::string_view a_funcName, Args... a_args);
+
+	// Where role a_role of a_active is held: the scene's spot plus that
+	// role's alignment for the scene (for a transition, the scene it goes
+	// to, so nothing jumps when it arrives).
+	struct ActorSpot
 	{
-		if (!g_lockScenes || !g_vm) {
+		RE::NiPoint3 position;
+		float        heading = 0.0F;  // radians
+		float        scale = 1.0F;    // times the actor's own scale
+	};
+
+	ActorSpot SpotOf(const ActiveScene& a_active, std::size_t a_role)
+	{
+		const auto scene = SceneRegistry::Find(a_active.sceneID);
+		const auto id = scene ? SceneRegistry::Settled(scene)->id : a_active.sceneID;
+		const auto o = Alignment::Get(id, a_role);
+		const float c = std::cos(a_active.heading), s = std::sin(a_active.heading);
+		ActorSpot spot;
+		// Facing heading h, forward is (sin h, cos h) and right is (cos h, -sin h).
+		spot.position = { a_active.center.x + o.x * c + o.y * s, a_active.center.y - o.x * s + o.y * c, a_active.center.z + o.z };
+		spot.heading = a_active.heading + o.rot * PI_F / 180.0F;
+		spot.scale = o.scale;
+		return spot;
+	}
+
+	void LockScene(ActiveScene& a_active)
+	{
+		if (!g_vm) {
 			return;
 		}
-		const float headingDeg = a_active.heading * 180.0F / PI_F;
-		for (const auto id : a_active.actors) {
+		for (std::size_t role = 0; role < a_active.actors.size(); ++role) {
+			const auto id = a_active.actors[role];
 			const auto actor = RE::TESForm::GetFormByID<RE::Actor>(id);
 			if (!actor) {
 				continue;
 			}
-			actor->SetHeading(a_active.heading);  // face the scene's way first; the translation then holds it
+			const auto spot = SpotOf(a_active, role);
+			// Alignment scale, only when it changes.
+			if (role < a_active.baseScale.size()) {
+				const float wanted = a_active.baseScale[role] * spot.scale;
+				const float current = a_active.appliedScale[role] > 0.0F ? a_active.appliedScale[role] : a_active.baseScale[role];
+				if (std::fabs(wanted - current) > 0.001F) {
+					CallActorMethod(actor, "ObjectReference"sv, "SetScale"sv, wanted);
+					a_active.appliedScale[role] = wanted;
+				}
+			}
+			if (!g_lockScenes) {
+				continue;
+			}
+			actor->SetHeading(spot.heading);  // face the right way first; the translation then holds it
 			RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
-			g_vm->DispatchStaticCall("FourStimScene"sv, "LockInPlace"sv, callback, static_cast<std::int32_t>(id), a_active.center.x, a_active.center.y,
-				a_active.center.z, headingDeg);
+			g_vm->DispatchStaticCall("FourStimScene"sv, "LockInPlace"sv, callback, static_cast<std::int32_t>(id), spot.position.x, spot.position.y,
+				spot.position.z, spot.heading * 180.0F / PI_F);
+		}
+	}
+
+	// Actors leaving a scene: their own scale back.
+	void RestoreScales(const ActiveScene& a_active)
+	{
+		for (std::size_t role = 0; role < a_active.actors.size() && role < a_active.appliedScale.size(); ++role) {
+			if (a_active.appliedScale[role] > 0.0F) {
+				if (const auto actor = RE::TESForm::GetFormByID<RE::Actor>(a_active.actors[role])) {
+					CallActorMethod(actor, "ObjectReference"sv, "SetScale"sv, a_active.baseScale[role]);
+				}
+			}
 		}
 	}
 
@@ -1234,6 +1299,18 @@ namespace
 		for (const auto id : a_ids) {
 			RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
 			g_vm->DispatchStaticCall("FourStimScene"sv, "Unlock"sv, callback, static_cast<std::int32_t>(id));
+			// Back to their routine right away: end the do-nothing package the
+			// scene gave them (LeaveFurniture) and the scene guard's hold on
+			// their idles (packageIdleTimer, renewed to 30 s every check),
+			// which left NPCs standing still for a long while after a scene.
+			const auto actor = RE::TESForm::GetFormByID<RE::Actor>(id);
+			if (actor && !IsPlayer(actor)) {
+				actor->EndInterruptPackage(false);
+				const auto process = actor->currentProcess;
+				if (const auto data = process ? process->middleHigh : nullptr) {
+					data->packageIdleTimer = 0.0F;
+				}
+			}
 		}
 	}
 
@@ -1302,8 +1379,10 @@ namespace
 				data->packageIdleTimer = 30.0F;  // no package idle for a while; renewed every check
 				// Scene lock watchdog: moved off the spot (or turned) anyway?
 				if (g_lockScenes && now - active.lastRelock > std::chrono::seconds(1)) {
-					const float drift = actor->data.location.GetDistance(active.center);
-					float       turn = std::fabs(actor->data.angle.z - active.heading);
+					const auto  role = static_cast<std::size_t>(std::ranges::find(active.actors, id) - active.actors.begin());
+					const auto  spot = SpotOf(active, role);
+					const float drift = actor->data.location.GetDistance(spot.position);
+					float       turn = std::fmod(std::fabs(actor->data.angle.z - spot.heading), 2.0F * PI_F);
 					turn = std::fmin(turn, 2.0F * PI_F - turn);
 					if (drift > 4.0F || turn > 0.06F) {
 						REX::INFO("Scene lock: {:08X} in \"{}\" was {:.1f} units / {:.1f} deg off its spot, locking it again", id, active.sceneID, drift,
@@ -2435,6 +2514,7 @@ namespace
 	std::int32_t ReloadScenes(std::monostate)
 	{
 		const auto count = SceneRegistry::Reload();
+		Alignment::Reload();
 		HUD::LoadConfig();  // theme and Utility entries too, for HUD authors
 		return count;
 	}
@@ -4200,7 +4280,7 @@ namespace
 
 	constexpr std::uint32_t SAVE_UID = 'FSTM';
 	constexpr std::uint32_t SCENES_RECORD = 'SCNS';
-	constexpr std::uint32_t SCENES_VERSION = 1;
+	constexpr std::uint32_t SCENES_VERSION = 2;  // 2: each actor's own scale (alignment scales them)
 
 	struct SavedScene
 	{
@@ -4212,6 +4292,7 @@ namespace
 		bool                                    autoMode = false;
 		std::vector<float>                      excitement;  // per actor
 		std::vector<std::vector<std::uint32_t>> stripped;    // per actor
+		std::vector<float>                      baseScale;   // per actor: their own scale (0 = unknown, version 1)
 	};
 	std::mutex              g_savedLock;
 	std::vector<SavedScene> g_loadedScenes;  // read from the save being loaded
@@ -4243,8 +4324,10 @@ namespace
 		a_intfc->WriteRecordData(count);
 		for (const auto& active : g_activeScenes) {
 			a_intfc->WriteRecordData(static_cast<std::uint32_t>(active.actors.size()));
-			for (const auto id : active.actors) {
+			for (std::size_t role = 0; role < active.actors.size(); ++role) {
+				const auto id = active.actors[role];
 				a_intfc->WriteRecordData(id);
+				a_intfc->WriteRecordData(role < active.baseScale.size() ? active.baseScale[role] : 1.0F);
 				a_intfc->WriteRecordData(std::max(Excitement::Get(id), 0.0F));
 				const auto items = Undress::Stripped(id);
 				a_intfc->WriteRecordData(static_cast<std::uint32_t>(items.size()));
@@ -4269,7 +4352,7 @@ namespace
 		std::uint32_t type = 0, version = 0, length = 0;
 		auto resolve = [&](std::uint32_t a_id) { return a_intfc->ResolveFormID(a_id).value_or(0); };
 		while (a_intfc->GetNextRecordInfo(type, version, length)) {
-			if (type != SCENES_RECORD || version != SCENES_VERSION) {
+			if (type != SCENES_RECORD || version < 1 || version > SCENES_VERSION) {
 				continue;
 			}
 			std::uint32_t count = 0;
@@ -4281,8 +4364,11 @@ namespace
 				bool ok = actors > 0 && actors <= 16;
 				for (std::uint32_t a = 0; ok && a < actors; ++a) {
 					std::uint32_t id = 0, items = 0;
-					float         excitement = 0.0F;
+					float         excitement = 0.0F, baseScale = 0.0F;
 					a_intfc->ReadRecordData(id);
+					if (version >= 2) {
+						a_intfc->ReadRecordData(baseScale);
+					}
 					a_intfc->ReadRecordData(excitement);
 					a_intfc->ReadRecordData(items);
 					std::vector<std::uint32_t> stripped;
@@ -4296,6 +4382,7 @@ namespace
 					saved.actors.push_back(resolve(id));  // 0 if its plugin is gone
 					saved.excitement.push_back(excitement);
 					saved.stripped.push_back(std::move(stripped));
+					saved.baseScale.push_back(baseScale);
 				}
 				std::int32_t speed = 0;
 				std::uint32_t furniture = 0;
@@ -4339,6 +4426,9 @@ namespace
 			if (!actor) {
 				continue;
 			}
+			if (a_saved.baseScale[i] > 0.0F) {
+				CallActorMethod(actor, "ObjectReference"sv, "SetScale"sv, a_saved.baseScale[i]);  // undo the alignment's size
+			}
 			if (!a_saved.stripped[i].empty()) {
 				Undress::NoteStripped(id, a_saved.stripped[i]);
 				Undress::Redress(id, true);
@@ -4371,6 +4461,11 @@ namespace
 		for (std::size_t i = 0; i < a_saved.actors.size(); ++i) {
 			if (!a_saved.stripped[i].empty()) {
 				Undress::NoteStripped(a_saved.actors[i], a_saved.stripped[i]);
+			}
+			// Their own size back first: the scene measures it again when it starts.
+			const auto actor = RE::TESForm::GetFormByID<RE::Actor>(a_saved.actors[i]);
+			if (actor && a_saved.baseScale[i] > 0.0F) {
+				CallActorMethod(actor, "ObjectReference"sv, "SetScale"sv, a_saved.baseScale[i]);
 			}
 		}
 		{
@@ -4538,6 +4633,34 @@ namespace FourStim
 	{
 		const auto focused = GetPlayerScene();
 		return SexesFit(a_scene, focused.ActorIDs()) && SceneFitsFurniture(a_scene, focused.furniture);
+	}
+
+	bool GetFocusedAlignment(std::size_t a_role, Alignment::Offset& a_offset, std::string& a_sceneID)
+	{
+		const auto focused = GetPlayerScene();
+		const auto active = focused.Active() ? FindActiveScene(focused.role0) : nullptr;
+		if (!active || a_role >= active->actors.size()) {
+			return false;
+		}
+		const auto scene = SceneRegistry::Find(active->sceneID);
+		a_sceneID = scene ? SceneRegistry::Settled(scene)->id : active->sceneID;
+		a_offset = Alignment::Get(a_sceneID, a_role);
+		return true;
+	}
+
+	void SetFocusedAlignment(std::size_t a_role, const Alignment::Offset& a_offset)
+	{
+		Alignment::Offset old;
+		std::string       sceneID;
+		if (!GetFocusedAlignment(a_role, old, sceneID)) {
+			return;
+		}
+		Alignment::Set(sceneID, a_role, a_offset);
+		REX::INFO("Alignment: \"{}\" role {}: x {:.1f} y {:.1f} z {:.1f} rot {:.1f} scale {:.2f}", sceneID, a_role, a_offset.x, a_offset.y, a_offset.z,
+			a_offset.rot, a_offset.scale);
+		if (const auto active = FindActiveScene(GetPlayerScene().role0)) {
+			LockScene(*active);
+		}
 	}
 
 	std::vector<RE::Actor*> ResolveActors(const std::vector<std::uint32_t>& a_ids)

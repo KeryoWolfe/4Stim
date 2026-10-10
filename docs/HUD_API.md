@@ -250,6 +250,7 @@ Every function is on `Menu_mc`. All of them are required except where marked.
 | `SetPaused(paused:Boolean):void` | A game menu opened or closed over the HUD. |
 | `ProcessUserEvent(name:String, down:Boolean):Boolean` | Input while focused: `down` is `true` on press and `false` on release. Return `true` if you used it. Holding `Up` or `Down` repeats the press, so you don't need your own repeat timer. The names and their keys are below. |
 | `SetMeters(values:Array):void` | *Optional.* Faster update of just the actor meters, one `Number` per role, without resending names. Sent up to ten times a second while excitement changes; a HUD without it only gets the values with `SetActors`. |
+| `SetAlign(data:Object):void` | *Optional.* The Align tab's data (ALIGNMENT.md): `{ available, role, roleCount, name, x, y, z, rot, scale, step }`: the role being adjusted (0-based) and its name ("You" for the player), its offset in this scene, and the step size. Sent with the scene data and after every alignment call. |
 | `PlayClimax(strength:Number):void` | *Optional.* An actor in the focused scene climaxed: play a flash. `strength` is `0.0`–`1.0` (`fClimaxFlash`). The default HUD fades a faint white glow in along the screen's edges only and out over about 1.5 s, behind its panels. |
 
 Input names while the HUD is focused:
@@ -274,11 +275,13 @@ Input names while the HUD is focused:
 | `OpenSearch()` | Open the scene picker, filtered to this scene's actors. |
 | `ReleaseFocus()` | Give input back to the game (the plugin answers with `SetFocus(false)`). |
 | `Log(message:String)` | Write a line to `4Stim.log`, tagged with your movie. |
+| `AlignAdjust(field:String, direction:int)` | One step of the role being adjusted: `field` is `"x"`, `"y"`, `"z"`, `"rot"` or `"scale"`, `direction` `+1` / `-1`. Saved and applied at once; answered with `SetAlign`. |
+| `AlignActor(direction:int)` | The next (`+1`) or previous (`-1`) role to adjust. |
+| `AlignStep(direction:int)` | The next or previous step size (0.5, 1, 2, 5, 10). |
+| `AlignReset()` | The role being adjusted back to no offset. |
+| `SetHorizontalRepeat(on:Boolean)` | While `true`, holding `Left` / `Right` repeats them like `Up` / `Down` (the default HUD turns it on while an Align value is selected). |
 
-**Planned, not in API version 1:** the Align tab (moving actors and the scene
-spot), and the excitement and orgasm meters. A custom HUD can show these tabs
-and parts, but the plugin won't send data for them yet. These will be added
-without breaking version 1 HUDs.
+The Align tab and the actor meters were added to version 1 as optional functions (`SetAlign`, `SetMeters`): a HUD without them still works, it just doesn't show them.
 
 ### Rules a replacement HUD must follow
 

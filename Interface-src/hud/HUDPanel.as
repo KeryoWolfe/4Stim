@@ -46,6 +46,7 @@ package hud
 		private var _scene:Object = { id: "", name: "", actorCount: 0, tags: [] };
 		private var _navigation:Array = [];
 		private var _utility:Array = [];
+		private var _align:Object = null;  // SetAlign's data
 		private var _speed:int = 0;
 		private var _speedCount:int = 0;
 		private var _focused:Boolean = false;
@@ -144,6 +145,16 @@ package hud
 			}
 		}
 
+		// Optional (HUD_API.md): the Align tab's data. { available, role,
+		// roleCount, name, x, y, z, rot, scale, step }.
+		public function SetAlign(a_data:Object):void
+		{
+			_align = a_data;
+			if (_tabs.selectedID == "align") {
+				showTab(true);
+			}
+		}
+
 		public function SetFocus(a_focused:Boolean):void
 		{
 			_focused = a_focused;
@@ -179,12 +190,30 @@ package hud
 			if (!a_down) {
 				return a_name == "Up" || a_name == "Down" || a_name == "Left" || a_name == "Right" || a_name == "Accept" || a_name == "Cancel";
 			}
+			// Align tab: Left / Right change the selected row's value.
+			var row:Object = _list.selectedEntry;
+			if (_tabs.selectedID == "align" && row != null && (a_name == "Left" || a_name == "Right")) {
+				var dir:int = a_name == "Left" ? -1 : 1;
+				switch (String(row.kind)) {
+					case "alignValue":
+						code("AlignAdjust", String(row.field), dir);
+						return true;
+					case "alignActor":
+						code("AlignActor", dir);
+						return true;
+					case "alignStep":
+						code("AlignStep", dir);
+						return true;
+				}
+			}
 			switch (a_name) {
 				case "Up":
 					_list.move(-1);
+					updateRepeat();
 					return true;
 				case "Down":
 					_list.move(1);
+					updateRepeat();
 					return true;
 				case "Left":
 				case "PrevTab":
@@ -267,6 +296,16 @@ package hud
 					code("OpenSearch");
 					break;
 				case "disabled":
+				case "alignValue":
+					break;
+				case "alignActor":
+					code("AlignActor", 1);
+					break;
+				case "alignStep":
+					code("AlignStep", 1);
+					break;
+				case "alignReset":
+					code("AlignReset");
 					break;
 				default:  // Utility entries have no kind
 					code("RunUtility", String(a_entry.id));
@@ -292,9 +331,46 @@ package hud
 					break;
 				case "align":
 					_list.setTitle("Align");
-					_list.setEntries([{ id: "align", label: "Alignment: coming soon", icon: "", kind: "disabled" }], "", false);
+					_list.setEntries(alignEntries(), "", a_keepSelection);
 					break;
 			}
+			updateRepeat();
+		}
+
+		// The Align tab's rows, from SetAlign's data. Left / Right change the
+		// value of the row selected (ProcessUserEvent).
+		private function alignEntries():Array
+		{
+			if (_align == null || _align.available !== true) {
+				return [{ id: "align_none", label: "Nothing to align", icon: "", kind: "disabled" }];
+			}
+			var name:String = String(_align.name);
+			var count:int = int(_align.roleCount);
+			return [
+				{ id: "align_actor", label: "< " + name + (count > 1 ? " (" + (int(_align.role) + 1) + "/" + count + ")" : "") + " >", icon: "", kind: "alignActor" },
+				{ id: "align_x", label: "Left / right   " + signed(Number(_align.x), 1), icon: "", kind: "alignValue", field: "x" },
+				{ id: "align_y", label: "Back / forward   " + signed(Number(_align.y), 1), icon: "", kind: "alignValue", field: "y" },
+				{ id: "align_z", label: "Down / up   " + signed(Number(_align.z), 1), icon: "", kind: "alignValue", field: "z" },
+				{ id: "align_rot", label: "Turn   " + signed(Number(_align.rot), 1) + " deg", icon: "", kind: "alignValue", field: "rot" },
+				{ id: "align_scale", label: "Size   " + Number(_align.scale).toFixed(3), icon: "", kind: "alignValue", field: "scale" },
+				{ id: "align_step", label: "Step   < " + Number(_align.step) + " >", icon: "", kind: "alignStep" },
+				{ id: "align_reset", label: "Reset " + name, icon: "", kind: "alignReset" }
+			];
+		}
+
+		private static function signed(a_value:Number, a_digits:int):String
+		{
+			var text:String = a_value.toFixed(a_digits);
+			return a_value > 0 ? "+" + text : text;
+		}
+
+		// Hold Left / Right to keep changing a value: asks the plugin to repeat
+		// them while an Align row that takes them is selected.
+		private function updateRepeat():void
+		{
+			var row:Object = _list.selectedEntry;
+			var kind:String = row != null ? String(row.kind) : "";
+			code("SetHorizontalRepeat", _tabs.selectedID == "align" && kind == "alignValue");
 		}
 
 		private function px(a_x:Number, a_w:Number):Number

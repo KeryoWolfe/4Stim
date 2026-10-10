@@ -6,6 +6,8 @@
 #include <fstream>
 #include <mutex>
 #include <optional>
+#include <array>
+#include <cmath>
 #include <set>
 
 #include <nlohmann/json.hpp>
@@ -87,6 +89,11 @@ namespace HUD
 		std::vector<UtilityEntry> g_utility;
 
 		std::atomic<bool> g_focused = false;
+
+		// The Align tab: which role is being adjusted and the step size.
+		constexpr std::array<float, 5> ALIGN_STEPS{ 0.5F, 1.0F, 2.0F, 5.0F, 10.0F };  // units / degrees; scale moves by step / 100
+		std::size_t                    g_alignRole = 0;
+		std::size_t                    g_alignStep = 1;
 		std::atomic<bool> g_showRequested = false;
 
 		std::string Lower(std::string a_text)
@@ -441,7 +448,7 @@ namespace HUD
 					_paused = paused;
 					if (paused && _heldDir != 0) {
 						// The key's release won't reach the HUD while paused.
-						GValue release[2]{ _heldDir < 0 ? "Up" : "Down", false };
+						GValue release[2]{ HeldName(), false };
 						InvokeRequired("ProcessUserEvent", release, 2);
 						_heldDir = 0;
 					}
@@ -468,6 +475,11 @@ namespace HUD
 				MapCodeMethodToASFunction("OpenSearch", 5);
 				MapCodeMethodToASFunction("ReleaseFocus", 6);
 				MapCodeMethodToASFunction("Log", 7);
+				MapCodeMethodToASFunction("AlignAdjust", 8);   // (field, direction)
+				MapCodeMethodToASFunction("AlignActor", 9);    // (direction)
+				MapCodeMethodToASFunction("AlignStep", 10);    // (direction)
+				MapCodeMethodToASFunction("AlignReset", 11);
+				MapCodeMethodToASFunction("SetHorizontalRepeat", 12);  // (on)
 			}
 
 			void Call(const Params& a_params) override
@@ -512,6 +524,32 @@ namespace HUD
 				case 7:  // Log(message)
 					REX::INFO("HUD movie: {}", string0());
 					break;
+				case 8:  // AlignAdjust(field, direction)
+					if (a_params.argCount > 1) {
+						AlignAdjust(string0(), ToNumber(a_params.args[1]) < 0 ? -1.0F : 1.0F);
+					}
+					break;
+				case 9:  // AlignActor(direction)
+					if (const auto count = FourStim::GetFocusedScene().ActorIDs().size(); count > 0) {
+						const int dir = a_params.argCount > 0 && ToNumber(a_params.args[0]) < 0 ? -1 : 1;
+						g_alignRole = (g_alignRole + count + dir) % count;
+						SendAlign();
+					}
+					break;
+				case 10:  // AlignStep(direction)
+					{
+						const int dir = a_params.argCount > 0 && ToNumber(a_params.args[0]) < 0 ? -1 : 1;
+						g_alignStep = (g_alignStep + ALIGN_STEPS.size() + dir) % ALIGN_STEPS.size();
+						SendAlign();
+					}
+					break;
+				case 11:  // AlignReset()
+					FourStim::SetFocusedAlignment(g_alignRole, {});
+					SendAlign();
+					break;
+				case 12:  // SetHorizontalRepeat(on)
+					_horizontalRepeat = a_params.argCount > 0 && a_params.args[0].IsBool() && a_params.args[0].GetBool();
+					break;
 				default:
 					break;
 				}
@@ -546,7 +584,74 @@ namespace HUD
 				// During a transition, the options of where it's going.
 				SendNavigation(focused, scene ? SceneRegistry::Settled(scene).get() : nullptr);
 				SendUtility(focused);
+				SendAlign();
 				SendFocus();
+			}
+
+			// The Align tab's data (optional HUD API function SetAlign,
+			// HUD_API.md): the role being adjusted, its name, its offset in
+			// this scene and the step size.
+			void SendAlign()
+			{
+				if (!Loaded()) {
+					return;
+				}
+				const auto focused = FourStim::GetFocusedScene();
+				const auto ids = focused.ActorIDs();
+				if (g_alignRole >= ids.size()) {
+					g_alignRole = 0;
+				}
+				Alignment::Offset offset;
+				std::string       sceneID;
+				const bool        ok = !ids.empty() && FourStim::GetFocusedAlignment(g_alignRole, offset, sceneID);
+				std::string       name = "Partner";
+				if (const auto actor = ok ? RE::TESForm::GetFormByID<RE::Actor>(ids[g_alignRole]) : nullptr) {
+					if (actor == RE::PlayerCharacter::GetSingleton()) {
+						name = "You";
+					} else if (const auto n = actor->GetDisplayFullName(); n && *n) {
+						name = n;
+					}
+				}
+				GValue data;
+				uiMovie->CreateObject(&data);
+				data.SetMember("available"sv, GValue(ok));
+				data.SetMember("role"sv, GValue(static_cast<double>(g_alignRole)));
+				data.SetMember("roleCount"sv, GValue(static_cast<double>(ids.size())));
+				data.SetMember("name"sv, GValue(name.c_str()));
+				data.SetMember("x"sv, GValue(static_cast<double>(offset.x)));
+				data.SetMember("y"sv, GValue(static_cast<double>(offset.y)));
+				data.SetMember("z"sv, GValue(static_cast<double>(offset.z)));
+				data.SetMember("rot"sv, GValue(static_cast<double>(offset.rot)));
+				data.SetMember("scale"sv, GValue(static_cast<double>(offset.scale)));
+				data.SetMember("step"sv, GValue(static_cast<double>(ALIGN_STEPS[g_alignStep])));
+				InvokeOptional("SetAlign", &data, 1);
+			}
+
+			// One step of a field of the role being adjusted, a_dir +1 / -1.
+			void AlignAdjust(const std::string& a_field, float a_dir)
+			{
+				Alignment::Offset offset;
+				std::string       sceneID;
+				if (!FourStim::GetFocusedAlignment(g_alignRole, offset, sceneID)) {
+					return;
+				}
+				const float step = ALIGN_STEPS[g_alignStep] * a_dir;
+				auto        snap = [](float a_value, float a_grid) { return std::round(a_value / a_grid) * a_grid; };
+				if (a_field == "x") {
+					offset.x = snap(offset.x + step, 0.1F);
+				} else if (a_field == "y") {
+					offset.y = snap(offset.y + step, 0.1F);
+				} else if (a_field == "z") {
+					offset.z = snap(offset.z + step, 0.1F);
+				} else if (a_field == "rot") {
+					offset.rot = std::fmod(snap(offset.rot + step, 0.1F) + 540.0F, 360.0F) - 180.0F;
+				} else if (a_field == "scale") {
+					offset.scale = std::clamp(snap(offset.scale + step / 100.0F, 0.005F), 0.5F, 2.0F);
+				} else {
+					return;
+				}
+				FourStim::SetFocusedAlignment(g_alignRole, offset);
+				SendAlign();
 			}
 
 			void SendFocus()
@@ -564,6 +669,8 @@ namespace HUD
 				_heldSince = std::chrono::steady_clock::now();
 				_repeats = 0;
 			}
+
+			bool WantsHorizontalRepeat() const { return _horizontalRepeat; }
 
 			// Invoke fails when the movie has no such function; that's logged
 			// once per function rather than every frame.
@@ -637,7 +744,8 @@ namespace HUD
 			bool                                  _loaded = false;
 			bool                                  _paused = false;
 			Scaleform::Render::Rect<float>        _screen{};
-			int                                   _heldDir = 0;
+			int                                   _heldDir = 0;   // -1 up, +1 down, -2 left, +2 right, 0 none
+			bool                                  _horizontalRepeat = false;  // the movie wants Left / Right repeated (Align tab)
 			std::chrono::steady_clock::time_point _heldSince{};
 			int                                   _repeats = 0;
 			std::set<std::string>                 _warnedMissing;
@@ -837,6 +945,11 @@ namespace HUD
 			// Hold-to-scroll while focused: the movie gets a fresh Up/Down every
 			// REPEAT_RATE seconds after REPEAT_DELAY. Real-time clock, so it
 			// works the same whether or not the game is paused.
+			const char* HeldName() const
+			{
+				return _heldDir == -1 ? "Up" : _heldDir == 1 ? "Down" : _heldDir == -2 ? "Left" : "Right";
+			}
+
 			void RepeatHeldNavigation()
 			{
 				if (_heldDir == 0 || !g_focused || _paused) {
@@ -848,7 +961,7 @@ namespace HUD
 				const int        due = held < REPEAT_DELAY ? 0 : static_cast<int>((held - REPEAT_DELAY) / REPEAT_RATE) + 1;
 				for (int i = 0; _repeats < due && i < 3; ++i) {  // at most 3 per frame, so a hitch can't jump far
 					++_repeats;
-					GValue args[2]{ _heldDir < 0 ? "Up" : "Down", true };
+					GValue args[2]{ HeldName(), true };
 					InvokeRequired("ProcessUserEvent", args, 2);
 				}
 			}
@@ -1013,15 +1126,17 @@ namespace HUD
 		if (!name) {
 			return false;
 		}
-		const bool upDown = std::string_view(name) == "Up"sv || std::string_view(name) == "Down"sv;
+		const std::string_view n(name);
+		const bool             upDown = n == "Up"sv || n == "Down"sv;
+		const bool             leftRight = (n == "Left"sv || n == "Right"sv) && g_menu->WantsHorizontalRepeat();
 		if (a_event->QJustPressed()) {
-			if (upDown) {
-				g_menu->SetHeld(std::string_view(name) == "Up"sv ? -1 : 1);
+			if (upDown || leftRight) {
+				g_menu->SetHeld(n == "Up"sv ? -1 : n == "Down"sv ? 1 : n == "Left"sv ? -2 : 2);
 			}
 			GValue args[2]{ name, true };
 			g_menu->InvokeRequired("ProcessUserEvent", args, 2);
 		} else if (!a_event->QPressed()) {
-			if (upDown) {
+			if (upDown || leftRight) {
 				g_menu->SetHeld(0);
 			}
 			GValue args[2]{ name, false };
