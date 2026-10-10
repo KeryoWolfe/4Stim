@@ -34,6 +34,11 @@ namespace
 	};
 	std::unordered_map<std::uint32_t, PlacedSpot> g_placedSpots;
 
+	// Where NPCs stood before their scene (OStim's positionBefore), to put
+	// them back when it ends (bResetPosition, OStim's "Reset position").
+	std::unordered_map<std::uint32_t, PlacedSpot> g_positionBefore;
+	bool                                          g_resetPosition = true;
+
 	// Turns a_actor to a_heading (radians). Like OStim: Actor::SetHeading
 	// only works on the player; NPCs get their reference angle set.
 	void FaceHeading(RE::Actor* a_actor, float a_heading)
@@ -227,6 +232,8 @@ namespace
 					Excitement::Settings().flash = std::clamp(std::stof(value), 0.0F, 1.0F);
 				} else if (key == "bclimaxrumble") {
 					Excitement::Settings().rumble = std::stoi(value) != 0;
+				} else if (key == "bresetposition") {
+					g_resetPosition = std::stoi(value) != 0;
 				} else if (key == "blockscenes") {
 					g_lockScenes = std::stoi(value) != 0;
 				} else if (key == "bguardscenes") {
@@ -1365,15 +1372,43 @@ namespace
 		}
 	}
 
-	// A scene ended: everyone in it is on one spot, inside each other, and
-	// their collision with each other comes back (RestoreCollision, which
-	// waits for this) -- left there, they'd be stuck together. Everyone but
-	// one (the player, else role 0) steps off the spot first: 70 units away,
-	// in the first direction (behind, left, right, ahead of the scene) with
-	// nothing in the way, each actor a different one.
+	// A scene ended. As OStim does with "Reset position" (on by default):
+	// each NPC goes back to where they stood before the scene, facing the way
+	// they faced (FourStimScene.ResetPosition: a translation there at a huge
+	// speed, OStim's setPosition). The player isn't moved, as the scene was
+	// built on the player's own spot. That also takes them out of each other
+	// before their collision with each other comes back (RestoreCollision
+	// waits for this). NPCs with nowhere recorded (a scene started again
+	// from a save) step 70 units off the spot instead, in the first clear
+	// direction, so no one is left stuck inside someone else.
 	void MoveApart(const ActiveScene& a_ended)
 	{
-		if (!g_vm || a_ended.actors.size() < 2) {
+		if (!g_vm) {
+			return;
+		}
+		std::vector<std::uint32_t> unplaced;
+		for (const auto id : a_ended.actors) {
+			const auto actor = RE::TESForm::GetFormByID<RE::Actor>(id);
+			const auto before = g_positionBefore.find(id);
+			if (!actor || IsPlayer(actor)) {
+				continue;
+			}
+			if (before != g_positionBefore.end()) {
+				if (g_resetPosition) {
+					const auto& b = before->second;
+					REX::INFO("Scene end: {:08X} back to where they stood before the scene", id);
+					RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
+					g_vm->DispatchStaticCall("FourStimScene"sv, "ResetPosition"sv, callback, static_cast<std::int32_t>(id), b.position.x, b.position.y,
+						b.position.z, b.heading * 180.0F / PI_F);
+				} else {
+					unplaced.push_back(id);
+				}
+				g_positionBefore.erase(before);
+			} else {
+				unplaced.push_back(id);
+			}
+		}
+		if (a_ended.actors.size() < 2 || unplaced.empty()) {
 			return;
 		}
 		std::size_t stay = 0;
@@ -1387,7 +1422,7 @@ namespace
 		std::size_t                next = 0;
 		for (std::size_t role = 0; role < a_ended.actors.size(); ++role) {
 			const auto actor = RE::TESForm::GetFormByID<RE::Actor>(a_ended.actors[role]);
-			if (role == stay || !actor || IsPlayer(actor)) {
+			if (role == stay || !actor || IsPlayer(actor) || std::ranges::find(unplaced, actor->GetFormID()) == unplaced.end()) {
 				continue;
 			}
 			bool moved = false;
@@ -1989,6 +2024,15 @@ namespace
 
 		const auto blockOk = CallActorMethod(a_actor, "ObjectReference"sv, "BlockActivation"sv, true, true);
 		const auto dialogueOk = CallActorMethod(a_actor, "Actor"sv, "AllowPCDialogue"sv, false);
+		// Before anything moves them: where to put them back afterwards.
+		{
+			const auto  id = a_actor->GetFormID();
+			const auto  pos = a_actor->data.location;
+			const float heading = a_actor->data.angle.z;
+			F4SE::GetTaskInterface()->AddTask([id, pos, heading]() {
+				g_positionBefore[id] = { pos, heading, std::chrono::steady_clock::now() };
+			});
+		}
 		REX::INFO("SuppressInteraction: {:08X} BlockActivation dispatch={}, AllowPCDialogue dispatch={}",
 			a_actor->GetFormID(), blockOk, dialogueOk);
 		// Out of any furniture or idle marker before they're placed (else

@@ -128,6 +128,18 @@ Function Unlock(int aiActorID) Global
 	endif
 EndFunction
 
+; A scene ended: this NPC goes back to where they stood before it, facing
+; afHeading degrees (OStim's "Reset position", bResetPosition): a translation
+; there at a huge speed, as OStim's setPosition does.
+Function ResetPosition(int aiActorID, float afX, float afY, float afZ, float afHeading) Global
+	Actor akActor = Game.GetForm(aiActorID) as Actor
+	if akActor == None || IsPlayer(akActor) || !akActor.Is3DLoaded()
+		return
+	endif
+	akActor.StopTranslation()
+	akActor.TranslateTo(afX, afY, afZ, 0.0, 0.0, afHeading, 1000000.0, 1000000.0)
+EndFunction
+
 ; A scene ended with everyone on one spot: the plugin has this NPC step
 ; off it to (afX, afY, afZ), a clear spot nearby, before their collision
 ; with the others comes back (else they're stuck inside each other).
