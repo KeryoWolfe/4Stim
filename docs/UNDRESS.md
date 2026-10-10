@@ -48,4 +48,4 @@ Any slot outside `sUndressSlots` is skipped anyway.
 - `FourStim.UndressActor(akActor)` takes everything in the undress slots off an actor.
 - `FourStim.RedressActor(akActor)` puts back on what 4Stim took off.
 
-The work is done by `FourStimUndress.psc`, using F4SE's `GetWornItem`.
+The plugin finds what each actor wears in which slots; `FourStimUndress.psc` (vanilla Papyrus) takes it off and puts it back on.

@@ -32,32 +32,75 @@ namespace Undress
 			return player && player->GetFormID() == a_id;
 		}
 
-		// Takes off a_slots (those not taken off yet) through Papyrus.
+		constexpr std::uint32_t PIPBOY = 0x00021B3B;  // the Pip-Boy (an armor) never comes off
+
+		// What a_actor wears with any of a_mask's slots (bit 0 = slot 30).
+		// Main thread.
+		std::vector<std::uint32_t> WornIn(RE::Actor* a_actor, std::uint32_t a_mask)
+		{
+			std::vector<std::uint32_t> items;
+			const auto list = a_actor->inventoryList;
+			if (!list) {
+				return items;
+			}
+			for (auto& item : list->data) {
+				const auto object = item.object;
+				if (!object || object->GetFormType() != RE::ENUM_FORM_ID::kARMO || object->GetFormID() == PIPBOY) {
+					continue;
+				}
+				bool equipped = false;
+				for (auto stack = item.stackData.get(); stack && !equipped; stack = stack->nextStack.get()) {
+					equipped = stack->IsEquipped();
+				}
+				if (equipped && (object->GetFilledSlots() & a_mask) && std::ranges::find(items, object->GetFormID()) == items.end()) {
+					items.push_back(object->GetFormID());
+				}
+			}
+			return items;
+		}
+
+		// Takes off what's in a_slots (those not taken off yet): finds the
+		// items here, Papyrus unequips them. Any thread.
 		void Strip(std::uint32_t a_id, const std::vector<int>& a_slots)
 		{
 			if (!g_config.enabled || (!g_config.player && IsPlayer(a_id))) {
 				return;
 			}
-			std::vector<std::int32_t> indices;  // F4SE's GetWornItem counts from slot 30
+			std::uint32_t mask = 0;
 			{
 				std::scoped_lock lock(g_lock);
 				auto& state = g_states[a_id];
 				for (const auto slot : a_slots) {
+					if (slot < 30 || slot > 61 || !Allowed(slot)) {
+						continue;
+					}
 					const auto bit = std::uint64_t{ 1 } << (slot - 30);
-					if (slot >= 30 && slot <= 61 && Allowed(slot) && !(state.handled & bit)) {
+					if (!(state.handled & bit)) {
 						state.handled |= bit;
-						indices.push_back(slot - 30);
+						mask |= static_cast<std::uint32_t>(bit);
 					}
 				}
 			}
-			if (indices.empty()) {
+			if (!mask) {
 				return;
 			}
-			if (const auto vm = FourStim::GetVM()) {
-				REX::INFO("Undress: {:08X}, {} slot(s)", a_id, indices.size());
-				RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
-				vm->DispatchStaticCall("FourStimUndress"sv, "Strip"sv, callback, static_cast<std::int32_t>(a_id), indices);
-			}
+			F4SE::GetTaskInterface()->AddTask([a_id, mask]() {
+				const auto actor = RE::TESForm::GetFormByID<RE::Actor>(a_id);
+				if (!actor) {
+					return;
+				}
+				const auto items = WornIn(actor, mask);
+				REX::INFO("Undress: {:08X}, slots 0x{:08X}: {} item(s) to take off", a_id, mask, items.size());
+				if (items.empty()) {
+					return;
+				}
+				NoteStripped(a_id, items);
+				if (const auto vm = FourStim::GetVM()) {
+					std::vector<std::int32_t> ids(items.begin(), items.end());
+					RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
+					vm->DispatchStaticCall("FourStimUndress"sv, "Strip"sv, callback, static_cast<std::int32_t>(a_id), ids);
+				}
+			});
 		}
 	}
 

@@ -85,7 +85,8 @@ float Function GetTimeUntilClimax(Actor akActor) Global Native
 Function UndressActor(Actor akActor) Global Native
 Function RedressActor(Actor akActor) Global Native
 
-; Used by FourStimUndress: what it took off.
+; Tells 4Stim akItems were taken off akActor, to put back on when the scene
+; ends (4Stim tracks what it takes off itself; this is for other mods).
 Function NoteStripped(Actor akActor, Form[] akItems) Global Native
 
 ; ---- Running scenes ----
