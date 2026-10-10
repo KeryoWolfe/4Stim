@@ -35,25 +35,27 @@ Directions are the scene's: "forward" is the way the scene faces, so an offset m
 
 ## What's saved
 
-`Data\F4SE\Plugins\4Stim\Alignment.json` (with Mod Organizer, it lands in `overwrite`), per scene id and role:
+As in OStim, alignments are saved per **set of actors**, scene and role, to `Documents\My Games\Fallout4\4Stim\alignment.json` (OStim keeps its `alignment.json` in `Documents\My Games\Skyrim Special Edition\OStim`), in OStim's layout:
 
 ```json
 {
-	"scenes": {
-		"4stimtest_ostim2pmissionarymf": {
-			"0": { "x": 0, "y": -3.5, "z": 1, "rot": 0, "scale": 1 }
-		}
-	}
+  "M100x0&F100x0": {
+    "4StimTest_OStim2PMissionaryMF": {
+      "0": { "offsetX": 0, "offsetY": -3.5, "offsetZ": 1, "rotation": 0, "scale": 1, "sosBend": 0 }
+    }
+  }
 }
 ```
 
-- An alignment belongs to a **scene and role**, for everyone who plays it.
-- A **transition** uses the alignment of the scene it goes to, so no one jumps when it arrives.
+- **The actor set** is OStim's key: one `<sex><height>x<heels>` per role, joined by `&`. By default actors are grouped by sex only, as OStim's defaults (`alignmentGroupBySex=1`, `alignmentGroupByHeight=0`, `alignmentGroupByHeels=1` in `4Stim.ini`), so a man and a woman in missionary share one alignment, and two women in the same scene have their own. With `alignmentGroupByHeight=1`, actors of different scales get their own too (height = scale x 100). Fallout 4 has no standard heels system, so heels is always 0 for now.
+- **A transition** uses the alignment of the scene it goes to, so no one jumps when it arrives.
 - **Size** is on top of the actor's own scale, and is undone when they leave the scene (also when a save made mid-scene is loaded).
-- The file can be shipped with an animation pack, or shared: it's plain JSON, re-read with `FourStim.ReloadScenes()`.
+- **`sosBend`** (penis bend) is kept, for when bendable bodies are supported.
+- A scene file's own `offset` (OStim's, `SCENES.md`) is added on top, as in OStim.
+- **From older 4Stim builds:** the first time this build runs with no `alignment.json` yet, it converts `Data\F4SE\Plugins\4Stim\Alignment.json` (one value for everyone): each value goes to every actor set its scene's roles can have. The old file isn't read again.
 
 ## Still to come
 
-- **Penis bend** per scene and role (OStim's `sosBend`, `penisBend` in 4Stim), once bendable bodies are supported.
-- Alignments **keyed by body or height** (OStim keys them by the actors' heights and heels), so A-Body / TWB characters and CBBE ones can have different values; with Automatic Mesh Detection (TODO, Later).
-- Actor scaling to the animation's intended height, and heel compensation.
+- **Penis bend** in game, once bendable bodies are supported.
+- **Heels** in the actor set key, if a heels system is supported.
+- Actor scaling to the animation's intended height (`scale`, `scaleHeight`).

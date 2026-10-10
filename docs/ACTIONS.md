@@ -54,6 +54,10 @@ Action types are defined in JSON files in `Data\F4SE\Plugins\4Stim\Actions\`. Al
 | `fullStrip` | `true`: that side's actor takes everything off (UNDRESS.md). |
 | `undressSlots` | Otherwise, the Fallout 4 biped slots (30–61) that side's actor takes off, e.g. `[34, 35]` for gloves. |
 
+### OStim's layout
+
+OStim's action files work too: one action per file in `Actions\`, the file name being the id (`Actions\vaginalsex.json`), with no `actions` list. Their `strippingSlots` are Skyrim's biped slots, and 4Stim maps them to Fallout 4's with the table in `UNDRESS.md` (an `undressSlots` on the same side wins). OStim's other side fields (`moan`, `talk`, `muffled`, `expressionOverride`, factions, stats, toy slots) and the action's `sounds` and `peak` are skipped until the features they belong to come. Such an action has no `name`, so it's shown as its id with a capital letter.
+
 ## Requirements
 
 A role collects the requirements of every action it's in. With `SetOnlyGayAnimsInGayScenes=1`, an actor can only take the role if they have everything it needs:

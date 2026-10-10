@@ -17,6 +17,8 @@ namespace Furniture
 	namespace
 	{
 		constexpr auto TYPE_FOLDER = "Data/F4SE/Plugins/4Stim/Furniture";
+		// OStim's layout: one type per file, id = file name, in subfolders too.
+		constexpr auto OSTIM_TYPE_FOLDER = "Data/F4SE/Plugins/4Stim/Furniture Types";
 		constexpr float DEG = 3.14159265F / 180.0F;
 
 		struct Type
@@ -54,6 +56,8 @@ namespace Furniture
 			bool                           ignoreMarker[3] = { false, false, false };
 			RE::NiPoint3                   offset;            // in the furniture's own frame
 			float                          rotation = 0.0F;   // radians
+			bool                           listIndividually = false;  // OStim's: list every piece of it, not just the nearest
+			float                          multiplyScale = 1.0F;      // OStim's: kept, not used yet
 		};
 
 		std::mutex                  g_lock;
@@ -103,6 +107,133 @@ namespace Furniture
 			return std::nullopt;
 		}
 
+		// A keyword given as OStim does ({"mod": "Fallout4.esm", "formid":
+		// "0x..."}) or by editor ID: its editor ID, or "".
+		std::string KeywordEditorID(const nlohmann::json& a_value)
+		{
+			if (a_value.is_string()) {
+				return a_value.get<std::string>();
+			}
+			if (!a_value.is_object()) {
+				return {};
+			}
+			const auto mod = a_value.value("mod", std::string{});
+			const auto formID = a_value.value("formid", std::string{});
+			const auto handler = RE::TESDataHandler::GetSingleton();
+			if (mod.empty() || formID.empty() || !handler) {
+				return {};
+			}
+			try {
+				const auto id = static_cast<std::uint32_t>(std::stoul(formID, nullptr, 0));
+				auto       keyword = handler->LookupForm<RE::BGSKeyword>(id & 0x00FFFFFF, mod);
+				if (!keyword) {
+					keyword = handler->LookupForm<RE::BGSKeyword>(id & 0x00000FFF, mod);
+				}
+				return keyword ? std::string(keyword->formEditorID.c_str()) : std::string{};
+			} catch (...) {
+				return {};
+			}
+		}
+
+		// One type from its JSON object, with 4Stim's field names and OStim's
+		// (offsetX / offsetY / offsetZ, ignoreMarkerOffsetX..., conditions
+		// "anykeyword" / "keywordblacklist", listIndividually, multiplyScale).
+		Type ParseType(const nlohmann::json& entry, const std::string& id, const std::string& file)
+		{
+			Type type;
+			type.id = id;
+			type.name = entry.value("name", type.id);
+			if (type.name.starts_with("$")) {
+				type.name = type.id;  // an OStim translation key: no translations here
+			}
+			type.supertype = Lower(entry.value("supertype", std::string{}));
+			type.priority = entry.value("priority", 0);
+			for (const auto& code : Strings(entry, "forms", false)) {
+				if (const auto form = FormType(code)) {
+					type.forms.push_back(*form);
+				} else {
+					REX::WARN("Furniture: {}: type \"{}\": unknown form type \"{}\" (FURN, STAT, MSTT, ACTI or CONT)", file, type.id, code);
+				}
+			}
+			if (type.forms.empty()) {
+				type.forms.push_back(RE::ENUM_FORM_ID::kFURN);
+			}
+			type.models = Strings(entry, "models", true);
+			type.excludeModels = Strings(entry, "excludeModels", true);
+			type.keywords = Strings(entry, "keywords", false);
+			type.excludeKeywords = Strings(entry, "excludeKeywords", false);
+			if (const auto conditions = entry.find("conditions"); conditions != entry.end() && conditions->is_array()) {
+				for (const auto& condition : *conditions) {
+					const auto kind = condition.is_object() ? Lower(condition.value("type", std::string{})) : std::string{};
+					const auto keywords = condition.is_object() ? condition.find("keywords") : condition.end();
+					if ((kind == "anykeyword" || kind == "keywordblacklist") && keywords != condition.end() && keywords->is_array()) {
+						for (const auto& keyword : *keywords) {
+							if (auto editorID = KeywordEditorID(keyword); !editorID.empty()) {
+								(kind == "anykeyword" ? type.keywords : type.excludeKeywords).push_back(std::move(editorID));
+							}
+						}
+					} else {
+						REX::WARN("Furniture: {}: type \"{}\": condition \"{}\" isn't supported in Fallout 4 (only anykeyword and keywordblacklist), ignored", file, type.id, kind);
+					}
+				}
+			}
+			type.minMarkers = entry.value("minMarkers", -1);
+			type.maxMarkers = entry.value("maxMarkers", -1);
+			type.useMarker = entry.value("useMarker", true);
+			type.markerIndex = entry.value("marker", 0);
+			if (const auto anchor = Lower(entry.value("anchor", std::string{ "marker" })); anchor == "edge") {
+				type.edge = true;
+			} else if (anchor == "center") {
+				type.center = true;
+			} else if (anchor == "origin") {
+				type.useMarker = false;
+			} else if (anchor != "marker") {
+				REX::WARN("Furniture: {}: type \"{}\": unknown \"anchor\" \"{}\" (marker, origin, edge or center)", file, type.id, anchor);
+			}
+			if (const auto floor = entry.find("floorScenes"); floor != entry.end() && floor->is_object()) {
+				type.floorNeedTags = Strings(*floor, "needTags", true);
+				type.floorExcludeTags = Strings(*floor, "excludeTags", true);
+			}
+			type.edgeLong = Lower(entry.value("edgeSide", std::string{ "long" })) != "short";
+			type.edgeFacingOut = Lower(entry.value("facing", std::string{ "out" })) != "in";
+			type.edgeInset = entry.value("edgeInset", 0.0F);
+			type.checkWalls = entry.value("checkWalls", true);
+			type.markerHeight = entry.value("markerHeight", false);
+			type.onFloor = entry.value("onFloor", false);
+			for (const auto& axis : Strings(entry, "ignoreMarkerAxes", true)) {
+				if (axis == "x" || axis == "y" || axis == "z") {
+					type.ignoreMarker[axis[0] - 'x'] = true;
+				}
+			}
+			type.ignoreMarker[0] = type.ignoreMarker[0] || entry.value("ignoreMarkerOffsetX", false);
+			type.ignoreMarker[1] = type.ignoreMarker[1] || entry.value("ignoreMarkerOffsetY", false);
+			type.ignoreMarker[2] = type.ignoreMarker[2] || entry.value("ignoreMarkerOffsetZ", false);
+			if (const auto off = entry.find("offset"); off != entry.end() && off->is_array() && off->size() == 3) {
+				type.offset = { (*off)[0].get<float>(), (*off)[1].get<float>(), (*off)[2].get<float>() };
+			}
+			type.offset.x = entry.value("offsetX", type.offset.x);
+			type.offset.y = entry.value("offsetY", type.offset.y);
+			type.offset.z = entry.value("offsetZ", type.offset.z);
+			type.rotation = entry.value("rotation", 0.0F) * DEG;
+			type.listIndividually = entry.value("listIndividually", false);
+			type.multiplyScale = entry.value("multiplyScale", 1.0F);
+			if (type.models.empty() && type.keywords.empty()) {
+				REX::INFO("Furniture: {}: type \"{}\" has no \"models\" or \"keywords\": only a supertype for others", file, type.id);
+			}
+			return type;
+		}
+
+		std::optional<nlohmann::json> ReadJSON(const std::filesystem::path& a_path)
+		{
+			try {
+				std::ifstream in(a_path);
+				return nlohmann::json::parse(in, nullptr, true, true);
+			} catch (const std::exception& ex) {
+				REX::WARN("Furniture: {}: not valid JSON ({})", a_path.filename().string(), ex.what());
+				return std::nullopt;
+			}
+		}
+
 		void LoadLocked()
 		{
 			g_types.clear();
@@ -116,85 +247,41 @@ namespace Furniture
 			}
 			std::ranges::sort(files);  // later files override earlier types of the same id
 			for (const auto& path : files) {
-				const auto     file = path.filename().string();
-				nlohmann::json root;
-				try {
-					std::ifstream in(path);
-					root = nlohmann::json::parse(in, nullptr, true, true);
-				} catch (const std::exception& ex) {
-					REX::WARN("Furniture: {}: not valid JSON ({})", file, ex.what());
+				const auto file = path.filename().string();
+				const auto root = ReadJSON(path);
+				if (!root) {
 					continue;
 				}
-				const auto types = root.find("types");
-				if (types == root.end() || !types->is_array()) {
+				const auto types = root->find("types");
+				if (types == root->end() || !types->is_array()) {
 					REX::WARN("Furniture: {}: no \"types\" list", file);
 					continue;
 				}
 				for (const auto& entry : *types) {
-					Type type;
-					type.id = entry.value("id", std::string{});
-					if (type.id.empty()) {
+					const auto id = entry.value("id", std::string{});
+					if (id.empty()) {
 						REX::WARN("Furniture: {}: a type without an \"id\", skipped", file);
 						continue;
 					}
-					type.name = entry.value("name", type.id);
-					type.supertype = Lower(entry.value("supertype", std::string{}));
-					type.priority = entry.value("priority", 0);
-					for (const auto& code : Strings(entry, "forms", false)) {
-						if (const auto form = FormType(code)) {
-							type.forms.push_back(*form);
-						} else {
-							REX::WARN("Furniture: {}: type \"{}\": unknown form type \"{}\" (FURN, STAT, MSTT, ACTI or CONT)", file, type.id, code);
-						}
-					}
-					if (type.forms.empty()) {
-						type.forms.push_back(RE::ENUM_FORM_ID::kFURN);
-					}
-					type.models = Strings(entry, "models", true);
-					type.excludeModels = Strings(entry, "excludeModels", true);
-					type.keywords = Strings(entry, "keywords", false);
-					type.excludeKeywords = Strings(entry, "excludeKeywords", false);
-					type.minMarkers = entry.value("minMarkers", -1);
-					type.maxMarkers = entry.value("maxMarkers", -1);
-					type.useMarker = entry.value("useMarker", true);
-					type.markerIndex = entry.value("marker", 0);
-					if (const auto anchor = Lower(entry.value("anchor", std::string{ "marker" })); anchor == "edge") {
-						type.edge = true;
-					} else if (anchor == "center") {
-						type.center = true;
-					} else if (anchor == "origin") {
-						type.useMarker = false;
-					} else if (anchor != "marker") {
-						REX::WARN("Furniture: {}: type \"{}\": unknown \"anchor\" \"{}\" (marker, origin, edge or center)", file, type.id, anchor);
-					}
-					if (const auto floor = entry.find("floorScenes"); floor != entry.end() && floor->is_object()) {
-						type.floorNeedTags = Strings(*floor, "needTags", true);
-						type.floorExcludeTags = Strings(*floor, "excludeTags", true);
-					}
-					type.edgeLong = Lower(entry.value("edgeSide", std::string{ "long" })) != "short";
-					type.edgeFacingOut = Lower(entry.value("facing", std::string{ "out" })) != "in";
-					type.edgeInset = entry.value("edgeInset", 0.0F);
-					type.checkWalls = entry.value("checkWalls", true);
-					type.markerHeight = entry.value("markerHeight", false);
-					type.onFloor = entry.value("onFloor", false);
-					if (const auto ignore = Strings(entry, "ignoreMarkerAxes", true); !ignore.empty()) {
-						for (const auto& axis : ignore) {
-							if (axis == "x" || axis == "y" || axis == "z") {
-								type.ignoreMarker[axis[0] - 'x'] = true;
-							}
-						}
-					}
-					if (const auto off = entry.find("offset"); off != entry.end() && off->is_array() && off->size() == 3) {
-						type.offset = { (*off)[0].get<float>(), (*off)[1].get<float>(), (*off)[2].get<float>() };
-					}
-					type.rotation = entry.value("rotation", 0.0F) * DEG;
-					if (type.models.empty() && type.keywords.empty()) {
-						REX::INFO("Furniture: {}: type \"{}\" has no \"models\" or \"keywords\": only a supertype for others", file, type.id);
-					}
-					g_types[Lower(type.id)] = std::move(type);
+					g_types[Lower(id)] = ParseType(entry, id, file);
 				}
 			}
-			REX::INFO("Furniture: {} type(s) from {} file(s)", g_types.size(), files.size());
+			// OStim's layout: Furniture Types\**\<id>.json, after 4Stim's (so
+			// they override a type of the same id).
+			std::vector<std::filesystem::path> ostimFiles;
+			for (const auto& e : std::filesystem::recursive_directory_iterator(OSTIM_TYPE_FOLDER, ec)) {
+				if (e.is_regular_file() && Lower(e.path().extension().string()) == ".json") {
+					ostimFiles.push_back(e.path());
+				}
+			}
+			std::ranges::sort(ostimFiles);
+			for (const auto& path : ostimFiles) {
+				if (const auto root = ReadJSON(path); root && root->is_object()) {
+					const auto id = Lower(path.stem().string());
+					g_types[id] = ParseType(*root, id, path.filename().string());
+				}
+			}
+			REX::INFO("Furniture: {} type(s) from {} file(s)", g_types.size(), files.size() + ostimFiles.size());
 		}
 
 		void EnsureLoaded()
@@ -406,7 +493,10 @@ namespace Furniture
 			if (type.empty()) {
 				return RE::BSContainer::ForEachResult::kContinue;
 			}
-			const auto it = std::ranges::find_if(found, [&](const Found& f) { return f.type == type; });
+			// One entry per type (the nearest piece), or every piece of a type
+			// OStim lists individually.
+			const bool individually = g_types[Lower(type)].listIndividually;
+			const auto it = individually ? found.end() : std::ranges::find_if(found, [&](const Found& f) { return f.type == type; });
 			if (it == found.end()) {
 				found.push_back({ type, g_types[Lower(type)].name, a_ref->GetFormID(), distance });
 			} else if (distance < it->distance) {

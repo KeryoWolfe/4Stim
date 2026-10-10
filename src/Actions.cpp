@@ -41,6 +41,51 @@ namespace Actions
 			return out;
 		}
 
+		// OStim's strippingSlots are Skyrim's biped slots; these are the
+		// Fallout 4 slots each one covers (docs/UNDRESS.md). Slots Skyrim
+		// uses for things Fallout 4 doesn't have (shield, tail, back...)
+		// map to nothing.
+		std::vector<int> FalloutSlotsFor(int a_skyrimSlot)
+		{
+			switch (a_skyrimSlot) {
+			case 30:  // head
+			case 31:  // hair
+			case 41:  // long hair
+			case 42:  // circlet
+				return { 46 };
+			case 32:  // body
+				return { 33, 36, 39, 40, 41, 44, 45 };
+			case 33:  // hands
+				return { 34, 35 };
+			case 34:  // forearms
+			case 57:  // shoulder
+			case 58:  // arm (secondary)
+			case 59:  // arm (primary)
+				return { 37, 38, 42, 43 };
+			case 35:  // amulet
+			case 45:  // neck
+				return { 50 };
+			case 36:  // ring
+				return { 51 };
+			case 37:  // feet: Fallout 4 has no feet slot, shoes are part of the legs
+			case 38:  // calves
+			case 53:  // leg (primary)
+			case 54:  // leg (secondary)
+				return { 39, 40, 44, 45 };
+			case 44:  // face / mouth
+			case 55:  // face (alternate)
+				return { 49 };
+			case 46:  // chest (primary)
+			case 56:  // chest (secondary)
+				return { 33, 36, 41 };
+			case 49:  // pelvis (primary)
+			case 52:  // pelvis (secondary)
+				return { 33, 36, 39, 40, 44, 45 };
+			default:
+				return {};
+			}
+		}
+
 		Side ParseSide(const nlohmann::json& a_action, const char* a_key)
 		{
 			Side side;
@@ -62,6 +107,18 @@ namespace Actions
 						side.undressSlots.push_back(slot.get<int>());
 					}
 				}
+			} else if (const auto skyrim = it->find("strippingSlots"); skyrim != it->end() && skyrim->is_array()) {
+				// OStim's field: Skyrim slots, mapped to Fallout 4's.
+				for (const auto& slot : *skyrim) {
+					if (!slot.is_number_integer()) {
+						continue;
+					}
+					for (const int fo4 : FalloutSlotsFor(slot.get<int>())) {
+						if (std::ranges::find(side.undressSlots, fo4) == side.undressSlots.end()) {
+							side.undressSlots.push_back(fo4);
+						}
+					}
+				}
 			}
 			return side;
 		}
@@ -76,6 +133,11 @@ namespace Actions
 			return name;
 		}
 
+		void AddType(const nlohmann::json& entry, const std::string& id, const std::string& file,
+			std::unordered_map<std::string, std::shared_ptr<const Type>>& a_out, std::vector<std::string>& a_ids, int& a_loaded);
+
+		// A file under Actions\: 4Stim's layout (an "actions" list) or
+		// OStim's (one action per file, its id the file name).
 		void LoadFile(const std::filesystem::path& a_path, std::unordered_map<std::string, std::shared_ptr<const Type>>& a_out,
 			std::vector<std::string>& a_ids, int& a_loaded)
 		{
@@ -88,9 +150,14 @@ namespace Actions
 				REX::WARN("Actions: {}: not valid JSON: {}", file, e.what());
 				return;
 			}
+			if (!root.is_object()) {
+				REX::WARN("Actions: {}: not a JSON object", file);
+				return;
+			}
 			const auto list = root.find("actions");
 			if (list == root.end() || !list->is_array()) {
-				REX::WARN("Actions: {}: missing an \"actions\" array", file);
+				// OStim's layout: this file is one action, its id the file name.
+				AddType(root, Lower(a_path.stem().string()), file, a_out, a_ids, a_loaded);
 				return;
 			}
 			for (const auto& entry : *list) {
@@ -99,6 +166,14 @@ namespace Actions
 					REX::WARN("Actions: {}: an action has no \"id\", skipped", file);
 					continue;
 				}
+				AddType(entry, id, file, a_out, a_ids, a_loaded);
+			}
+		}
+
+		void AddType(const nlohmann::json& entry, const std::string& id, const std::string& file,
+			std::unordered_map<std::string, std::shared_ptr<const Type>>& a_out, std::vector<std::string>& a_ids, int& a_loaded)
+		{
+			{
 				Type type;
 				type.id = id;
 				type.name = entry.value("name", DefaultName(id));

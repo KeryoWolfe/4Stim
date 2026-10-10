@@ -14,7 +14,11 @@ namespace Actions
 
 // Scenes are defined in JSON files under Data\F4SE\Plugins\4Stim\Scenes\,
 // so animation authors add content with an Idle-record plugin plus a JSON
-// file, no scripting. See SCENES.md for the format.
+// file, no scripting. See SCENES.md for the format. Two layouts are read:
+// 4Stim's pack files (a "scenes" list, many scenes per file) and OStim's
+// (one scene per file, anywhere under Scenes\, the file name being the
+// scene id, with OStim's field names). Sequences: in pack files, or one per
+// file in Data\F4SE\Plugins\4Stim\Sequences\ as OStim's.
 namespace SceneRegistry
 {
 	enum class Sex : std::uint8_t
@@ -27,6 +31,18 @@ namespace SceneRegistry
 	// An actor's sex as the scenes see it.
 	Sex SexOf(RE::Actor* a_actor);  // GetSex() isn't const
 
+	// A position offset from the scene's spot (OStim's "offset": x right, y
+	// forward, z up, r degrees clockwise).
+	struct Position
+	{
+		float x = 0.0F;
+		float y = 0.0F;
+		float z = 0.0F;
+		float r = 0.0F;
+
+		[[nodiscard]] bool IsZero() const { return x == 0.0F && y == 0.0F && z == 0.0F && r == 0.0F; }
+	};
+
 	struct SceneActor
 	{
 		Sex                      sex = Sex::kAny;  // who may take this role
@@ -35,6 +51,11 @@ namespace SceneRegistry
 		// Scenes to move to on an event for this role's actor (OStim's
 		// autoTransitions): "climax", "pullout"... key lowercase.
 		std::vector<std::pair<std::string, std::string>> autoTransitions;
+		// Where this role stands from the scene's spot, before alignment:
+		// OStim's actor "offset" plus the scene's (OStim adds the scene's to
+		// every actor's).
+		Position offset;
+		float    penisBend = 0.0F;  // OStim's sosBend / tngBend: kept, not used yet (bendable bodies)
 
 		[[nodiscard]] bool HasTag(std::string_view a_tag) const;
 		// The scene for a_event, or "".
@@ -52,9 +73,19 @@ namespace SceneRegistry
 
 	struct Navigation
 	{
-		std::string to;     // destination scene id
-		std::string label;  // may contain {n} = name of the actor in role n
+		std::string to;     // destination scene id (OStim: "destination")
+		std::string label;  // may contain {n} = name of the actor in role n (OStim: "description"); empty = the destination's name
 		std::string icon;   // HUD icon movie under Data\Interface\4Stim\Icons\; empty = the destination's
+		std::string border;  // OStim's icon border color (hex, "ffffff" = none given)
+		int         priority = 0;  // lower first, as OStim sorts them
+		bool        noWarnings = false;  // OStim's: kept, not used yet
+	};
+
+	// One speed of a scene.
+	struct SpeedInfo
+	{
+		float playbackSpeed = 1.0F;  // OStim's: kept, not used yet (Fallout 4's graphs have no speed variable for it)
+		float displaySpeed = 0.0F;   // OStim's speed label (0 = not given): kept, not shown yet
 	};
 
 	// An animated undressing step: at `at` seconds into the scene, the actor
@@ -73,6 +104,7 @@ namespace SceneRegistry
 		std::string                                name;
 		std::vector<SceneActor>                    actors;       // index = role
 		std::vector<std::vector<RE::TESIdleForm*>> speeds;       // [speed][role]; at least one speed
+		std::vector<SpeedInfo>                     speedInfo;    // [speed]
 		std::vector<Navigation>                    navigations;  // only to scenes that exist
 		std::vector<std::string>                   tags;
 		std::vector<SceneAction>                   actions;
@@ -85,10 +117,18 @@ namespace SceneRegistry
 		std::vector<SceneUndress>                  undress;                    // animated undressing steps
 		float                                      dressAt = -1.0F;            // redress animations: when the clothes go on (s); -1 = not given
 		std::string                                furniture;      // furniture type it's played on (lowercase); "" = anywhere
+		std::string                                modpack;        // OStim's: the pack it comes from, shown in the picker
+		bool                                       fadeOnEntry = false;  // OStim's: kept for auto mode fades (not used yet)
+		// Scene-wide auto transitions (OStim's scene "autoTransitions"),
+		// key lowercase; a role's own come first.
+		std::vector<std::pair<std::string, std::string>> autoTransitions;
 		std::array<float, 4>                       furnitureOffset{};  // x, y, z, degrees from the furniture's spot
 		std::string                                sourceFile;
 
 		bool IsTransition() const { return !destination.empty(); }
+
+		// The scene-wide auto transition for a_event, or "".
+		[[nodiscard]] std::string AutoTransition(std::string_view a_event) const;
 
 		// Whether one of its actions is of a_type (an id or alias) / has a_tag.
 		bool HasAction(std::string_view a_type) const;
@@ -149,6 +189,7 @@ namespace SceneRegistry
 		std::string tags;       // comma-separated
 		std::string furniture;  // furniture type it needs, "" = none
 		std::string actions;    // its actions' names, comma-separated
+		std::string modpack;    // OStim's modpack, "" = none
 	};
 
 	// Which of the lists below to give: every scene for that many actors, or

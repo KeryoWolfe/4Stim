@@ -60,6 +60,9 @@ Times given with OStim's names are in milliseconds, as in OStim. `SetFurnitureSe
 | `SetPartialUndressing` | 1 | `bPartialUndress` | What each action needs |
 | `SetUndressIfNeed` | 1 | `bFullUndressMidScene` | Everything off for actions that need it |
 | `SetAnimateRedress` | 0 | `bAnimateRedress` | Redress animations after a scene |
+| `alignmentGroupBySex` | 1 | | Alignments kept per sex of the actors |
+| `alignmentGroupByHeight` | 0 | | And per height (scale) |
+| `alignmentGroupByHeels` | 1 | | And per heel height (no heels system yet) |
 
 Older 4Stim names in seconds (`fAutoModeSceneMin`, `fExcitementDecayGrace`...) are still read in seconds.
 
@@ -69,4 +72,4 @@ These have no OStim counterpart, and keep their names: `bResumeScenes` (0, as OS
 
 ## Not in yet
 
-OStim settings that come with features 4Stim doesn't have yet: intro scenes (`SetUseIntroScenes`), auto mode fades (`SetUseAutoFades`), clutter reset (`SetResetClutter`), the custom time scale (`SetCustomTimescale`), alignment grouping, sounds, expressions, strap-ons, and the rest of OStim's MCM. They'll take OStim's names when they come.
+OStim settings that come with features 4Stim doesn't have yet: intro scenes (`SetUseIntroScenes`), auto mode fades (`SetUseAutoFades`), clutter reset (`SetResetClutter`), the custom time scale (`SetCustomTimescale`), sounds, expressions, strap-ons, and the rest of OStim's MCM. They'll take OStim's names when they come.

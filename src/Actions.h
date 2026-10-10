@@ -9,7 +9,9 @@
 
 // Action types: what a scene's actors do to each other (vaginal sex,
 // kissing, a handjob...), as OStim's actions. Defined in JSON files under
-// Data\F4SE\Plugins\4Stim\Actions\ (see docs/ACTIONS.md); scenes list the
+// Data\F4SE\Plugins\4Stim\Actions\ (see docs/ACTIONS.md), in 4Stim's layout
+// (an "actions" list) or OStim's (one action per file, id = file name,
+// Skyrim "strippingSlots" mapped to Fallout 4's slots); scenes list the
 // actions they show with who does what ("actions" in a scene file,
 // SCENES.md). Excitement, undressing, sounds and expressions build on these.
 namespace Actions

@@ -220,6 +220,10 @@ namespace
 		{ "setpartialundressing", { "bpartialundress", OStimUnit::kSame } },
 		{ "setundressifneed", { "bfullundressmidscene", OStimUnit::kSame } },
 		{ "setanimateredress", { "banimateredress", OStimUnit::kSame } },
+		// Alignment.
+		{ "alignmentgroupbysex", { "balignbysex", OStimUnit::kSame } },
+		{ "alignmentgroupbyheight", { "balignbyheight", OStimUnit::kSame } },
+		{ "alignmentgroupbyheels", { "balignbyheels", OStimUnit::kSame } },
 	};
 
 	void LoadSettings()
@@ -367,6 +371,12 @@ namespace
 					Excitement::Settings().slowMo = std::stoi(value) != 0;
 				} else if (key == "bclimaxrumble") {
 					Excitement::Settings().rumble = std::stoi(value) != 0;
+				} else if (key == "balignbysex") {
+					Alignment::Settings().groupBySex = std::stoi(value) != 0;
+				} else if (key == "balignbyheight") {
+					Alignment::Settings().groupByHeight = std::stoi(value) != 0;
+				} else if (key == "balignbyheels") {
+					Alignment::Settings().groupByHeels = std::stoi(value) != 0;
 				} else if (key == "bresetposition") {
 					g_resetPosition = std::stoi(value) != 0;
 				} else if (key == "blockscenes") {
@@ -715,6 +725,7 @@ namespace
 		std::chrono::steady_clock::time_point lastRelock{};
 		std::vector<float>                    baseScale;     // per role: the actor's own scale when the scene started
 		std::vector<float>                    appliedScale;  // per role: the scale the alignment last set (0 = none)
+		std::string                           alignKey;      // OStim's actor set key for alignment (Alignment::KeyFor)
 
 		// Auto mode (see "Auto mode" below).
 		struct Auto
@@ -865,11 +876,14 @@ namespace
 				scene.heading = actor->data.angle.z;
 			}
 		}
+		std::vector<Alignment::ActorInfo> alignActors;
 		for (const auto id : a_actors) {
 			const auto actor = RE::TESForm::GetFormByID<RE::Actor>(id);
 			scene.baseScale.push_back(actor && actor->refScale ? actor->refScale / 100.0F : 1.0F);
 			scene.appliedScale.push_back(0.0F);
+			alignActors.push_back({ SceneRegistry::SexOf(actor), scene.baseScale.back(), 0.0F });  // no heels system in Fallout 4 yet
 		}
+		scene.alignKey = Alignment::KeyFor(alignActors);
 		g_activeScenes.push_back(std::move(scene));
 		LockScene(g_activeScenes.back());
 		SceneEvents::SceneStarted(a_actors, a_sceneID);
@@ -1448,13 +1462,21 @@ namespace
 	ActorSpot SpotOf(const ActiveScene& a_active, std::size_t a_role)
 	{
 		const auto scene = SceneRegistry::Find(a_active.sceneID);
-		const auto id = scene ? SceneRegistry::Settled(scene)->id : a_active.sceneID;
-		const auto o = Alignment::Get(id, a_role);
+		const auto settled = scene ? SceneRegistry::Settled(scene) : nullptr;
+		const auto id = settled ? settled->id : a_active.sceneID;
+		const auto o = Alignment::Get(a_active.alignKey, id, a_role);
+		// As OStim's alignActor: the role's offset from the scene file plus
+		// the alignment.
+		SceneRegistry::Position base;
+		if (settled && a_role < settled->actors.size()) {
+			base = settled->actors[a_role].offset;
+		}
+		const float x = o.x + base.x, y = o.y + base.y, z = o.z + base.z, r = o.rot + base.r;
 		const float c = std::cos(a_active.heading), s = std::sin(a_active.heading);
 		ActorSpot spot;
 		// Facing heading h, forward is (sin h, cos h) and right is (cos h, -sin h).
-		spot.position = { a_active.center.x + o.x * c + o.y * s, a_active.center.y - o.x * s + o.y * c, a_active.center.z + o.z };
-		spot.heading = a_active.heading + o.rot * PI_F / 180.0F;
+		spot.position = { a_active.center.x + x * c + y * s, a_active.center.y - x * s + y * c, a_active.center.z + z };
+		spot.heading = a_active.heading + r * PI_F / 180.0F;
 		spot.scale = o.scale;
 		return spot;
 	}
@@ -2851,6 +2873,9 @@ namespace
 			}
 		}
 		if (dest.empty()) {
+			dest = scene->AutoTransition(a_event);  // OStim's scene-wide ones
+		}
+		if (dest.empty()) {
 			return false;
 		}
 		F4SE::GetTaskInterface()->AddTask([id = a_actor->GetFormID(), dest]() {
@@ -3897,7 +3922,9 @@ namespace
 				Scaleform::GFx::Value id, name, tags;
 				id = scene.id.c_str();
 				name = scene.name.c_str();
-				tags = scene.actions.empty() ? scene.tags.c_str() : scene.actions.c_str();  // what happens in it, else its tags
+				// What happens in it, else its tags; and the OStim modpack it's from.
+				const auto detail = (scene.actions.empty() ? scene.tags : scene.actions) + (scene.modpack.empty() ? std::string{} : "  (" + scene.modpack + ")");
+				tags = detail.c_str();
 				entry.SetMember("id"sv, id);
 				entry.SetMember("name"sv, name);
 				entry.SetMember("tags"sv, tags);
@@ -5111,7 +5138,7 @@ namespace FourStim
 		}
 		const auto scene = SceneRegistry::Find(active->sceneID);
 		a_sceneID = scene ? SceneRegistry::Settled(scene)->id : active->sceneID;
-		a_offset = Alignment::Get(a_sceneID, a_role);
+		a_offset = Alignment::Get(active->alignKey, a_sceneID, a_role);
 		return true;
 	}
 
@@ -5122,12 +5149,14 @@ namespace FourStim
 		if (!GetFocusedAlignment(a_role, old, sceneID)) {
 			return;
 		}
-		Alignment::Set(sceneID, a_role, a_offset);
-		REX::INFO("Alignment: \"{}\" role {}: x {:.1f} y {:.1f} z {:.1f} rot {:.1f} scale {:.2f}", sceneID, a_role, a_offset.x, a_offset.y, a_offset.z,
-			a_offset.rot, a_offset.scale);
-		if (const auto active = FindActiveScene(GetPlayerScene().role0)) {
-			LockScene(*active);
+		const auto active = FindActiveScene(GetPlayerScene().role0);
+		if (!active) {
+			return;
 		}
+		Alignment::Set(active->alignKey, sceneID, a_role, a_offset);
+		REX::INFO("Alignment: \"{}\" ({}) role {}: x {:.1f} y {:.1f} z {:.1f} rot {:.1f} scale {:.2f}", sceneID, active->alignKey, a_role, a_offset.x, a_offset.y,
+			a_offset.z, a_offset.rot, a_offset.scale);
+		LockScene(*active);
 	}
 
 	std::vector<RE::Actor*> ResolveActors(const std::vector<std::uint32_t>& a_ids)

@@ -9,7 +9,7 @@
 Data\F4SE\Plugins\4Stim\Scenes\YourPack.json
 ```
 
-Every `.json` file in that folder is loaded. Use a filename unique to your pack.
+Every `.json` file in that folder and its subfolders is loaded. Use a filename unique to your pack. 4Stim also reads **OStim's own layout**, one scene per file (see "OStim's layout" below), so a converted OStim pack keeps its files.
 
 ## The plugin: Idle records
 
@@ -78,14 +78,14 @@ The first scene has two speeds and one navigation option. The second uses the si
 | `name` | scene | no | Display name. Defaults to the ID. |
 | `actors` | scene | yes | One entry per role, **in role order**: the first entry is role 0, the second role 1, and so on. |
 | `sex` | actor | no | Who may take this role: `"male"`, `"female"` or `"any"` (default). With `SetOnlyGayAnimsInGayScenes=1` (the default, in `4Stim.ini`), the picker, the HUD and navigation only offer scenes and sequences whose roles the actors fit, and a new scene gives each actor the role that fits (the player takes the first role unless only the other order fits). A sequence's role asks for whatever its scenes ask for; scenes that ask for different sexes in the same role can't share a sequence. OStim's `intendedSex` is read the same way. |
-| `speeds` | scene | one of `speeds` or actor `idle` | List of speeds, slowest first. Each has `idles`: one Idle form ID per role, in role order. |
-| `autoTransitions` | actor | no | Scenes to move to on an event for the actor in this role, OStim's format: `{"climax": "MyPack_MissionaryClimax", "pullout": "MyPack_MissionaryPullout"}`. `climax` plays when the actor climaxes (see `EXCITEMENT.md`), `pullout` when auto mode has a man pull out (`AUTOMODE.md`); scripts can play any other with `FourStim.AutoTransition`. Each must be a scene with the same number of actors, usually a transition back. `"climax": "..."` on the actor is short for the climax one. |
+| `speeds` | scene | one of `speeds` or actor `idle` | List of speeds, slowest first. Each has `idles`: one Idle form ID per role, in role order; or OStim's `animation` (see "OStim's layout"). A speed can also have OStim's `displaySpeed` and `playbackSpeed` (kept, not used yet: Fallout 4's behavior graphs have no speed variable). |
+| `autoTransitions` | actor or scene | no | Scenes to move to on an event for the actor in this role, OStim's format: `{"climax": "MyPack_MissionaryClimax", "pullout": "MyPack_MissionaryPullout"}`. `climax` plays when the actor climaxes (see `EXCITEMENT.md`), `pullout` when auto mode has a man pull out (`AUTOMODE.md`); scripts can play any other with `FourStim.AutoTransition`. Each must be a scene with the same number of actors, usually a transition back. `"climax": "..."` on the actor is short for the climax one. |
 | `tags` | actor | no | What the actor in this role is doing: `standing`, `kneeling`, `sitting`, `lyingback`, `lyingfront`, `allfours`, `ontop`, `onbottom`, `facingaway`... (OStim's actor tags). Auto mode uses `standing` (`AUTOMODE.md`); scripts can query them (`SceneActorHasTag`). |
 | `requirements` | actor | no | Body parts the actor in this role needs besides what the scene's actions ask for (`ACTIONS.md`, Requirements), e.g. `["penis"]`. |
 | `idle` | actor | one of `speeds` or actor `idle` | Single-speed shorthand: the Idle form ID for this role. |
-| `navigations` | scene | no | Scenes the player can move to from this one, in display order. Each has `to` (destination scene ID) and `label`. In a label, `{0}`, `{1}` and so on are replaced by the name of the actor in that role. |
+| `navigations` | scene | no | Scenes the player can move to from this one, in display order. Each has `to` (destination scene ID; OStim's `destination` also works) and `label` (OStim's `description`; the destination's name if none). In a label, `{0}`, `{1}` and so on are replaced by the name of the actor in that role. OStim's fields work too: `origin` (offer it in that scene instead, linking it to this one), `priority` (lower first; links are sorted by it, as OStim does), `icon`, `border` and `noWarnings` (kept). A transition's own `navigations` don't count, as in OStim: give it an `origin` instead. |
 | `actions` | scene | no | What the actors do to each other: a list of `{"type": "vaginalsex", "actor": 0, "target": 1}`. `type` is an action type id or alias (`ACTIONS.md`); `actor` is the role doing it, `target` the role it's done to (default: the actor, for things done to oneself), and `performer` the role moving (default: the actor; in cowgirl the target is the performer). Unknown types are skipped with a warning. With `SetOnlyGayAnimsInGayScenes=1` a role's actions must also fit its actor: a role that receives `vaginalsex` needs a vagina, so only women take it (`ACTIONS.md`, Requirements). The picker shows a scene's actions under its name. Excitement, undressing and sounds will build on them. |
-| `tags` | scene | no | Free-form tags. One has a meaning: **`idle`** marks a scene a new scene can start with. After the player picks who and where, 4Stim starts a random `idle` scene that fits them (any fitting scene if none is tagged), like OStim. Tag your neutral standing, sitting or lying poses `idle`, not transitions. |
+| `tags` | scene | no | Free-form tags. As OStim, every transition also gets `transition`, and a scene of two or more men `gay`, of two or more women `lesbian`. One has a meaning: **`idle`** marks a scene a new scene can start with. After the player picks who and where, 4Stim starts a random `idle` scene that fits them (any fitting scene if none is tagged), like OStim. Tag your neutral standing, sitting or lying poses `idle`, not transitions. |
 | `icon` | scene or navigation | no | HUD icon: a `.dds` (or `.swf`) under `Data\Interface\4Stim\Icons\`, extension optional, so `"4Stim/positional/standup_f"` is `Icons\4Stim\positional\standup_f.dds` (see `HUD_API.md`). On a navigation entry it overrides the destination scene's icon. |
 | `length` | scene | for transitions | Seconds one play-through of the animation takes. A transition moves on after this long; a sequence uses it when an entry has no `duration`. |
 | `undress` | scene | no | Animated undressing: a list of `{"actor": role, "slots": [biped slots], "at": seconds}`. At `at` seconds into the scene, the actor in that role takes off what they wear in those slots (within `sUndressSlots`, see `UNDRESS.md`). For scenes whose animation shows clothes coming off. |
@@ -95,7 +95,22 @@ The first scene has two speeds and one navigation option. The second uses the si
 | `furnitureOffset` | scene | no | `[x, y, z]` or `[x, y, z, degrees]`: moves this scene from its furniture type's spot, in the spot's own frame (x to the right, y forward, z up), and turns it. For scenes whose animation starts somewhere other than the rest on that furniture. |
 | `defaultSpeed` | scene | no | The speed auto mode starts this scene at, 0 = slowest (OStim's convention; sequences count from 1). Navigating by hand keeps the current speed. |
 | `noRandomSelection` | scene | no | `true`: auto mode never picks this scene at random (it can still walk through it). For scenes that only make sense from a particular other one. |
+| `offset` | scene or actor | no | OStim's `{"x", "y", "z", "r"}`: moves an actor from the scene's spot (x right, y forward, z up, r degrees clockwise), before alignment. A scene's offset moves every actor, on top of each one's own. |
+| `modpack` | scene | no | OStim's: the pack the scene comes from, shown in the picker. |
+| `fadeOnEntry` | scene | no | OStim's: fade to black when auto mode jumps to this scene. Kept, for when auto mode fades come. |
+| `penisBend` | actor | no | The penis bend for this role (OStim's `sosBend`, also read). Kept, for when bendable bodies are supported. |
 | `noStrip` | scene | no | `true`: no one undresses in this scene, whatever its actions (UNDRESS.md). Scenes after it still undress as usual. |
+
+## OStim's layout
+
+4Stim also reads scenes written the way OStim NG writes them, so an OStim pack converted to Fallout 4 keeps its scene files:
+
+- **One scene per file**, anywhere under `Scenes\` (subfolders too, as OStim's `scenes\` folder). The file name is the scene id: `Scenes\MyPack\MyPack_Cowgirl.json` is `MyPack_Cowgirl`. A file with no `scenes` or `sequences` list is read this way.
+- **OStim's field names**: `intendedSex`, `navigations` with `destination` / `origin` / `description` / `priority`, `offset`, `modpack`, `fadeOnEntry`, scene-wide `autoTransitions`, `sosBend`, `animationIndex`.
+- **`speeds[].animation`**: one name for all actors, as OStim's: role 0 plays the Idle whose **editor ID** is `<animation>_0`, role 1 `<animation>_1`, and so on (OStim appends the actor's index the same way, or the actor's `animationIndex`). Name your Idle records after OStim's animations (the converter does) and no plugin or form IDs are needed.
+- **Sequences**: one per file in `Data\F4SE\Plugins\4Stim\Sequences\`, the file name being the sequence id, with OStim's `scenes` (`id`, `duration`) and `tags`.
+
+What OStim has that Fallout 4 can't use is skipped: `lookUp` / `lookDown` / `lookLeft` / `lookRight` and expressions (until facial expressions), `scale` / `scaleHeight` / `feetOnGround` (until actor scaling), `playbackSpeed`.
 
 ## Speeds and navigation in game
 
@@ -120,7 +135,7 @@ Three things about the transition idle and clip:
 
 ## Sequences
 
-A sequence plays a fixed run of scenes, each for a set time, then stays on the last one (if that's a transition, it still moves on to its destination). Put them in a `sequences` list in any scene file:
+A sequence plays a fixed run of scenes, each for a set time, then stays on the last one (if that's a transition, it still moves on to its destination). Put them in a `sequences` list in any scene file, or one per file in `Sequences\` as OStim does (see "OStim's layout"):
 
 ```json
 "sequences": [
