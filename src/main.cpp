@@ -20,6 +20,8 @@ namespace
 {
 	using namespace std::literals;
 
+	bool g_lockScenes = true;  // bLockScenes: see "Scene lock"
+
 	bool g_guardScenes = true;  // bGuardScenes: see GuardScenes
 
 	// Furniture kicks by the scene guard, per actor: when the last was, and
@@ -199,6 +201,8 @@ namespace
 					Excitement::Settings().flash = std::clamp(std::stof(value), 0.0F, 1.0F);
 				} else if (key == "bclimaxrumble") {
 					Excitement::Settings().rumble = std::stoi(value) != 0;
+				} else if (key == "blockscenes") {
+					g_lockScenes = std::stoi(value) != 0;
 				} else if (key == "bguardscenes") {
 					g_guardScenes = std::stoi(value) != 0;
 				} else if (key == "bundress") {
@@ -521,6 +525,12 @@ namespace
 		// When its idles were last played (the scene guard leaves it alone
 		// for a moment after).
 		std::chrono::steady_clock::time_point lastPlayed = std::chrono::steady_clock::now();
+		// The scene's spot: where its animations are played around (every
+		// actor of a paired animation shares it), and the heading they face.
+		// Each actor is locked there for the whole scene (see "Scene lock").
+		RE::NiPoint3                          center{};
+		float                                 heading = 0.0F;  // radians
+		std::chrono::steady_clock::time_point lastRelock{};
 
 		// Auto mode (see "Auto mode" below).
 		struct Auto
@@ -578,6 +588,8 @@ namespace
 	std::mutex                   g_pendingResumeLock;
 	std::optional<PendingResume> g_pendingResume;
 
+	void LockScene(const ActiveScene& a_active);
+	void UnlockActors(const std::vector<std::uint32_t>& a_ids);
 	void ArmAutoplay(ActiveScene& a_scene);
 	void StartAutoMode(ActiveScene& a_active);
 	void StopAutoMode(ActiveScene& a_active);
@@ -606,6 +618,7 @@ namespace
 				std::vector<std::uint32_t> left;
 				std::ranges::copy_if(a_scene.actors, std::back_inserter(left), [&](std::uint32_t id) { return std::ranges::find(a_actors, id) == a_actors.end(); });
 				Excitement::Leave(left);
+				UnlockActors(left);
 				for (const auto id : left) {
 					Undress::Redress(id, false, true);
 				}
@@ -635,7 +648,14 @@ namespace
 				}
 			}
 		}
+		// The spot it's played on: where role 0 was placed (everyone was
+		// placed on the same spot, or the player's / first actor's own).
+		if (const auto first = RE::TESForm::GetFormByID<RE::Actor>(a_actors.front())) {
+			scene.center = first->data.location;
+			scene.heading = first->data.angle.z;
+		}
 		g_activeScenes.push_back(std::move(scene));
+		LockScene(g_activeScenes.back());
 		SceneEvents::SceneStarted(a_actors, a_sceneID);
 		WatchAnimEvents(a_actors, a_sceneID);
 		auto& added = g_activeScenes.back();
@@ -686,6 +706,7 @@ namespace
 		}
 		const auto ended = std::move(*it);
 		g_activeScenes.erase(it);
+		UnlockActors(ended.actors);
 		Excitement::Leave(ended.actors);
 		for (const auto id : ended.actors) {
 			Undress::Redress(id, false, true);
@@ -1177,10 +1198,45 @@ namespace
 	// together, so they stay in sync). Not during transitions.
 
 
-	// An NPC using furniture or an idle marker (a workbench, a broom, a
-	// chair...) stays in it under any idle we play, props and all: get them
-	// out on the spot, and give their AI a do-nothing package so it doesn't
-	// walk them back. Main thread. True if they were in something.
+	// ---- Scene lock ----
+	// Every actor in a scene is held on the scene's spot for the whole scene,
+	// so nothing moves them: not other NPCs walking into them, furniture or
+	// world collision, slopes or gravity, nor their AI. Like OStim: each
+	// actor is put into a "translation" to its own spot at a huge speed and
+	// a near-zero turning speed (Papyrus TranslateTo); the game then keeps a
+	// translating reference exactly where the translation puts it every
+	// frame, whatever pushes on it, until StopTranslation. The scene guard
+	// checks four times a second and locks again if anyone got off the spot.
+	// The Alignment menu's offsets will be added to each actor's spot here.
+	void LockScene(const ActiveScene& a_active)
+	{
+		if (!g_lockScenes || !g_vm) {
+			return;
+		}
+		const float headingDeg = a_active.heading * 180.0F / PI_F;
+		for (const auto id : a_active.actors) {
+			const auto actor = RE::TESForm::GetFormByID<RE::Actor>(id);
+			if (!actor) {
+				continue;
+			}
+			actor->SetHeading(a_active.heading);  // face the scene's way first; the translation then holds it
+			RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
+			g_vm->DispatchStaticCall("FourStimScene"sv, "LockInPlace"sv, callback, static_cast<std::int32_t>(id), a_active.center.x, a_active.center.y,
+				a_active.center.z, headingDeg);
+		}
+	}
+
+	void UnlockActors(const std::vector<std::uint32_t>& a_ids)
+	{
+		if (!g_vm) {
+			return;
+		}
+		for (const auto id : a_ids) {
+			RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
+			g_vm->DispatchStaticCall("FourStimScene"sv, "Unlock"sv, callback, static_cast<std::int32_t>(id));
+		}
+	}
+
 	// The furniture or idle marker a_actor is using, if any (nullptr if none
 	// or if the handle no longer resolves).
 	RE::NiPointer<RE::TESObjectREFR> FurnitureOf(RE::Actor* a_actor)
@@ -1196,6 +1252,10 @@ namespace
 		return data->currentFurniture.get();
 	}
 
+	// An NPC using furniture or an idle marker (a workbench, a broom, a
+	// chair...) stays in it under any idle we play, props and all: get them
+	// out on the spot, and give their AI a do-nothing package so it doesn't
+	// walk them back. Main thread. True if they were in something.
 	bool LeaveFurniture(RE::Actor* a_actor, bool a_doNothing)
 	{
 		const auto furniture = FurnitureOf(a_actor);
@@ -1240,6 +1300,18 @@ namespace
 					continue;
 				}
 				data->packageIdleTimer = 30.0F;  // no package idle for a while; renewed every check
+				// Scene lock watchdog: moved off the spot (or turned) anyway?
+				if (g_lockScenes && now - active.lastRelock > std::chrono::seconds(1)) {
+					const float drift = actor->data.location.GetDistance(active.center);
+					float       turn = std::fabs(actor->data.angle.z - active.heading);
+					turn = std::fmin(turn, 2.0F * PI_F - turn);
+					if (drift > 4.0F || turn > 0.06F) {
+						REX::INFO("Scene lock: {:08X} in \"{}\" was {:.1f} units / {:.1f} deg off its spot, locking it again", id, active.sceneID, drift,
+							turn * 180.0F / PI_F);
+						active.lastRelock = now;
+						LockScene(active);
+					}
+				}
 				if (auto& kicks = g_guardKicks[id]; kicks.count < 3 && now - kicks.last > std::chrono::seconds(5) && FurnitureOf(actor)) {
 					kicks.last = now;
 					if (++kicks.count == 3) {

@@ -105,6 +105,29 @@ Function PrepareSceneCamera() Global
 	Utility.Wait(0.5)  ; let the view change finish
 EndFunction
 
+; ---- Scene lock ----
+; Holds an actor on its scene spot for the whole scene, so nothing moves
+; them (other NPCs, furniture, slopes, gravity, their AI): a translation to
+; the spot at a huge speed and next to no turning speed, which the game keeps
+; them in every frame until Unlock. The heading is already set natively;
+; the translation's +1 degree at 0.0001 deg/s just holds it. Called by the
+; plugin (bLockScenes).
+Function LockInPlace(int aiActorID, float afX, float afY, float afZ, float afHeading) Global
+	ObjectReference akRef = Game.GetForm(aiActorID) as ObjectReference
+	if akRef == None || !akRef.Is3DLoaded()
+		return
+	endif
+	akRef.StopTranslation()
+	akRef.TranslateTo(afX, afY, afZ, 0.0, 0.0, afHeading + 1.0, 1000000.0, 0.0001)
+EndFunction
+
+Function Unlock(int aiActorID) Global
+	ObjectReference akRef = Game.GetForm(aiActorID) as ObjectReference
+	if akRef
+		akRef.StopTranslation()
+	endif
+EndFunction
+
 ; An NPC who was in a scene when the game was saved, whose scene isn't
 ; started again on load: let them go (they're still restrained, can't be
 ; talked to or activated, in the save). Called by the plugin.
@@ -113,6 +136,7 @@ Function ReleaseAfterLoad(int aiActorID) Global
 	if akActor == None || IsPlayer(akActor)
 		return
 	endif
+	akActor.StopTranslation()
 	akActor.SetRestrained(false)
 	akActor.EvaluatePackage()
 	FourStim.RestoreInteraction(akActor)
