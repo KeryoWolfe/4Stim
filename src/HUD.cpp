@@ -548,7 +548,7 @@ namespace HUD
 					SendAlign();
 					break;
 				case 12:  // SetHorizontalRepeat(on)
-					_horizontalRepeat = a_params.argCount > 0 && a_params.args[0].IsBool() && a_params.args[0].GetBool();
+					_horizontalRepeat = a_params.argCount > 0 && a_params.args[0].IsBoolean() && a_params.args[0].GetBoolean();
 					break;
 				default:
 					break;
