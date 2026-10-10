@@ -55,6 +55,10 @@ namespace
 
 	bool g_guardScenes = true;  // bGuardScenes: see GuardScenes
 
+	// 4Stim's own fade to black (SetUseFades) is up: the scene camera doesn't
+	// wait for that one, so the camera change happens while it's black.
+	std::atomic<bool> g_sceneFade = false;
+
 	// Furniture kicks by the scene guard, per actor: when the last was, and
 	// how many in this scene (it gives up after a few, rather than replay
 	// the scene over and over).
@@ -97,6 +101,8 @@ namespace
 		float         freeCamFOV = 45.0F;        // 0 = leave the FOV alone
 		bool          forceFirstPerson = false;
 		bool          useFades = true;           // SetUseFades: fade to black as scenes with the player start and end
+		bool          useAutoFades = false;      // SetUseAutoFades: and as auto mode jumps to another scene
+		bool          useIntroScenes = true;     // SetUseIntroScenes: scenes with the player start with one tagged "intro"
 		float         npcSceneDuration = 300.0F; // NPCSceneDuration (OStim: ms): scenes without the player end after this many seconds (0 = never)
 		std::uint32_t speedUpKey = 0xBB;       // virtual-key code; 0xBB = the =/+ key
 		std::uint32_t speedDownKey = 0xBD;     // 0xBD = the -/_ key
@@ -181,6 +187,8 @@ namespace
 		{ "setfreecamfov", { "ffreecamfov", OStimUnit::kSame } },
 		{ "setforcefirstperson", { "bforcefirstperson", OStimUnit::kSame } },
 		{ "setusefades", { "busefades", OStimUnit::kSame } },
+		{ "setuseintroscenes", { "buseintroscenes", OStimUnit::kSame } },
+		{ "setuseautofades", { "buseautofades", OStimUnit::kSame } },
 		{ "npcsceneduration", { "fnpcsceneduration", OStimUnit::kMilliseconds } },
 		// Excitement and climax.
 		{ "setsexexcitementmult", { "fmaleexcitementmult", OStimUnit::kSame } },
@@ -297,6 +305,10 @@ namespace
 					g_settings.forceFirstPerson = std::stoi(value) != 0;
 				} else if (key == "busefades") {
 					g_settings.useFades = std::stoi(value) != 0;
+				} else if (key == "buseintroscenes") {
+					g_settings.useIntroScenes = std::stoi(value) != 0;
+				} else if (key == "buseautofades") {
+					g_settings.useAutoFades = std::stoi(value) != 0;
 				} else if (key == "fnpcsceneduration") {
 					g_settings.npcSceneDuration = std::max(std::stof(value), 0.0F);
 				} else if (key == "ipulloutkey") {
@@ -713,6 +725,16 @@ namespace
 		// Scenes without the player: time left before they end anyway
 		// (OStim's NPCSceneDuration; < 0 = no limit).
 		float stopTimer = -1.0F;
+		// Actors playing their climax animation, who climax at its
+		// 4StimClimax annotation or when the scene leaves it (OStim's
+		// awaitingClimax).
+		struct AwaitingClimax
+		{
+			std::uint32_t actor = 0;
+			std::string   sceneID;            // the climax animation's scene
+			bool          annotated = false;  // its 4StimClimax annotation came
+		};
+		std::vector<AwaitingClimax> awaitingClimax;
 
 		// When its idles were last played (the scene guard leaves it alone
 		// for a moment after).
@@ -1215,7 +1237,38 @@ namespace
 	// Moves a_active to a_target: along a_route if there is one (a short
 	// sequence: transitions for their length, other scenes in between for
 	// half a second), else directly. Returns the seconds the way takes.
+	float AutoGoToNow(ActiveScene& a_active, const std::shared_ptr<const SceneRegistry::Scene>& a_target, const std::vector<std::string>& a_route);
+
+	// As OStim's navigateTo / warpTo: with the player in the scene, and
+	// SetUseAutoFades on or the first scene marked fadeOnEntry, it fades to
+	// black, moves on 0.7 s in, and fades back 0.55 s later.
 	float AutoGoTo(ActiveScene& a_active, const std::shared_ptr<const SceneRegistry::Scene>& a_target, const std::vector<std::string>& a_route)
+	{
+		const auto first = a_route.empty() ? a_target : SceneRegistry::Find(a_route.front());
+		const bool withPlayer = std::ranges::any_of(a_active.actors, [](std::uint32_t id) { return IsPlayer(RE::TESForm::GetFormByID<RE::Actor>(id)); });
+		if (!withPlayer || !g_vm || g_sceneFade || !first || !(g_settings.useAutoFades || first->fadeOnEntry)) {
+			return AutoGoToNow(a_active, a_target, a_route);
+		}
+		REX::INFO("Auto mode: fading to \"{}\"", a_target->id);
+		RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
+		g_vm->DispatchStaticCall("FourStimMenu"sv, "FadeToBlack"sv, callback);
+		std::thread([role0 = a_active.actors[0], target = a_target, route = a_route]() {
+			std::this_thread::sleep_for(std::chrono::milliseconds(700));
+			F4SE::GetTaskInterface()->AddTask([role0, target, route]() {
+				if (const auto active = FindActiveScene(role0)) {
+					AutoGoToNow(*active, target, route);
+				}
+			});
+			std::this_thread::sleep_for(std::chrono::milliseconds(550));
+			if (g_vm) {
+				RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> after;
+				g_vm->DispatchStaticCall("FourStimMenu"sv, "FadeFromBlack"sv, after, 0.0F);
+			}
+		}).detach();
+		return 1.25F;
+	}
+
+	float AutoGoToNow(ActiveScene& a_active, const std::shared_ptr<const SceneRegistry::Scene>& a_target, const std::vector<std::string>& a_route)
 	{
 		const int finalSpeed = a_target->defaultSpeed;
 		if (a_route.size() <= 1) {
@@ -1906,13 +1959,13 @@ namespace
 		}
 	}
 
-	// a_actorID, in a_active, reached 100: climax (as OStim's). Plays their
-	// role's climax scene if it has one, else a man drops to the slowest
-	// speed; tells other mods; shakes the camera if the player is in it;
-	// and ends the scene if the settings say so.
-	void HandleClimax(ActiveScene& a_active, std::uint32_t a_actorID)
+	// a_actorID, in a_active, climaxes now (OStim's climaxInner): counts it,
+	// a man drops to the slowest speed, other mods are told, the player sees
+	// the effects, and the scene ends if the settings say so.
+	void ClimaxNow(ActiveScene& a_active, std::uint32_t a_actorID)
 	{
 		const auto& config = Excitement::Settings();
+		std::erase_if(a_active.awaitingClimax, [&](const auto& a_entry) { return a_entry.actor == a_actorID; });
 		Excitement::Climaxed(a_actorID);
 		if (a_active.autoMode.on && a_active.autoMode.stage == ActiveScene::Auto::Stage::kPullout) {
 			a_active.autoMode.stage = ActiveScene::Auto::Stage::kMain;
@@ -1925,20 +1978,12 @@ namespace
 		const auto scene = SceneRegistry::Find(a_active.sceneID);
 		REX::INFO("Climax: {:08X} (role {}) in \"{}\", climax {}", a_actorID, role, a_active.sceneID, times);
 
-		bool played = false;
-		const auto climaxScene = scene && role < scene->actors.size() ? scene->actors[role].AutoTransition("climax") : std::string{};
-		if (config.climaxScenes && scene && !scene->IsTransition() && !climaxScene.empty() &&
-			a_active.queuedScene.empty() && !a_active.sequence) {
-			played = PlayOnActiveScene(a_active, climaxScene, 0);
-			if (played) {
-				if (sex == SceneRegistry::Sex::kMale) {
-					a_active.carrySpeed = 0;  // back at the slowest speed after it
-				}
-				ArmAutoplay(a_active);
-			}
-		}
-		if (!played && sex == SceneRegistry::Sex::kMale && a_active.speed > 0 && scene && !scene->IsTransition()) {
-			if (PlayOnActiveScene(a_active, a_active.sceneID, 0)) {
+		// As OStim: a man's climax drops the scene to its slowest speed (still
+		// in the climax animation: the scene it goes back to starts slowest).
+		if (sex == SceneRegistry::Sex::kMale && scene) {
+			if (scene->IsTransition()) {
+				a_active.carrySpeed = 0;
+			} else if (a_active.speed > 0 && PlayOnActiveScene(a_active, a_active.sceneID, 0)) {
 				SceneEvents::SpeedChanged(a_active.actors, a_active.sceneID, 0, static_cast<int>(scene->speeds.size()));
 			}
 		}
@@ -1964,6 +2009,49 @@ namespace
 		}
 		if (end && a_active.endIn < 0.0F) {
 			a_active.endIn = config.endDelay;
+		}
+	}
+
+	// a_actorID, in a_active, reached 100 (OStim's orgasm): with a climax
+	// animation for their role (SetAutoClimaxAnims), it plays and the climax
+	// itself waits for the animation's 4StimClimax annotation (OStim's
+	// OStimClimax), or for the scene to move on from it; otherwise they
+	// climax at once.
+	void HandleClimax(ActiveScene& a_active, std::uint32_t a_actorID)
+	{
+		const auto& config = Excitement::Settings();
+		if (std::ranges::any_of(a_active.awaitingClimax, [&](const auto& a_entry) { return a_entry.actor == a_actorID; })) {
+			return;  // already on its way
+		}
+		const auto role = static_cast<std::size_t>(std::ranges::find(a_active.actors, a_actorID) - a_active.actors.begin());
+		const auto scene = SceneRegistry::Find(a_active.sceneID);
+		const auto climaxScene = scene && role < scene->actors.size() ? scene->actors[role].AutoTransition("climax") : std::string{};
+		if (config.climaxScenes && scene && !scene->IsTransition() && !climaxScene.empty() && a_active.queuedScene.empty() && !a_active.sequence &&
+			PlayOnActiveScene(a_active, climaxScene, 0)) {
+			if (SceneRegistry::SexOf(RE::TESForm::GetFormByID<RE::Actor>(a_actorID)) == SceneRegistry::Sex::kMale) {
+				a_active.carrySpeed = 0;  // back at the slowest speed after it
+			}
+			ArmAutoplay(a_active);
+			a_active.awaitingClimax.push_back({ a_actorID, a_active.sceneID, false });
+			REX::INFO("Climax: {:08X} (role {}) plays \"{}\", climaxing at its 4StimClimax annotation or when it ends", a_actorID, role, a_active.sceneID);
+			return;
+		}
+		ClimaxNow(a_active, a_actorID);
+	}
+
+	// Climaxes waiting on their climax animation: the annotation came, or
+	// the scene moved on from the animation (OStim climaxes on the next
+	// scene change). Called from the scene clock.
+	void ResolveAwaitingClimaxes(ActiveScene& a_active)
+	{
+		std::vector<std::uint32_t> due;
+		for (const auto& entry : a_active.awaitingClimax) {
+			if (entry.annotated || _stricmp(entry.sceneID.c_str(), a_active.sceneID.c_str()) != 0) {
+				due.push_back(entry.actor);
+			}
+		}
+		for (const auto id : due) {
+			ClimaxNow(a_active, id);
 		}
 	}
 
@@ -2004,6 +2092,9 @@ namespace
 					Excitement::Climaxed(id);
 				}
 			}
+			for (auto& active : g_activeScenes) {
+				ResolveAwaitingClimaxes(active);
+			}
 			UpdateClimaxShake();
 			GuardScenes(elapsed);
 			Undress::Tick(elapsed);
@@ -2035,7 +2126,8 @@ namespace
 			}
 		}
 		const bool waiting = std::ranges::any_of(g_activeScenes, [](const ActiveScene& a_scene) {
-			return a_scene.remaining >= 0.0F || a_scene.endIn >= 0.0F || a_scene.stopTimer >= 0.0F || a_scene.autoMode.on || Excitement::Settings().enabled;
+			return a_scene.remaining >= 0.0F || a_scene.endIn >= 0.0F || a_scene.stopTimer >= 0.0F || !a_scene.awaitingClimax.empty() || a_scene.autoMode.on ||
+			       Excitement::Settings().enabled;
 		});
 		if (!waiting && !g_climaxShake.active) {
 			g_autoplayTicking = false;
@@ -3270,10 +3362,6 @@ namespace
 	// A loading screen or a screen fade is up (a teleport, a cell load).
 	// Switching to the free camera then can leave the game stuck on the
 	// loading screen, so the scene camera waits for it to clear.
-	// 4Stim's own fade to black (SetUseFades) is up: the scene camera doesn't
-	// wait for that one, so the camera change happens while it's black.
-	std::atomic<bool> g_sceneFade = false;
-
 	bool LoadingOrFading()
 	{
 		const auto ui = RE::UI::GetSingleton();
@@ -4122,17 +4210,56 @@ namespace
 			return true;
 		}
 
-		// Like OStim: a random scene tagged "idle" that fits the cast and the
-		// place (any fitting scene if none is tagged).
+		// The scene a new scene starts with, as OStim's thread starters pick
+		// it: a random scene that fits the cast and the place (no transitions,
+		// nothing marked noRandomSelection). With the player in it, one tagged
+		// "intro" (SetUseIntroScenes) or else "idle"; without the player, any
+		// (OStim's NPC threads). Off furniture it must have someone standing,
+		// on a bed no one standing. Departure from OStim, which gives up when
+		// nothing qualifies: 4Stim falls back step by step (intro -> idle ->
+		// any scene, then without the standing rule), since most converted
+		// packs have no intro scenes yet.
 		static void StartIdleScene()
 		{
 			const auto cast = CastIDs();
 			const auto here = ChosenFurnitureType();
 			auto       scenes = ScenesForCast(cast, here);
-			std::erase_if(scenes, [](const auto& a_scene) { return a_scene->IsTransition(); });
-			std::vector<std::shared_ptr<const SceneRegistry::Scene>> idles;
-			std::ranges::copy_if(scenes, std::back_inserter(idles), [](const auto& a_scene) { return HasTag(*a_scene, "idle"); });
-			const auto& pool = idles.empty() ? scenes : idles;
+			std::erase_if(scenes, [](const auto& a_scene) { return a_scene->IsTransition() || a_scene->noRandomSelection; });
+			bool withPlayer;
+			{
+				std::scoped_lock lock(g_castLock);
+				withPlayer = g_includePlayer;
+			}
+			const bool onBed = !here.empty() && Furniture::IsA(here, "bed");
+			auto standingRule = [&](const SceneRegistry::Scene& a_scene) {
+				const bool standing = std::ranges::any_of(a_scene.actors, [](const SceneRegistry::SceneActor& a) { return a.HasTag("standing"); });
+				return here.empty() ? standing : onBed ? !standing : true;
+			};
+			std::vector<std::string> tags;
+			if (withPlayer) {
+				if (g_settings.useIntroScenes) {
+					tags.emplace_back("intro");
+				}
+				tags.emplace_back("idle");
+			}
+			tags.emplace_back("");  // any scene
+			std::vector<std::shared_ptr<const SceneRegistry::Scene>> pool;
+			std::string                                              picked;
+			for (const bool rule : { true, false }) {
+				for (const auto& tag : tags) {
+					pool.clear();
+					std::ranges::copy_if(scenes, std::back_inserter(pool), [&](const auto& a_scene) {
+						return (tag.empty() || HasTag(*a_scene, tag)) && (!rule || standingRule(*a_scene));
+					});
+					if (!pool.empty()) {
+						picked = (tag.empty() ? std::string("any") : tag) + (rule ? "" : ", without the standing rule");
+						break;
+					}
+				}
+				if (!pool.empty()) {
+					break;
+				}
+			}
 			if (pool.empty()) {
 				REX::WARN("Picker: no scene fits {} actor(s) {}", cast.size(), here.empty() ? "here" : "on " + here);
 				Close();
@@ -4140,7 +4267,7 @@ namespace
 			}
 			static std::mt19937 rng{ std::random_device{}() };
 			const auto& scene = pool[std::uniform_int_distribution<std::size_t>(0, pool.size() - 1)(rng)];
-			REX::INFO("Picker: starting idle \"{}\" ({} of {} {} scene(s))", scene->id, idles.empty() ? "any" : "idle", pool.size(), here.empty() ? "floor" : here);
+			REX::INFO("Picker: starting \"{}\" ({}: {} {} scene(s))", scene->id, picked, pool.size(), here.empty() ? "floor" : here);
 			StartPicked(scene->id);
 		}
 
@@ -4645,6 +4772,16 @@ namespace
 					REX::INFO("Transition \"{}\": clip ended ({:.2f}s before the timer), moving on now", scene->id, active->remaining);
 					active->remaining = -1.0F;
 					AdvanceAutoplay(*active);
+				});
+			} else if (_stricmp(a_event.tag.c_str(), "4StimClimax") == 0) {
+				// The climax annotation (OStim's OStimClimax): this actor
+				// climaxes now, as OStim's climax() does when its annotation
+				// comes, whether or not they were waiting for it.
+				F4SE::GetTaskInterface()->AddTask([id]() {
+					if (const auto active = FindActiveScene(id)) {
+						REX::INFO("Climax: {:08X} 4StimClimax annotation", id);
+						ClimaxNow(*active, id);
+					}
 				});
 			}
 		}

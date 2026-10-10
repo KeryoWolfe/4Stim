@@ -28,6 +28,8 @@ Times given with OStim's names are in milliseconds, as in OStim. `SetFurnitureSe
 | `SetFreeCamFOV` | 45 | | Field of view during the scene |
 | `SetForceFirstPerson` | 0 | | First person after the scene |
 | `SetUseFades` | 1 | | Fade to black as scenes with you start and end |
+| `SetUseAutoFades` | 0 | | Also fade when auto mode jumps to another scene |
+| `SetUseIntroScenes` | 1 | | Scenes with you start with an `intro` scene |
 | `NPCSceneDuration` | 300000 ms | | Scenes without you end after this long |
 | `SetResetPosition` | 1 | `bResetPosition` | NPCs go back to where they stood |
 | `SetOnlyGayAnimsInGayScenes` | 1 | `bMatchSex` | Only scenes whose roles the actors fit |
@@ -72,4 +74,4 @@ These have no OStim counterpart, and keep their names: `bResumeScenes` (0, as OS
 
 ## Not in yet
 
-OStim settings that come with features 4Stim doesn't have yet: intro scenes (`SetUseIntroScenes`), auto mode fades (`SetUseAutoFades`), clutter reset (`SetResetClutter`), the custom time scale (`SetCustomTimescale`), sounds, expressions, strap-ons, and the rest of OStim's MCM. They'll take OStim's names when they come.
+OStim settings that come with features 4Stim doesn't have yet: clutter reset (`SetResetClutter`), the custom time scale (`SetCustomTimescale`), sounds, expressions, strap-ons, and the rest of OStim's MCM. They'll take OStim's names when they come.

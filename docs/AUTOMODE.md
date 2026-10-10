@@ -16,6 +16,8 @@ Auto mode moves a scene on by itself, the way OStim's auto mode does. Scenes wit
 
 Auto mode waits while the scene is in a transition, a sequence, or ending.
 
+**Fades:** in a scene with the player, with `SetUseAutoFades=1` (off by default, as OStim), or when the scene it goes to is marked `fadeOnEntry`, the screen fades to black as auto mode moves on, as OStim's does.
+
 ## Scene files
 
 These scene fields matter to auto mode (`SCENES.md`):

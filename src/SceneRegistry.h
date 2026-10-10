@@ -118,7 +118,7 @@ namespace SceneRegistry
 		float                                      dressAt = -1.0F;            // redress animations: when the clothes go on (s); -1 = not given
 		std::string                                furniture;      // furniture type it's played on (lowercase); "" = anywhere
 		std::string                                modpack;        // OStim's: the pack it comes from, shown in the picker
-		bool                                       fadeOnEntry = false;  // OStim's: kept for auto mode fades (not used yet)
+		bool                                       fadeOnEntry = false;  // OStim's: auto mode fades to black moving here (with the player)
 		// Scene-wide auto transitions (OStim's scene "autoTransitions"),
 		// key lowercase; a role's own come first.
 		std::vector<std::pair<std::string, std::string>> autoTransitions;
