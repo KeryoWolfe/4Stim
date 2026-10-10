@@ -119,7 +119,7 @@ foreach ($s in $Scripts) {
         continue
     }
     Add-File $core $pex "Scripts/$s.pex"
-    if ((Get-Item -LiteralPath $pex).LastWriteTime -lt (Get-Item -LiteralPath $psc).LastWriteTime) {
+    if ((Test-Path -LiteralPath $psc) -and (Get-Item -LiteralPath $pex).LastWriteTime -lt (Get-Item -LiteralPath $psc).LastWriteTime) {
         $warnings += "$s.pex ($pex) is older than its source: recompile it?"
     }
 }
