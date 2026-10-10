@@ -60,4 +60,9 @@ namespace Furniture
 	// Where a scene goes on a_ref, a piece of furniture of type a_type. For
 	// types anchored on an edge, the side nearest a_near is used.
 	Spot SpotFor(RE::TESObjectREFR* a_ref, std::string_view a_type, const RE::NiPoint3& a_near);
+
+	// How much of the straight line a_from -> a_to is clear (1 = all of it),
+	// by a line-of-sight ray: walls, furniture and clutter stop it; actors
+	// and a_ignore don't. Main thread.
+	float ClearFraction(RE::TESObjectREFR* a_ignore, const RE::NiPoint3& a_from, const RE::NiPoint3& a_to);
 }

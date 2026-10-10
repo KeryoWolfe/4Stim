@@ -625,4 +625,9 @@ namespace Furniture
 		}
 		return type.floorExcludeTags.empty() || !anyActorHas(type.floorExcludeTags);
 	}
+
+	float ClearFraction(RE::TESObjectREFR* a_ignore, const RE::NiPoint3& a_from, const RE::NiPoint3& a_to)
+	{
+		return a_ignore ? FreeFraction(a_ignore, a_from, a_to) : 1.0F;
+	}
 }

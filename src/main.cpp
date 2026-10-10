@@ -23,6 +23,31 @@ namespace
 
 	bool g_lockScenes = true;  // bLockScenes: see "Scene lock"
 
+	// Where actors were last placed for a scene, and when: the scene that
+	// starts with them takes its spot and heading from here (the actors'
+	// own positions can already be a little off). Main thread.
+	struct PlacedSpot
+	{
+		RE::NiPoint3                          position;
+		float                                 heading = 0.0F;
+		std::chrono::steady_clock::time_point when;
+	};
+	std::unordered_map<std::uint32_t, PlacedSpot> g_placedSpots;
+
+	// Turns a_actor to a_heading (radians). Like OStim: Actor::SetHeading
+	// only works on the player; NPCs get their reference angle set.
+	void FaceHeading(RE::Actor* a_actor, float a_heading)
+	{
+		if (!a_actor) {
+			return;
+		}
+		if (a_actor == RE::PlayerCharacter::GetSingleton()) {
+			a_actor->SetHeading(a_heading);
+		} else {
+			a_actor->SetAngleOnReference(RE::NiPoint3{ 0.0F, 0.0F, a_heading });
+		}
+	}
+
 	bool g_guardScenes = true;  // bGuardScenes: see GuardScenes
 
 	// Furniture kicks by the scene guard, per actor: when the last was, and
@@ -594,6 +619,7 @@ namespace
 	void LockScene(ActiveScene& a_active);
 	void UnlockActors(const std::vector<std::uint32_t>& a_ids);
 	void RestoreScales(const ActiveScene& a_active);
+	void MoveApart(const ActiveScene& a_ended);
 	void ArmAutoplay(ActiveScene& a_scene);
 	void StartAutoMode(ActiveScene& a_active);
 	void StopAutoMode(ActiveScene& a_active);
@@ -659,6 +685,30 @@ namespace
 			scene.center = first->data.location;
 			scene.heading = first->data.angle.z;
 		}
+		// Better: the spot they were just placed on, if they were (the
+		// player isn't moved: then the player's own spot and facing).
+		const auto now = std::chrono::steady_clock::now();
+		bool       fromPlacement = false;
+		for (const auto id : a_actors) {
+			const auto it = g_placedSpots.find(id);
+			if (it != g_placedSpots.end() && now - it->second.when < std::chrono::seconds(15)) {
+				if (!fromPlacement) {
+					scene.center = it->second.position;
+					scene.heading = it->second.heading;
+					fromPlacement = true;
+				}
+			}
+			if (it != g_placedSpots.end()) {
+				g_placedSpots.erase(it);
+			}
+		}
+		for (const auto id : a_actors) {
+			const auto actor = RE::TESForm::GetFormByID<RE::Actor>(id);
+			if (IsPlayer(actor)) {
+				scene.center = actor->data.location;  // the player is never moved: the scene is built on their spot
+				scene.heading = actor->data.angle.z;
+			}
+		}
 		for (const auto id : a_actors) {
 			const auto actor = RE::TESForm::GetFormByID<RE::Actor>(id);
 			scene.baseScale.push_back(actor && actor->refScale ? actor->refScale / 100.0F : 1.0F);
@@ -717,6 +767,7 @@ namespace
 		const auto ended = std::move(*it);
 		g_activeScenes.erase(it);
 		UnlockActors(ended.actors);
+		MoveApart(ended);
 		RestoreScales(ended);
 		Excitement::Leave(ended.actors);
 		for (const auto id : ended.actors) {
@@ -1272,7 +1323,7 @@ namespace
 			if (!g_lockScenes) {
 				continue;
 			}
-			actor->SetHeading(spot.heading);  // face the right way first; the translation then holds it
+			FaceHeading(actor, spot.heading);  // face the right way first; the translation then holds it
 			RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
 			g_vm->DispatchStaticCall("FourStimScene"sv, "LockInPlace"sv, callback, static_cast<std::int32_t>(id), spot.position.x, spot.position.y,
 				spot.position.z, spot.heading * 180.0F / PI_F);
@@ -1310,6 +1361,51 @@ namespace
 				if (const auto data = process ? process->middleHigh : nullptr) {
 					data->packageIdleTimer = 0.0F;
 				}
+			}
+		}
+	}
+
+	// A scene ended: everyone in it is on one spot, inside each other, and
+	// their collision with each other comes back (RestoreCollision, which
+	// waits for this) -- left there, they'd be stuck together. Everyone but
+	// one (the player, else role 0) steps off the spot first: 70 units away,
+	// in the first direction (behind, left, right, ahead of the scene) with
+	// nothing in the way, each actor a different one.
+	void MoveApart(const ActiveScene& a_ended)
+	{
+		if (!g_vm || a_ended.actors.size() < 2) {
+			return;
+		}
+		std::size_t stay = 0;
+		for (std::size_t role = 0; role < a_ended.actors.size(); ++role) {
+			if (IsPlayer(RE::TESForm::GetFormByID<RE::Actor>(a_ended.actors[role]))) {
+				stay = role;
+			}
+		}
+		constexpr float DISTANCE = 70.0F;
+		const std::array<float, 4> directions{ PI_F, -PI_F * 0.5F, PI_F * 0.5F, 0.0F };  // behind, left, right, ahead
+		std::size_t                next = 0;
+		for (std::size_t role = 0; role < a_ended.actors.size(); ++role) {
+			const auto actor = RE::TESForm::GetFormByID<RE::Actor>(a_ended.actors[role]);
+			if (role == stay || !actor || IsPlayer(actor)) {
+				continue;
+			}
+			bool moved = false;
+			for (std::size_t tries = 0; tries < directions.size() && !moved; ++tries) {
+				const float        angle = a_ended.heading + directions[(next + tries) % directions.size()];
+				const RE::NiPoint3 to{ a_ended.center.x + DISTANCE * std::sin(angle), a_ended.center.y + DISTANCE * std::cos(angle), a_ended.center.z };
+				const RE::NiPoint3 up{ 0.0F, 0.0F, 40.0F };
+				if (Furniture::ClearFraction(actor, a_ended.center + up, to + up) < 0.99F) {
+					continue;
+				}
+				REX::INFO("Scene end: {:08X} steps off the spot, {:.0f} units away", actor->GetFormID(), DISTANCE);
+				RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
+				g_vm->DispatchStaticCall("FourStimScene"sv, "MoveApart"sv, callback, static_cast<std::int32_t>(actor->GetFormID()), to.x, to.y, to.z);
+				next = (next + tries + 1) % directions.size();
+				moved = true;
+			}
+			if (!moved) {
+				REX::INFO("Scene end: {:08X} has nowhere clear to step to; left on the spot", actor->GetFormID());
 			}
 		}
 	}
@@ -1383,6 +1479,7 @@ namespace
 					const auto  spot = SpotOf(active, role);
 					const float drift = actor->data.location.GetDistance(spot.position);
 					float       turn = std::fmod(std::fabs(actor->data.angle.z - spot.heading), 2.0F * PI_F);
+					turn = std::fmin(turn, 2.0F * PI_F - turn);
 					turn = std::fmin(turn, 2.0F * PI_F - turn);
 					if (drift > 4.0F || turn > 0.06F) {
 						REX::INFO("Scene lock: {:08X} in \"{}\" was {:.1f} units / {:.1f} deg off its spot, locking it again", id, active.sceneID, drift,
@@ -1785,7 +1882,8 @@ namespace
 				return;
 			}
 			actor->SetPosition(a_spot.position, true);
-			actor->SetHeading(a_spot.heading);
+			FaceHeading(actor, a_spot.heading);
+			g_placedSpots[id] = { a_spot.position, a_spot.heading, std::chrono::steady_clock::now() };
 			const auto& now = actor->data.location;
 			REX::INFO("Furniture: {:08X} -> ({:.1f}, {:.1f}, {:.1f}), heading {:.1f} deg; now at ({:.1f}, {:.1f}, {:.1f})",
 				id, a_spot.position.x, a_spot.position.y, a_spot.position.z, a_spot.heading * 180.0F / PI_F, now.x, now.y, now.z);
@@ -2075,6 +2173,8 @@ namespace
 		});
 	}
 
+	void RestoreCollisionNow(RE::Actor* a_actor);
+
 	void RestoreCollision(std::monostate, RE::Actor* a_actor)
 	{
 		if (!a_actor) {
@@ -2082,7 +2182,17 @@ namespace
 			return;
 		}
 
-		F4SE::GetTaskInterface()->AddTask([a_actor]() {
+		// After the actors have stepped apart (MoveApart): collision back
+		// while they're still inside each other leaves them stuck together.
+		std::thread([a_actor]() {
+			std::this_thread::sleep_for(std::chrono::milliseconds(700));
+			F4SE::GetTaskInterface()->AddTask([a_actor]() { RestoreCollisionNow(a_actor); });
+		}).detach();
+	}
+
+	void RestoreCollisionNow(RE::Actor* a_actor)
+	{
+		{
 			const auto it = g_savedFilters.find(a_actor->GetFormID());
 			if (it == g_savedFilters.end()) {
 				REX::INFO("RestoreCollision: {:08X} has no saved filter", a_actor->GetFormID());
@@ -2091,7 +2201,7 @@ namespace
 			const auto ok = ApplyFilter(a_actor, it->second);
 			REX::INFO("RestoreCollision: {:08X} filter -> {:08X} ({})", a_actor->GetFormID(), it->second, ok);
 			g_savedFilters.erase(it);
-		});
+		}
 	}
 
 	// ---- Two-actor scenes ----

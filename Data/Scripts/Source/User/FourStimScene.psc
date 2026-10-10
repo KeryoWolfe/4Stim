@@ -128,6 +128,18 @@ Function Unlock(int aiActorID) Global
 	endif
 EndFunction
 
+; A scene ended with everyone on one spot: the plugin has this NPC step
+; off it to (afX, afY, afZ), a clear spot nearby, before their collision
+; with the others comes back (else they're stuck inside each other).
+Function MoveApart(int aiActorID, float afX, float afY, float afZ) Global
+	Actor akActor = Game.GetForm(aiActorID) as Actor
+	if akActor == None || IsPlayer(akActor) || !akActor.Is3DLoaded()
+		return
+	endif
+	akActor.StopTranslation()
+	akActor.SetPosition(afX, afY, afZ)
+EndFunction
+
 ; An NPC who was in a scene when the game was saved, whose scene isn't
 ; started again on load: let them go (they're still restrained, can't be
 ; talked to or activated, in the save). Called by the plugin.

@@ -8,6 +8,10 @@ Every scene has one spot, where its actors were placed, and the way they face. W
 
 It works the way OStim's does: each actor is put into a "translation" (Papyrus `TranslateTo`) to their own spot, at a huge speed and next to no turning speed, and the game keeps a translating reference exactly where the translation puts it every frame until it's stopped. The scene guard checks four times a second, and anyone more than 4 units or 3 degrees off their spot is put back (`Scene lock:` in `4Stim.log`).
 
+The spot is where the actors were placed for the scene (the player's own spot and facing when the player is in it), and every actor is turned to face the scene's way before they're locked: NPCs by their reference angle, as OStim does, since the game's heading setter only works on the player.
+
+When the scene ends, everyone but one (the player, else the first role) steps 70 units off the spot, each in a different clear direction, before their collision with each other comes back, so no one is left stuck inside someone else.
+
 `bLockScenes=0` in `4Stim.ini` turns the lock off.
 
 ## The Align tab
