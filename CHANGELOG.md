@@ -11,7 +11,9 @@ First test build, for private testers (see `docs/ALPHA.md`).
 - **Actions:** who does what to whom in each scene (OStim's action types); roles go to actors who fit them.
 - **Excitement and climax:** meters driven by each scene's actions, climax at 100 with climax animations, screen effects and rumble, and scene-end rules.
 - **Auto mode:** scenes move on by themselves (foreplay, intercourse, pull-out), faster with excitement.
-- **Undressing:** what each scene needs comes off, everything optionally at the start, and it all goes back on at the end.
+- **Undressing:** what each scene needs comes off, one piece at a time, everything optionally at the start, and it all goes back on at the end. Undress / Dress anyone in the scene by hand from the HUD's Utility tab.
+- **Saving mid-scene:** running scenes are kept in the save and start again when it's loaded.
+- **NPC scene key** (Shift + `N` by default): start a scene between NPCs even while you're in one.
 - **Scene guard:** NPCs are taken out of furniture and work spots when a scene starts, and kept on the scene's animations.
 - **Physics swap** for A-Body's SMP during scenes.
 - **Papyrus API and events** for other mods: start / change / speed / end / climax events, actions, excitement, auto mode and undressing calls.

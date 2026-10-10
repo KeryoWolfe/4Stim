@@ -189,10 +189,13 @@ Function EndSceneCamera() Global Native
 
 ; ---- Scene picker ----
 
-; Opens the scene picker menu for the player plus the actor with form ID
-; aiTargetID (0 = solo scenes for the player). When the player picks a
-; scene, the plugin calls FourStimMenu.StartPickedScene.
+; Opens the scene picker for a new scene, with the actor with form ID
+; aiTargetID already picked (0 = no one): with the player in it (unless the
+; player is in a scene already), or, OpenNPCScenePicker, without. If that
+; actor is in a scene, the picker opens on that scene's options. When a
+; scene is picked, the plugin calls FourStimMenu.StartPickedCast.
 Function OpenScenePicker(int aiTargetID) Global Native
+Function OpenNPCScenePicker(int aiTargetID) Global Native
 
 ; ---- Speed and navigation (the focused scene) ----
 ; The focused scene is the one the player is in, or an NPC scene the player

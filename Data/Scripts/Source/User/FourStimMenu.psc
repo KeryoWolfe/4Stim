@@ -26,6 +26,17 @@ Function OnHotkey(int aiTargetMode, float afMaxDistance, float afCone, float afR
 	FourStim.OpenScenePicker(targetID)
 EndFunction
 
+; The NPC scene key (iNPCSceneKey, or Shift + the hotkey): the picker for a
+; scene without the player, whether or not the player is in one.
+Function OnNPCSceneHotkey(int aiTargetMode, float afMaxDistance, float afCone, float afRadius) Global
+	Actor akTarget = FindTarget(aiTargetMode, afMaxDistance, afCone, afRadius)
+	int targetID = 0
+	if akTarget
+		targetID = akTarget.GetFormID()
+	endif
+	FourStim.OpenNPCScenePicker(targetID)
+EndFunction
+
 ; Ends a scene the player isn't watching (by its actors' form IDs, in
 ; role order), leaving the camera alone. Called by the plugin when an NPC
 ; scene ends after a climax.

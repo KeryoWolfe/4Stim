@@ -66,6 +66,8 @@ namespace
 		float         furnitureRadius = 500.0F;  // how far from the player to look for furniture
 		float         furnitureHeight = 100.0F;  // and how far up or down
 		bool          logFurniture = false;      // log every candidate object when looking
+		std::uint32_t npcSceneKey = 0;           // opens the picker for an NPC-only scene, even in a scene (0 = Shift + the hotkey)
+		bool          resumeScenes = true;       // scenes running in a save start again when it's loaded
 	};
 	Settings g_settings;
 
@@ -125,6 +127,10 @@ namespace
 			try {
 				if (key == "ihotkey") {
 					g_settings.hotkey = static_cast<std::uint32_t>(std::stoul(value, nullptr, 0));
+				} else if (key == "inpcscenekey") {
+					g_settings.npcSceneKey = static_cast<std::uint32_t>(std::stoul(value, nullptr, 0));
+				} else if (key == "bresumescenes") {
+					g_settings.resumeScenes = std::stoi(value) != 0;
 				} else if (key == "stargetmode") {
 					auto v = value;
 					std::ranges::transform(v, v.begin(), [](unsigned char ch) { return static_cast<char>(std::tolower(ch)); });
@@ -207,6 +213,12 @@ namespace
 					Undress::Settings().player = std::stoi(value) != 0;
 				} else if (key == "bredress") {
 					Undress::Settings().redress = std::stoi(value) != 0;
+				} else if (key == "fundressitemdelay") {
+					Undress::Settings().itemDelay = std::clamp(std::stof(value), 0.0F, 5.0F);
+				} else if (key == "sredressidle") {
+					Undress::Settings().redressIdle = value;
+				} else if (key == "fredressidlelength") {
+					Undress::Settings().redressIdleLength = std::clamp(std::stof(value), 0.0F, 30.0F);
 				} else if (key == "sundressslots") {
 					std::vector<int> slots;
 					std::string      token;
@@ -280,8 +292,8 @@ namespace
 			ex.enabled ? "on" : "off", ex.maleMult, ex.femaleMult, ex.decayRate, ex.decayGrace, ex.climaxScenes,
 			ex.endOnPlayer, ex.endOnMale, ex.endOnFemale, ex.endOnAll, ex.endNPCScenes, ex.endDelay);
 		const auto& un = Undress::Settings();
-		REX::INFO("Settings: undress {} (at start {}, partial {}, full mid-scene {}, player {}, redress {}), {} slot(s)",
-			un.enabled, un.atStart, un.partial, un.fullMidScene, un.player, un.redress, un.slots.size());
+		REX::INFO("Settings: undress {} (at start {}, partial {}, full mid-scene {}, player {}, redress {}), {} slot(s), {}s per item, redress idle \"{}\"",
+			un.enabled, un.atStart, un.partial, un.fullMidScene, un.player, un.redress, un.slots.size(), un.itemDelay, un.redressIdle);
 		auto& ac = g_autoConfig;
 		ac.sceneMax = std::max(ac.sceneMax, ac.sceneMin);
 		ac.foreplayMax = std::max(ac.foreplayMax, ac.foreplayMin);
@@ -556,8 +568,21 @@ namespace
 	std::mutex                     g_pendingSequenceLock;
 	std::optional<PendingSequence> g_pendingSequence;
 
+	// A scene from a loaded save, being started again (see "Save data"):
+	// what to restore once it's running.
+	struct PendingResume
+	{
+		std::vector<std::uint32_t> actors;  // sorted
+		int                        speed = 0;
+		bool                       autoMode = false;
+		std::vector<std::pair<std::uint32_t, float>> excitement;
+	};
+	std::mutex                   g_pendingResumeLock;
+	std::optional<PendingResume> g_pendingResume;
+
 	void ArmAutoplay(ActiveScene& a_scene);
 	void StartAutoMode(ActiveScene& a_active);
+	void StopAutoMode(ActiveScene& a_active);
 	void AutoModeTick(ActiveScene& a_active, float a_seconds);
 	bool IsPlayer(const RE::Actor* a_actor);
 	void StartAutoplayTicks();
@@ -584,7 +609,7 @@ namespace
 				std::ranges::copy_if(a_scene.actors, std::back_inserter(left), [&](std::uint32_t id) { return std::ranges::find(a_actors, id) == a_actors.end(); });
 				Excitement::Leave(left);
 				for (const auto id : left) {
-					Undress::Redress(id);
+					Undress::Redress(id, false, true);
 				}
 			}
 			return replaced;
@@ -628,6 +653,29 @@ namespace
 		if (withPlayer ? g_autoConfig.player : g_autoConfig.npc) {
 			StartAutoMode(added);
 		}
+		// Started again from a save: back to where it was.
+		std::optional<PendingResume> resume;
+		{
+			std::scoped_lock lock(g_pendingResumeLock);
+			auto sorted = added.actors;
+			std::ranges::sort(sorted);
+			if (g_pendingResume && g_pendingResume->actors == sorted) {
+				resume = std::move(g_pendingResume);
+				g_pendingResume.reset();
+			}
+		}
+		if (resume) {
+			for (const auto& [id, value] : resume->excitement) {
+				Excitement::Set(id, value);
+			}
+			if (resume->autoMode != added.autoMode.on) {
+				resume->autoMode ? StartAutoMode(added) : StopAutoMode(added);
+			}
+			if (resume->speed > 0) {
+				PlayOnActiveScene(added, added.sceneID, resume->speed);
+			}
+			REX::INFO("Save data: \"{}\" running again (speed {}, auto mode {})", added.sceneID, resume->speed + 1, resume->autoMode);
+		}
 	}
 
 	void TrackSceneStop(std::uint32_t a_actorID)
@@ -642,7 +690,7 @@ namespace
 		g_activeScenes.erase(it);
 		Excitement::Leave(ended.actors);
 		for (const auto id : ended.actors) {
-			Undress::Redress(id);
+			Undress::Redress(id, false, true);
 		}
 		SceneEvents::SceneEnded(ended.actors, ended.sceneID);
 	}
@@ -2235,7 +2283,7 @@ namespace
 	void UndressActor(std::monostate, RE::Actor* a_actor)
 	{
 		if (a_actor) {
-			Undress::StripAll(a_actor->GetFormID());
+			Undress::StripAll(a_actor->GetFormID(), true);
 		}
 	}
 
@@ -2967,6 +3015,7 @@ namespace
 	std::mutex                 g_castLock;
 	std::vector<std::uint32_t> g_cast;            // NPCs picked, in pick order
 	bool                       g_includePlayer = true;  // the player is in the new scene
+	bool                       g_playerBusy = false;    // the player is in a scene already (so can't be in the new one)
 	std::vector<RunningScene>  g_running;         // scenes running when the picker opened
 	std::uint32_t              g_selectedScene = 0;  // kScene: its role 0
 	std::vector<Candidate>     g_candidates;      // eligible NPCs near the player
@@ -3297,6 +3346,7 @@ namespace
 				std::vector<std::uint32_t> picked;
 				std::size_t maxCast;
 				bool        withMe;
+				bool        busy;
 				std::size_t running;
 				{
 					std::scoped_lock lock(g_castLock);
@@ -3304,6 +3354,7 @@ namespace
 					picked = g_cast;
 					maxCast = g_maxCast;
 					withMe = g_includePlayer;
+					busy = g_playerBusy;
 					running = g_running.size();
 				}
 				std::string who = withMe ? "You" : "";
@@ -3317,7 +3368,11 @@ namespace
 				} else {
 					rows.push_back({ "@go", castSize == 1 && withMe ? "Continue alone" : std::format("Continue with {}", castSize), who });
 				}
-				rows.push_back({ "@me", withMe ? "You: in the scene" : "You: not in it (NPCs only)", "choose to switch" });
+				if (busy) {
+					rows.push_back({ "@none", "You: not in it (NPCs only)", "you're in a scene already" });
+				} else {
+					rows.push_back({ "@me", withMe ? "You: in the scene" : "You: not in it (NPCs only)", "choose to switch" });
+				}
 				for (const auto& c : candidates) {
 					if (std::ranges::find(picked, c.id) != picked.end()) {
 						rows.push_back({ std::format("@drop:{:X}", c.id), "[x] " + withSex(c), std::format("picked, {:.0f} m away: choose to remove", c.distance / 70.0F) });
@@ -3337,14 +3392,16 @@ namespace
 			} else if (g_startStep == StartStep::kRunning || g_startStep == StartStep::kScene) {
 				std::vector<RunningScene> running;
 				std::uint32_t             selected;
+				bool                      busy;
 				{
 					std::scoped_lock lock(g_castLock);
 					running = g_running;
 					selected = g_selectedScene;
+					busy = g_playerBusy;
 				}
 				const auto it = std::ranges::find_if(running, [&](const RunningScene& r) { return !r.actors.empty() && r.actors.front() == selected; });
 				if (g_startStep == StartStep::kScene && it != running.end()) {
-					if (!it->withPlayer) {
+					if (!it->withPlayer && !busy) {  // not while you're in a scene yourself
 						rows.push_back({ "@watch", "Watch", "follow it with the free camera and the HUD" });
 					}
 					rows.push_back({ "@auto", it->autoMode ? "Auto mode: on" : "Auto mode: off", "choose to switch" });
@@ -3632,21 +3689,24 @@ namespace
 		});
 	}
 
-	// Opens the picker for the player plus a_targetID (0 = solo scenes).
-	void OpenScenePicker(std::monostate, std::int32_t a_targetID)
+	// Opens the picker for a new scene: a_targetID already picked (0 = no
+	// one), the player in it unless a_npcsOnly.
+	void OpenPicker(std::int32_t a_targetID, bool a_npcsOnly)
 	{
 		g_pickerMode = PickerMode::kStart;
 		g_startStep = StartStep::kActors;
 		// Look for actors and furniture first (on the main thread: it walks
 		// the loaded cells), then open the picker.
-		F4SE::GetTaskInterface()->AddTask([a_targetID]() {
+		F4SE::GetTaskInterface()->AddTask([a_targetID, a_npcsOnly]() {
 			{
 				auto candidates = FindCandidates(g_settings.actorRadius);
 				auto running = SnapshotRunning();
 				std::scoped_lock lock(g_castLock);
 				g_cast.clear();
 				g_placeChoice = -1;
-				g_includePlayer = true;
+				// In a scene yourself, you can't be in another.
+				g_playerBusy = FindActiveScene(RE::PlayerCharacter::GetSingleton()->GetFormID()) != nullptr;
+				g_includePlayer = !a_npcsOnly && !g_playerBusy;
 				g_running = std::move(running);
 				// The hotkey found someone already in a scene: that scene's options.
 				if (const auto active = a_targetID ? FindActiveScene(static_cast<std::uint32_t>(a_targetID)) : nullptr) {
@@ -3682,6 +3742,18 @@ namespace
 				queue->AddMessage(PICKER_MENU, RE::UI_MESSAGE_TYPE::kShow);
 			}
 		});
+	}
+
+	// Natives: the hotkey (you in the scene, unless you're in one already)
+	// and the NPC scene key (a scene without you).
+	void OpenScenePicker(std::monostate, std::int32_t a_targetID)
+	{
+		OpenPicker(a_targetID, false);
+	}
+
+	void OpenNPCScenePicker(std::monostate, std::int32_t a_targetID)
+	{
+		OpenPicker(a_targetID, true);
 	}
 
 	// Returns the form ID of the actor currently selected in the console, or
@@ -3799,6 +3871,19 @@ namespace
 				Notify(active->autoMode.on ? "Auto mode on" : "Auto mode off");
 			}
 			return;
+		}
+		// The NPC scene key (or Shift + the hotkey): the picker for a scene
+		// without you, whether or not you're in one.
+		{
+			const auto code = static_cast<std::uint32_t>(a_event->idCode);
+			const bool shift = (::GetAsyncKeyState(VK_SHIFT) & 0x8000) != 0;
+			if (g_vm && (g_settings.npcSceneKey != 0 ? code == g_settings.npcSceneKey : (code == g_settings.hotkey && shift))) {
+				REX::INFO("NPC scene key pressed");
+				RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
+				g_vm->DispatchStaticCall("FourStimMenu"sv, "OnNPCSceneHotkey"sv, callback,
+					g_settings.targetMode, g_settings.maxDistance, g_settings.crosshairCone, g_settings.proximityRadius);
+				return;
+			}
 		}
 		if (static_cast<std::uint32_t>(a_event->idCode) != g_settings.hotkey) {
 			return;
@@ -4004,6 +4089,7 @@ namespace
 		a_vm->BindNativeMethod(SCRIPT_NAME, "StopPair"sv, StopPair);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "SaveStartView"sv, SaveStartView);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "OpenScenePicker"sv, OpenScenePicker);
+		a_vm->BindNativeMethod(SCRIPT_NAME, "OpenNPCScenePicker"sv, OpenNPCScenePicker);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "OpenSceneNavigation"sv, OpenSceneNavigation);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "ChangeSceneSpeed"sv, ChangeSceneSpeed);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "NavigateScene"sv, NavigateScene);
@@ -4021,6 +4107,237 @@ namespace
 		a_vm->BindNativeMethod(SCRIPT_NAME, "UnregisterForSceneEvents"sv, UnregisterForSceneEvents);
 		REX::INFO("Papyrus functions bound");
 		return true;
+	}
+
+	// ---- Save data (F4SE co-save) ----
+	// The scenes running when the game is saved: who, which scene, speed,
+	// furniture, auto mode, excitement and what was taken off. On load they
+	// start again (bResumeScenes=1), one by one once the loading screen is
+	// gone; otherwise, or if someone's missing, everyone in them is let go
+	// (unrestrained, interaction back, dressed again).
+
+	constexpr std::uint32_t SAVE_UID = 'FSTM';
+	constexpr std::uint32_t SCENES_RECORD = 'SCNS';
+	constexpr std::uint32_t SCENES_VERSION = 1;
+
+	struct SavedScene
+	{
+		std::vector<std::uint32_t>              actors;  // role order
+		std::string                             sceneID;
+		std::int32_t                            speed = 0;
+		std::uint32_t                           furnitureRef = 0;
+		std::string                             furnitureType;
+		bool                                    autoMode = false;
+		std::vector<float>                      excitement;  // per actor
+		std::vector<std::vector<std::uint32_t>> stripped;    // per actor
+	};
+	std::mutex              g_savedLock;
+	std::vector<SavedScene> g_loadedScenes;  // read from the save being loaded
+
+	void WriteString(const F4SE::SerializationInterface* a_intfc, const std::string& a_text)
+	{
+		const auto length = static_cast<std::uint32_t>(a_text.size());
+		a_intfc->WriteRecordData(length);
+		a_intfc->WriteRecordData(a_text.data(), length);
+	}
+
+	bool ReadString(const F4SE::SerializationInterface* a_intfc, std::string& a_out)
+	{
+		std::uint32_t length = 0;
+		if (a_intfc->ReadRecordData(length) != sizeof(length) || length > 4096) {
+			return false;
+		}
+		a_out.resize(length);
+		return a_intfc->ReadRecordData(a_out.data(), length) == length;
+	}
+
+	void OnGameSaved(const F4SE::SerializationInterface* a_intfc)
+	{
+		if (!a_intfc->OpenRecord(SCENES_RECORD, SCENES_VERSION)) {
+			REX::WARN("Save data: couldn't write the scenes record");
+			return;
+		}
+		const auto count = static_cast<std::uint32_t>(g_activeScenes.size());
+		a_intfc->WriteRecordData(count);
+		for (const auto& active : g_activeScenes) {
+			a_intfc->WriteRecordData(static_cast<std::uint32_t>(active.actors.size()));
+			for (const auto id : active.actors) {
+				a_intfc->WriteRecordData(id);
+				a_intfc->WriteRecordData(std::max(Excitement::Get(id), 0.0F));
+				const auto items = Undress::Stripped(id);
+				a_intfc->WriteRecordData(static_cast<std::uint32_t>(items.size()));
+				for (const auto item : items) {
+					a_intfc->WriteRecordData(item);
+				}
+			}
+			WriteString(a_intfc, active.sceneID);
+			a_intfc->WriteRecordData(static_cast<std::int32_t>(active.speed));
+			a_intfc->WriteRecordData(active.furnitureRef);
+			WriteString(a_intfc, active.furnitureType);
+			a_intfc->WriteRecordData(static_cast<std::uint8_t>(active.autoMode.on ? 1 : 0));
+		}
+		if (count > 0) {
+			REX::INFO("Save data: {} running scene(s) saved", count);
+		}
+	}
+
+	void OnGameLoadedData(const F4SE::SerializationInterface* a_intfc)
+	{
+		std::vector<SavedScene> scenes;
+		std::uint32_t type = 0, version = 0, length = 0;
+		auto resolve = [&](std::uint32_t a_id) { return a_intfc->ResolveFormID(a_id).value_or(0); };
+		while (a_intfc->GetNextRecordInfo(type, version, length)) {
+			if (type != SCENES_RECORD || version != SCENES_VERSION) {
+				continue;
+			}
+			std::uint32_t count = 0;
+			a_intfc->ReadRecordData(count);
+			for (std::uint32_t i = 0; i < count && i < 64; ++i) {
+				SavedScene saved;
+				std::uint32_t actors = 0;
+				a_intfc->ReadRecordData(actors);
+				bool ok = actors > 0 && actors <= 16;
+				for (std::uint32_t a = 0; ok && a < actors; ++a) {
+					std::uint32_t id = 0, items = 0;
+					float         excitement = 0.0F;
+					a_intfc->ReadRecordData(id);
+					a_intfc->ReadRecordData(excitement);
+					a_intfc->ReadRecordData(items);
+					std::vector<std::uint32_t> stripped;
+					for (std::uint32_t n = 0; n < items && n < 64; ++n) {
+						std::uint32_t item = 0;
+						a_intfc->ReadRecordData(item);
+						if (const auto resolved = resolve(item)) {
+							stripped.push_back(resolved);
+						}
+					}
+					saved.actors.push_back(resolve(id));  // 0 if its plugin is gone
+					saved.excitement.push_back(excitement);
+					saved.stripped.push_back(std::move(stripped));
+				}
+				std::int32_t speed = 0;
+				std::uint32_t furniture = 0;
+				std::uint8_t  autoMode = 0;
+				ok = ok && ReadString(a_intfc, saved.sceneID);
+				a_intfc->ReadRecordData(speed);
+				a_intfc->ReadRecordData(furniture);
+				ok = ok && ReadString(a_intfc, saved.furnitureType);
+				a_intfc->ReadRecordData(autoMode);
+				if (!ok) {
+					REX::WARN("Save data: the scenes record is damaged, scenes from it skipped");
+					break;
+				}
+				saved.speed = speed;
+				saved.furnitureRef = furniture ? resolve(furniture) : 0;
+				saved.autoMode = autoMode != 0;
+				scenes.push_back(std::move(saved));
+			}
+		}
+		if (!scenes.empty()) {
+			REX::INFO("Save data: {} scene(s) were running in this save", scenes.size());
+		}
+		std::scoped_lock lock(g_savedLock);
+		g_loadedScenes = std::move(scenes);
+	}
+
+	void OnGameReverted(const F4SE::SerializationInterface*)
+	{
+		std::scoped_lock lock(g_savedLock);
+		g_loadedScenes.clear();
+	}
+
+	// Lets everyone in a saved scene go: unrestrained, interaction back, and
+	// what was taken off back on. Main thread.
+	void ReleaseSavedScene(const SavedScene& a_saved, const char* a_why)
+	{
+		REX::INFO("Save data: \"{}\" not started again ({}): letting its actors go", a_saved.sceneID, a_why);
+		for (std::size_t i = 0; i < a_saved.actors.size(); ++i) {
+			const auto id = a_saved.actors[i];
+			const auto actor = id ? RE::TESForm::GetFormByID<RE::Actor>(id) : nullptr;
+			if (!actor) {
+				continue;
+			}
+			if (!a_saved.stripped[i].empty()) {
+				Undress::NoteStripped(id, a_saved.stripped[i]);
+				Undress::Redress(id, true);
+			}
+			if (!IsPlayer(actor) && g_vm) {
+				RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
+				g_vm->DispatchStaticCall("FourStimScene"sv, "ReleaseAfterLoad"sv, callback, static_cast<std::int32_t>(id));
+			}
+		}
+	}
+
+	// Starts a saved scene again (or lets its actors go). Main thread.
+	void ResumeSavedScene(const SavedScene& a_saved)
+	{
+		const auto scene = SceneRegistry::Find(a_saved.sceneID);
+		bool       everyone = true;
+		bool       free = true;
+		for (const auto id : a_saved.actors) {
+			const auto actor = id ? RE::TESForm::GetFormByID<RE::Actor>(id) : nullptr;
+			everyone = everyone && actor && !actor->IsDead(false) && actor->Get3D();
+			free = free && !FindActiveScene(id);
+		}
+		if (!g_settings.resumeScenes || !scene || !everyone || !free || !g_vm) {
+			ReleaseSavedScene(a_saved, !g_settings.resumeScenes ? "bResumeScenes=0" : !scene ? "scene no longer loaded" :
+			                           !everyone ? "an actor is missing" : !free ? "an actor is in another scene" : "no script engine");
+			return;
+		}
+		auto sorted = a_saved.actors;
+		std::ranges::sort(sorted);
+		for (std::size_t i = 0; i < a_saved.actors.size(); ++i) {
+			if (!a_saved.stripped[i].empty()) {
+				Undress::NoteStripped(a_saved.actors[i], a_saved.stripped[i]);
+			}
+		}
+		{
+			std::scoped_lock lock(g_pendingResumeLock);
+			PendingResume resume{ sorted, a_saved.speed, a_saved.autoMode, {} };
+			for (std::size_t i = 0; i < a_saved.actors.size(); ++i) {
+				resume.excitement.emplace_back(a_saved.actors[i], a_saved.excitement[i]);
+			}
+			g_pendingResume = std::move(resume);
+		}
+		if (a_saved.furnitureRef) {
+			std::scoped_lock lock(g_pendingFurnitureLock);
+			PendingFurniture pending{ a_saved.furnitureRef, a_saved.furnitureType, sorted };
+			pending.offset = scene->furnitureOffset;
+			g_pendingFurniture = std::move(pending);
+		}
+		const bool   withPlayer = std::ranges::any_of(a_saved.actors, [](std::uint32_t id) { return IsPlayer(RE::TESForm::GetFormByID<RE::Actor>(id)); });
+		std::vector<std::int32_t> ids(a_saved.actors.begin(), a_saved.actors.end());
+		const auto   anchor = withPlayer ? 0 : ids.front();
+		REX::INFO("Save data: starting \"{}\" again ({} actor(s))", a_saved.sceneID, ids.size());
+		RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
+		g_vm->DispatchStaticCall("FourStimMenu"sv, "StartPickedCast"sv, callback, a_saved.sceneID, ids, anchor);
+	}
+
+	// After a save is loaded: once the loading screen and fade are gone, the
+	// saved scenes one at a time (each takes the furniture slot and a few
+	// seconds of Papyrus to set up).
+	void ResumeSavedScenes()
+	{
+		std::vector<SavedScene> scenes;
+		{
+			std::scoped_lock lock(g_savedLock);
+			scenes = std::move(g_loadedScenes);
+			g_loadedScenes.clear();
+		}
+		if (scenes.empty()) {
+			return;
+		}
+		std::thread([scenes = std::move(scenes)]() {
+			std::this_thread::sleep_for(std::chrono::seconds(1));
+			for (int i = 0; i < 600 && LoadingOrFading(); ++i) {
+				std::this_thread::sleep_for(std::chrono::milliseconds(100));
+			}
+			std::this_thread::sleep_for(std::chrono::milliseconds(1500));
+			for (const auto& saved : scenes) {
+				F4SE::GetTaskInterface()->AddTask([saved]() { ResumeSavedScene(saved); });
+				std::this_thread::sleep_for(std::chrono::seconds(4));
+			}
+		}).detach();
 	}
 
 	void OnMessage(F4SE::MessagingInterface::Message* a_msg)
@@ -4046,6 +4363,9 @@ namespace
 				std::scoped_lock lock(g_pendingSequenceLock);
 				g_pendingSequence.reset();
 			}
+			break;
+		case F4SE::MessagingInterface::kPostLoadGame:
+			ResumeSavedScenes();
 			break;
 		case F4SE::MessagingInterface::kGameLoaded:
 			{
@@ -4167,6 +4487,12 @@ F4SE_PLUGIN_LOAD(const F4SE::LoadInterface* a_f4se)
 	InputHook::Install();
 	F4SE::GetMessagingInterface()->RegisterListener(OnMessage);
 	F4SE::GetPapyrusInterface()->Register(RegisterPapyrusFunctions);
+	if (const auto serialization = F4SE::GetSerializationInterface()) {
+		serialization->SetUniqueID(SAVE_UID);
+		serialization->SetSaveCallback(OnGameSaved);
+		serialization->SetLoadCallback(OnGameLoadedData);
+		serialization->SetRevertCallback(OnGameReverted);
+	}
 
 	REX::INFO("4Stim loaded");
 

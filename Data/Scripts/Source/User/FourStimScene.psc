@@ -105,6 +105,19 @@ Function PrepareSceneCamera() Global
 	Utility.Wait(0.5)  ; let the view change finish
 EndFunction
 
+; An NPC who was in a scene when the game was saved, whose scene isn't
+; started again on load: let them go (they're still restrained, can't be
+; talked to or activated, in the save). Called by the plugin.
+Function ReleaseAfterLoad(int aiActorID) Global
+	Actor akActor = Game.GetForm(aiActorID) as Actor
+	if akActor == None || IsPlayer(akActor)
+		return
+	endif
+	akActor.SetRestrained(false)
+	akActor.EvaluatePackage()
+	FourStim.RestoreInteraction(akActor)
+EndFunction
+
 Function RestoreActorInteraction(Actor akActor) Global
 	if !IsPlayer(akActor)
 		FourStim.RestoreInteraction(akActor)

@@ -6,6 +6,7 @@
 
 #include "Actions.h"
 #include "Bridge.h"
+#include "HUD.h"
 
 namespace Undress
 {
@@ -34,6 +35,27 @@ namespace Undress
 
 		constexpr std::uint32_t PIPBOY = 0x00021B3B;  // the Pip-Boy (an armor) never comes off
 
+		// "Plugin.esp|0xID" -> the idle's form ID (0 if none or not found).
+		std::uint32_t IdleFormID(const std::string& a_spec)
+		{
+			const auto bar = a_spec.find('|');
+			const auto handler = RE::TESDataHandler::GetSingleton();
+			if (a_spec.empty() || bar == std::string::npos || !handler) {
+				return 0;
+			}
+			try {
+				const auto id = static_cast<std::uint32_t>(std::stoul(a_spec.substr(bar + 1), nullptr, 16));
+				const auto idle = handler->LookupForm<RE::TESIdleForm>(id & 0x00FFFFFF, a_spec.substr(0, bar));
+				if (!idle) {
+					REX::WARN("Undress: no idle {} (sRedressIdle)", a_spec);
+				}
+				return idle ? idle->GetFormID() : 0;
+			} catch (const std::exception&) {
+				REX::WARN("Undress: sRedressIdle \"{}\" isn't Plugin.esp|0xID", a_spec);
+				return 0;
+			}
+		}
+
 		// What a_actor wears with any of a_mask's slots (bit 0 = slot 30).
 		// Main thread.
 		std::vector<std::uint32_t> WornIn(RE::Actor* a_actor, std::uint32_t a_mask)
@@ -61,9 +83,9 @@ namespace Undress
 
 		// Takes off what's in a_slots (those not taken off yet): finds the
 		// items here, Papyrus unequips them. Any thread.
-		void Strip(std::uint32_t a_id, const std::vector<int>& a_slots)
+		void Strip(std::uint32_t a_id, const std::vector<int>& a_slots, bool a_byHand = false)
 		{
-			if (!g_config.enabled || (!g_config.player && IsPlayer(a_id))) {
+			if (!a_byHand && (!g_config.enabled || (!g_config.player && IsPlayer(a_id)))) {
 				return;
 			}
 			std::uint32_t mask = 0;
@@ -98,8 +120,9 @@ namespace Undress
 				if (const auto vm = FourStim::GetVM()) {
 					std::vector<std::int32_t> ids(items.begin(), items.end());
 					RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
-					vm->DispatchStaticCall("FourStimUndress"sv, "Strip"sv, callback, static_cast<std::int32_t>(a_id), ids);
+					vm->DispatchStaticCall("FourStimUndress"sv, "Strip"sv, callback, static_cast<std::int32_t>(a_id), ids, g_config.itemDelay);
 				}
+				HUD::OnFocusedSceneChanged();  // the HUD's "Undress / Dress" entries
 			});
 		}
 	}
@@ -144,9 +167,23 @@ namespace Undress
 		}
 	}
 
-	void StripAll(std::uint32_t a_id)
+	void StripAll(std::uint32_t a_id, bool a_byHand)
 	{
-		Strip(a_id, g_config.slots);
+		Strip(a_id, g_config.slots, a_byHand);
+	}
+
+	bool IsStripped(std::uint32_t a_id)
+	{
+		std::scoped_lock lock(g_lock);
+		const auto it = g_states.find(a_id);
+		return it != g_states.end() && !it->second.items.empty();
+	}
+
+	std::vector<std::uint32_t> Stripped(std::uint32_t a_id)
+	{
+		std::scoped_lock lock(g_lock);
+		const auto it = g_states.find(a_id);
+		return it != g_states.end() ? it->second.items : std::vector<std::uint32_t>{};
 	}
 
 	void NoteStripped(std::uint32_t a_id, const std::vector<std::uint32_t>& a_items)
@@ -160,7 +197,7 @@ namespace Undress
 		}
 	}
 
-	void Redress(std::uint32_t a_id, bool a_force)
+	void Redress(std::uint32_t a_id, bool a_force, bool a_afterScene)
 	{
 		std::vector<std::int32_t> items;
 		{
@@ -178,10 +215,13 @@ namespace Undress
 			return;
 		}
 		if (const auto vm = FourStim::GetVM()) {
-			REX::INFO("Undress: dressing {:08X} again ({} item(s))", a_id, items.size());
+			const auto idle = a_afterScene ? static_cast<std::int32_t>(IdleFormID(g_config.redressIdle)) : 0;
+			REX::INFO("Undress: dressing {:08X} again ({} item(s){})", a_id, items.size(), idle ? ", redress idle first" : "");
 			RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
-			vm->DispatchStaticCall("FourStimUndress"sv, "Redress"sv, callback, static_cast<std::int32_t>(a_id), items);
+			vm->DispatchStaticCall("FourStimUndress"sv, "Redress"sv, callback, static_cast<std::int32_t>(a_id), items, g_config.itemDelay, idle,
+				g_config.redressIdleLength);
 		}
+		HUD::OnFocusedSceneChanged();
 	}
 
 	void Clear()

@@ -155,6 +155,8 @@ destination scene's icon, otherwise an empty tile.
 
 ## 3. Utility tab entries
 
+4Stim puts its own entries first: **Undress _name_** / **Dress _name_** for each actor in the scene (ids starting `__strip:` / `__dress:`, handled by the plugin; see UNDRESS.md). A custom HUD gets them in `SetUtility` like any other entry.
+
 Any mod can add actions to the Utility tab with a JSON file in:
 
 ```

@@ -2,6 +2,7 @@
 #include <atomic>
 #include <chrono>
 #include <filesystem>
+#include <format>
 #include <fstream>
 #include <mutex>
 #include <optional>
@@ -10,6 +11,7 @@
 #include <nlohmann/json.hpp>
 
 #include "Excitement.h"
+#include "Undress.h"
 #include "Bridge.h"
 #include "HUD.h"
 #include "SceneRegistry.h"
@@ -25,7 +27,10 @@ namespace HUD
 		constexpr auto UTILITY_DIR = "Data/F4SE/Plugins/4Stim/Utility"sv;
 		constexpr auto ICON_DIR = "4Stim/Icons/"sv;  // icon paths are under Data\Interface\4Stim\Icons\ (HUD_API.md)
 		constexpr auto END_ID = "__end__"sv;
-		constexpr auto STOP_WATCHING_ID = "__stopwatching__"sv;  // main.cpp handles it in NavigateFocused
+		constexpr auto STOP_WATCHING_ID = "__stopwatching__"sv;
+		// Built-in Utility entries: undress / dress one of the scene's actors.
+		constexpr auto STRIP_PREFIX = "__strip:"sv;  // + the actor's form ID in hex
+		constexpr auto DRESS_PREFIX = "__dress:"sv;  // main.cpp handles it in NavigateFocused
 
 		// The built-in "Color" theme. Every theme is laid over this, so a
 		// theme file only needs the fields it changes. Kept in step with
@@ -268,6 +273,22 @@ namespace HUD
 			const auto scene = FourStim::GetFocusedScene();
 			const auto vm = FourStim::GetVM();
 			if (!scene.Active() || !vm) {
+				return;
+			}
+			// Built in: undress or dress someone in the scene by hand.
+			if (a_id.starts_with(STRIP_PREFIX) || a_id.starts_with(DRESS_PREFIX)) {
+				const bool strip = a_id.starts_with(STRIP_PREFIX);
+				try {
+					const auto id = static_cast<std::uint32_t>(std::stoul(a_id.substr(STRIP_PREFIX.size()), nullptr, 16));
+					REX::INFO("HUD: {} {:08X} by hand", strip ? "undressing" : "dressing", id);
+					if (strip) {
+						Undress::StripAll(id, true);
+					} else {
+						Undress::Redress(id, true);
+					}
+				} catch (const std::exception&) {
+					REX::WARN("HUD: bad Utility id \"{}\"", a_id);
+				}
 				return;
 			}
 			UtilityEntry entry;
@@ -785,9 +806,25 @@ namespace HUD
 					std::scoped_lock lock(g_configLock);
 					entries = g_utility;
 				}
-				const int count = static_cast<int>(a_focused.ActorIDs().size());
-				GValue    list;
+				const auto ids = a_focused.ActorIDs();
+				const int  count = static_cast<int>(ids.size());
+				GValue     list;
 				uiMovie->CreateArray(&list);
+				// Built in: "Undress <name>" / "Dress <name>" for each actor.
+				if (Undress::Settings().enabled) {
+					for (const auto id : ids) {
+						const auto actor = RE::TESForm::GetFormByID<RE::Actor>(id);
+						if (!actor) {
+							continue;
+						}
+						const auto  player = RE::PlayerCharacter::GetSingleton();
+						const char* name = actor->GetDisplayFullName();
+						const std::string who = actor == player ? std::string("yourself") : std::string(name && *name ? name : "them");
+						const bool  stripped = Undress::IsStripped(id);
+						AddEntry(list, std::format("{}{:X}", stripped ? DRESS_PREFIX : STRIP_PREFIX, id), (stripped ? "Dress " : "Undress ") + who,
+							IconPath(stripped ? "4Stim/clothes/top.swf" : "4Stim/clothes/bra.swf"), nullptr);
+					}
+				}
 				for (const auto& entry : entries) {
 					if (!entry.actorCounts.empty() && std::ranges::find(entry.actorCounts, count) == entry.actorCounts.end()) {
 						continue;

@@ -9,8 +9,15 @@ Scene actors take off their clothes and armor during a scene and put them back o
 - **Full** (`bFullUndressMidScene`): actions marked `fullStrip`, such as intercourse, oral sex or a handjob's receiver, take everything off.
 - **Never** in a scene marked `"noStrip": true` (`SCENES.md`).
 - **Redress** (`bRedress`): when the scene ends, each actor puts back on what they took off.
+- **By hand:** the HUD's Utility tab has **Undress _name_** / **Dress _name_** for each actor in the scene (shown while `bUndress` is on). Undressing by hand takes off everything in the undress slots, the player too even with `bUndressPlayer=0`; dressing puts back on everything 4Stim took off.
 
 Weapons are always put away when a scene starts.
+
+## One piece at a time
+
+Clothes come off and go back on one item at a time, `fUndressItemDelay` seconds apart (0.3 by default; 0 = all at once).
+
+When a scene ends, actors can play a "getting dressed" idle before their clothes go back on: `sRedressIdle` (as `Plugin.esp|0xFormID`), for `fRedressIdleLength` seconds. Fallout 4 has no such animation of its own, so it's empty by default; it's there for animation packs that add one. OStim's undressing animations are Skyrim's and can't be used.
 
 ## What
 
@@ -45,7 +52,9 @@ Any slot outside `sUndressSlots` is skipped anyway.
 
 ## Papyrus
 
-- `FourStim.UndressActor(akActor)` takes everything in the undress slots off an actor.
+- `FourStim.UndressActor(akActor)` takes everything in the undress slots off an actor (like the HUD's Undress, so the player too).
 - `FourStim.RedressActor(akActor)` puts back on what 4Stim took off.
+
+What's been taken off is kept in the save with the scene: a scene that starts again on load still dresses everyone at the end, and one that doesn't dresses them on load (`bResumeScenes`, `4Stim.ini`).
 
 The plugin finds what each actor wears in which slots; `FourStimUndress.psc` (vanilla Papyrus) takes it off and puts it back on.

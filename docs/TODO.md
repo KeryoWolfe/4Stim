@@ -21,8 +21,8 @@ What OStim NG has that 4Stim doesn't yet, from a read of its source (October 202
 - ~~**Actions.**~~ Done: action types in `Actions\*.json`, `actions` in scene files, requirements in role matching, Papyrus queries (docs/ACTIONS.md). The animation converter (Separate projects) should copy OStim scenes' `actions` (the test pack's were backfilled from OStim's scene files).
 - ~~**Excitement and climax.**~~ Done (docs/EXCITEMENT.md). Left for later: climax sounds and moans (with Sound, from the OStim sounds now in 4Stim Core\Sound), partner reactions, climax annotations in animations (OStim triggers the climax from the climax animation; 4Stim climaxes when the animation starts), slow motion / blur options.
 - ~~**Auto mode.**~~ Done (docs/AUTOMODE.md): stages, routes through navigations, auto speed, pull-out, toggle key, Papyrus. With it, these scene fields: `defaultSpeed`, `noRandomSelection`, actor `tags`, actor `requirements`, `intendedSex`, `autoTransitions` (any event).
-- ~~**Concurrent scenes (threads).**~~ Done: any number of scenes at once, tracked natively; NPC-only scenes from the picker ("You: not in it"); a "Running scenes" list and the hotkey on someone in a scene to watch (free camera + HUD, "Stop watching"), switch auto mode or end it; one scene per actor (`FourStim.IsInScene`, checked by `CanUseActor`). Still to do: starting an NPC scene while you're in your own (a second hotkey), and scenes surviving a save / load (see Save data).
-- ~~**Undressing.**~~ Done (docs/UNDRESS.md): at start (optional), partial per action (`undressSlots`, mapped from OStim's), full for `fullStrip` actions, `noStrip` scenes, a slot list setting, redress at the end, Papyrus `UndressActor` / `RedressActor`. Weapons were already put away. Still to do: animated undressing / redressing (OStim's redress animations), an HUD option to undress or dress someone by hand.
+- ~~**Concurrent scenes (threads).**~~ Done: any number of scenes at once, tracked natively; NPC-only scenes from the picker ("You: not in it"); a "Running scenes" list and the hotkey on someone in a scene to watch (free camera + HUD, "Stop watching"), switch auto mode or end it; one scene per actor (`FourStim.IsInScene`, checked by `CanUseActor`). Also done: the NPC scene key (`iNPCSceneKey`, default Shift + the hotkey) starts an NPC scene even while you're in your own, and running scenes are kept in the save and start again on load (`bResumeScenes`; with it off, or someone missing, everyone in them is let go and dressed again).
+- ~~**Undressing.**~~ Done (docs/UNDRESS.md): at start (optional), partial per action (`undressSlots`, mapped from OStim's), full for `fullStrip` actions, `noStrip` scenes, a slot list setting, redress at the end, Papyrus `UndressActor` / `RedressActor`. Weapons were already put away. Also done: Undress / Dress for each actor by hand in the HUD's Utility tab; clothes come off and go on one piece at a time (`fUndressItemDelay`); an optional "getting dressed" idle after a scene (`sRedressIdle`). Fallout 4 has no undress animations of its own (OStim's are Skyrim's), so that idle is empty until an animation pack adds one.
 
 ### Presentation
 - **Alignment menu.** Live per-actor offsets (x, y, z, rotation, scale, penis bend) per scene and role, saved to JSON and keyed by sex / height / heels. Covers the penis-position pin above.
@@ -49,11 +49,11 @@ What OStim NG has that 4Stim doesn't yet, from a read of its source (October 202
 - **Papyrus API.** A thread builder (actors, furniture, start scene or sequence, flags: no auto mode, no undress...), scene metadata queries, random scene by tags (OLibrary), per-actor data.
 - **More events.** Furniture changed, NPC scene start / end, sequence end (below). (Climax is done: `FourStim_OnClimax`.)
 - **A C++ plugin interface** for other F4SE plugins (start / stop, listeners, alignment).
-- **Save data.** Per-actor choices (voice set, equip objects, alignment) in the F4SE co-save; clean up scenes left running on load.
+- **Save data.** Running scenes are saved and start again on load (done, with Concurrent scenes). Still to do: per-actor choices (voice set, equip objects, alignment) in the F4SE co-save, as those features come.
 
 ### Settings and UI
 - **MCM page** (Fallout 4's Mod Configuration Menu) for every INI setting plus hotkeys, with export / import. Include a setting for each climax effect (shake, blur, edge glow strength and size, rumble), so players can tune them in game.
-- **Hotkeys:** end scene, auto mode, pull out, hide UI, NPC-only scene start.
+- **Hotkeys:** end scene, pull out, hide UI. (Auto mode: `iAutoModeKey`; NPC-only scene start: `iNPCSceneKey`.)
 - **Options in the HUD:** per-actor toggles (undress, strap-on, mute...).
 - **Translations** for the menu and HUD text.
 - **Sex toys** (device integration). Optional, last.

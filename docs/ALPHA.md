@@ -12,7 +12,7 @@ Thanks for testing. 4Stim is an OStim-style scene framework for Fallout 4: you p
 - A mod manager (Mod Organizer 2 or Vortex).
 - Optional: A-Body (male) with its SMP physics. 4Stim swaps to the erect physics during scenes when it's there.
 
-**Use a separate save.** 4Stim doesn't keep anything in your save yet, but it does move NPCs and change their equipment and AI for the length of a scene.
+**Use a separate save.** 4Stim keeps the scenes running when you save in that save, and moves NPCs and changes their equipment and AI for the length of a scene.
 
 ## Installing
 
@@ -33,6 +33,7 @@ If you're updating from an earlier test build, replace both mods (don't merge th
 | Esc, Backspace / B | Back, or hand the keys back to the game. |
 | `=` / `-` (gamepad Y / X) | Faster / slower. |
 | `U` | Auto mode on or off for your scene. |
+| `Shift` + `N` | Start a scene between NPCs, even while you're in one yourself. |
 
 Starting a scene: press `N` near someone. Add more people if the scene allows, pick where (right here, or a bed, chair, table or mattress nearby), and an idle scene starts. Choose **You: not in it** to start a scene between NPCs and watch it; **Running scenes** lists every scene going on, where you can watch one, switch its auto mode or end it.
 
@@ -47,7 +48,9 @@ Anything goes, but these are new and the least tested:
 - **Undressing.** Do clothes come off as the scene needs them, and go back on when it ends?
 - **Excitement and climax.** Do the meters rise, does climax happen, and does the scene end the way the ini says it should?
 - **Auto mode.** Does it move through positions sensibly and end on its own?
-- **Several scenes at once,** with and without you in them.
+- **Several scenes at once,** with and without you in them, including starting one with `Shift` + `N` while you're in your own.
+- **Saving and loading mid-scene.** Scenes running when you save should start again a few seconds after the save loads (`bResumeScenes`).
+- **Undressing by hand:** Undress / Dress for each actor in the HUD's Utility tab.
 - **Your body and outfit mods.** Anything that doesn't line up, clips badly or doesn't undress.
 
 ## Known problems
@@ -55,7 +58,6 @@ Anything goes, but these are new and the least tested:
 - NPCs in scenes still talk (idle chatter, greetings).
 - Actors can get pushed by passers-by or slide on slopes.
 - Picking a transition can hitch for a moment the first time.
-- Scenes don't survive a save and reload: end them before saving.
 - No sounds or facial expressions yet, and no alignment menu (positions can't be adjusted in game).
 - Strap-ons aren't in yet, so roles that need a penis only go to men.
 
