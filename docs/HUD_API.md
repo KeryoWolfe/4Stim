@@ -252,6 +252,8 @@ Every function is on `Menu_mc`. All of them are required except where marked.
 | `SetMeters(values:Array):void` | *Optional.* Faster update of just the actor meters, one `Number` per role, without resending names. Sent up to ten times a second while excitement changes; a HUD without it only gets the values with `SetActors`. |
 | `SetAlign(data:Object):void` | *Optional.* The Align tab's data (ALIGNMENT.md): `{ available, role, roleCount, name, x, y, z, rot, scale, step }`: the role being adjusted (0-based) and its name ("You" for the player), its offset in this scene, and the step size. Sent with the scene data and after every alignment call. |
 | `PlayClimax(strength:Number):void` | *Optional.* An actor in the focused scene climaxed: play a flash. `strength` is `0.0`–`1.0` (`fClimaxFlash`). The default HUD fades a faint white glow in along the screen's edges only and out over about 1.5 s, behind its panels. |
+| `ShowTab(id:String):void` | *Optional.* Show tab `id` (`"navigation"`, `"utility"`, `"align"`, `"search"`), for OStim's alignment key (`keyAlignment`): pressed once it shows the Align tab and focuses the HUD, pressed again it shows Navigation. A HUD without tabs can ignore it. |
+| `SetHidden(hidden:Boolean):void` | *Optional.* Hide the HUD, or show it again, for OStim's hide-UI key (`keyHideUI`). Sent with the scene data too. The HUD is unfocused while hidden. The default HUD still plays the climax glow. |
 
 Input names while the HUD is focused:
 
@@ -281,7 +283,7 @@ Input names while the HUD is focused:
 | `AlignReset()` | The role being adjusted back to no offset. |
 | `SetHorizontalRepeat(on:Boolean)` | While `true`, holding `Left` / `Right` repeats them like `Up` / `Down` (the default HUD turns it on while an Align value is selected). |
 
-The Align tab and the actor meters were added to version 1 as optional functions (`SetAlign`, `SetMeters`): a HUD without them still works, it just doesn't show them.
+The Align tab, the actor meters and OStim's alignment and hide-UI keys were added to version 1 as optional functions (`SetAlign`, `SetMeters`, `ShowTab`, `SetHidden`): a HUD without them still works, it just doesn't show them.
 
 ### Rules a replacement HUD must follow
 

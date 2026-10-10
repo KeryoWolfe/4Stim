@@ -179,13 +179,22 @@ Function StopGroup(Actor[] akActors) Global Native
 Function SaveStartView() Global Native
 
 ; Hides the vanilla HUD and switches to the third-person free camera
-; (slowed by fFreeCameraSpeed in 4Stim.ini), remembering the view the
-; player was in.
+; (SetUseFreeCam, at SetCameraSpeed, with SetFreeCamFOV in 4Stim.ini),
+; remembering the view the player was in.
 Function BeginSceneCamera() Global Native
 
-; Leaves the free camera, returns to the view the player started in, and
-; shows the HUD again. Does nothing if BeginSceneCamera wasn't called.
+; Leaves the free camera, returns to the view the player started in (or
+; first person, SetForceFirstPerson), and shows the HUD again. Does nothing
+; if BeginSceneCamera wasn't called.
 Function EndSceneCamera() Global Native
+
+; SetUseFades in 4Stim.ini: fade to black as scenes with the player start
+; and end, as OStim does.
+bool Function UseFades() Global Native
+
+; 4Stim's own fade is up (true) or gone (false): the scene camera changes
+; during it instead of waiting for it to clear.
+Function SetSceneFade(bool abFading) Global Native
 
 ; ---- Scene picker ----
 

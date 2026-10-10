@@ -56,7 +56,7 @@ Action types are defined in JSON files in `Data\F4SE\Plugins\4Stim\Actions\`. Al
 
 ## Requirements
 
-A role collects the requirements of every action it's in. With `bMatchSex=1`, an actor can only take the role if they have everything it needs:
+A role collects the requirements of every action it's in. With `SetOnlyGayAnimsInGayScenes=1`, an actor can only take the role if they have everything it needs:
 
 | Requirement | Who has it |
 |---|---|

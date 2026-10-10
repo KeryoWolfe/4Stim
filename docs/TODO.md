@@ -18,12 +18,18 @@
 
 What OStim NG has that 4Stim doesn't yet, from a read of its source (October 2026). Roughly in priority order within each group.
 
+### Parity audit (approved October 2026)
+The audit compared every finished feature with OStim's source; it's being carried out in three builds.
+- ~~**1. Settings and defaults.**~~ Done (docs/SETTINGS.md).
+- **2. File formats.** Read OStim's layouts too: one scene per file in `scenes\**\<id>.json` (with `speeds[].animation`, `playbackSpeed` / `displaySpeed`, OStim's navigation fields, `origin`, `offset`, `fadeOnEntry`, `modpack`, a `sequences` folder), one action per file (`strippingSlots` mapped from Skyrim's slots), one furniture type per file, and alignment in OStim's nesting and field names, grouped by sex (converting the current `Alignment.json` once).
+- **3. Behavior.** `intro` starting scenes with OStim's standing / bed rule; climax on the animation's annotation once the converter keeps annotations.
+
 ### Core
 - ~~**Actions.**~~ Done: action types in `Actions\*.json`, `actions` in scene files, requirements in role matching, Papyrus queries (docs/ACTIONS.md). The animation converter (Separate projects) should copy OStim scenes' `actions` (the test pack's were backfilled from OStim's scene files).
 - ~~**Excitement and climax.**~~ Done (docs/EXCITEMENT.md). Left for later: climax sounds and moans (with Sound, from the OStim sounds now in 4Stim Core\Sound), partner reactions, climax annotations in animations (OStim triggers the climax from the climax animation; 4Stim climaxes when the animation starts), slow motion / blur options.
 - ~~**Auto mode.**~~ Done (docs/AUTOMODE.md): stages, routes through navigations, auto speed, pull-out, toggle key, Papyrus. With it, these scene fields: `defaultSpeed`, `noRandomSelection`, actor `tags`, actor `requirements`, `intendedSex`, `autoTransitions` (any event).
-- ~~**Concurrent scenes (threads).**~~ Done: any number of scenes at once, tracked natively; NPC-only scenes from the picker ("You: not in it"); a "Running scenes" list and the hotkey on someone in a scene to watch (free camera + HUD, "Stop watching"), switch auto mode or end it; one scene per actor (`FourStim.IsInScene`, checked by `CanUseActor`). Also done: the NPC scene key (`iNPCSceneKey`, default Shift + the hotkey) starts an NPC scene even while you're in your own, and running scenes are kept in the save and start again on load (`bResumeScenes`; with it off, or someone missing, everyone in them is let go and dressed again).
-- ~~**Undressing.**~~ Done (docs/UNDRESS.md): at start (optional), partial per action (`undressSlots`, mapped from OStim's), full for `fullStrip` actions, `noStrip` scenes, a slot list setting, redress at the end, Papyrus `UndressActor` / `RedressActor`. Weapons were already put away. Also done: Undress / Dress for each actor by hand in the HUD's Utility tab; clothes come off and go on one piece at a time (`fUndressItemDelay`); animated undressing scenes (an `undress` list in scene files, with OStim's converted ones wired up in the test pack from Standing apart) and OStim's redress animations after a scene, a body part at a time (`bAnimateRedress`, scenes tagged `redress`). The animation converter (Separate projects) should carry over OStim's `OStimUndressPartial` annotations as `undress` steps: the converted clips lost them (the test pack's timings were read from OStim's originals).
+- ~~**Concurrent scenes (threads).**~~ Done: any number of scenes at once, tracked natively; NPC-only scenes from the picker ("You: not in it"); a "Running scenes" list and the hotkey on someone in a scene to watch (free camera + HUD, "Stop watching"), switch auto mode or end it; one scene per actor (`FourStim.IsInScene`, checked by `CanUseActor`). Also done: the NPC scene key (`keyNpcSceneStart`, default Shift + the hotkey) starts an NPC scene even while you're in your own, and running scenes are kept in the save: on load everyone in them is let go and dressed again, as OStim ends its scenes, or with `bResumeScenes=1` they start again.
+- ~~**Undressing.**~~ Done (docs/UNDRESS.md): at start (optional), partial per action (`undressSlots`, mapped from OStim's), full for `fullStrip` actions, `noStrip` scenes, a slot list setting, redress at the end, Papyrus `UndressActor` / `RedressActor`. Weapons were already put away. Also done: Undress / Dress for each actor by hand in the HUD's Utility tab; clothes come off and go on one piece at a time (`fUndressItemDelay`); animated undressing scenes (an `undress` list in scene files, with OStim's converted ones wired up in the test pack from Standing apart) and OStim's redress animations after a scene, a body part at a time (`SetAnimateRedress`, scenes tagged `redress`). The animation converter (Separate projects) should carry over OStim's `OStimUndressPartial` annotations as `undress` steps: the converted clips lost them (the test pack's timings were read from OStim's originals).
 
 ### Presentation
 - ~~**Alignment menu.**~~ Done (docs/ALIGNMENT.md): the HUD's Align tab moves, turns and scales each actor per scene and role, live, saved to `Alignment.json`, on top of the scene lock. Still to do: penis bend (needs bendable-body support), alignments keyed by body / height (with Automatic Mesh Detection), heel compensation.
@@ -32,11 +38,11 @@ What OStim NG has that 4Stim doesn't yet, from a read of its source (October 202
 - **Sound.** Voice sets per actor / voice type (moans, muffled moans, climax sounds, comments, reactions, post-scene lines), action sounds (slaps on peaks), mute / muffle per actor or action.
 - **Peaks and events.** Distance- or loop-based peak signals per action, and annotation events (spank...) with sound, stimulation, camera shake and rumble.
 - **Lights.** Optional face / crotch light during scenes, only in the dark.
-- **Camera extras.** Freecam speed and FOV, first person after the scene, fades on start and on scene changes, screen shake.
+- ~~**Camera extras.**~~ Done (docs/SETTINGS.md): `SetUseFreeCam`, `SetCameraSpeed`, `SetFreeCamFOV`, `SetForceFirstPerson`, fades as scenes with the player start and end (`SetUseFades`), slow motion at a climax (`SetSlowMoOrgasms`). Still to do: fades on auto mode's scene changes (`SetUseAutoFades`), the custom time scale (`SetCustomTimescale`).
 
 ### Actors and roles
 - **Equip objects, strap-ons and futa (one system).** Strap-ons equipped when a woman takes a role that needs a penis, plus tongues and other per-scene items, removed at the end. **Futa is merged into strap-ons:** in Fallout 4 futa comes from equippable penises with two states (flaccid / erect), not one built into the body mesh, so they can't be posed or bent like a male body's. They're handled like a strap-on: an actor wearing one has a `penis` for action requirements (`Actions::Provides`), with options for the male role, male excitement and male climax.
-- **Role choice.** Intended-sex-only filter (have it: `bMatchSex`), player always dominant or submissive, choose your role when several fit.
+- **Role choice.** Intended-sex-only filter (have it: `SetOnlyGayAnimsInGayScenes`), player always dominant or submissive, choose your role when several fit.
 - **Actor requirements and properties.** Per-role requirements (race, vampire / ghoul / super mutant, has a penis...), actor tags, perk-conditioned properties. Covers "Race filtering" below.
 
 ### Furniture
@@ -54,7 +60,7 @@ What OStim NG has that 4Stim doesn't yet, from a read of its source (October 202
 
 ### Settings and UI
 - **MCM page** (Fallout 4's Mod Configuration Menu) for every INI setting plus hotkeys, with export / import. Include a setting for each climax effect (shake, blur, edge glow strength and size, rumble), so players can tune them in game.
-- **Hotkeys:** end scene, pull out, hide UI. (Auto mode: `iAutoModeKey`; NPC-only scene start: `iNPCSceneKey`.)
+- ~~**OStim's setting names, defaults and keys.**~~ Done (docs/SETTINGS.md): 4Stim.ini uses OStim's names and defaults (older names still read), with OStim's pull-out, end, search, alignment, free camera and hide-UI keys (unbound by default), and NPC scenes ending after `NPCSceneDuration`.
 - **Options in the HUD:** per-actor toggles (undress, strap-on, mute...).
 - **Translations** for the menu and HUD text.
 - **Sex toys** (device integration). Optional, last.

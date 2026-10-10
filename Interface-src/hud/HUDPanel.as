@@ -155,6 +155,24 @@ package hud
 			}
 		}
 
+		// Optional (HUD_API.md): show tab a_id ("navigation", "utility",
+		// "align", "search"), for OStim's alignment and search keys.
+		public function ShowTab(a_id:String):void
+		{
+			if (_tabs.selectedID == a_id) {
+				return;
+			}
+			_tabs.selectID(a_id);
+			showTab(false);
+		}
+
+		// Optional (HUD_API.md): hide the HUD, or show it again (OStim's hide
+		// UI key). The climax glow still plays.
+		public function SetHidden(a_hidden:Boolean):void
+		{
+			_root.visible = !a_hidden;
+		}
+
 		public function SetFocus(a_focused:Boolean):void
 		{
 			_focused = a_focused;

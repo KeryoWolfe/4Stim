@@ -4,9 +4,9 @@ Scene actors take off their clothes and armor during a scene and put them back o
 
 ## When
 
-- **Undress at start** (`bUndressAtStart`, off by default): everything comes off when a scene starts.
-- **Partial** (`bPartialUndress`): each time the scene moves to another scene, each actor takes off what that scene's actions need for their side. A kiss takes the hat off, a handjob the giver's gloves (`undressSlots` on the action type, `ACTIONS.md`).
-- **Full** (`bFullUndressMidScene`): actions marked `fullStrip`, such as intercourse, oral sex or a handjob's receiver, take everything off.
+- **Undress at start** (`SetAlwaysUndressAtStart`, off by default): everything comes off when a scene starts.
+- **Partial** (`SetPartialUndressing`): each time the scene moves to another scene, each actor takes off what that scene's actions need for their side. A kiss takes the hat off, a handjob the giver's gloves (`undressSlots` on the action type, `ACTIONS.md`).
+- **Full** (`SetUndressIfNeed`): actions marked `fullStrip`, such as intercourse, oral sex or a handjob's receiver, take everything off.
 - **Never** in a scene marked `"noStrip": true` (`SCENES.md`).
 - **Redress** (`bRedress`): when the scene ends, each actor puts back on what they took off.
 - **By hand:** the HUD's Utility tab has **Undress _name_** / **Dress _name_** for each actor in the scene (shown while `bUndress` is on). Undressing by hand takes off everything in the undress slots, the player too even with `bUndressPlayer=0`; dressing puts back on everything 4Stim took off.
@@ -15,12 +15,12 @@ Weapons are always put away when a scene starts.
 
 ## One piece at a time
 
-Clothes come off and go back on one item at a time, `fUndressItemDelay` seconds apart (0.3 by default; 0 = all at once).
+Clothes come off and go back on all at once, as in OStim, or one item at a time with `fUndressItemDelay` seconds between them (a 4Stim setting; 0 by default).
 
 ## Animated undressing and redressing
 
 - **Undressing scenes:** a scene can take clothes off at a set moment of its animation with an `undress` list (`SCENES.md`): a partner pulling someone's top off takes the top off as the hands get there. The test pack has OStim's: from **Standing apart** (MF), "take off _her_ top / bottoms / gloves / hat / boots" and "_she_ takes off _his_ bottoms", each playing once and going back to standing apart.
-- **Redress animations** (`bAnimateRedress`, on by default): when a scene ends, NPCs get dressed a body part at a time, torso, feet, hands, then head, each with its own animation, and that part's clothes go on partway through it, like OStim. The animations are one-actor scenes tagged `redress` plus the part (`torso`, `feet`, `hands`, `head`) for the actor's sex, with `length` and `dressAt` (`SCENES.md`); the test pack has OStim's. Anything that isn't in one of those parts goes on afterwards. The player dresses without them.
+- **Redress animations** (`SetAnimateRedress`, off by default, as OStim): when a scene ends, NPCs get dressed a body part at a time, torso, feet, hands, then head, each with its own animation, and that part's clothes go on partway through it, like OStim. The animations are one-actor scenes tagged `redress` plus the part (`torso`, `feet`, `hands`, `head`) for the actor's sex, with `length` and `dressAt` (`SCENES.md`); the test pack has OStim's. Anything that isn't in one of those parts goes on afterwards. The player dresses without them.
 
 The slots each part covers:
 

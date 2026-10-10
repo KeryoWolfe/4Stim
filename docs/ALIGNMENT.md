@@ -10,7 +10,7 @@ It works the way OStim's does: each actor is put into a "translation" (Papyrus `
 
 The spot is where the actors were placed for the scene (the player's own spot and facing when the player is in it), and every actor is turned to face the scene's way before they're locked: NPCs by their reference angle, as OStim does, since the game's heading setter only works on the player.
 
-When the scene ends, as with OStim's "Reset position" (`bResetPosition`, on by default), each NPC goes back to where they stood before the scene, facing the way they faced; the player isn't moved, since the scene was built on the player's own spot. That also takes everyone out of each other before their collision with each other comes back. NPCs with nowhere recorded (a scene started again from a save), or all of them with `bResetPosition=0`, step 70 units off the spot instead, each in a different clear direction, so no one is left stuck inside someone else.
+When the scene ends, as with OStim's "Reset position" (`SetResetPosition`, on by default), each NPC goes back to where they stood before the scene, facing the way they faced; the player isn't moved, since the scene was built on the player's own spot. That also takes everyone out of each other before their collision with each other comes back. NPCs with nowhere recorded (a scene started again from a save), or all of them with `SetResetPosition=0`, step 70 units off the spot instead, each in a different clear direction, so no one is left stuck inside someone else.
 
 `bLockScenes=0` in `4Stim.ini` turns the lock off.
 

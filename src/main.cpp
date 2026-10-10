@@ -87,20 +87,38 @@ namespace
 		float         maxDistance = 300.0f;    // crosshair: how far to look
 		float         crosshairCone = 10.0f;   // crosshair: degrees either side of your facing
 		float         proximityRadius = 200.0f;
-		float         freeCameraSpeed = 0.5f;  // multiplier on the game's free camera speed during scenes
+		// The scene camera, as OStim's SetUseFreeCam / SetCameraSpeed /
+		// SetFreeCamFOV / SetForceFirstPerson: the free camera, its speed (the
+		// game's fFreeCameraTranslationSpeed:Camera, set outright as OStim
+		// does), the world FOV during the scene, and first person after it.
+		bool          useFreeCam = true;
+		float         freeCamSpeed = 3.0F;
+		float         freeCamSpeedMult = -1.0F;  // old fFreeCameraSpeed (a multiplier on the game's speed); < 0 = not set
+		float         freeCamFOV = 45.0F;        // 0 = leave the FOV alone
+		bool          forceFirstPerson = false;
+		bool          useFades = true;           // SetUseFades: fade to black as scenes with the player start and end
+		float         npcSceneDuration = 300.0F; // NPCSceneDuration (OStim: ms): scenes without the player end after this many seconds (0 = never)
 		std::uint32_t speedUpKey = 0xBB;       // virtual-key code; 0xBB = the =/+ key
 		std::uint32_t speedDownKey = 0xBD;     // 0xBD = the -/_ key
+		// OStim's other scene keys, unbound (0) by default: pull out, end the
+		// scene, the search, the Align tab, the free camera, hide the HUD.
+		std::uint32_t pullOutKey = 0;
+		std::uint32_t endKey = 0;
+		std::uint32_t searchKey = 0;
+		std::uint32_t alignmentKey = 0;
+		std::uint32_t freeCamKey = 0;
+		std::uint32_t hideUIKey = 0;
 		std::string   hudTheme = "Color";     // file name in Data\Interface\4Stim\Themes\, without .json
 		bool          hudEnabled = true;
 		bool          logAnimEvents = false;  // log scene actors' animation events (for authors)
 		float         transitionLead = 0.0F;   // seconds before a transition's length to move on (see 4Stim.ini)
 		bool          matchSex = true;         // only offer scenes whose roles' sexes the actors fit
 		float         actorRadius = 1500.0F;     // how far from the player to list NPCs for a new scene
-		float         furnitureRadius = 500.0F;  // how far from the player to look for furniture
+		float         furnitureRadius = 1600.0F; // how far from the player to look for furniture (OStim's SetFurnitureSearchDistance 15)
 		float         furnitureHeight = 100.0F;  // and how far up or down
 		bool          logFurniture = false;      // log every candidate object when looking
 		std::uint32_t npcSceneKey = 0;           // opens the picker for an NPC-only scene, even in a scene (0 = Shift + the hotkey)
-		bool          resumeScenes = true;       // scenes running in a save start again when it's loaded
+		bool          resumeScenes = false;      // scenes running in a save start again when it's loaded (OStim ends them)
 	};
 	Settings g_settings;
 
@@ -110,24 +128,99 @@ namespace
 		bool          player = false;        // scenes with the player start in auto mode
 		bool          npc = true;            // scenes without the player do
 		std::uint32_t key = 0;               // toggles it for the scene you're in / watching (0 = no key)
-		float         sceneMin = 15.0F;      // seconds in each scene
-		float         sceneMax = 30.0F;
+		float         sceneMin = 7.5F;       // seconds in each scene
+		float         sceneMax = 15.0F;
 		int           foreplayChance = 35;   // % of scenes that start with foreplay
 		float         foreplayMin = 15.0F;   // excitement that ends it
 		float         foreplayMax = 35.0F;
 		int           pulloutChance = 75;    // % of scenes where a man pulls out before climaxing
 		float         pulloutMin = 80.0F;    // at this excitement
-		float         pulloutMax = 95.0F;
-		int           maxSteps = 10;         // navigations auto mode walks through to reach a scene
+		float         pulloutMax = 90.0F;
+		int           maxSteps = 5;          // navigations auto mode walks through to reach a scene
 		bool          limitToNavigation = true;  // during sex, only pick scenes reachable by navigation
 		bool          standingOnFloor = true;    // off furniture prefer standing scenes, on a bed lying ones
 		bool          autoSpeed = true;      // speed up as excitement rises
-		float         speedIntervalMin = 5.0F;
-		float         speedIntervalMax = 10.0F;
-		float         speedExcitementMin = 20.0F;  // no speed-ups below this excitement...
-		float         speedExcitementMax = 80.0F;  // ...always at or above this
+		float         speedIntervalMin = 2.5F;
+		float         speedIntervalMax = 7.5F;
+		float         speedExcitementMin = 15.0F;  // no speed-ups below this excitement...
+		float         speedExcitementMax = 85.0F;  // ...always at or above this
 	};
 	AutoConfig g_autoConfig;
+
+	// OStim's setting names -> the 4Stim names LoadSettings reads (all
+	// lowercase). 4Stim.ini uses OStim's names wherever OStim has the
+	// setting, so a Skyrim user can look it up in OStim's docs; the older
+	// 4Stim names keep working. The settings OStim has that 4Stim didn't
+	// map to internal names only (the right-hand side), which aren't
+	// documented.
+	enum class OStimUnit
+	{
+		kSame,
+		kMilliseconds,    // OStim's value is ms, 4Stim's seconds
+		kFurnitureSteps,  // OStim's SetFurnitureSearchDistance: (value + 1) * 100 units
+	};
+	const std::unordered_map<std::string, std::pair<std::string_view, OStimUnit>> OSTIM_SETTING_NAMES{
+		// Keys (4Stim's are Windows virtual-key codes, OStim's DirectX scan codes).
+		{ "setkeymap", { "ihotkey", OStimUnit::kSame } },
+		{ "keynpcscenestart", { "inpcscenekey", OStimUnit::kSame } },
+		{ "setkeyup", { "ispeedupkey", OStimUnit::kSame } },
+		{ "setkeydown", { "ispeeddownkey", OStimUnit::kSame } },
+		{ "setcontroltoggle", { "iautomodekey", OStimUnit::kSame } },
+		{ "setpullout", { "ipulloutkey", OStimUnit::kSame } },
+		{ "setosaendkey", { "iendkey", OStimUnit::kSame } },
+		{ "keysearch", { "isearchkey", OStimUnit::kSame } },
+		{ "keyalignment", { "ialignmentkey", OStimUnit::kSame } },
+		{ "setfreecamtogglekey", { "ifreecamkey", OStimUnit::kSame } },
+		{ "keyhideui", { "ihideuikey", OStimUnit::kSame } },
+		// General, camera, furniture.
+		{ "setresetposition", { "bresetposition", OStimUnit::kSame } },
+		{ "setonlygayanimsingayscenes", { "bmatchsex", OStimUnit::kSame } },
+		{ "setfurnituresearchdistance", { "ffurnitureradius", OStimUnit::kFurnitureSteps } },
+		{ "setusefreecam", { "busefreecam", OStimUnit::kSame } },
+		{ "setcameraspeed", { "fcameraspeed", OStimUnit::kSame } },
+		{ "setfreecamfov", { "ffreecamfov", OStimUnit::kSame } },
+		{ "setforcefirstperson", { "bforcefirstperson", OStimUnit::kSame } },
+		{ "setusefades", { "busefades", OStimUnit::kSame } },
+		{ "npcsceneduration", { "fnpcsceneduration", OStimUnit::kMilliseconds } },
+		// Excitement and climax.
+		{ "setsexexcitementmult", { "fmaleexcitementmult", OStimUnit::kSame } },
+		{ "setfemalesexexcitementmult", { "ffemaleexcitementmult", OStimUnit::kSame } },
+		{ "excitementdecayrate", { "fexcitementdecayrate", OStimUnit::kSame } },
+		{ "excitementdecaygraceperiod", { "fexcitementdecaygrace", OStimUnit::kMilliseconds } },
+		{ "postorgasmexcitement", { "fpostclimaxexcitement", OStimUnit::kSame } },
+		{ "postorgasmexcitementmax", { "fpostclimaxexcitementmax", OStimUnit::kSame } },
+		{ "setautoclimaxanims", { "bclimaxscenes", OStimUnit::kSame } },
+		{ "endonplayerorgasm", { "bendonplayerclimax", OStimUnit::kSame } },
+		{ "setendonorgasm", { "bendonmaleclimax", OStimUnit::kSame } },
+		{ "setendonsuborgasm", { "bendonfemaleclimax", OStimUnit::kSame } },
+		{ "setendonbothorgasm", { "bendonallclimax", OStimUnit::kSame } },
+		{ "endnpcsceneonorgasm", { "bendnpcscenesonclimax", OStimUnit::kSame } },
+		{ "setuserumble", { "bclimaxrumble", OStimUnit::kSame } },
+		{ "setblurorgasms", { "bblurorgasms", OStimUnit::kSame } },
+		{ "setslowmoorgasms", { "bslowmoorgasms", OStimUnit::kSame } },
+		// Auto mode.
+		{ "setaicontrol", { "bautomodeplayer", OStimUnit::kSame } },
+		{ "automodeanimdurationmin", { "fautomodescenemin", OStimUnit::kMilliseconds } },
+		{ "automodeanimdurationmax", { "fautomodescenemax", OStimUnit::kMilliseconds } },
+		{ "automodeforeplaychance", { "iforeplaychance", OStimUnit::kSame } },
+		{ "automodeforeplaythresholdmin", { "fforeplayendmin", OStimUnit::kSame } },
+		{ "automodeforeplaythresholdmax", { "fforeplayendmax", OStimUnit::kSame } },
+		{ "automodepulloutchance", { "ipulloutchance", OStimUnit::kSame } },
+		{ "automodepulloutthresholdmin", { "fpulloutmin", OStimUnit::kSame } },
+		{ "automodepulloutthresholdmax", { "fpulloutmax", OStimUnit::kSame } },
+		{ "navigationdistancemax", { "iautomodemaxsteps", OStimUnit::kSame } },
+		{ "automodelimittonavigationdistance", { "bautomodelimittonavigation", OStimUnit::kSame } },
+		{ "setactorspeedcontrol", { "bautospeed", OStimUnit::kSame } },
+		{ "autospeedcontrolintervalmin", { "fautospeedintervalmin", OStimUnit::kMilliseconds } },
+		{ "autospeedcontrolintervalmax", { "fautospeedintervalmax", OStimUnit::kMilliseconds } },
+		{ "autospeedcontrolexcitementmin", { "fautospeedexcitementmin", OStimUnit::kSame } },
+		{ "autospeedcontrolexcitementmax", { "fautospeedexcitementmax", OStimUnit::kSame } },
+		// Undressing.
+		{ "setalwaysundressatstart", { "bundressatstart", OStimUnit::kSame } },
+		{ "setpartialundressing", { "bpartialundress", OStimUnit::kSame } },
+		{ "setundressifneed", { "bfullundressmidscene", OStimUnit::kSame } },
+		{ "setanimateredress", { "banimateredress", OStimUnit::kSame } },
+	};
 
 	void LoadSettings()
 	{
@@ -158,6 +251,19 @@ namespace
 			}
 			std::ranges::transform(key, key.begin(), [](unsigned char ch) { return static_cast<char>(std::tolower(ch)); });
 			try {
+				// OStim's setting names (its MCM export keys, MCMTable.h) are read
+				// as the 4Stim names they match. OStim's durations are in ms,
+				// 4Stim's in seconds; its furniture search distance is in OStim's
+				// own steps ((value + 1) * 100 units).
+				if (const auto alias = OSTIM_SETTING_NAMES.find(key); alias != OSTIM_SETTING_NAMES.end()) {
+					const auto& [name, unit] = alias->second;
+					key = std::string(name);
+					if (unit == OStimUnit::kMilliseconds) {
+						value = std::to_string(std::stof(value) / 1000.0F);
+					} else if (unit == OStimUnit::kFurnitureSteps) {
+						value = std::to_string((std::stof(value) + 1.0F) * 100.0F);
+					}
+				}
 				if (key == "ihotkey") {
 					g_settings.hotkey = static_cast<std::uint32_t>(std::stoul(value, nullptr, 0));
 				} else if (key == "inpcscenekey") {
@@ -175,7 +281,32 @@ namespace
 				} else if (key == "fproximityradius") {
 					g_settings.proximityRadius = std::stof(value);
 				} else if (key == "ffreecameraspeed") {
-					g_settings.freeCameraSpeed = std::stof(value);
+					g_settings.freeCamSpeedMult = std::max(std::stof(value), 0.01F);  // older 4Stim setting: a multiplier
+				} else if (key == "fcameraspeed") {
+					g_settings.freeCamSpeed = std::max(std::stof(value), 0.01F);
+					g_settings.freeCamSpeedMult = -1.0F;
+				} else if (key == "busefreecam") {
+					g_settings.useFreeCam = std::stoi(value) != 0;
+				} else if (key == "ffreecamfov") {
+					g_settings.freeCamFOV = std::clamp(std::stof(value), 0.0F, 150.0F);
+				} else if (key == "bforcefirstperson") {
+					g_settings.forceFirstPerson = std::stoi(value) != 0;
+				} else if (key == "busefades") {
+					g_settings.useFades = std::stoi(value) != 0;
+				} else if (key == "fnpcsceneduration") {
+					g_settings.npcSceneDuration = std::max(std::stof(value), 0.0F);
+				} else if (key == "ipulloutkey") {
+					g_settings.pullOutKey = static_cast<std::uint32_t>(std::stoul(value, nullptr, 0));
+				} else if (key == "iendkey") {
+					g_settings.endKey = static_cast<std::uint32_t>(std::stoul(value, nullptr, 0));
+				} else if (key == "isearchkey") {
+					g_settings.searchKey = static_cast<std::uint32_t>(std::stoul(value, nullptr, 0));
+				} else if (key == "ialignmentkey") {
+					g_settings.alignmentKey = static_cast<std::uint32_t>(std::stoul(value, nullptr, 0));
+				} else if (key == "ifreecamkey") {
+					g_settings.freeCamKey = static_cast<std::uint32_t>(std::stoul(value, nullptr, 0));
+				} else if (key == "ihideuikey") {
+					g_settings.hideUIKey = static_cast<std::uint32_t>(std::stoul(value, nullptr, 0));
 				} else if (key == "ispeedupkey") {
 					g_settings.speedUpKey = static_cast<std::uint32_t>(std::stoul(value, nullptr, 0));
 				} else if (key == "ispeeddownkey") {
@@ -230,6 +361,10 @@ namespace
 					Excitement::Settings().blur = std::clamp(std::stof(value), 0.0F, 1.0F);
 				} else if (key == "fclimaxflash") {
 					Excitement::Settings().flash = std::clamp(std::stof(value), 0.0F, 1.0F);
+				} else if (key == "bblurorgasms") {
+					Excitement::Settings().blurOn = std::stoi(value) != 0;
+				} else if (key == "bslowmoorgasms") {
+					Excitement::Settings().slowMo = std::stoi(value) != 0;
 				} else if (key == "bclimaxrumble") {
 					Excitement::Settings().rumble = std::stoi(value) != 0;
 				} else if (key == "bresetposition") {
@@ -316,10 +451,21 @@ namespace
 				REX::WARN("Settings: couldn't read \"{}\" for {}", value, key);
 			}
 		}
-		REX::INFO("Settings: hotkey 0x{:X}, target mode {}, max distance {}, cone {}, radius {}, free camera speed x{}, speed keys 0x{:X}/0x{:X}",
+		REX::INFO("Settings: hotkey 0x{:X}, target mode {}, max distance {}, cone {}, radius {}, speed keys 0x{:X}/0x{:X}",
 			g_settings.hotkey, g_settings.targetMode == 1 ? "Proximity" : "Crosshair",
-			g_settings.maxDistance, g_settings.crosshairCone, g_settings.proximityRadius, g_settings.freeCameraSpeed,
+			g_settings.maxDistance, g_settings.crosshairCone, g_settings.proximityRadius,
 			g_settings.speedUpKey, g_settings.speedDownKey);
+		REX::INFO("Settings: keys pull out 0x{:X}, end 0x{:X}, search 0x{:X}, align 0x{:X}, free camera 0x{:X}, hide HUD 0x{:X}",
+			g_settings.pullOutKey, g_settings.endKey, g_settings.searchKey, g_settings.alignmentKey, g_settings.freeCamKey, g_settings.hideUIKey);
+		if (g_settings.freeCamSpeedMult > 0.0F) {
+			REX::INFO("Settings: free camera {}, speed x{} (fFreeCameraSpeed), FOV {}, first person after {}, fades {}, NPC scenes {}s, resume on load {}",
+				g_settings.useFreeCam, g_settings.freeCamSpeedMult, g_settings.freeCamFOV, g_settings.forceFirstPerson, g_settings.useFades,
+				g_settings.npcSceneDuration, g_settings.resumeScenes);
+		} else {
+			REX::INFO("Settings: free camera {}, speed {}, FOV {}, first person after {}, fades {}, NPC scenes {}s, resume on load {}",
+				g_settings.useFreeCam, g_settings.freeCamSpeed, g_settings.freeCamFOV, g_settings.forceFirstPerson, g_settings.useFades,
+				g_settings.npcSceneDuration, g_settings.resumeScenes);
+		}
 		REX::INFO("Settings: HUD {}, theme \"{}\", transition lead {}s, match sex {}", g_settings.hudEnabled ? "on" : "off", g_settings.hudTheme, g_settings.transitionLead, g_settings.matchSex ? "on" : "off");
 		REX::INFO("Settings: furniture within {} (height {}), log {}", g_settings.furnitureRadius, g_settings.furnitureHeight, g_settings.logFurniture ? "on" : "off");
 		const auto& ex = Excitement::Settings();
@@ -554,6 +700,9 @@ namespace
 
 		// Game time left before it ends after a climax (< 0 = not ending).
 		float endIn = -1.0F;
+		// Scenes without the player: time left before they end anyway
+		// (OStim's NPCSceneDuration; < 0 = no limit).
+		float stopTimer = -1.0F;
 
 		// When its idles were last played (the scene guard leaves it alone
 		// for a moment after).
@@ -735,6 +884,10 @@ namespace
 		}
 		ArmAutoplay(added);
 		const bool withPlayer = std::ranges::any_of(added.actors, [](std::uint32_t id) { return IsPlayer(RE::TESForm::GetFormByID<RE::Actor>(id)); });
+		if (!withPlayer && g_settings.npcSceneDuration > 0.0F) {
+			added.stopTimer = g_settings.npcSceneDuration;
+			StartAutoplayTicks();
+		}
 		if (withPlayer ? g_autoConfig.player : g_autoConfig.npc) {
 			StartAutoMode(added);
 		}
@@ -1619,11 +1772,53 @@ namespace
 		shake.turnedY = turnY;
 	}
 
-	// The player's climax effects: shake, blur, glow, rumble (Excitement::Config).
-	void PlayClimaxEffects()
+	// Slow motion at a climax, as OStim's SetSlowMoOrgasms: the game at 0.3x
+	// for 2.5 s (OStim runs the console's setGameSpeed; here the game timer's
+	// global time multiplier, what Fallout 4's "sgtm" sets). A climax during
+	// it starts the 2.5 s over. Main thread.
+	std::atomic<std::uint32_t> g_slowMoGeneration = 0;
+	bool                       g_slowMo = false;
+
+	void EndSlowMotion()
+	{
+		if (!g_slowMo) {
+			return;
+		}
+		g_slowMo = false;
+		if (const auto timer = RE::BSTimer::GetSingleton()) {
+			timer->SetGlobalTimeMultiplier(1.0F, true);
+		}
+	}
+
+	void StartSlowMotion()
+	{
+		const auto timer = RE::BSTimer::GetSingleton();
+		if (!timer) {
+			return;
+		}
+		timer->SetGlobalTimeMultiplier(0.3F, true);
+		g_slowMo = true;
+		const auto generation = ++g_slowMoGeneration;
+		std::thread([generation]() {
+			std::this_thread::sleep_for(std::chrono::milliseconds(2500));
+			F4SE::GetTaskInterface()->AddTask([generation]() {
+				if (g_slowMoGeneration == generation) {
+					EndSlowMotion();
+				}
+			});
+		}).detach();
+	}
+
+	// The player's climax effects: shake, blur, glow, rumble, slow motion
+	// (Excitement::Config). Slow motion only in scenes with the player, as
+	// OStim's (its player thread); the rest also in a scene being watched.
+	void PlayClimaxEffects(bool a_withPlayer)
 	{
 		const auto& config = Excitement::Settings();
 		const bool  freeCamera = FreeCamera() != nullptr;
+		if (config.slowMo && a_withPlayer) {
+			StartSlowMotion();
+		}
 		if (config.shake > 0.0F && freeCamera) {
 			if (g_climaxShake.active) {
 				// Already shaking: restart it from where the camera is now.
@@ -1633,7 +1828,7 @@ namespace
 			}
 			StartAutoplayTicks();
 		}
-		if (config.blur > 0.0F) {
+		if (config.blurOn && config.blur > 0.0F) {
 			// Depth of field with no in-focus range: everything blurs, for
 			// a moment.
 			RE::ImageSpaceModifierInstanceDOF::Trigger(0.0F, 0.0F, 0.0F, 0.0F,
@@ -1670,12 +1865,12 @@ namespace
 
 	// Ends a running scene through Papyrus: the focused scene the way the
 	// HUD's "End scene" does, any other without touching the camera.
-	void EndActiveScene(const ActiveScene& a_scene)
+	void EndActiveScene(const ActiveScene& a_scene, std::string_view a_why)
 	{
 		if (!g_vm || a_scene.actors.empty()) {
 			return;
 		}
-		REX::INFO("Scene \"{}\": ending after a climax", a_scene.sceneID);
+		REX::INFO("Scene \"{}\": ending, {}", a_scene.sceneID, a_why);
 		RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
 		const auto focused = GetPlayerScene();
 		if (focused.Active() && focused.role0 == a_scene.actors[0]) {
@@ -1732,7 +1927,7 @@ namespace
 		const auto focused = GetPlayerScene();
 		const bool watched = focused.Active() && focused.role0 == a_active.actors[0];
 		if (withPlayer || watched) {
-			PlayClimaxEffects();
+			PlayClimaxEffects(withPlayer);
 		}
 
 		bool end = false;
@@ -1757,6 +1952,9 @@ namespace
 		float      elapsed = std::chrono::duration<float>(now - g_autoplayLast).count();
 		g_autoplayLast = now;
 		elapsed = std::min(elapsed, 0.25F);  // a hitch or a load screen doesn't skip a whole step
+		if (g_slowMo) {
+			elapsed *= 0.3F;  // the animations are in slow motion too
+		}
 
 		const auto ui = RE::UI::GetSingleton();
 		const bool paused = ui && ui->menuMode > 0;
@@ -1790,21 +1988,32 @@ namespace
 			for (auto& active : g_activeScenes) {
 				AutoModeTick(active, elapsed);
 			}
-			// Scenes ending after a climax. Ending goes through Papyrus,
-			// which removes the scene later (TrackSceneStop).
+			// Scenes ending after a climax, or NPC scenes whose time is up
+			// (OStim's NPCSceneDuration). Ending goes through Papyrus, which
+			// removes the scene later (TrackSceneStop).
 			for (auto& active : g_activeScenes) {
+				if (active.stopTimer >= 0.0F) {
+					active.stopTimer -= elapsed;
+					if (active.stopTimer < 0.0F) {
+						active.stopTimer = -1.0F;
+						if (active.endIn < 0.0F) {
+							EndActiveScene(active, "its time is up (NPCSceneDuration)");
+						}
+						continue;
+					}
+				}
 				if (active.endIn < 0.0F) {
 					continue;
 				}
 				active.endIn -= elapsed;
 				if (active.endIn <= 0.0F) {
 					active.endIn = -1.0F;
-					EndActiveScene(active);
+					EndActiveScene(active, "after a climax");
 				}
 			}
 		}
 		const bool waiting = std::ranges::any_of(g_activeScenes, [](const ActiveScene& a_scene) {
-			return a_scene.remaining >= 0.0F || a_scene.endIn >= 0.0F || a_scene.autoMode.on || Excitement::Settings().enabled;
+			return a_scene.remaining >= 0.0F || a_scene.endIn >= 0.0F || a_scene.stopTimer >= 0.0F || a_scene.autoMode.on || Excitement::Settings().enabled;
 		});
 		if (!waiting && !g_climaxShake.active) {
 			g_autoplayTicking = false;
@@ -2947,8 +3156,38 @@ namespace
 		if (g_savedFreeCamSpeed < 0.0f) {
 			g_savedFreeCamSpeed = setting->GetFloat();
 		}
-		setting->SetFloat(g_savedFreeCamSpeed * g_settings.freeCameraSpeed);
+		// As OStim: the speed is set outright (SetCameraSpeed). The older
+		// fFreeCameraSpeed multiplied the game's own instead.
+		const float speed = g_settings.freeCamSpeedMult > 0.0F ? g_savedFreeCamSpeed * g_settings.freeCamSpeedMult : g_settings.freeCamSpeed;
+		setting->SetFloat(speed);
 		REX::INFO("Scene camera: free camera speed {} -> {}", g_savedFreeCamSpeed, setting->GetFloat());
+	}
+
+	// The world FOV during the scene (OStim's SetFreeCamFOV), put back after.
+	float g_savedWorldFOV = -1.0F;  // < 0: nothing saved
+
+	void SetSceneFOV()
+	{
+		const auto camera = RE::PlayerCamera::GetSingleton();
+		if (!camera || g_settings.freeCamFOV <= 0.0F) {
+			return;
+		}
+		if (g_savedWorldFOV < 0.0F) {
+			g_savedWorldFOV = camera->worldFOV;
+		}
+		camera->worldFOV = g_settings.freeCamFOV;
+		REX::INFO("Scene camera: FOV {} -> {}", g_savedWorldFOV, camera->worldFOV);
+	}
+
+	void RestoreFOV()
+	{
+		if (g_savedWorldFOV < 0.0F) {
+			return;
+		}
+		if (const auto camera = RE::PlayerCamera::GetSingleton()) {
+			camera->worldFOV = g_savedWorldFOV;
+		}
+		g_savedWorldFOV = -1.0F;
 	}
 
 	void RestoreFreeCameraSpeed()
@@ -3006,10 +3245,26 @@ namespace
 	// A loading screen or a screen fade is up (a teleport, a cell load).
 	// Switching to the free camera then can leave the game stuck on the
 	// loading screen, so the scene camera waits for it to clear.
+	// 4Stim's own fade to black (SetUseFades) is up: the scene camera doesn't
+	// wait for that one, so the camera change happens while it's black.
+	std::atomic<bool> g_sceneFade = false;
+
 	bool LoadingOrFading()
 	{
 		const auto ui = RE::UI::GetSingleton();
-		return ui && (ui->GetMenuOpen("LoadingMenu") || ui->GetMenuOpen("FaderMenu"));
+		return ui && (ui->GetMenuOpen("LoadingMenu") || (!g_sceneFade && ui->GetMenuOpen("FaderMenu")));
+	}
+
+	// Papyrus: FourStim.UseFades() / SetSceneFade (FourStimMenu's fades,
+	// OStim's SetUseFades).
+	bool UseFades(std::monostate)
+	{
+		return g_settings.useFades;
+	}
+
+	void SetSceneFade(std::monostate, bool a_fading)
+	{
+		g_sceneFade = a_fading;
 	}
 
 	// Runs a_task on the main thread once no loading screen or fade is up
@@ -3043,8 +3298,11 @@ namespace
 			}
 			g_sceneCameraActive = true;
 			SetHUDVisible(false);
-			ScaleFreeCameraSpeed();
-			EnterFreeCamera(0);
+			SetSceneFOV();
+			if (g_settings.useFreeCam) {
+				ScaleFreeCameraSpeed();
+				EnterFreeCamera(0);
+			}
 		});
 	}
 
@@ -3060,15 +3318,37 @@ namespace
 				if (camera->QCameraEquals(RE::CameraState::kFree)) {
 					camera->ToggleFreeCameraMode(false);
 				}
-				const auto restore = g_startedFirstPerson ? RE::CameraState::kFirstPerson : RE::CameraState::k3rdPerson;
+				// Back to the view the player started in, or first person with
+				// OStim's SetForceFirstPerson.
+				const bool firstPerson = g_startedFirstPerson || g_settings.forceFirstPerson;
+				const auto restore = firstPerson ? RE::CameraState::kFirstPerson : RE::CameraState::k3rdPerson;
 				if (!camera->QCameraEquals(restore)) {
 					camera->SetState(camera->cameraStates[restore].get());
 				}
 			}
 			RestoreFreeCameraSpeed();
+			RestoreFOV();
 			SetHUDVisible(true);
-			REX::INFO("Scene camera: restored ({})", g_startedFirstPerson ? "first person" : "third person");
+			REX::INFO("Scene camera: restored ({})", g_startedFirstPerson || g_settings.forceFirstPerson ? "first person" : "third person");
 		});
+	}
+
+	// OStim's SetFreeCamToggleKey: in and out of the free camera during a
+	// scene. Main thread.
+	void ToggleSceneFreeCamera()
+	{
+		const auto camera = RE::PlayerCamera::GetSingleton();
+		if (!camera || !g_sceneCameraActive) {
+			return;
+		}
+		if (camera->QCameraEquals(RE::CameraState::kFree)) {
+			camera->ToggleFreeCameraMode(false);
+			RestoreFreeCameraSpeed();
+			REX::INFO("Scene camera: free camera off");
+		} else {
+			ScaleFreeCameraSpeed();
+			EnterFreeCamera(0);
+		}
 	}
 
 	// ---- Speed and navigation (the player's current scene) ----
@@ -3274,7 +3554,7 @@ namespace
 			active->autoMode.on ? StopAutoMode(*active) : StartAutoMode(*active);
 			Notify(active->autoMode.on ? "Auto mode on" : "Auto mode off");
 		} else if (a_command == "@endscene") {
-			EndActiveScene(*active);
+			EndActiveScene(*active, "ended from the picker");
 		}
 	}
 
@@ -4188,6 +4468,34 @@ namespace
 			}
 			return;
 		}
+		// OStim's other scene keys, for the scene you're in or watching (all
+		// unbound by default): pull out, end, search, align, free camera, hide
+		// the HUD. As OStim's EventListener.
+		if (const auto code = static_cast<std::uint32_t>(a_event->idCode); GetPlayerScene().Active() &&
+			(code == g_settings.pullOutKey || code == g_settings.endKey || code == g_settings.searchKey ||
+				code == g_settings.alignmentKey || code == g_settings.freeCamKey || code == g_settings.hideUIKey) &&
+			code != 0) {
+			const auto focused = GetPlayerScene();
+			if (code == g_settings.pullOutKey) {
+				if (const auto active = FindActiveScene(focused.role0); active && !AutoPullOut(*active)) {
+					Notify("4Stim: nowhere to pull out to from here");
+				}
+			} else if (code == g_settings.endKey) {
+				if (g_vm) {
+					RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
+					g_vm->DispatchStaticCall("FourStimMenu"sv, "EndPlayerScene"sv, callback);
+				}
+			} else if (code == g_settings.searchKey) {
+				ShowPicker(PickerMode::kSearch);
+			} else if (code == g_settings.alignmentKey) {
+				HUD::ToggleTab("align");
+			} else if (code == g_settings.freeCamKey) {
+				ToggleSceneFreeCamera();
+			} else if (code == g_settings.hideUIKey) {
+				HUD::ToggleHidden();
+			}
+			return;
+		}
 		// The NPC scene key (or Shift + the hotkey): the picker for a scene
 		// without you, whether or not you're in one.
 		{
@@ -4410,6 +4718,8 @@ namespace
 		a_vm->BindNativeMethod(SCRIPT_NAME, "ChangeSceneSpeed"sv, ChangeSceneSpeed);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "NavigateScene"sv, NavigateScene);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "BeginSceneCamera"sv, BeginSceneCamera);
+		a_vm->BindNativeMethod(SCRIPT_NAME, "UseFades"sv, UseFades);
+		a_vm->BindNativeMethod(SCRIPT_NAME, "SetSceneFade"sv, SetSceneFade);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "EndSceneCamera"sv, EndSceneCamera);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "LockPlayerControls"sv, LockPlayerControls);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "UnlockPlayerControls"sv, UnlockPlayerControls);
@@ -4722,6 +5032,9 @@ namespace
 				g_sceneCameraActive = false;
 				g_startViewSaved = false;
 				RestoreFreeCameraSpeed();
+				RestoreFOV();
+				EndSlowMotion();
+				g_sceneFade = false;
 				ReleaseSceneLayer();
 			}
 			break;

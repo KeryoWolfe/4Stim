@@ -21,8 +21,8 @@ namespace Excitement
 		float femaleMult = 1.0F;
 		float decayRate = 0.5F;       // per second, down to what the scene allows
 		float decayGrace = 5.0F;      // seconds after it last rose before it falls
-		float postClimax = 20.0F;     // a woman's excitement after a climax, times climaxes so far...
-		float postClimaxMax = 60.0F;  // ...up to this (a man's starts over at 0)
+		float postClimax = 10.0F;     // a woman's excitement after a climax, times climaxes so far...
+		float postClimaxMax = 30.0F;  // ...up to this (a man's starts over at 0)
 		bool  climaxScenes = true;    // play a role's "climax" scene when it climaxes
 		bool  endOnPlayer = false;    // end a scene when the player climaxes,
 		bool  endOnMale = true;       // when a man does,
@@ -33,9 +33,11 @@ namespace Excitement
 
 		// What the player sees at a climax in a scene they're in or watching.
 		float shake = 1.0F;           // camera shake strength (0 = off)
-		float blur = 0.5F;            // brief full-screen blur strength (0 = off)
+		bool  blurOn = true;          // a brief full-screen blur (OStim's SetBlurOrgasms)...
+		float blur = 0.5F;            // ...this strong (0 = off)
 		float flash = 1.0F;           // white glow at the screen's edges (0 = off), from the HUD
 		bool  rumble = true;          // controller rumble
+		bool  slowMo = true;          // the game slows to 0.3x for 2.5 s (OStim's SetSlowMoOrgasms)
 	};
 	Config& Settings();
 

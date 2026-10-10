@@ -17,9 +17,10 @@ An OStim-style scene framework for **Fallout 4** (1.11.240, "Anniversary Edition
 - **Customizable HUD:** themes, a replaceable logo animation, Utility entries, or a complete replacement HUD ([docs/HUD_API.md](docs/HUD_API.md)).
 - **Starting a scene, like OStim:** the hotkey lists the NPCs near you (the one you're looking at already picked); add as many as a scene allows, then pick where (right here, or a bed, chair, table... near you), and a fitting idle scene starts. Or browse every scene that fits.
 - **Group scenes:** three or more actors, as the scenes allow.
-- **Several scenes at once:** start scenes with or without yourself in them ("You: not in it" in the picker), and any number run side by side, each with its own excitement and auto mode. "Running scenes" in the picker, or the hotkey aimed at someone in a scene, lets you watch one (free camera and HUD; "Stop watching" leaves it running), switch its auto mode or end it. An actor is never in two scenes at once. Shift + the hotkey (or `iNPCSceneKey`) starts an NPC scene even while you're in one.
+- **Several scenes at once:** start scenes with or without yourself in them ("You: not in it" in the picker), and any number run side by side, each with its own excitement and auto mode. "Running scenes" in the picker, or the hotkey aimed at someone in a scene, lets you watch one (free camera and HUD; "Stop watching" leaves it running), switch its auto mode or end it. An actor is never in two scenes at once. Shift + the hotkey (or `keyNpcSceneStart`) starts an NPC scene even while you're in one.
 - **Locked in place, and aligned:** everyone in a scene is held on its spot so nothing can push them off, and the HUD's Align tab moves, turns and scales each actor per scene, saved for next time ([docs/ALIGNMENT.md](docs/ALIGNMENT.md)).
-- **Saving mid-scene:** scenes running when you save start again when that save is loaded (`bResumeScenes`).
+- **OStim's settings:** `4Stim.ini` uses OStim NG's setting names and defaults, so Skyrim users can find their way ([docs/SETTINGS.md](docs/SETTINGS.md)).
+- **Saving mid-scene:** scenes running when you save end cleanly when that save is loaded, as in OStim, or start again with `bResumeScenes=1`.
 - **Free camera** during scenes, with the player's controls locked to what a scene allows.
 - **Scene events for other mods:** start, change, speed change and end, delivered to Papyrus.
 

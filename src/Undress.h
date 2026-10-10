@@ -20,8 +20,8 @@ namespace Undress
 		bool             fullMidScene = true; // actions marked fullStrip take everything off
 		bool             player = true;       // the player too
 		bool             redress = true;      // back on when the scene ends
-		float            itemDelay = 0.3F;    // seconds between items, taking off and putting on (0 = all at once)
-		bool             animateRedress = true;  // NPCs play redress animations (scenes tagged "redress") as they dress after a scene
+		float            itemDelay = 0.0F;    // seconds between items, taking off and putting on (0 = all at once)
+		bool             animateRedress = false;  // NPCs play redress animations (scenes tagged "redress") as they dress after a scene
 		std::vector<int> slots{ 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 50 };  // biped slots 4Stim may undress
 	};
 	Config& Settings();

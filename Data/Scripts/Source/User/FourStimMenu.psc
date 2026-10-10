@@ -26,7 +26,7 @@ Function OnHotkey(int aiTargetMode, float afMaxDistance, float afCone, float afR
 	FourStim.OpenScenePicker(targetID)
 EndFunction
 
-; The NPC scene key (iNPCSceneKey, or Shift + the hotkey): the picker for a
+; The NPC scene key (keyNpcSceneStart, or Shift + the hotkey): the picker for a
 ; scene without the player, whether or not the player is in one.
 Function OnNPCSceneHotkey(int aiTargetMode, float afMaxDistance, float afCone, float afRadius) Global
 	Actor akTarget = FindTarget(aiTargetMode, afMaxDistance, afCone, afRadius)
@@ -62,13 +62,48 @@ Function ClimaxEffects(float afShake, bool abRumble) Global
 	endif
 EndFunction
 
-; Ends the scene the player is in. Called by the plugin when "End scene"
-; is picked in the navigation menu.
+; ---- Fades (OStim's SetUseFades) ----
+; As OStim's: to black over 1 s, the scene starts or ends 0.7 s in, and
+; 0.55 s later back from black over 1 s. Fallout 4's FadeOutGame can stay
+; black by itself (abStayFaded), where OStim fades twice.
+
+Function FadeToBlack() Global
+	FourStim.SetSceneFade(true)
+	Game.FadeOutGame(true, true, 0.0, 1.0, true)
+	Utility.Wait(0.7)
+EndFunction
+
+; Run with Utility.CallGlobalFunctionNoWait, so the scene goes on starting
+; or ending meanwhile.
+Function FadeFromBlack(float afDelay) Global
+	Utility.Wait(afDelay)
+	Game.FadeOutGame(false, true, 0.0, 1.0)
+	Utility.Wait(1.0)
+	FourStim.SetSceneFade(false)
+EndFunction
+
+Function FadeFromBlackLater(float afDelay) Global
+	Var[] args = new Var[1]
+	args[0] = afDelay
+	Utility.CallGlobalFunctionNoWait("FourStimMenu", "FadeFromBlack", args)
+EndFunction
+
+; Ends the scene the player is in or watching. Called by the plugin when
+; "End scene" is picked, by the end key, and when the scene ends by itself.
+; With the player in it, fades to black first (SetUseFades).
 Function EndPlayerScene() Global
 	int count = FourStim.GetPlayerSceneActorCount()
 	if count == 0
 		return
 	endif
+	if FourStim.UseFades() && FourStim.IsInScene(Game.GetPlayer())
+		FadeToBlack()
+		FadeFromBlackLater(0.55)
+	endif
+	EndPlayerSceneNow(count)
+EndFunction
+
+Function EndPlayerSceneNow(int count) Global
 	Actor akActor0 = Game.GetForm(FourStim.GetPlayerSceneActorID(0)) as Actor
 	if count == 1
 		FourStimScene.EndScene(akActor0)
@@ -111,6 +146,19 @@ Function StartPickedCast(String asSceneID, int[] aiActorIDs, int aiAnchorID = 0)
 		endif
 	endif
 
+	; With the player in it, fade to black first (SetUseFades), as OStim.
+	bool bFade = false
+	if FourStim.UseFades()
+		i = 0
+		while i < count && !bFade
+			bFade = akActors[i] == akPlayer
+			i += 1
+		endwhile
+	endif
+	if bFade
+		FadeToBlack()
+	endif
+
 	bool bStarted
 	if count == 1
 		bStarted = FourStimScene.BeginScene(akActors[0], akAnchor, 0.0, 0.0, asSceneID)
@@ -118,6 +166,9 @@ Function StartPickedCast(String asSceneID, int[] aiActorIDs, int aiAnchorID = 0)
 		bStarted = FourStimScene.BeginPairScene(akActors[0], akActors[1], asSceneID, akAnchor, 0.0, 0.0)
 	else
 		bStarted = FourStimScene.BeginGroupScene(akActors, asSceneID)
+	endif
+	if bFade
+		FadeFromBlackLater(0.55)
 	endif
 	if !bStarted
 		Debug.Notification("4Stim: scene couldn't start (see Papyrus log / 4Stim.log)")

@@ -89,6 +89,7 @@ namespace HUD
 		std::vector<UtilityEntry> g_utility;
 
 		std::atomic<bool> g_focused = false;
+		bool              g_hidden = false;  // hidden by the hide-HUD key (OStim's keyHideUI)
 
 		// The Align tab: which role is being adjusted and the step size.
 		constexpr std::array<float, 5> ALIGN_STEPS{ 0.5F, 1.0F, 2.0F, 5.0F, 10.0F };  // units / degrees; scale moves by step / 100
@@ -586,6 +587,21 @@ namespace HUD
 				SendUtility(focused);
 				SendAlign();
 				SendFocus();
+				SendHidden();
+			}
+
+			// Hidden by the hide-HUD key (optional HUD API function SetHidden).
+			void SendHidden()
+			{
+				GValue arg(g_hidden);
+				InvokeOptional("SetHidden", &arg, 1);
+			}
+
+			// The movie shows tab a_id (optional HUD API function ShowTab).
+			void ShowTab(const char* a_id)
+			{
+				GValue arg(a_id);
+				InvokeOptional("ShowTab", &arg, 1);
 			}
 
 			// The Align tab's data (optional HUD API function SetAlign,
@@ -1065,6 +1081,7 @@ namespace HUD
 				g_focused = false;
 				SetFocusLayer(false);
 			}
+			g_hidden = false;
 			if (g_menu) {
 				ShowMenu(false);
 			}
@@ -1073,6 +1090,7 @@ namespace HUD
 
 	void Reset()
 	{
+		g_hidden = false;
 		g_focused = false;
 		SetFocusLayer(false);
 		g_showRequested = false;
@@ -1114,6 +1132,48 @@ namespace HUD
 				g_menu->SendFocus();
 			}
 			REX::INFO("HUD: {}", focused ? "focused" : "unfocused");
+		});
+	}
+
+	void ToggleTab(const char* a_id)
+	{
+		const std::string id = a_id;
+		F4SE::GetTaskInterface()->AddTask([id]() {
+			if (!g_menu || !g_menu->Loaded()) {
+				return;
+			}
+			// As OStim's keys toggle its menus: the first press opens the tab
+			// (and gives the HUD the keys), the next goes back to Navigation.
+			static std::string shown;
+			const bool         open = !(g_focused && shown == id);
+			shown = open ? id : "navigation";
+			if (g_hidden) {
+				g_hidden = false;
+				g_menu->SendHidden();
+			}
+			g_menu->ShowTab(shown.c_str());
+			if (open && !g_focused) {
+				g_focused = true;
+				SetFocusLayer(true);
+				g_menu->SendFocus();
+			}
+		});
+	}
+
+	void ToggleHidden()
+	{
+		F4SE::GetTaskInterface()->AddTask([]() {
+			if (!g_menu || !g_menu->Loaded()) {
+				return;
+			}
+			g_hidden = !g_hidden;
+			if (g_hidden && g_focused) {
+				g_focused = false;
+				SetFocusLayer(false);
+				g_menu->SendFocus();
+			}
+			g_menu->SendHidden();
+			REX::INFO("HUD: {}", g_hidden ? "hidden" : "shown");
 		});
 	}
 

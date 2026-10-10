@@ -4,7 +4,7 @@ A scene with `"furniture": "<type>"` (see `SCENES.md`) is played on a piece of f
 
 ## How furniture is found
 
-When the picker opens for a new scene, 4Stim looks at the objects within `fFurnitureRadius` of the player (and `fFurnitureHeight` up or down, so the floor above doesn't count), in `4Stim.ini`. It gives each object its most specific matching type (highest `priority`) and keeps the nearest piece of each type. A scene for type T is listed if there's a piece of type T or of a subtype of T (a type whose `supertype` chain leads to T). For example, scenes for `chair` can be played on a `bench`, since a bench is a kind of chair. When one is picked, the actors are moved onto the nearest piece it fits.
+When the picker opens for a new scene, 4Stim looks at the objects within `SetFurnitureSearchDistance` of the player (OStim's steps: (value + 1) x 100 units, so the default 15 is 1600 units) (and `fFurnitureHeight` up or down, so the floor above doesn't count), in `4Stim.ini`. It gives each object its most specific matching type (highest `priority`) and keeps the nearest piece of each type. A scene for type T is listed if there's a piece of type T or of a subtype of T (a type whose `supertype` chain leads to T). For example, scenes for `chair` can be played on a `bench`, since a bench is a kind of chair. When one is picked, the actors are moved onto the nearest piece it fits.
 
 With `bLogFurniture=1`, every object looked at is written to `4Stim.log`, with its form type, model path, number of furniture markers and the type it got, plus where each furniture scene is placed. That's the way to find out what to put in `models` for a mod's furniture, and to tune offsets.
 

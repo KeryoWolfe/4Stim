@@ -33,6 +33,15 @@ namespace HUD
 	// function PlayClimax, HUD_API.md). a_strength 0-1. Any thread.
 	void PlayClimax(float a_strength);
 
+	// OStim's keyAlignment / keySearch: shows that tab (optional HUD API
+	// function ShowTab) and gives the HUD the keys; pressed again, back to
+	// Navigation. a_id: "align", "search", "utility", "navigation". Any thread.
+	void ToggleTab(const char* a_id);
+
+	// OStim's keyHideUI: hides the HUD or shows it again (optional HUD API
+	// function SetHidden). Any thread.
+	void ToggleHidden();
+
 	[[nodiscard]] bool IsOpen();
 	[[nodiscard]] bool IsFocused();
 	void               SetFocus(bool a_focused);  // any thread

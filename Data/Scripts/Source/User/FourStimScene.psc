@@ -25,7 +25,7 @@ Scriptname FourStimScene Hidden
 ;
 ; Camera: scenes with the player hide the vanilla HUD and switch to the
 ; third-person free camera once the animation starts (speed set by
-; fFreeCameraSpeed in 4Stim.ini). NPC-only scenes do the
+; SetCameraSpeed in 4Stim.ini). NPC-only scenes do the
 ; same if abFreeCamera is true (for scenes the player starts and wants to
 ; watch). The camera and HUD are restored first thing when the scene ends.
 
@@ -129,7 +129,7 @@ Function Unlock(int aiActorID) Global
 EndFunction
 
 ; A scene ended: this NPC goes back to where they stood before it, facing
-; afHeading degrees (OStim's "Reset position", bResetPosition): a translation
+; afHeading degrees (OStim's "Reset position", SetResetPosition): a translation
 ; there at a huge speed, as OStim's setPosition does.
 Function ResetPosition(int aiActorID, float afX, float afY, float afZ, float afHeading) Global
 	Actor akActor = Game.GetForm(aiActorID) as Actor
