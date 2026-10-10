@@ -2,7 +2,7 @@
 
 An OStim-style scene framework for **Fallout 4** (1.11.240, "Anniversary Edition"), built as an F4SE plugin. Two actors (or one) share a spot, play paired animations, and move between scenes through an in-scene HUD. Animation authors add content with an Idle-record plugin and a JSON file, with no scripting.
 
-> **Status:** early development (0.0.1). Expect breaking changes.
+> **Status:** alpha (0.1.0), in private testing. Expect breaking changes. Testers: see [docs/ALPHA.md](docs/ALPHA.md); changes are in [CHANGELOG.md](CHANGELOG.md).
 
 ## Features
 
@@ -27,6 +27,7 @@ Children are never eligible for scenes.
 
 - Fallout 4 **1.11.240**
 - [F4SE](https://f4se.silverlock.org/) for that runtime
+- Address Library for F4SE Plugins, for that runtime
 - An animation pack with a 4Stim scene file (the test pack in `Data\F4SE\Plugins\4Stim\Scenes\` needs its matching `4StimTestAnims.esp` and animations, which aren't in this repository)
 
 ## Usage
@@ -50,6 +51,7 @@ Data/                  Files that ship with the mod
   Interface/4Stim/     HUD themes
   Scripts/Source/User/ Papyrus sources (FourStim, FourStimScene, FourStimMenu, FourStimTest)
 Interface-src/         ActionScript 3 sources for the picker and HUD movies
+tools/                 package-alpha.ps1 (test build archives)
 docs/                  Scene format (SCENES.md) and HUD API (HUD_API.md)
 lib/commonlibf4/       CommonLibF4 (git submodule)
 ```
@@ -76,7 +78,15 @@ Set `FLEX_HOME` at the top of `Interface-src\build.bat`, then run it. The movies
 
 ### Papyrus
 
-Compile the scripts in `Data\Scripts\Source\User\` with the Creation Kit's Papyrus compiler (F4SE's script sources are needed for the `Native` declarations).
+Compile the scripts in `Data\Scripts\Source\User\` with the Creation Kit's Papyrus compiler.
+
+### Test builds
+
+`tools\package-alpha.ps1` packages a test build: `4Stim-<version>-alpha.zip` (the framework) and `4Stim-TestAnims-<version>-alpha.zip` (the test pack), with the testers' read-me, in `release\`. Build the plugin, movies and scripts first. The top of the script says where it takes each file from; it stops if one is missing, and warns about anything older than its source:
+
+```bat
+powershell -ExecutionPolicy Bypass -File tools\package-alpha.ps1
+```
 
 ## Credits
 
