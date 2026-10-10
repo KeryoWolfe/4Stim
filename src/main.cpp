@@ -215,10 +215,8 @@ namespace
 					Undress::Settings().redress = std::stoi(value) != 0;
 				} else if (key == "fundressitemdelay") {
 					Undress::Settings().itemDelay = std::clamp(std::stof(value), 0.0F, 5.0F);
-				} else if (key == "sredressidle") {
-					Undress::Settings().redressIdle = value;
-				} else if (key == "fredressidlelength") {
-					Undress::Settings().redressIdleLength = std::clamp(std::stof(value), 0.0F, 30.0F);
+				} else if (key == "banimateredress") {
+					Undress::Settings().animateRedress = std::stoi(value) != 0;
 				} else if (key == "sundressslots") {
 					std::vector<int> slots;
 					std::string      token;
@@ -292,8 +290,8 @@ namespace
 			ex.enabled ? "on" : "off", ex.maleMult, ex.femaleMult, ex.decayRate, ex.decayGrace, ex.climaxScenes,
 			ex.endOnPlayer, ex.endOnMale, ex.endOnFemale, ex.endOnAll, ex.endNPCScenes, ex.endDelay);
 		const auto& un = Undress::Settings();
-		REX::INFO("Settings: undress {} (at start {}, partial {}, full mid-scene {}, player {}, redress {}), {} slot(s), {}s per item, redress idle \"{}\"",
-			un.enabled, un.atStart, un.partial, un.fullMidScene, un.player, un.redress, un.slots.size(), un.itemDelay, un.redressIdle);
+		REX::INFO("Settings: undress {} (at start {}, partial {}, full mid-scene {}, player {}, redress {}), {} slot(s), {}s per item, animated redress {}",
+			un.enabled, un.atStart, un.partial, un.fullMidScene, un.player, un.redress, un.slots.size(), un.itemDelay, un.animateRedress);
 		auto& ac = g_autoConfig;
 		ac.sceneMax = std::max(ac.sceneMax, ac.sceneMin);
 		ac.foreplayMax = std::max(ac.foreplayMax, ac.foreplayMin);
@@ -1505,6 +1503,7 @@ namespace
 			}
 			UpdateClimaxShake();
 			GuardScenes(elapsed);
+			Undress::Tick(elapsed);
 			for (auto& active : g_activeScenes) {
 				AutoModeTick(active, elapsed);
 			}

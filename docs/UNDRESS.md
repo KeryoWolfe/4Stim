@@ -17,7 +17,19 @@ Weapons are always put away when a scene starts.
 
 Clothes come off and go back on one item at a time, `fUndressItemDelay` seconds apart (0.3 by default; 0 = all at once).
 
-When a scene ends, actors can play a "getting dressed" idle before their clothes go back on: `sRedressIdle` (as `Plugin.esp|0xFormID`), for `fRedressIdleLength` seconds. Fallout 4 has no such animation of its own, so it's empty by default; it's there for animation packs that add one. OStim's undressing animations are Skyrim's and can't be used.
+## Animated undressing and redressing
+
+- **Undressing scenes:** a scene can take clothes off at a set moment of its animation with an `undress` list (`SCENES.md`): a partner pulling someone's top off takes the top off as the hands get there. The test pack has OStim's: from **Standing apart** (MF), "take off _her_ top / bottoms / gloves / hat / boots" and "_she_ takes off _his_ bottoms", each playing once and going back to standing apart.
+- **Redress animations** (`bAnimateRedress`, on by default): when a scene ends, NPCs get dressed a body part at a time, torso, feet, hands, then head, each with its own animation, and that part's clothes go on partway through it, like OStim. The animations are one-actor scenes tagged `redress` plus the part (`torso`, `feet`, `hands`, `head`) for the actor's sex, with `length` and `dressAt` (`SCENES.md`); the test pack has OStim's. Anything that isn't in one of those parts goes on afterwards. The player dresses without them.
+
+The slots each part covers:
+
+| Part | Slots |
+|---|---|
+| torso | 33, 36–38, 41–43, 50 |
+| feet | 39, 40, 44, 45 (Fallout 4 has no feet slot: shoes are part of the legs) |
+| hands | 34, 35 |
+| head | 46, 47 |
 
 ## What
 

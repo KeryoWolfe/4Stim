@@ -12,9 +12,13 @@
 			],
 			"tags": [
 				"redress",
+				"feet",
 				"1p",
 				"f"
-			]
+			],
+			"length": 3.0,
+			"dressAt": 2.9,
+			"noRandomSelection": true
 		},
 		{
 			"id": "4StimTest_OStimRedressFeetM",
@@ -27,9 +31,13 @@
 			],
 			"tags": [
 				"redress",
+				"feet",
 				"1p",
 				"m"
-			]
+			],
+			"length": 3.0,
+			"dressAt": 2.9,
+			"noRandomSelection": true
 		},
 		{
 			"id": "4StimTest_OStimRedressHandsF",
@@ -42,9 +50,13 @@
 			],
 			"tags": [
 				"redress",
+				"hands",
 				"1p",
 				"f"
-			]
+			],
+			"length": 2.0,
+			"dressAt": 1.6,
+			"noRandomSelection": true
 		},
 		{
 			"id": "4StimTest_OStimRedressHandsM",
@@ -57,9 +69,13 @@
 			],
 			"tags": [
 				"redress",
+				"hands",
 				"1p",
 				"m"
-			]
+			],
+			"length": 2.0,
+			"dressAt": 1.6,
+			"noRandomSelection": true
 		},
 		{
 			"id": "4StimTest_OStimRedressHeadF",
@@ -72,9 +88,13 @@
 			],
 			"tags": [
 				"redress",
+				"head",
 				"1p",
 				"f"
-			]
+			],
+			"length": 2.0,
+			"dressAt": 1.9,
+			"noRandomSelection": true
 		},
 		{
 			"id": "4StimTest_OStimRedressHeadM",
@@ -87,9 +107,13 @@
 			],
 			"tags": [
 				"redress",
+				"head",
 				"1p",
 				"m"
-			]
+			],
+			"length": 2.0,
+			"dressAt": 1.9,
+			"noRandomSelection": true
 		},
 		{
 			"id": "4StimTest_OStimRedressTorsoF",
@@ -102,9 +126,13 @@
 			],
 			"tags": [
 				"redress",
+				"torso",
 				"1p",
 				"f"
-			]
+			],
+			"length": 3.0,
+			"dressAt": 1.5,
+			"noRandomSelection": true
 		},
 		{
 			"id": "4StimTest_OStimRedressTorsoM",
@@ -117,9 +145,13 @@
 			],
 			"tags": [
 				"redress",
+				"torso",
 				"1p",
 				"m"
-			]
+			],
+			"length": 3.0,
+			"dressAt": 1.5,
+			"noRandomSelection": true
 		},
 		{
 			"id": "4StimTest_OStim1PSittingF",
@@ -1393,6 +1425,36 @@
 					"to": "4StimTest_OStim2PStandingApartMM",
 					"label": "go to gay idle",
 					"icon": "4Stim/symbols/gender_mm"
+				},
+				{
+					"to": "4StimTest_OStim2PUndressTop1MF",
+					"label": "take off {1}'s top",
+					"icon": "4Stim/clothes/top"
+				},
+				{
+					"to": "4StimTest_OStim2PUndressBottom1MF",
+					"label": "take off {1}'s bottoms",
+					"icon": "4Stim/clothes/skirt"
+				},
+				{
+					"to": "4StimTest_OStim2PUndressGloves1MF",
+					"label": "take off {1}'s gloves",
+					"icon": "4Stim/clothes/gauntlets"
+				},
+				{
+					"to": "4StimTest_OStim2PUndressHead1MF",
+					"label": "take off {1}'s hat",
+					"icon": "4Stim/clothes/helmet"
+				},
+				{
+					"to": "4StimTest_OStim2PUndressBoots1MF",
+					"label": "take off {1}'s boots",
+					"icon": "4Stim/clothes/boots"
+				},
+				{
+					"to": "4StimTest_OStim2PUndressBottom0MF",
+					"label": "{1} takes off {0}'s bottoms",
+					"icon": "4Stim/clothes/trousers"
 				}
 			]
 		},
@@ -10818,13 +10880,28 @@
 			"tags": [
 				"undressing",
 				"2p",
-				"mf"
+				"mf",
+				"transition"
+			],
+			"destination": "4StimTest_OStim2PStandingApartMF",
+			"noRandomSelection": true,
+			"undress": [
+				{
+					"actor": 1,
+					"slots": [
+						39,
+						40,
+						44,
+						45
+					],
+					"at": 4.0
+				}
 			]
 		},
 		{
 			"id": "4StimTest_OStim2PUndressBottom0MF",
 			"name": "Undress Bottom 0 (MF)",
-			"length": 7.0,
+			"length": 7.167,
 			"actors": [
 				{
 					"sex": "male",
@@ -10844,7 +10921,24 @@
 			"tags": [
 				"undressing",
 				"2p",
-				"mf"
+				"mf",
+				"transition"
+			],
+			"destination": "4StimTest_OStim2PStandingApartMF",
+			"noRandomSelection": true,
+			"undress": [
+				{
+					"actor": 0,
+					"slots": [
+						33,
+						36,
+						39,
+						40,
+						44,
+						45
+					],
+					"at": 4.667
+				}
 			]
 		},
 		{
@@ -10870,7 +10964,24 @@
 			"tags": [
 				"undressing",
 				"2p",
-				"mf"
+				"mf",
+				"transition"
+			],
+			"destination": "4StimTest_OStim2PStandingApartMF",
+			"noRandomSelection": true,
+			"undress": [
+				{
+					"actor": 1,
+					"slots": [
+						33,
+						36,
+						39,
+						40,
+						44,
+						45
+					],
+					"at": 1.5
+				}
 			]
 		},
 		{
@@ -10896,7 +11007,20 @@
 			"tags": [
 				"undressing",
 				"2p",
-				"mf"
+				"mf",
+				"transition"
+			],
+			"destination": "4StimTest_OStim2PStandingApartMF",
+			"noRandomSelection": true,
+			"undress": [
+				{
+					"actor": 1,
+					"slots": [
+						34,
+						35
+					],
+					"at": 2.667
+				}
 			]
 		},
 		{
@@ -10922,13 +11046,26 @@
 			"tags": [
 				"undressing",
 				"2p",
-				"mf"
+				"mf",
+				"transition"
+			],
+			"destination": "4StimTest_OStim2PStandingApartMF",
+			"noRandomSelection": true,
+			"undress": [
+				{
+					"actor": 1,
+					"slots": [
+						46,
+						47
+					],
+					"at": 1.5
+				}
 			]
 		},
 		{
 			"id": "4StimTest_OStim2PUndressTop1MF",
 			"name": "Undress Top 1 (MF)",
-			"length": 4.0,
+			"length": 4.333,
 			"actors": [
 				{
 					"sex": "male",
@@ -10948,7 +11085,26 @@
 			"tags": [
 				"undressing",
 				"2p",
-				"mf"
+				"mf",
+				"transition"
+			],
+			"destination": "4StimTest_OStim2PStandingApartMF",
+			"noRandomSelection": true,
+			"undress": [
+				{
+					"actor": 1,
+					"slots": [
+						33,
+						36,
+						37,
+						38,
+						41,
+						42,
+						43,
+						50
+					],
+					"at": 2.0
+				}
 			]
 		},
 		{

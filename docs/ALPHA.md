@@ -51,6 +51,7 @@ Anything goes, but these are new and the least tested:
 - **Several scenes at once,** with and without you in them, including starting one with `Shift` + `N` while you're in your own.
 - **Saving and loading mid-scene.** Scenes running when you save should start again a few seconds after the save loads (`bResumeScenes`).
 - **Undressing by hand:** Undress / Dress for each actor in the HUD's Utility tab.
+- **Animated undressing:** from Standing apart (MF), the "take off her top / bottoms / gloves / hat / boots" options. And after a scene, NPCs dressing a body part at a time with redress animations.
 - **Your body and outfit mods.** Anything that doesn't line up, clips badly or doesn't undress.
 
 ## Known problems

@@ -57,6 +57,16 @@ namespace SceneRegistry
 		std::string icon;   // HUD icon movie under Data\Interface\4Stim\Icons\; empty = the destination's
 	};
 
+	// An animated undressing step: at `at` seconds into the scene, the actor
+	// in role `actor` takes off what's in `slots` (biped slots 30-61), e.g.
+	// a partner pulling their top off.
+	struct SceneUndress
+	{
+		std::size_t      actor = 0;
+		std::vector<int> slots;
+		float            at = 0.0F;
+	};
+
 	struct Scene
 	{
 		std::string                                id;
@@ -72,6 +82,8 @@ namespace SceneRegistry
 		int                                        defaultSpeed = 0;   // 0-based speed it starts at (auto mode, new scenes)
 		bool                                       noRandomSelection = false;  // auto mode never picks it
 		bool                                       noStrip = false;            // no undressing in this scene
+		std::vector<SceneUndress>                  undress;                    // animated undressing steps
+		float                                      dressAt = -1.0F;            // redress animations: when the clothes go on (s); -1 = not given
 		std::string                                furniture;      // furniture type it's played on (lowercase); "" = anywhere
 		std::array<float, 4>                       furnitureOffset{};  // x, y, z, degrees from the furniture's spot
 		std::string                                sourceFile;

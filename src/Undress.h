@@ -21,8 +21,7 @@ namespace Undress
 		bool             player = true;       // the player too
 		bool             redress = true;      // back on when the scene ends
 		float            itemDelay = 0.3F;    // seconds between items, taking off and putting on (0 = all at once)
-		std::string      redressIdle;         // "Plugin.esp|0xID": an idle played before dressing again after a scene ("" = none)
-		float            redressIdleLength = 3.0F;  // seconds the redress idle plays before the clothes go on
+		bool             animateRedress = true;  // NPCs play redress animations (scenes tagged "redress") as they dress after a scene
 		std::vector<int> slots{ 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 50 };  // biped slots 4Stim may undress
 	};
 	Config& Settings();
@@ -30,6 +29,10 @@ namespace Undress
 	// a_ids[role] play a_scene: takes off what its actions need (and at a
 	// scene's start, with atStart, everything). Main thread.
 	void SceneEntered(const std::vector<std::uint32_t>& a_ids, const SceneRegistry::Scene& a_scene, bool a_start);
+
+	// Advances animated undressing steps (scene "undress", SCENES.md) by
+	// a_seconds, taking off what's due. Main thread (the scene clock).
+	void Tick(float a_seconds);
 
 	// Takes off every undress slot of a_id. a_byHand: asked for by the
 	// player (the HUD), so it also undresses the player with

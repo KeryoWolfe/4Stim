@@ -161,6 +161,9 @@ namespace SceneRegistry
 				scene.sourceFile = file;
 				scene.noRandomSelection = entry.value("noRandomSelection", false);
 				scene.noStrip = entry.value("noStrip", false);
+				if (const auto at = entry.find("dressAt"); at != entry.end() && at->is_number()) {
+					scene.dressAt = std::max(at->get<float>(), 0.0F);
+				}
 				if (const auto ds = entry.find("defaultSpeed"); ds != entry.end()) {
 					if (ds->is_number_integer() && ds->get<int>() >= 0) {
 						scene.defaultSpeed = ds->get<int>();
@@ -226,6 +229,26 @@ namespace SceneRegistry
 					scene.actors.push_back(role);
 				}
 				const auto roles = scene.actors.size();
+				if (const auto list = entry.find("undress"); list != entry.end()) {
+					for (const auto& step : list->is_array() ? *list : nlohmann::json::array()) {
+						SceneUndress undress;
+						const auto   role = step.is_object() ? step.find("actor") : step.end();
+						const auto   slots = step.is_object() ? step.find("slots") : step.end();
+						if (role == step.end() || !role->is_number_integer() || role->get<int>() < 0 || static_cast<std::size_t>(role->get<int>()) >= scene.actors.size() ||
+							slots == step.end() || !slots->is_array()) {
+							REX::WARN("Scenes: {}: scene \"{}\" has an \"undress\" step without a valid \"actor\" role and \"slots\" list, ignored", file, id);
+							continue;
+						}
+						undress.actor = static_cast<std::size_t>(role->get<int>());
+						for (const auto& slot : *slots) {
+							if (slot.is_number_integer() && slot.get<int>() >= 30 && slot.get<int>() <= 61) {
+								undress.slots.push_back(slot.get<int>());
+							}
+						}
+						undress.at = std::max(step.value("at", 0.0F), 0.0F);
+						scene.undress.push_back(std::move(undress));
+					}
+				}
 
 				// Idles: either a "speeds" list ({"idles": [one per role]}), or the
 				// single-speed shorthand with an "idle" on each actor.
