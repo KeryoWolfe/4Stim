@@ -16,7 +16,12 @@ The NPC height is the `height` on their NPC record. OStim also divides by the Ra
 
 ## Heels
 
-An actor's heel height is read from what they wear, from **Fallout 4's High Heels System** files: a `.txt` next to the shoe's mesh (`Data\Meshes\...\Shoes.nif` → `Shoes.txt`) with `Height=<units>`. The highest one among their worn armor counts. Heels are read again on every scene change, so taking shoes off mid-scene is noticed at the next one. The heights found are logged (`Heels:` in `4Stim.log`).
+An actor's heel height is read from what they wear, the way **Fallout 4's High Heels System** (HHS) defines heights. The highest one among their worn armor counts, from the first of these that has one:
+
+1. HHS `.json` files in `Data\F4SE\Plugins\HHS\`: an armor (or armor addon) by plugin and form ID, for one sex or both (`{"MyShoes.esp": [{"formid": "00800", "gender": 1, "value": 10}]}`), or a mesh by its path under `Meshes\` (`{"MyShoes": [{"key": "MyShoes\\MyShoes.nif", "value": 10}]}`).
+2. An HHS `.txt` next to the shoe's mesh (`Data\Meshes\MyArmor\MyArmor.nif` -> `MyArmor.txt`), or with the mesh's file name in `Data\F4SE\Plugins\HHS\`, holding `Height=10.0`.
+
+Heights set in HHS's MCM, or written into the mesh as extra data, aren't read. Heels are read again on every scene change, so taking shoes off mid-scene is noticed at the next one. The heights found are logged (`Heels:` in `4Stim.log`). The `.json` files are read once per game session (again with `FourStim.ReloadScenes()`).
 
 As OStim does with its heel offsets:
 
@@ -37,6 +42,6 @@ On an actor (`SCENES.md`), all OStim's:
 
 ## Not yet
 
-- Heel heights from other heel mods (e.g. ones set by script properties on the armor), and Skyrim-style `HH_OFFSET` data in meshes.
+- Heights from HHS's MCM and from extra data in meshes, and from other heel mods (e.g. ones set by script properties on the armor).
 - The furniture type's `multiplyScale` (OStim's furniture scale).
 - LooksMenu height.

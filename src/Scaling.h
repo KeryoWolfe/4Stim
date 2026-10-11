@@ -11,7 +11,7 @@
 //   by their own NPC height, so a tall NPC and a short one both play the
 //   animation at its size.
 // - Heels: an actor wearing heels (a height from Fallout 4's High Heels
-//   System .txt files, "Height=" next to the shoe's mesh) is scaled down so
+//   System's .json and .txt files, docs/SCALING.md) is scaled down so
 //   heels plus body match the animation (OStim's scaleHeight / (scaleHeight +
 //   heels)) when their feet are on the ground (role tag standing / squatting,
 //   or "feetOnGround"); otherwise the heels are taken off their height: they
