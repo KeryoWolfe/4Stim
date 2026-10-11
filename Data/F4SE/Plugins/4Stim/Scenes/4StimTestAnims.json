@@ -8652,7 +8652,7 @@
 				},
 				{
 					"to": "4StimTest_OStim2PProneMaleMountedMF",
-					"label": "sit up ({0})gs",
+					"label": "sit up ({0})",
 					"icon": "4Stim/symbols/arrow_up"
 				},
 				{

@@ -39,6 +39,10 @@ namespace Undress
 	// bUndressPlayer=0. Any thread.
 	void StripAll(std::uint32_t a_id, bool a_byHand = false);
 
+	// The armor a_actor wears with any of a_mask's slots (bit 0 = slot 30),
+	// as form IDs; not the Pip-Boy. Main thread.
+	std::vector<std::uint32_t> WornItems(RE::Actor* a_actor, std::uint32_t a_mask = 0xFFFFFFFF);
+
 	// Whether 4Stim has taken anything off a_id (that isn't back on), and what.
 	[[nodiscard]] bool                       IsStripped(std::uint32_t a_id);
 	[[nodiscard]] std::vector<std::uint32_t> Stripped(std::uint32_t a_id);

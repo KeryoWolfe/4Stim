@@ -549,7 +549,15 @@ namespace Furniture
 		}
 	}
 
-	Spot SpotFor(RE::TESObjectREFR* a_ref, std::string_view a_type, const RE::NiPoint3& a_near)
+	bool IsEdgeAnchored(std::string_view a_type)
+	{
+		std::scoped_lock lock(g_lock);
+		EnsureLoaded();
+		const auto it = g_types.find(Lower(a_type));
+		return it != g_types.end() && it->second.edge;
+	}
+
+	Spot SpotFor(RE::TESObjectREFR* a_ref, std::string_view a_type, const RE::NiPoint3& a_near, bool a_floorScene)
 	{
 		Spot spot;
 		if (!a_ref) {
@@ -577,7 +585,34 @@ namespace Furniture
 		int        used = -1;
 		bool       zFromMarker = false;
 		const auto bound = a_ref->GetObjectReference();  // already the base object's bounds holder
-		if (type.edge && bound) {
+		if (type.edge && a_floorScene && bound) {
+			// A scene without furniture of its own played on edge furniture (a
+			// floor scene on a bed): lying along it, in the middle, at the
+			// height the edge spot has (the mattress), heading toward the end
+			// farther from the player. The edge spot is for scenes made for
+			// the bed (sitting on its side...); a lying floor scene there
+			// would stick out over the floor.
+			const auto& b = bound->boundData;
+			const float midX = (b.boundMin.x + b.boundMax.x) * 0.5F, midY = (b.boundMin.y + b.boundMax.y) * 0.5F;
+			const bool  alongX = (b.boundMax.x - b.boundMin.x) >= (b.boundMax.y - b.boundMin.y);
+			const auto  origin = a_ref->GetPosition();
+			const float dx = a_near.x - origin.x, dy = a_near.y - origin.y;
+			const float c0 = std::cos(yaw), s0 = std::sin(yaw);
+			const float nearX = dx * c0 - dy * s0;
+			const float nearY = dx * s0 + dy * c0;
+			local = { midX, midY, type.onFloor ? static_cast<float>(b.boundMin.z) : 0.0F };
+			if (alongX) {
+				localHeading = nearX >= midX * scale ? -3.14159265F * 0.5F : 3.14159265F * 0.5F;
+			} else {
+				localHeading = nearY >= midY * scale ? 3.14159265F : 0.0F;
+			}
+			if (type.markerHeight && !markers.empty()) {
+				local.z = markers[std::clamp(type.markerIndex, 0, static_cast<int>(markers.size()) - 1)].position.z;
+				zFromMarker = true;
+			}
+			REX::INFO("Furniture: {:08X} bounds ({}, {}, {}) to ({}, {}, {}); a floor scene: center, along {}", a_ref->GetFormID(),
+				b.boundMin.x, b.boundMin.y, b.boundMin.z, b.boundMax.x, b.boundMax.y, b.boundMax.z, alongX ? "x" : "y");
+		} else if (type.edge && bound) {
 			// The bounding box, in the object's frame.
 			const auto& b = bound->boundData;
 			const float minX = b.boundMin.x, maxX = b.boundMax.x, minY = b.boundMin.y, maxY = b.boundMax.y;
@@ -679,7 +714,10 @@ namespace Furniture
 				local.z = 0.0F;
 			}
 		}
-		local = local + RE::NiPoint3{ type.offset.x, type.offset.y, zFromMarker ? 0.0F : type.offset.z };
+		// The type's offset is in the edge spot's terms; a floor scene on it
+		// only takes its height.
+		const bool floorOnEdge = type.edge && a_floorScene;
+		local = local + RE::NiPoint3{ floorOnEdge ? 0.0F : type.offset.x, floorOnEdge ? 0.0F : type.offset.y, zFromMarker ? 0.0F : type.offset.z };
 		local = local * scale;
 
 		const float c = std::cos(yaw);

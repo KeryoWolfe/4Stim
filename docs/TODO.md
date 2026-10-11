@@ -33,7 +33,7 @@ The audit compared every finished feature with OStim's source; it's being carrie
 
 ### Presentation
 - ~~**Alignment menu.**~~ Done (docs/ALIGNMENT.md): the HUD's Align tab moves, turns and scales each actor per scene and role, live, saved to `Alignment.json`, on top of the scene lock. Alignments are now keyed by sex as OStim's (pass 2). Still to do: penis bend (needs bendable-body support), alignments keyed by body / height (with Automatic Mesh Detection), heel compensation.
-- **Actor scaling and heels.** Scale actors to the animation's intended height (`scale`, `scaleHeight`), and remove or compensate heel offsets.
+- ~~**Actor scaling and heels.**~~ Done (docs/SCALING.md): OStim's scaling (`SetScaling`, role `scale`, NPC height evened out), heels from the High Heels System's `.txt` files, scaled with `scaleHeight` when feet are on the ground, lowered when not, and in the alignment key. Still to do: other heel mods' heights, furniture `multiplyScale`, LooksMenu height.
 - **Facial expressions.** Expression sets (default, excited, kissing, moan, climax, open mouth...) with phonemes, eyes and brows, by action and excitement; `look` directions and `expressionOverride` per scene.
 - **Sound.** Voice sets per actor / voice type (moans, muffled moans, climax sounds, comments, reactions, post-scene lines), action sounds (slaps on peaks), mute / muffle per actor or action.
 - **Peaks and events.** Distance- or loop-based peak signals per action, and annotation events (spank...) with sound, stimulation, camera shake and rumble.

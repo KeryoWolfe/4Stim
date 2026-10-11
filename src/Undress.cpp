@@ -241,6 +241,11 @@ namespace Undress
 		Strip(a_id, g_config.slots, a_byHand);
 	}
 
+	std::vector<std::uint32_t> WornItems(RE::Actor* a_actor, std::uint32_t a_mask)
+	{
+		return a_actor ? WornIn(a_actor, a_mask) : std::vector<std::uint32_t>{};
+	}
+
 	bool IsStripped(std::uint32_t a_id)
 	{
 		std::scoped_lock lock(g_lock);

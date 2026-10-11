@@ -19,6 +19,7 @@ package hud
 		private var _buttons:Array = [];  // { bg, icon, label }
 		private var _theme:Theme;
 		private var _selected:int = 0;
+		private var _focused:Boolean = false;  // the tab buttons have the keys (OStim's control scheme)
 
 		public function TabBar(a_tabs:Array)
 		{
@@ -70,6 +71,12 @@ package hud
 			refresh();
 		}
 
+		public function set focused(a_focused:Boolean):void
+		{
+			_focused = a_focused;
+			refresh();
+		}
+
 		public function select(a_index:int):void
 		{
 			_selected = (a_index + _tabs.length) % _tabs.length;
@@ -97,7 +104,7 @@ package hud
 				var g:* = button.bg.graphics;
 				g.clear();
 				var border:Array = on ? [_theme.colors("accent")[0]] : _theme.colors("tabBorder");
-				g.lineStyle(2, border[0].c, border[0].a);
+				g.lineStyle(on && _focused ? 4 : 2, border[0].c, border[0].a);
 				Theme.begin(g, on ? _theme.colors("tabSelected") : _theme.colors("tabBackground"), 0, 0, SIZE, SIZE, Math.PI / 4);
 				g.drawRect(1, 1, SIZE - 2, SIZE - 2);
 				g.endFill();

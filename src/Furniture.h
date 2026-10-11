@@ -58,8 +58,14 @@ namespace Furniture
 	bool AllowsFloorScene(std::string_view a_type, const SceneRegistry::Scene& a_scene);
 
 	// Where a scene goes on a_ref, a piece of furniture of type a_type. For
-	// types anchored on an edge, the side nearest a_near is used.
-	Spot SpotFor(RE::TESObjectREFR* a_ref, std::string_view a_type, const RE::NiPoint3& a_near);
+	// types anchored on an edge, the side nearest a_near is used; with
+	// a_floorScene (a scene without furniture of its own, on a bed), the
+	// middle, lengthwise, at the edge spot's height.
+	Spot SpotFor(RE::TESObjectREFR* a_ref, std::string_view a_type, const RE::NiPoint3& a_near, bool a_floorScene = false);
+
+	// Whether type a_type places scenes on an edge (beds, tables): floor
+	// scenes on it get their own spot (SpotFor's a_floorScene).
+	bool IsEdgeAnchored(std::string_view a_type);
 
 	// How much of the straight line a_from -> a_to is clear (1 = all of it),
 	// by a line-of-sight ray: walls, furniture and clutter stop it; actors

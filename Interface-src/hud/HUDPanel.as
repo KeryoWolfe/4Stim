@@ -50,6 +50,11 @@ package hud
 		private var _speed:int = 0;
 		private var _speedCount:int = 0;
 		private var _focused:Boolean = false;
+		// OStim's control scheme ("columns"): Up / Down move in the list,
+		// Left / Right between the list and the tab buttons. _tabFocus: the
+		// tab buttons have the keys.
+		private var _columns:Boolean = false;
+		private var _tabFocus:Boolean = false;
 		private var _paused:Boolean = false;
 		private var _ready:Boolean = false;
 
@@ -176,7 +181,26 @@ package hud
 		public function SetFocus(a_focused:Boolean):void
 		{
 			_focused = a_focused;
-			_list.focused = a_focused;
+			if (!a_focused) {
+				_tabFocus = false;
+			}
+			updateFocus();
+		}
+
+		// Optional (HUD_API.md): "tabs" (Left / Right change tabs, the
+		// default) or "columns" (OStim's: Left / Right move between the list
+		// and the tab buttons, Up / Down move within the one that has the keys).
+		public function SetControlScheme(a_scheme:String):void
+		{
+			_columns = String(a_scheme).toLowerCase() == "columns";
+			_tabFocus = false;
+			updateFocus();
+		}
+
+		private function updateFocus():void
+		{
+			_list.focused = _focused && !_tabFocus;
+			_tabs.focused = _focused && _tabFocus;
 		}
 
 		public function SetPaused(a_paused:Boolean):void
@@ -207,6 +231,9 @@ package hud
 			}
 			if (!a_down) {
 				return a_name == "Up" || a_name == "Down" || a_name == "Left" || a_name == "Right" || a_name == "Accept" || a_name == "Cancel";
+			}
+			if (_columns && handleColumns(a_name)) {
+				return true;
 			}
 			// Align tab: Left / Right change the selected row's value.
 			var row:Object = _list.selectedEntry;
@@ -260,6 +287,60 @@ package hud
 		}
 
 		// ---- Internals ----
+
+		// OStim's control scheme. Returns true if it handled a_name. In the
+		// list, Left / Right still change a value on the Align tab's value,
+		// actor and step rows (the safeguard): the tab buttons are reached
+		// from any other row, or with LB / RB.
+		private function handleColumns(a_name:String):Boolean
+		{
+			var toTabs:String = _mirror ? "Right" : "Left";
+			var toList:String = _mirror ? "Left" : "Right";
+			if (_tabFocus) {
+				switch (a_name) {
+					case "Up":
+					case "PrevTab":
+						_tabs.select(_tabs.selected - 1);
+						showTab(false);
+						return true;
+					case "Down":
+					case "NextTab":
+						_tabs.select(_tabs.selected + 1);
+						showTab(false);
+						return true;
+					case "Accept":
+					case "Left":
+					case "Right":
+						if (a_name == "Accept" || a_name == toList) {
+							_tabFocus = false;
+							updateFocus();
+							updateRepeat();
+						}
+						return true;
+				}
+				return false;  // Cancel, speed keys: as usual
+			}
+			if (a_name == toTabs) {
+				var row:Object = _list.selectedEntry;
+				var kind:String = row != null ? String(row.kind) : "";
+				if (_tabs.selectedID == "align" && (kind == "alignValue" || kind == "alignActor" || kind == "alignStep")) {
+					return false;  // changes the value
+				}
+				_tabFocus = true;
+				updateFocus();
+				code("SetHorizontalRepeat", false);
+				return true;
+			}
+			if (a_name == toList) {
+				var r:Object = _list.selectedEntry;
+				var k:String = r != null ? String(r.kind) : "";
+				if (_tabs.selectedID == "align" && (k == "alignValue" || k == "alignActor" || k == "alignStep")) {
+					return false;  // changes the value
+				}
+				return true;  // already in the list
+			}
+			return false;
+		}
 
 		private function onEnterFrame(a_event:Event):void
 		{
@@ -388,7 +469,7 @@ package hud
 		{
 			var row:Object = _list.selectedEntry;
 			var kind:String = row != null ? String(row.kind) : "";
-			code("SetHorizontalRepeat", _tabs.selectedID == "align" && kind == "alignValue");
+			code("SetHorizontalRepeat", !_tabFocus && _tabs.selectedID == "align" && kind == "alignValue");
 		}
 
 		private function px(a_x:Number, a_w:Number):Number

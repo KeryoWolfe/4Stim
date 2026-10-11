@@ -56,6 +56,13 @@ namespace SceneRegistry
 		// every actor's).
 		Position offset;
 		float    penisBend = 0.0F;  // OStim's sosBend / tngBend: kept, not used yet (bendable bodies)
+		// Actor scaling (OStim's): the scale this role's actor is played at
+		// (their own height evened out), and the height the animation was
+		// made for, against which heels are taken off. feetOnGround: heels
+		// stay on (default: tagged standing or squatting).
+		float scale = 1.0F;
+		float scaleHeight = 120.748F;
+		bool  feetOnGround = false;
 
 		[[nodiscard]] bool HasTag(std::string_view a_tag) const;
 		// The scene for a_event, or "".

@@ -85,6 +85,7 @@ namespace HUD
 		std::mutex                g_configLock;
 		std::string               g_themeName = "Color";
 		bool                      g_enabled = true;
+		bool                      g_columns = false;  // sHUDControls=Columns (OStim's scheme)
 		json                      g_theme;
 		std::vector<UtilityEntry> g_utility;
 
@@ -565,6 +566,7 @@ namespace HUD
 				}
 				SendScreen();
 				SendTheme();
+				SendControlScheme();
 				SendSceneData();
 			}
 
@@ -588,6 +590,20 @@ namespace HUD
 				SendAlign();
 				SendFocus();
 				SendHidden();
+			}
+
+			// The control scheme (optional HUD API function SetControlScheme):
+			// "tabs" (Left / Right change tabs) or "columns" (OStim's: Left /
+			// Right move between the list and the tab buttons).
+			void SendControlScheme()
+			{
+				bool columns;
+				{
+					std::scoped_lock lock(g_configLock);
+					columns = g_columns;
+				}
+				GValue arg(columns ? "columns" : "tabs");
+				InvokeOptional("SetControlScheme", &arg, 1);
 			}
 
 			// Hidden by the hide-HUD key (optional HUD API function SetHidden).
@@ -1027,11 +1043,12 @@ namespace HUD
 		}
 	}
 
-	void SetOptions(std::string a_theme, bool a_enabled)
+	void SetOptions(std::string a_theme, bool a_enabled, bool a_columns)
 	{
 		std::scoped_lock lock(g_configLock);
 		g_themeName = a_theme.empty() ? "Color" : std::move(a_theme);
 		g_enabled = a_enabled;
+		g_columns = a_columns;
 	}
 
 	void LoadConfig()

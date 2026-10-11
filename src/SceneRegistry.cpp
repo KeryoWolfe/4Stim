@@ -269,6 +269,20 @@ namespace SceneRegistry
 					if (const auto ai = a.find("animationIndex"); ai != a.end() && ai->is_number_integer()) {
 						index = ai->get<int>();
 					}
+					if (const auto v = a.find("scale"); v != a.end() && v->is_number() && v->get<float>() > 0.0F) {
+						role.scale = v->get<float>();
+					}
+					if (const auto v = a.find("scaleHeight"); v != a.end() && v->is_number() && v->get<float>() > 0.0F) {
+						role.scaleHeight = v->get<float>();
+					}
+				}
+				// As OStim: feet on the ground when standing or squatting,
+				// unless the scene says otherwise.
+				role.feetOnGround = role.HasTag("standing") || role.HasTag("squatting");
+				if (a.is_object()) {
+					if (const auto v = a.find("feetOnGround"); v != a.end() && v->is_boolean()) {
+						role.feetOnGround = v->get<bool>();
+					}
 				}
 				role.offset.x += sceneOffset.x;
 				role.offset.y += sceneOffset.y;

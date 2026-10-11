@@ -32,6 +32,7 @@ Times given with OStim's names are in milliseconds, as in OStim. `SetFurnitureSe
 | `SetUseIntroScenes` | 1 | | Scenes with you start with an `intro` scene |
 | `NPCSceneDuration` | 300000 ms | | Scenes without you end after this long |
 | `SetResetPosition` | 1 | `bResetPosition` | NPCs go back to where they stood |
+| `SetScaling` | 0 | | 1 = don't scale actors to the animation (`SCALING.md`) |
 | `SetOnlyGayAnimsInGayScenes` | 1 | `bMatchSex` | Only scenes whose roles the actors fit |
 | `SetFurnitureSearchDistance` | 15 (1600 units) | `fFurnitureRadius` (units) | How far to look for furniture |
 | `SetsexExcitementMult` / `SetFemaleSexExcitementMult` | 1 / 1 | `fMaleExcitementMult` / `fFemaleExcitementMult` | Excitement multipliers |
@@ -70,7 +71,7 @@ Older 4Stim names in seconds (`fAutoModeSceneMin`, `fExcitementDecayGrace`...) a
 
 ## 4Stim's own settings
 
-These have no OStim counterpart, and keep their names: `bResumeScenes` (0, as OStim, which ends scenes on load), `sTargetMode`, `fMaxDistance`, `fCrosshairCone`, `fProximityRadius`, `fActorRadius`, `fFurnitureHeight`, `fTransitionLead`, `bLockScenes`, `bGuardScenes`, the logging switches, `[HUD]`, `bEnableExcitement`, `fClimaxEndDelay`, `fClimaxShake` (OStim's shake is a fixed on / off), `fClimaxBlur` (the blur's strength), `fClimaxFlash`, `bAutoModeNPC` (OStim's NPC scenes always use auto mode), `bAutoModeStandingOnFloor`, `bUndress`, `bUndressPlayer`, `bRedress`, `sUndressSlots` (Fallout 4's slots) and `fUndressItemDelay` (0, all at once as OStim).
+These have no OStim counterpart, and keep their names: `bResumeScenes` (0, as OStim, which ends scenes on load), `sTargetMode`, `fMaxDistance`, `fCrosshairCone`, `fProximityRadius`, `fActorRadius`, `fFurnitureHeight`, `fTransitionLead`, `bLockScenes`, `bGuardScenes`, the logging switches, `[HUD]` (including `sHUDControls`, which offers OStim's control scheme as `Columns`), `bEnableExcitement`, `fClimaxEndDelay`, `fClimaxShake` (OStim's shake is a fixed on / off), `fClimaxBlur` (the blur's strength), `fClimaxFlash`, `bAutoModeNPC` (OStim's NPC scenes always use auto mode), `bAutoModeStandingOnFloor`, `bUndress`, `bUndressPlayer`, `bRedress`, `sUndressSlots` (Fallout 4's slots) and `fUndressItemDelay` (0, all at once as OStim).
 
 ## Not in yet
 

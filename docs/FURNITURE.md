@@ -57,6 +57,10 @@ With `bLogFurniture=1`, every object looked at is written to `4Stim.log`, with i
 
 A type with neither `models` nor `keywords` matches nothing by itself; it only exists as a supertype for others.
 
+## Floor scenes on beds
+
+A scene without furniture of its own can play on furniture whose type chain reaches `none` (beds, as in OStim). On a type anchored on an edge (`"anchor": "edge"`, beds), such a floor scene doesn't use the edge spot: it lies along the middle of the bed, at the edge spot's height (the type's `offset` z, or the marker's height), heading toward the end farther from the player. A scene that moves between bed scenes and floor scenes switches between the two spots.
+
 ## How the shipped types place scenes
 
 The OStim animations in the test pack share one origin per kind of furniture, worked out from the clips themselves:

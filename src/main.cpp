@@ -11,6 +11,7 @@
 #include "Excitement.h"
 #include "Undress.h"
 #include "Alignment.h"
+#include "Scaling.h"
 #include "Bridge.h"
 #include "HUD.h"
 #include "SceneEvents.h"
@@ -116,6 +117,7 @@ namespace
 		std::uint32_t hideUIKey = 0;
 		std::string   hudTheme = "Color";     // file name in Data\Interface\4Stim\Themes\, without .json
 		bool          hudEnabled = true;
+		bool          hudColumns = false;     // sHUDControls=Columns: OStim's control scheme (Left / Right between the list and the tab buttons)
 		bool          logAnimEvents = false;  // log scene actors' animation events (for authors)
 		float         transitionLead = 0.0F;   // seconds before a transition's length to move on (see 4Stim.ini)
 		bool          matchSex = true;         // only offer scenes whose roles' sexes the actors fit
@@ -188,6 +190,7 @@ namespace
 		{ "setforcefirstperson", { "bforcefirstperson", OStimUnit::kSame } },
 		{ "setusefades", { "busefades", OStimUnit::kSame } },
 		{ "setuseintroscenes", { "buseintroscenes", OStimUnit::kSame } },
+		{ "setscaling", { "bdisablescaling", OStimUnit::kSame } },
 		{ "setuseautofades", { "buseautofades", OStimUnit::kSame } },
 		{ "npcsceneduration", { "fnpcsceneduration", OStimUnit::kMilliseconds } },
 		// Excitement and climax.
@@ -305,6 +308,8 @@ namespace
 					g_settings.forceFirstPerson = std::stoi(value) != 0;
 				} else if (key == "busefades") {
 					g_settings.useFades = std::stoi(value) != 0;
+				} else if (key == "bdisablescaling") {
+					Scaling::Settings().disabled = std::stoi(value) != 0;
 				} else if (key == "buseintroscenes") {
 					g_settings.useIntroScenes = std::stoi(value) != 0;
 				} else if (key == "buseautofades") {
@@ -329,6 +334,10 @@ namespace
 					g_settings.speedDownKey = static_cast<std::uint32_t>(std::stoul(value, nullptr, 0));
 				} else if (key == "stheme") {
 					g_settings.hudTheme = value;
+				} else if (key == "shudcontrols") {
+					auto v = value;
+					std::ranges::transform(v, v.begin(), [](unsigned char ch) { return static_cast<char>(std::tolower(ch)); });
+					g_settings.hudColumns = v == "columns";
 				} else if (key == "benablehud") {
 					g_settings.hudEnabled = std::stoi(value) != 0;
 				} else if (key == "factorradius") {
@@ -637,7 +646,19 @@ namespace
 		std::string                type;
 		std::vector<std::uint32_t> actors;  // sorted
 		std::array<float, 4>       offset{};  // the scene's own offset from the spot
+		bool                       floorScene = false;  // the starting scene has no furniture of its own
 	};
+
+	// Edge furniture (beds): the spot for scenes made for it and the spot
+	// for floor scenes played on it (see Furniture::SpotFor), worked out
+	// when the actors are placed, for the scene that starts with them.
+	struct FurnitureSpots
+	{
+		std::vector<std::uint32_t> actors;  // sorted
+		Furniture::Spot            furniture;
+		Furniture::Spot            floor;
+	};
+	std::optional<FurnitureSpots> g_furnitureSpots;
 	std::mutex                      g_pendingFurnitureLock;
 	std::optional<PendingFurniture> g_pendingFurniture;
 
@@ -675,7 +696,8 @@ namespace
 			return false;
 		}
 		const auto player = RE::PlayerCharacter::GetSingleton();
-		auto       spot = Furniture::SpotFor(ref, pending->type, player ? player->GetPosition() : ref->GetPosition());
+		const auto near = player ? player->GetPosition() : ref->GetPosition();
+		auto       spot = Furniture::SpotFor(ref, pending->type, near, pending->floorScene);
 		if (const auto& o = pending->offset; o[0] != 0.0F || o[1] != 0.0F || o[2] != 0.0F || o[3] != 0.0F) {
 			// In the spot's frame: x to its right, y forward.
 			const float c = std::cos(spot.heading), s = std::sin(spot.heading);
@@ -684,6 +706,15 @@ namespace
 			spot.position.z += o[2];
 			spot.heading += o[3] * PI_F / 180.0F;
 			REX::INFO("Furniture: scene offset ({}, {}, {}, {} deg)", o[0], o[1], o[2], o[3]);
+		}
+		// On a bed, the scene can later move between bed scenes and floor
+		// scenes: keep both spots.
+		g_furnitureSpots.reset();
+		if (Furniture::IsEdgeAnchored(pending->type)) {
+			const auto other = Furniture::SpotFor(ref, pending->type, near, !pending->floorScene);
+			auto       sorted = ids;
+			std::ranges::sort(sorted);
+			g_furnitureSpots = FurnitureSpots{ sorted, pending->floorScene ? other : spot, pending->floorScene ? spot : other };
 		}
 		for (const auto actor : a_actors) {
 			PlaceActorAt(actor, spot);
@@ -747,7 +778,12 @@ namespace
 		std::chrono::steady_clock::time_point lastRelock{};
 		std::vector<float>                    baseScale;     // per role: the actor's own scale when the scene started
 		std::vector<float>                    appliedScale;  // per role: the scale the alignment last set (0 = none)
-		std::string                           alignKey;      // OStim's actor set key for alignment (Alignment::KeyFor)
+		std::string                           alignKey;      // OStim's actor set key for alignment (Alignment::KeyFor), for the scene playing
+		std::vector<float>                    heels;         // per role: how high their heels lift them (Scaling::HeelHeight), read on each scene change
+		// On edge furniture (beds): the spots for its own scenes and for floor
+		// scenes; SpotOf picks by the scene playing (center / heading are the
+		// first scene's).
+		std::optional<FurnitureSpots>         furnitureSpots;
 
 		// Auto mode (see "Auto mode" below).
 		struct Auto
@@ -849,6 +885,12 @@ namespace
 		if (const auto furniture = PendingFurnitureFor(a_actors, true)) {
 			scene.furnitureRef = furniture->ref;
 			scene.furnitureType = furniture->type;
+			auto sorted = a_actors;
+			std::ranges::sort(sorted);
+			if (g_furnitureSpots && g_furnitureSpots->actors == sorted) {
+				scene.furnitureSpots = std::move(g_furnitureSpots);
+			}
+			g_furnitureSpots.reset();
 			REX::INFO("Scene \"{}\": on furniture {:08X} ({})", a_sceneID, furniture->ref, furniture->type);
 		}
 		{
@@ -898,14 +940,12 @@ namespace
 				scene.heading = actor->data.angle.z;
 			}
 		}
-		std::vector<Alignment::ActorInfo> alignActors;
 		for (const auto id : a_actors) {
 			const auto actor = RE::TESForm::GetFormByID<RE::Actor>(id);
 			scene.baseScale.push_back(actor && actor->refScale ? actor->refScale / 100.0F : 1.0F);
 			scene.appliedScale.push_back(0.0F);
-			alignActors.push_back({ SceneRegistry::SexOf(actor), scene.baseScale.back(), 0.0F });  // no heels system in Fallout 4 yet
 		}
-		scene.alignKey = Alignment::KeyFor(alignActors);
+		// LockScene (below) reads heels and builds the alignment key.
 		g_activeScenes.push_back(std::move(scene));
 		LockScene(g_activeScenes.back());
 		SceneEvents::SceneStarted(a_actors, a_sceneID);
@@ -1525,13 +1565,46 @@ namespace
 			base = settled->actors[a_role].offset;
 		}
 		const float x = o.x + base.x, y = o.y + base.y, z = o.z + base.z, r = o.rot + base.r;
-		const float c = std::cos(a_active.heading), s = std::sin(a_active.heading);
+		// On a bed: its own scenes at the edge spot, floor scenes along the middle.
+		auto  center = a_active.center;
+		float heading = a_active.heading;
+		if (a_active.furnitureSpots && settled) {
+			const auto& chosen = settled->furniture.empty() ? a_active.furnitureSpots->floor : a_active.furnitureSpots->furniture;
+			center = chosen.position;
+			heading = chosen.heading;
+		}
+		const float c = std::cos(heading), s = std::sin(heading);
 		ActorSpot spot;
 		// Facing heading h, forward is (sin h, cos h) and right is (cos h, -sin h).
-		spot.position = { a_active.center.x + x * c + y * s, a_active.center.y - x * s + y * c, a_active.center.z + z };
-		spot.heading = a_active.heading + r * PI_F / 180.0F;
+		spot.position = { center.x + x * c + y * s, center.y - x * s + y * c, center.z + z };
+		spot.heading = heading + r * PI_F / 180.0F;
+		// As OStim: heels come off an actor whose feet aren't on the ground
+		// (lying, kneeling...): OStim moves their skeleton down by the heel
+		// height; here their spot is lowered by it.
+		if (a_role < a_active.heels.size() && a_active.heels[a_role] > 0.0F && settled && a_role < settled->actors.size() &&
+			!settled->actors[a_role].feetOnGround) {
+			spot.position.z -= a_active.heels[a_role];
+		}
 		spot.scale = o.scale;
 		return spot;
+	}
+
+	// Reads each actor's heels and builds the alignment key for the scene
+	// playing, as OStim's rebuildAlignmentKey: sex, NPC height, and heel
+	// height unless the heels are off (feet not on the ground).
+	void RefreshActors(ActiveScene& a_active)
+	{
+		const auto scene = SceneRegistry::Find(a_active.sceneID);
+		const auto settled = scene ? SceneRegistry::Settled(scene) : nullptr;
+		a_active.heels.resize(a_active.actors.size(), 0.0F);
+		std::vector<Alignment::ActorInfo> info;
+		for (std::size_t role = 0; role < a_active.actors.size(); ++role) {
+			const auto actor = RE::TESForm::GetFormByID<RE::Actor>(a_active.actors[role]);
+			a_active.heels[role] = Scaling::HeelHeight(actor);
+			const bool feetOnGround = settled && role < settled->actors.size() && settled->actors[role].feetOnGround;
+			info.push_back({ SceneRegistry::SexOf(actor), Scaling::NPCHeight(actor), feetOnGround ? a_active.heels[role] : 0.0F });
+		}
+		a_active.alignKey = Alignment::KeyFor(info);
 	}
 
 	void LockScene(ActiveScene& a_active)
@@ -1539,6 +1612,9 @@ namespace
 		if (!g_vm) {
 			return;
 		}
+		RefreshActors(a_active);
+		const auto scene = SceneRegistry::Find(a_active.sceneID);
+		const auto settled = scene ? SceneRegistry::Settled(scene) : nullptr;
 		for (std::size_t role = 0; role < a_active.actors.size(); ++role) {
 			const auto id = a_active.actors[role];
 			const auto actor = RE::TESForm::GetFormByID<RE::Actor>(id);
@@ -1546,9 +1622,20 @@ namespace
 				continue;
 			}
 			const auto spot = SpotOf(a_active, role);
-			// Alignment scale, only when it changes.
+			// The actor's scale, only when it changes. As OStim's
+			// ThreadActor::scale: the role's scale times the alignment's,
+			// over their own NPC height, and with heels on, times
+			// scaleHeight / (scaleHeight + heels); with SetScaling=1 their
+			// own scale times the alignment's.
 			if (role < a_active.baseScale.size()) {
-				const float wanted = a_active.baseScale[role] * spot.scale;
+				float wanted = a_active.baseScale[role] * spot.scale;
+				if (!Scaling::Settings().disabled && settled && role < settled->actors.size()) {
+					const auto& part = settled->actors[role];
+					wanted = part.scale * spot.scale / Scaling::NPCHeight(actor);
+					if (role < a_active.heels.size() && a_active.heels[role] > 0.0F && part.feetOnGround) {
+						wanted *= part.scaleHeight / (part.scaleHeight + a_active.heels[role]);
+					}
+				}
 				const float current = a_active.appliedScale[role] > 0.0F ? a_active.appliedScale[role] : a_active.baseScale[role];
 				if (std::fabs(wanted - current) > 0.001F) {
 					CallActorMethod(actor, "ObjectReference"sv, "SetScale"sv, wanted);
@@ -2995,6 +3082,7 @@ namespace
 	{
 		const auto count = SceneRegistry::Reload();
 		Alignment::Reload();
+		Scaling::Reload();
 		HUD::LoadConfig();  // theme and Utility entries too, for HUD authors
 		return count;
 	}
@@ -4372,6 +4460,7 @@ namespace
 					const auto& piece = found[choice];
 					PendingFurniture pending{ piece.ref, piece.type, cast };
 					pending.offset = scene->furnitureOffset;
+					pending.floorScene = scene->furniture.empty();
 					std::ranges::sort(pending.actors);
 					REX::INFO("Picker: \"{}\" goes on {:08X} ({}, {:.0f} away)", a_sceneID, piece.ref, piece.type, piece.distance);
 					g_pendingFurniture = std::move(pending);
@@ -5108,6 +5197,7 @@ namespace
 			std::scoped_lock lock(g_pendingFurnitureLock);
 			PendingFurniture pending{ a_saved.furnitureRef, a_saved.furnitureType, sorted };
 			pending.offset = scene->furnitureOffset;
+			pending.floorScene = scene->furniture.empty();
 			g_pendingFurniture = std::move(pending);
 		}
 		const bool   withPlayer = std::ranges::any_of(a_saved.actors, [](std::uint32_t id) { return IsPlayer(RE::TESForm::GetFormByID<RE::Actor>(id)); });
@@ -5321,7 +5411,7 @@ F4SE_PLUGIN_LOAD(const F4SE::LoadInterface* a_f4se)
 	F4SE::Init(a_f4se);
 
 	LoadSettings();
-	HUD::SetOptions(g_settings.hudTheme, g_settings.hudEnabled);
+	HUD::SetOptions(g_settings.hudTheme, g_settings.hudEnabled, g_settings.hudColumns);
 	InputHook::Install();
 	F4SE::GetMessagingInterface()->RegisterListener(OnMessage);
 	F4SE::GetPapyrusInterface()->Register(RegisterPapyrusFunctions);

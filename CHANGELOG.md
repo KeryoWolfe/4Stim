@@ -8,6 +8,9 @@
 - **Starting like OStim:** a new scene with you starts with a scene tagged `intro` (OStim's intro scenes are tagged in the test pack), else `idle`; off furniture someone stands, on a bed no one does. NPC-only scenes start with any fitting scene.
 - **Climax timed by the animation:** with a climax animation, the climax happens at its `4StimClimax` annotation (or when it ends), not as it starts.
 - **Auto mode fades** (`SetUseAutoFades`, and scenes marked `fadeOnEntry`).
+- **Actor scaling and heels** (OStim's): actors are scaled to the animation's size, and heels from the High Heels System are scaled out or taken off (docs/SCALING.md).
+- **OStim's HUD controls** as an option (`sHUDControls=Columns`): Left / Right move between the list and the tab buttons.
+- **Fixes:** floor scenes played on a bed now lie along the middle of it, not off its edge; a label typo ("sit up (...)gs", from OStim's own translation).
 - **New, from OStim:** slow motion at a climax, fades to black as scenes with you start and end, the free camera's FOV during scenes, first person after scenes, a free camera switch, NPC scenes ending after 5 minutes, and keys for pull out, end scene, search, the Align tab, the free camera and hiding the HUD (unbound by default).
 
 ## 0.1.0 alpha (October 2026)

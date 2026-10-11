@@ -41,6 +41,7 @@ package
 		public function PlayClimax(a_strength:Number):void { Menu_mc.PlayClimax(a_strength); }
 		public function ShowTab(a_id:String):void { Menu_mc.ShowTab(a_id); }
 		public function SetHidden(a_hidden:Boolean):void { Menu_mc.SetHidden(a_hidden); }
+		public function SetControlScheme(a_scheme:String):void { Menu_mc.SetControlScheme(a_scheme); }
 		public function ProcessUserEvent(a_name:String, a_down:Boolean):Boolean { return Menu_mc.ProcessUserEvent(a_name, a_down); }
 	}
 }

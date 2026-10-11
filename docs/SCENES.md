@@ -98,6 +98,7 @@ The first scene has two speeds and one navigation option. The second uses the si
 | `offset` | scene or actor | no | OStim's `{"x", "y", "z", "r"}`: moves an actor from the scene's spot (x right, y forward, z up, r degrees clockwise), before alignment. A scene's offset moves every actor, on top of each one's own. |
 | `modpack` | scene | no | OStim's: the pack the scene comes from, shown in the picker. |
 | `fadeOnEntry` | scene | no | OStim's: in a scene with the player, fade to black when auto mode moves to this scene (as `SetUseAutoFades` does for every scene, `AUTOMODE.md`). |
+| `scale`, `scaleHeight`, `feetOnGround` | actor | no | OStim's actor scaling and heels: the scale the role is played at, the height the animation was made for, and whether heels stay on (`SCALING.md`). |
 | `penisBend` | actor | no | The penis bend for this role (OStim's `sosBend`, also read). Kept, for when bendable bodies are supported. |
 | `noStrip` | scene | no | `true`: no one undresses in this scene, whatever its actions (UNDRESS.md). Scenes after it still undress as usual. |
 
@@ -110,7 +111,7 @@ The first scene has two speeds and one navigation option. The second uses the si
 - **`speeds[].animation`**: one name for all actors, as OStim's: role 0 plays the Idle whose **editor ID** is `<animation>_0`, role 1 `<animation>_1`, and so on (OStim appends the actor's index the same way, or the actor's `animationIndex`). Name your Idle records after OStim's animations (the converter does) and no plugin or form IDs are needed.
 - **Sequences**: one per file in `Data\F4SE\Plugins\4Stim\Sequences\`, the file name being the sequence id, with OStim's `scenes` (`id`, `duration`) and `tags`.
 
-What OStim has that Fallout 4 can't use is skipped: `lookUp` / `lookDown` / `lookLeft` / `lookRight` and expressions (until facial expressions), `scale` / `scaleHeight` / `feetOnGround` (until actor scaling), `playbackSpeed`.
+What OStim has that Fallout 4 can't use is skipped: `lookUp` / `lookDown` / `lookLeft` / `lookRight` and expressions (until facial expressions), `playbackSpeed`.
 
 ## Speeds and navigation in game
 

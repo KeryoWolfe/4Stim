@@ -13,7 +13,9 @@ namespace HUD
 
 	// From 4Stim.ini: the theme file name (without .json) and whether the HUD
 	// is used at all.
-	void SetOptions(std::string a_theme, bool a_enabled);
+	// a_columns: OStim's control scheme (sHUDControls=Columns): Up / Down
+	// move in the list, Left / Right between the list and the tab buttons.
+	void SetOptions(std::string a_theme, bool a_enabled, bool a_columns);
 
 	// Reads the active theme and the Utility entries. Called on game load and
 	// by FourStim.ReloadScenes.
