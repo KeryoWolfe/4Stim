@@ -26,7 +26,7 @@ Each animation clip is played through an **Idle** record (IDLE) in your plugin: 
 
 The clips themselves:
 
-- **Fallout 4 format.** Havok 2014 (`hk_2014`) animations for the Fallout 4 skeleton. Skyrim (OStim) clips have to be converted first; the Skyrim-to-FO4 converter writes the clips and a plugin with these Idles for you (`pipeline.py`).
+- **Fallout 4 format.** Havok 2014 (`hk_2014`) animations for the Fallout 4 skeleton. Skyrim (OStim) clips have to be converted first;
 - **Put them under** `Data\Meshes\Actors\Character\Animations\<YourPack>\`, at the path the Idle's `GNAM` names.
 - **One shared origin.** All roles of a scene are authored around the same point (see "Two-actor scenes"). The actors are placed on that point with the same heading.
 - **Loops loop.** A clip for an ordinary scene should end in the pose it starts in.
