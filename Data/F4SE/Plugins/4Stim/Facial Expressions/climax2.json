@@ -1,0 +1,115 @@
+{
+	"events": [
+		"climax"
+	],
+	"female": {
+		"duration": 3,
+		"expression":{
+			"type":10,
+			"baseValue": 70,
+			"variance": 30
+		},
+		"phonemes":[
+			{
+				"type":0,
+				"baseValue":40,
+			    "variance": 30,
+			    "delayVariance":0.3
+			},
+			{
+				"type":1,
+				"baseValue": 30,
+			    "variance": 30,
+			    "delayVariance":0.5
+			},
+			{
+				"type":11,
+				"baseValue": 15,
+			    "variance": 20
+			},
+			{
+				"type":13,
+				"baseValue": 30
+			}
+		],
+		"modifiers":[
+			{
+				"type":6,
+				"baseValue":40,
+			    "variance": 40,
+				"delayVariance":0.3
+			},
+			{
+				"type":8,
+				"baseValue": 10,
+			    "variance": 20,
+				"delayVariance": 0.6
+			},
+			{
+				"type":12,
+				"baseValue": 40,
+				"variance": 40
+			},
+			{
+				"type":13,
+				"baseValue": 40,
+				"variance": 45
+			}
+		]
+	},
+	"male": {
+		"duration": 2,
+		"expression":{
+			"type":10,
+			"baseValue": 70,
+			"variance": 30
+		},
+		"phonemes":[
+			{
+				"type":0,
+				"baseValue":20,
+			    "variance": 30,
+			    "delayVariance":0.3
+			},
+			{
+				"type":1,
+				"baseValue": 20,
+			    "variance": 30,
+			    "delayVariance":0.5
+			},
+			{
+				"type":11,
+				"baseValue": 15,
+			    "variance": 20
+			},
+			{
+				"type":13,
+				"baseValue": 30
+			}
+		],
+		"modifiers":[
+			{
+				"type":6,
+				"baseValue":40,
+			    "variance": 40,
+				"delayVariance":0.3
+			},
+			{
+				"type":8,
+				"baseValue": 10,
+			    "variance": 20,
+				"delayVariance": 0.6
+			},
+			{
+				"type":12,
+				"baseValue": 40,
+				"variance": 40
+			},
+			{
+				"type":13,
+				"baseValue": 40,
+				"variance": 45
+			}
+		]
+	}
+}

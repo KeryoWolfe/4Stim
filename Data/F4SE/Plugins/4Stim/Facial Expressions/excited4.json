@@ -1,0 +1,103 @@
+{
+	"actionActors": [
+		"analfingering",
+		"analfisting",
+		"analsex",
+		"blowjob",
+		"boobjob",
+		"buttjob",
+		"footjob",
+		"gropingbreast",
+		"gropingbutt",
+		"handjob",
+		"pullinghair",
+		"rubbingclitoris",
+		"thighjob",
+		"vaginalfingering",
+		"vaginalfisting",
+		"vaginalsex"
+	],
+	"actionTargets": [
+		"gropingbutt",
+		"kissingfeet",
+		"kissingneck",
+		"pullinghair",
+		"rubbingpenisagainstface"
+	],
+	"female": {
+		"expression": {
+			"type": 14,
+			"baseValue": 30,
+			"variance": 30,
+			"excitementMultiplier": 0.2,
+			"speedMultiplier": 20.0
+		},
+		"phonemes": [{
+			"type": 5,
+			"variance": 30
+		},{
+			"type": 12,
+			"variance": 25,
+			"delayVariance":0.5,
+			"excitementMultiplier": 0.3,
+			"speedMultiplier": 20.0
+		},{
+			"type": 14,
+			"baseValue": 10,
+			"variance": 40,
+			"delayVariance":0.5,
+			"excitementMultiplier": 0.2,
+			"speedMultiplier": 20.0
+		}],
+		"modifiers": [{
+			"type": 8,
+			"variance": 30,
+			"delayVariance":0.5,
+			"excitementMultiplier": 0.25
+		}, {
+			"type": 12,
+			"variance": 40,
+			"delayVariance":0.3,
+			"excitementMultiplier": 0.3,
+			"speedMultiplier": -80.0
+		}]
+	},
+	"male": {
+		"expression": {
+			"type": 14,
+			"baseValue": 30,
+			"variance": 30,
+			"excitementMultiplier": 0.2,
+			"speedMultiplier": 20.0
+		},
+		"phonemes": [{
+			"type": 5,
+			"variance": 30
+		},{
+			"type": 12,
+			"variance": 25,
+			"delayVariance":0.5,
+			"excitementMultiplier": 0.3,
+			"speedMultiplier": 20.0
+		},{
+			"type": 14,
+			"baseValue": 10,
+			"variance": 40,
+			"delayVariance":0.5,
+			"excitementMultiplier": 0.2,
+			"speedMultiplier": 20.0
+		}],
+		"modifiers": [{
+			"type": 8,
+			"variance": 30,
+			"delayVariance":0.5,
+			"excitementMultiplier": 0.25
+		}, {
+			"type": 12,
+			"variance": 40,
+			"delayVariance":0.3,
+			"excitementMultiplier": 0.3,
+			"speedMultiplier": -80.0
+		}]
+	}
+}

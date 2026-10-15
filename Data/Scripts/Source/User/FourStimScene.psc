@@ -166,6 +166,16 @@ Function ReleaseAfterLoad(int aiActorID) Global
 	FourStim.RestoreInteraction(akActor)
 EndFunction
 
+; Plays a sound descriptor (an OStim-style voice set's "sound") on an actor.
+; Called by the plugin (docs/SOUND.md).
+Function PlaySoundForm(int aiSoundID, int aiActorID) Global
+	Sound akSound = Game.GetForm(aiSoundID) as Sound
+	ObjectReference akSource = Game.GetForm(aiActorID) as ObjectReference
+	if akSound && akSource
+		akSound.Play(akSource)
+	endif
+EndFunction
+
 Function RestoreActorInteraction(Actor akActor) Global
 	if !IsPlayer(akActor)
 		FourStim.RestoreInteraction(akActor)

@@ -63,6 +63,16 @@ namespace SceneRegistry
 		float scale = 1.0F;
 		float scaleHeight = 120.748F;
 		bool  feetOnGround = false;
+		// Sound and expressions (OStim's, merged from the role's actions):
+		// whether the actor moans, talks, is muffled; the expression set
+		// overriding theirs ("openmouth"...); OStim's actor fields
+		// underlyingExpression / expressionOverride / expressionAction.
+		bool        moan = false;
+		bool        talk = false;
+		bool        muffled = false;
+		std::string expressionOverride;
+		std::string underlyingExpression;
+		int         expressionAction = -1;
 
 		[[nodiscard]] bool HasTag(std::string_view a_tag) const;
 		// The scene for a_event, or "".

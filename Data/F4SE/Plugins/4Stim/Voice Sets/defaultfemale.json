@@ -1,0 +1,23 @@
+{
+	"_comment": "The default voice set for women, as OStim's defaultfemale.json (docs/SOUND.md). OStim's target 0x000001 = the default for women. Sounds are 4Stim's sound files (\"file\": a file or folder under Data\\Sound).",
+	"name": "Default (female)",
+	"target": { "mod": "Fallout4.esm", "formid": "0x000001" },
+	"moan": {
+		"sound": [
+			{ "file": "fx/4Stim/actor/moan/female", "expression": "moan" }
+		],
+		"soundMuffled": [
+			{
+				"info": "sucking sounds, as OStim's (it uses a perk condition for blowjobs; 4Stim lists the actions)",
+				"actions": [ "blowjob", "deepthroating", "suckingnipple", "penilelicking", "testicularlicking" ],
+				"file": "fx/4Stim/effects/suck",
+				"moanIntervalOverride": 1.0
+			}
+		]
+	},
+	"climax": {
+		"sound": [
+			{ "file": "fx/4Stim/actor/climax/female", "expression": "climax" }
+		]
+	}
+}

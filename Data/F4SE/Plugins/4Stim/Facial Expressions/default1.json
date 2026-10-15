@@ -1,0 +1,65 @@
+{
+	"sets": [
+		"default"
+	],
+	"female": {
+		"expression": {
+			"type": 2,
+			"baseValue": 20,
+			"variance": 25,
+			"excitementMultiplier": 0.5
+		},
+		"phonemes": [{
+			"type": 4,
+			"baseValue": 10,
+			"variance": 20,
+			"excitementMultiplier": 0.2
+		},{
+			"type": 5,
+			"baseValue": 10,
+			"variance": 15,
+			"excitementMultiplier": 0.2
+		}],
+		"modifiers": [{
+			"type": 12,
+			"baseValue": 15,
+			"variance": 20,
+			"excitementMultiplier": 0.2
+		}, {
+			"type": 13,
+			"baseValue": 15,
+			"variance": 20,
+			"excitementMultiplier": 0.2
+		}]
+	},
+	"male": {
+		"expression": {
+			"type": 2,
+			"baseValue": 20,
+			"variance": 25,
+			"excitementMultiplier": 0.5
+		},
+		"phonemes": [{
+			"type": 4,
+			"baseValue": 10,
+			"variance": 20,
+			"excitementMultiplier": 0.2
+		},{
+			"type": 5,
+			"baseValue": 10,
+			"variance": 15,
+			"excitementMultiplier": 0.2
+		}],
+		"modifiers": [{
+			"type": 12,
+			"baseValue": 15,
+			"variance": 20,
+			"excitementMultiplier": 0.2
+		}, {
+			"type": 13,
+			"baseValue": 15,
+			"variance": 20,
+			"excitementMultiplier": 0.2
+		}]
+	}
+}

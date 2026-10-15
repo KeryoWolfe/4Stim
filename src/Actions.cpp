@@ -101,6 +101,10 @@ namespace Actions
 			}
 			side.requirements = LowerList(*it, "requirements");
 			side.fullStrip = it->value("fullStrip", false);
+			side.moan = it->value("moan", false);
+			side.talk = it->value("talk", false);
+			side.muffled = it->value("muffled", false);
+			side.expressionOverride = Lower(it->value("expressionOverride", std::string{}));
 			if (const auto v = it->find("undressSlots"); v != it->end() && v->is_array()) {
 				for (const auto& slot : *v) {
 					if (slot.is_number_integer() && slot.get<int>() >= 30 && slot.get<int>() <= 61) {

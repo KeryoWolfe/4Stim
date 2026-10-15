@@ -22,14 +22,18 @@
 				"undressSlots": [
 					34,
 					35
-				]
+				],
+				"moan": true,
+				"talk": true
 			},
 			"target": {
 				"stimulation": 0.2,
 				"requirements": [
 					"anus"
 				],
-				"fullStrip": true
+				"fullStrip": true,
+				"moan": true,
+				"talk": true
 			}
 		},
 		{
@@ -50,14 +54,18 @@
 				"undressSlots": [
 					34,
 					35
-				]
+				],
+				"moan": true,
+				"talk": true
 			},
 			"target": {
 				"stimulation": 0.2,
 				"requirements": [
 					"anus"
 				],
-				"fullStrip": true
+				"fullStrip": true,
+				"moan": true,
+				"talk": true
 			}
 		},
 		{
@@ -82,14 +90,19 @@
 				"undressSlots": [
 					46,
 					49
-				]
+				],
+				"moan": true,
+				"muffled": true,
+				"expressionOverride": "tongue"
 			},
 			"target": {
 				"stimulation": 0.3,
 				"requirements": [
 					"anus"
 				],
-				"fullStrip": true
+				"fullStrip": true,
+				"moan": true,
+				"talk": true
 			}
 		},
 		{
@@ -109,14 +122,18 @@
 				"requirements": [
 					"penis"
 				],
-				"fullStrip": true
+				"fullStrip": true,
+				"moan": true,
+				"talk": true
 			},
 			"target": {
 				"stimulation": 0.3,
 				"requirements": [
 					"anus"
 				],
-				"fullStrip": true
+				"fullStrip": true,
+				"moan": true,
+				"talk": true
 			}
 		},
 		{
@@ -133,14 +150,18 @@
 				"maxStimulation": 50,
 				"requirements": [
 					"tail"
-				]
+				],
+				"moan": true,
+				"talk": true
 			},
 			"target": {
 				"stimulation": 0.3,
 				"requirements": [
 					"anus"
 				],
-				"fullStrip": true
+				"fullStrip": true,
+				"moan": true,
+				"talk": true
 			}
 		},
 		{
@@ -154,14 +175,18 @@
 			],
 			"actor": {
 				"stimulation": 0.1,
-				"maxStimulation": 75
+				"maxStimulation": 75,
+				"moan": true,
+				"talk": true
 			},
 			"target": {
 				"stimulation": 0.3,
 				"requirements": [
 					"anus"
 				],
-				"fullStrip": true
+				"fullStrip": true,
+				"moan": true,
+				"talk": true
 			}
 		},
 		{
@@ -217,14 +242,19 @@
 				"undressSlots": [
 					46,
 					49
-				]
+				],
+				"moan": true,
+				"muffled": true,
+				"expressionOverride": "openmouth"
 			},
 			"target": {
 				"stimulation": 1.4,
 				"requirements": [
 					"penis"
 				],
-				"fullStrip": true
+				"fullStrip": true,
+				"moan": true,
+				"talk": true
 			}
 		},
 		{
@@ -248,14 +278,18 @@
 				"requirements": [
 					"breast"
 				],
-				"fullStrip": true
+				"fullStrip": true,
+				"moan": true,
+				"talk": true
 			},
 			"target": {
 				"stimulation": 0.8,
 				"requirements": [
 					"penis"
 				],
-				"fullStrip": true
+				"fullStrip": true,
+				"moan": true,
+				"talk": true
 			}
 		},
 		{
@@ -305,7 +339,9 @@
 				"requirements": [
 					"breast"
 				],
-				"fullStrip": true
+				"fullStrip": true,
+				"moan": true,
+				"talk": true
 			},
 			"target": {
 				"stimulation": 0.1,
@@ -345,7 +381,9 @@
 					41,
 					44,
 					45
-				]
+				],
+				"moan": true,
+				"talk": true
 			},
 			"target": {
 				"stimulation": 0.3,
@@ -353,7 +391,8 @@
 				"undressSlots": [
 					46,
 					49
-				]
+				],
+				"moan": true
 			}
 		},
 		{
@@ -370,14 +409,18 @@
 			"actor": {
 				"stimulation": 0.1,
 				"maxStimulation": 50,
-				"fullStrip": true
+				"fullStrip": true,
+				"moan": true,
+				"talk": true
 			},
 			"target": {
 				"stimulation": 0.8,
 				"requirements": [
 					"penis"
 				],
-				"fullStrip": true
+				"fullStrip": true,
+				"moan": true,
+				"talk": true
 			}
 		},
 		{
@@ -403,7 +446,9 @@
 					41,
 					44,
 					45
-				]
+				],
+				"moan": true,
+				"talk": true
 			},
 			"target": {
 				"stimulation": 0.3,
@@ -411,7 +456,8 @@
 				"undressSlots": [
 					46,
 					49
-				]
+				],
+				"moan": true
 			}
 		},
 		{
@@ -500,7 +546,11 @@
 		},
 		{
 			"id": "dancing",
-			"name": "Dancing"
+			"name": "Dancing",
+			"actor": {
+				"moan": true,
+				"talk": true
+			}
 		},
 		{
 			"id": "deepthroating",
@@ -523,14 +573,19 @@
 				"undressSlots": [
 					46,
 					49
-				]
+				],
+				"moan": true,
+				"muffled": true,
+				"expressionOverride": "openmouth"
 			},
 			"target": {
 				"stimulation": 1.4,
 				"requirements": [
 					"penis"
 				],
-				"fullStrip": true
+				"fullStrip": true,
+				"moan": true,
+				"talk": true
 			}
 		},
 		{
@@ -557,7 +612,10 @@
 				"undressSlots": [
 					46,
 					49
-				]
+				],
+				"moan": true,
+				"talk": true,
+				"expressionOverride": "tongue"
 			}
 		},
 		{
@@ -581,7 +639,9 @@
 				"requirements": [
 					"vagina"
 				],
-				"fullStrip": true
+				"fullStrip": true,
+				"moan": true,
+				"talk": true
 			}
 		},
 		{
@@ -602,14 +662,18 @@
 				"maxStimulation": 50,
 				"requirements": [
 					"foot"
-				]
+				],
+				"moan": true,
+				"talk": true
 			},
 			"target": {
 				"stimulation": 0.9,
 				"requirements": [
 					"penis"
 				],
-				"fullStrip": true
+				"fullStrip": true,
+				"moan": true,
+				"talk": true
 			}
 		},
 		{
@@ -631,7 +695,10 @@
 				"undressSlots": [
 					46,
 					49
-				]
+				],
+				"moan": true,
+				"muffled": true,
+				"expressionOverride": "tongue"
 			},
 			"target": {
 				"stimulation": 0.1,
@@ -642,7 +709,10 @@
 				"undressSlots": [
 					46,
 					49
-				]
+				],
+				"moan": true,
+				"muffled": true,
+				"expressionOverride": "tongue"
 			}
 		},
 		{
@@ -660,11 +730,15 @@
 				"requirements": [
 					"vagina"
 				],
-				"fullStrip": true
+				"fullStrip": true,
+				"moan": true,
+				"talk": true
 			},
 			"target": {
 				"stimulation": 0.2,
-				"maxStimulation": 75
+				"maxStimulation": 75,
+				"moan": true,
+				"talk": true
 			}
 		},
 		{
@@ -679,7 +753,8 @@
 				"requirements": [
 					"vagina"
 				],
-				"fullStrip": true
+				"fullStrip": true,
+				"moan": true
 			}
 		},
 		{
@@ -700,14 +775,18 @@
 				"requirements": [
 					"vagina"
 				],
-				"fullStrip": true
+				"fullStrip": true,
+				"moan": true,
+				"talk": true
 			},
 			"target": {
 				"stimulation": 0.75,
 				"requirements": [
 					"penis"
 				],
-				"fullStrip": true
+				"fullStrip": true,
+				"moan": true,
+				"talk": true
 			}
 		},
 		{
@@ -724,7 +803,9 @@
 				"requirements": [
 					"vagina"
 				],
-				"fullStrip": true
+				"fullStrip": true,
+				"moan": true,
+				"talk": true
 			},
 			"target": {
 				"stimulation": 0.2,
@@ -737,7 +818,9 @@
 					41,
 					44,
 					45
-				]
+				],
+				"moan": true,
+				"talk": true
 			}
 		},
 		{
@@ -780,14 +863,18 @@
 				"undressSlots": [
 					34,
 					35
-				]
+				],
+				"moan": true,
+				"talk": true
 			},
 			"target": {
 				"stimulation": 0.1,
 				"maxStimulation": 50,
 				"requirements": [
 					"breast"
-				]
+				],
+				"moan": true,
+				"talk": true
 			}
 		},
 		{
@@ -818,11 +905,15 @@
 				"undressSlots": [
 					34,
 					35
-				]
+				],
+				"moan": true,
+				"talk": true
 			},
 			"target": {
 				"stimulation": 0.1,
-				"maxStimulation": 50
+				"maxStimulation": 50,
+				"moan": true,
+				"talk": true
 			}
 		},
 		{
@@ -857,7 +948,9 @@
 				"undressSlots": [
 					34,
 					35
-				]
+				],
+				"moan": true,
+				"talk": true
 			},
 			"target": {
 				"stimulation": 0.4,
@@ -865,7 +958,9 @@
 				"requirements": [
 					"testicles"
 				],
-				"fullStrip": true
+				"fullStrip": true,
+				"moan": true,
+				"talk": true
 			}
 		},
 		{
@@ -888,14 +983,18 @@
 				"undressSlots": [
 					34,
 					35
-				]
+				],
+				"moan": true,
+				"talk": true
 			},
 			"target": {
 				"stimulation": 0.9,
 				"requirements": [
 					"penis"
 				],
-				"fullStrip": true
+				"fullStrip": true,
+				"moan": true,
+				"talk": true
 			}
 		},
 		{
@@ -1139,7 +1238,9 @@
 				"undressSlots": [
 					46,
 					49
-				]
+				],
+				"moan": true,
+				"muffled": true
 			},
 			"target": {
 				"stimulation": 0.1,
@@ -1150,7 +1251,9 @@
 				"undressSlots": [
 					46,
 					49
-				]
+				],
+				"moan": true,
+				"muffled": true
 			}
 		},
 		{
@@ -1174,7 +1277,9 @@
 				"undressSlots": [
 					46,
 					49
-				]
+				],
+				"moan": true,
+				"muffled": true
 			},
 			"target": {
 				"stimulation": 0.1,
@@ -1182,7 +1287,9 @@
 				"undressSlots": [
 					46,
 					49
-				]
+				],
+				"moan": true,
+				"talk": true
 			}
 		},
 		{
@@ -1205,14 +1312,18 @@
 				"undressSlots": [
 					46,
 					49
-				]
+				],
+				"moan": true,
+				"muffled": true
 			},
 			"target": {
 				"stimulation": 0.1,
 				"maxStimulation": 50,
 				"requirements": [
 					"foot"
-				]
+				],
+				"moan": true,
+				"talk": true
 			}
 		},
 		{
@@ -1238,7 +1349,9 @@
 					35,
 					46,
 					49
-				]
+				],
+				"moan": true,
+				"muffled": true
 			},
 			"target": {
 				"stimulation": 0.1,
@@ -1246,7 +1359,9 @@
 				"undressSlots": [
 					34,
 					35
-				]
+				],
+				"moan": true,
+				"talk": true
 			}
 		},
 		{
@@ -1268,14 +1383,18 @@
 				"undressSlots": [
 					46,
 					49
-				]
+				],
+				"moan": true,
+				"muffled": true
 			},
 			"target": {
 				"stimulation": 0.1,
 				"maxStimulation": 50,
 				"undressSlots": [
 					50
-				]
+				],
+				"moan": true,
+				"talk": true
 			}
 		},
 		{
@@ -1311,14 +1430,19 @@
 				"undressSlots": [
 					46,
 					49
-				]
+				],
+				"moan": true,
+				"muffled": true,
+				"expressionOverride": "tongue"
 			},
 			"target": {
 				"stimulation": 0.6,
 				"requirements": [
 					"nipple"
 				],
-				"fullStrip": true
+				"fullStrip": true,
+				"moan": true,
+				"talk": true
 			}
 		},
 		{
@@ -1342,7 +1466,9 @@
 				"requirements": [
 					"penis"
 				],
-				"fullStrip": true
+				"fullStrip": true,
+				"moan": true,
+				"talk": true
 			}
 		},
 		{
@@ -1438,7 +1564,9 @@
 				"undressSlots": [
 					34,
 					35
-				]
+				],
+				"moan": true,
+				"talk": true
 			},
 			"target": {
 				"stimulation": 0.1,
@@ -1449,7 +1577,10 @@
 				"undressSlots": [
 					46,
 					49
-				]
+				],
+				"moan": true,
+				"muffled": true,
+				"expressionOverride": "openmouth"
 			}
 		},
 		{
@@ -1461,7 +1592,9 @@
 			],
 			"actor": {
 				"stimulation": 0.1,
-				"maxStimulation": 75
+				"maxStimulation": 75,
+				"moan": true,
+				"talk": true
 			},
 			"target": {
 				"stimulation": 0.1,
@@ -1472,7 +1605,9 @@
 				"undressSlots": [
 					46,
 					49
-				]
+				],
+				"moan": true,
+				"muffled": true
 			}
 		},
 		{
@@ -1521,14 +1656,19 @@
 				"undressSlots": [
 					46,
 					49
-				]
+				],
+				"moan": true,
+				"muffled": true,
+				"expressionOverride": "tongue"
 			},
 			"target": {
 				"stimulation": 1.4,
 				"requirements": [
 					"penis"
 				],
-				"fullStrip": true
+				"fullStrip": true,
+				"moan": true,
+				"talk": true
 			}
 		},
 		{
@@ -1549,7 +1689,8 @@
 				"undressSlots": [
 					34,
 					35
-				]
+				],
+				"moan": true
 			},
 			"target": {
 				"stimulation": 0.1,
@@ -1577,7 +1718,8 @@
 				"undressSlots": [
 					34,
 					35
-				]
+				],
+				"moan": true
 			},
 			"target": {
 				"stimulation": 0.1,
@@ -1620,14 +1762,19 @@
 				"undressSlots": [
 					46,
 					49
-				]
+				],
+				"moan": true,
+				"muffled": true,
+				"expressionOverride": "openmouth"
 			},
 			"target": {
 				"stimulation": 0.3,
 				"requirements": [
 					"anus"
 				],
-				"fullStrip": true
+				"fullStrip": true,
+				"moan": true,
+				"talk": true
 			}
 		},
 		{
@@ -1646,7 +1793,9 @@
 				"requirements": [
 					"penis"
 				],
-				"fullStrip": true
+				"fullStrip": true,
+				"moan": true,
+				"talk": true
 			},
 			"target": {
 				"stimulation": 0.1,
@@ -1654,7 +1803,9 @@
 				"undressSlots": [
 					46,
 					49
-				]
+				],
+				"moan": true,
+				"talk": true
 			}
 		},
 		{
@@ -1681,7 +1832,11 @@
 				"specate",
 				"watch",
 				"watching"
-			]
+			],
+			"actor": {
+				"moan": true,
+				"talk": true
+			}
 		},
 		{
 			"id": "spooning",
@@ -1761,14 +1916,19 @@
 				"undressSlots": [
 					46,
 					49
-				]
+				],
+				"moan": true,
+				"muffled": true,
+				"expressionOverride": "openmouth"
 			},
 			"target": {
 				"stimulation": 0.6,
 				"requirements": [
 					"nipple"
 				],
-				"fullStrip": true
+				"fullStrip": true,
+				"moan": true,
+				"talk": true
 			}
 		},
 		{
@@ -1787,14 +1947,18 @@
 				"maxStimulation": 50,
 				"requirements": [
 					"tail"
-				]
+				],
+				"moan": true,
+				"talk": true
 			},
 			"target": {
 				"stimulation": 0.9,
 				"requirements": [
 					"penis"
 				],
-				"fullStrip": true
+				"fullStrip": true,
+				"moan": true,
+				"talk": true
 			}
 		},
 		{
@@ -1823,14 +1987,19 @@
 				"undressSlots": [
 					46,
 					49
-				]
+				],
+				"moan": true,
+				"muffled": true,
+				"expressionOverride": "tongue"
 			},
 			"target": {
 				"stimulation": 0.4,
 				"requirements": [
 					"testicles"
 				],
-				"fullStrip": true
+				"fullStrip": true,
+				"moan": true,
+				"talk": true
 			}
 		},
 		{
@@ -1846,14 +2015,18 @@
 			],
 			"actor": {
 				"stimulation": 0.2,
-				"fullStrip": true
+				"fullStrip": true,
+				"moan": true,
+				"talk": true
 			},
 			"target": {
 				"stimulation": 0.9,
 				"requirements": [
 					"penis"
 				],
-				"fullStrip": true
+				"fullStrip": true,
+				"moan": true,
+				"talk": true
 			}
 		},
 		{
@@ -1888,14 +2061,18 @@
 				"requirements": [
 					"vagina"
 				],
-				"fullStrip": true
+				"fullStrip": true,
+				"moan": true,
+				"talk": true
 			},
 			"target": {
 				"stimulation": 1.0,
 				"requirements": [
 					"vagina"
 				],
-				"fullStrip": true
+				"fullStrip": true,
+				"moan": true,
+				"talk": true
 			}
 		},
 		{
@@ -1920,14 +2097,18 @@
 				"undressSlots": [
 					34,
 					35
-				]
+				],
+				"moan": true,
+				"talk": true
 			},
 			"target": {
 				"stimulation": 0.6,
 				"requirements": [
 					"vagina"
 				],
-				"fullStrip": true
+				"fullStrip": true,
+				"moan": true,
+				"talk": true
 			}
 		},
 		{
@@ -1951,14 +2132,18 @@
 				"undressSlots": [
 					34,
 					35
-				]
+				],
+				"moan": true,
+				"talk": true
 			},
 			"target": {
 				"stimulation": 0.6,
 				"requirements": [
 					"vagina"
 				],
-				"fullStrip": true
+				"fullStrip": true,
+				"moan": true,
+				"talk": true
 			}
 		},
 		{
@@ -1978,14 +2163,18 @@
 				"requirements": [
 					"penis"
 				],
-				"fullStrip": true
+				"fullStrip": true,
+				"moan": true,
+				"talk": true
 			},
 			"target": {
 				"stimulation": 1.0,
 				"requirements": [
 					"vagina"
 				],
-				"fullStrip": true
+				"fullStrip": true,
+				"moan": true,
+				"talk": true
 			}
 		},
 		{
@@ -2002,14 +2191,18 @@
 				"maxStimulation": 50,
 				"requirements": [
 					"tail"
-				]
+				],
+				"moan": true,
+				"talk": true
 			},
 			"target": {
 				"stimulation": 1.0,
 				"requirements": [
 					"vagina"
 				],
-				"fullStrip": true
+				"fullStrip": true,
+				"moan": true,
+				"talk": true
 			}
 		},
 		{
@@ -2026,14 +2219,18 @@
 			],
 			"actor": {
 				"stimulation": 0.1,
-				"maxStimulation": 75
+				"maxStimulation": 75,
+				"moan": true,
+				"talk": true
 			},
 			"target": {
 				"stimulation": 1.0,
 				"requirements": [
 					"vagina"
 				],
-				"fullStrip": true
+				"fullStrip": true,
+				"moan": true,
+				"talk": true
 			}
 		},
 		{
@@ -2067,11 +2264,15 @@
 				"undressSlots": [
 					46,
 					49
-				]
+				],
+				"moan": true,
+				"muffled": true,
+				"expressionOverride": "openmouth"
 			},
 			"target": {
 				"stimulation": 0.25,
-				"maxStimulation": 50
+				"maxStimulation": 50,
+				"moan": true
 			}
 		},
 		{
@@ -2097,14 +2298,19 @@
 				"undressSlots": [
 					46,
 					49
-				]
+				],
+				"moan": true,
+				"muffled": true,
+				"expressionOverride": "openmouth"
 			},
 			"target": {
 				"stimulation": 1.4,
 				"requirements": [
 					"vagina"
 				],
-				"fullStrip": true
+				"fullStrip": true,
+				"moan": true,
+				"talk": true
 			}
 		},
 		{
@@ -2138,14 +2344,19 @@
 				"undressSlots": [
 					46,
 					49
-				]
+				],
+				"moan": true,
+				"muffled": true,
+				"expressionOverride": "tongue"
 			},
 			"target": {
 				"stimulation": 1.4,
 				"requirements": [
 					"vagina"
 				],
-				"fullStrip": true
+				"fullStrip": true,
+				"moan": true,
+				"talk": true
 			}
 		},
 		{
@@ -2174,14 +2385,18 @@
 				"undressSlots": [
 					34,
 					35
-				]
+				],
+				"moan": true,
+				"talk": true
 			},
 			"target": {
 				"stimulation": 1.3,
 				"requirements": [
 					"vagina"
 				],
-				"fullStrip": true
+				"fullStrip": true,
+				"moan": true,
+				"talk": true
 			}
 		},
 		{

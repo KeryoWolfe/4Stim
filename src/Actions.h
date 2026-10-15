@@ -24,6 +24,10 @@ namespace Actions
 		std::vector<std::string> requirements;             // body parts this side needs (lowercase): penis, vagina, mouth...
 		bool                     fullStrip = false;        // undress this side's actor completely (docs/UNDRESS.md)
 		std::vector<int>         undressSlots;             // else take off what's in these biped slots (30-61)
+		bool                     moan = false;             // this side's actor moans (docs/SOUND.md)
+		bool                     talk = false;             // and may talk (kept for dialogue, not used yet)
+		bool                     muffled = false;          // their mouth is busy: muffled sounds
+		std::string              expressionOverride;       // facial expression set while doing it ("openmouth", "tongue"...)
 	};
 
 	struct Type

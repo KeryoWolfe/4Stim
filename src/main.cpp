@@ -12,6 +12,8 @@
 #include "Undress.h"
 #include "Alignment.h"
 #include "Scaling.h"
+#include "Expressions.h"
+#include "Sounds.h"
 #include "Bridge.h"
 #include "HUD.h"
 #include "SceneEvents.h"
@@ -191,6 +193,12 @@ namespace
 		{ "setusefades", { "busefades", OStimUnit::kSame } },
 		{ "setuseintroscenes", { "buseintroscenes", OStimUnit::kSame } },
 		{ "setscaling", { "bdisablescaling", OStimUnit::kSame } },
+		{ "nofacialexpressions", { "bnofacialexpressions", OStimUnit::kSame } },
+		{ "setexpressiondurationmin", { "fexpressiondurationmin", OStimUnit::kMilliseconds } },
+		{ "setexpressiondurationmax", { "fexpressiondurationmax", OStimUnit::kMilliseconds } },
+		{ "moanintervalmin", { "fmoanintervalmin", OStimUnit::kMilliseconds } },
+		{ "moanintervalmax", { "fmoanintervalmax", OStimUnit::kMilliseconds } },
+		{ "moanvolume", { "fmoanvolume", OStimUnit::kSame } },
 		{ "setuseautofades", { "buseautofades", OStimUnit::kSame } },
 		{ "npcsceneduration", { "fnpcsceneduration", OStimUnit::kMilliseconds } },
 		// Excitement and climax.
@@ -308,6 +316,24 @@ namespace
 					g_settings.forceFirstPerson = std::stoi(value) != 0;
 				} else if (key == "busefades") {
 					g_settings.useFades = std::stoi(value) != 0;
+				} else if (key == "bnofacialexpressions") {
+					Expressions::Settings().disabled = std::stoi(value) != 0;
+				} else if (key == "fexpressiondurationmin") {
+					Expressions::Settings().durationMin = std::max(std::stof(value), 0.1F);
+				} else if (key == "fexpressiondurationmax") {
+					Expressions::Settings().durationMax = std::max(std::stof(value), 0.1F);
+				} else if (key == "fmoanintervalmin") {
+					Sounds::Settings().moanIntervalMin = std::max(std::stof(value), 0.2F);
+				} else if (key == "fmoanintervalmax") {
+					Sounds::Settings().moanIntervalMax = std::max(std::stof(value), 0.2F);
+				} else if (key == "fmoanvolume") {
+					Sounds::Settings().moanVolume = std::clamp(std::stof(value), 0.0F, 1.0F);
+				} else if (key == "bsounds") {
+					Sounds::Settings().disabled = std::stoi(value) == 0;
+				} else if (key == "isoundflags") {
+					Sounds::Settings().flags = static_cast<std::uint32_t>(std::stoul(value, nullptr, 0));
+				} else if (key == "isoundpriority") {
+					Sounds::Settings().priority = static_cast<std::uint8_t>(std::clamp(std::stoi(value, nullptr, 0), 0, 255));
 				} else if (key == "bdisablescaling") {
 					Scaling::Settings().disabled = std::stoi(value) != 0;
 				} else if (key == "buseintroscenes") {
@@ -873,6 +899,8 @@ namespace
 				std::vector<std::uint32_t> left;
 				std::ranges::copy_if(a_scene.actors, std::back_inserter(left), [&](std::uint32_t id) { return std::ranges::find(a_actors, id) == a_actors.end(); });
 				Excitement::Leave(left);
+				Expressions::Leave(left);
+				Sounds::Leave(left);
 				UnlockActors(left);
 				RestoreScales(a_scene);
 				for (const auto id : left) {
@@ -1006,6 +1034,8 @@ namespace
 		MoveApart(ended);
 		RestoreScales(ended);
 		Excitement::Leave(ended.actors);
+		Expressions::Leave(ended.actors);
+		Sounds::Leave(ended.actors);
 		for (const auto id : ended.actors) {
 			Undress::Redress(id, false, true);
 		}
@@ -2020,9 +2050,13 @@ namespace
 			sexes.push_back(SceneRegistry::SexOf(RE::TESForm::GetFormByID<RE::Actor>(id)));
 		}
 		Excitement::Enter(a_scene.actors, sexes, *scene, a_scene.speed);
-		if (Excitement::Settings().enabled) {
-			StartAutoplayTicks();
+		// Faces and voices follow the scene too (OStim's changeNode).
+		const float relativeSpeed = scene->speeds.empty() ? 0.0F : static_cast<float>(a_scene.speed) / static_cast<float>(scene->speeds.size());
+		for (std::size_t role = 0; role < a_scene.actors.size(); ++role) {
+			Expressions::Enter(a_scene.actors[role], *scene, role, relativeSpeed);
+			Sounds::Enter(a_scene.actors[role], *scene, role);
 		}
+		StartAutoplayTicks();
 	}
 
 	// Ends a running scene through Papyrus: the focused scene the way the
@@ -2076,6 +2110,7 @@ namespace
 		}
 
 		SceneEvents::Climaxed(a_actorID, a_active.actors, a_active.sceneID, times);
+		Sounds::Climax(a_actorID);  // OStim's playClimaxSound, with the climax expression
 
 		const bool withPlayer = std::ranges::any_of(a_active.actors, [](std::uint32_t id) { return IsPlayer(RE::TESForm::GetFormByID<RE::Actor>(id)); });
 		const auto focused = GetPlayerScene();
@@ -2182,6 +2217,8 @@ namespace
 			for (auto& active : g_activeScenes) {
 				ResolveAwaitingClimaxes(active);
 			}
+			Sounds::Tick(elapsed);
+			Expressions::Tick(elapsed);
 			UpdateClimaxShake();
 			GuardScenes(elapsed);
 			Undress::Tick(elapsed);
@@ -2212,10 +2249,7 @@ namespace
 				}
 			}
 		}
-		const bool waiting = std::ranges::any_of(g_activeScenes, [](const ActiveScene& a_scene) {
-			return a_scene.remaining >= 0.0F || a_scene.endIn >= 0.0F || a_scene.stopTimer >= 0.0F || !a_scene.awaitingClimax.empty() || a_scene.autoMode.on ||
-			       Excitement::Settings().enabled;
-		});
+		const bool waiting = !g_activeScenes.empty();  // faces and voices run as long as any scene does
 		if (!waiting && !g_climaxShake.active) {
 			g_autoplayTicking = false;
 		}
@@ -3082,6 +3116,8 @@ namespace
 	{
 		const auto count = SceneRegistry::Reload();
 		Alignment::Reload();
+		Expressions::Reload();
+		Sounds::Reload();
 		Scaling::Reload();
 		HUD::LoadConfig();  // theme and Utility entries too, for HUD authors
 		return count;
@@ -5252,6 +5288,8 @@ namespace
 			F4SE::GetTaskInterface()->AddTask([]() {
 				g_activeScenes.clear();
 				Excitement::Clear();
+				Expressions::Clear();
+				Sounds::Clear();
 				Undress::Clear();
 			});
 			{
@@ -5280,6 +5318,8 @@ namespace
 				HUD::Reset();
 				g_activeScenes.clear();
 				Excitement::Clear();
+				Expressions::Clear();
+				Sounds::Clear();
 				Undress::Clear();
 				g_focusNextScene = false;
 				SetPlayerScene({});

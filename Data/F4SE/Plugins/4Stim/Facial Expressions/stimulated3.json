@@ -1,0 +1,114 @@
+{
+	"actionActors":[
+		"rubbingpenisagainstface"	
+	],
+	"actionTargets": [
+		"analfingering",
+		"blowjob",
+		"boobjob",
+		"buttjob",
+		"cunnilingus",
+		"femalemasturbation",
+		"footjob",
+		"gropingbreast",
+		"handjob",
+		"lickingnipples",
+		"lickingpenis",
+		"lickingtesticles",
+		"lickingvagina",
+		"malemasturbation",
+		"rimjob",
+		"rubbingclitoris",
+		"suckingnipples",
+		"thighjob",
+		"vaginalfingering"
+	],
+	"female": {
+		"expression": {
+			"type": 3,
+			"baseValue": 30,
+			"variance": 20,
+			"excitementMultiplier": 0.5,
+			"speedMultiplier": 40.0
+		},
+		"phonemes": [{
+			"type": 1,
+			"baseValue": 15,
+			"delayVariance":0.5,
+			"excitementMultiplier": 0.2,
+			"speedMultiplier": 20.0
+		}, {
+			"type": 12,
+			"baseValue": 30,
+			"variance": 20,
+			"excitementMultiplier": 0.3
+		}, {
+			"type": 14,
+			"baseValue": 40,
+			"excitementMultiplier": 0.2
+		}],
+		"modifiers": [{
+			"type": 4,
+			"baseValue": 20,
+			"variance": 30,
+			"delayVariance":0.4,
+			"excitementMultiplier": 0.5,
+			"speedMultiplier": 40.0
+		}, {
+			"type": 5,
+			"baseValue": 20,
+			"variance": 30,
+			"delayVariance":0.4,
+			"excitementMultiplier": 0.5,
+			"speedMultiplier": 40.0
+		}, {
+			"type": 8,
+			"baseValue": 20,
+			"excitementMultiplier": 0.2
+		}]
+	},
+	"male": {
+		"expression": {
+			"type": 3,
+			"baseValue": 30,
+			"variance": 20,
+			"excitementMultiplier": 0.5,
+			"speedMultiplier": 40.0
+		},
+		"phonemes": [{
+			"type": 1,
+			"baseValue": 15,
+			"delayVariance":0.5,
+			"excitementMultiplier": 0.2,
+			"speedMultiplier": 20.0
+		}, {
+			"type": 12,
+			"baseValue": 30,
+			"variance": 20,
+			"excitementMultiplier": 0.3
+		}, {
+			"type": 14,
+			"baseValue": 40,
+			"excitementMultiplier": 0.2
+		}],
+		"modifiers": [{
+			"type": 4,
+			"baseValue": 20,
+			"variance": 30,
+			"delayVariance":0.4,
+			"excitementMultiplier": 0.5,
+			"speedMultiplier": 40.0
+		}, {
+			"type": 5,
+			"baseValue": 20,
+			"variance": 30,
+			"delayVariance":0.4,
+			"excitementMultiplier": 0.5,
+			"speedMultiplier": 40.0
+		}, {
+			"type": 8,
+			"baseValue": 20,
+			"excitementMultiplier": 0.2
+		}]
+	}
+}

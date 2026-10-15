@@ -283,6 +283,12 @@ namespace SceneRegistry
 					if (const auto v = a.find("feetOnGround"); v != a.end() && v->is_boolean()) {
 						role.feetOnGround = v->get<bool>();
 					}
+					role.expressionOverride = Lower(a.value("expressionOverride", std::string{}));
+					role.underlyingExpression = Lower(a.value("underlyingExpression", std::string{}));
+					if (const auto v = a.find("expressionAction"); v != a.end() && v->is_number_integer()) {
+						role.expressionAction = v->get<int>();
+					}
+					role.muffled = a.value("muffled", false);
 				}
 				role.offset.x += sceneOffset.x;
 				role.offset.y += sceneOffset.y;
@@ -436,6 +442,20 @@ namespace SceneRegistry
 					need(actor, type->actor);
 					need(target, type->target);
 					need(performer, type->performer);
+					// As OStim's GraphActor::merge, and its getOverrideExpressions
+					// (the first action, actor / target / performer, with one).
+					auto merge = [&](int a_role, const Actions::Side& a_side) {
+						auto& part = scene.actors[static_cast<std::size_t>(a_role)];
+						part.moan |= a_side.moan;
+						part.talk |= a_side.talk;
+						part.muffled |= a_side.muffled;
+						if (part.expressionOverride.empty() && !a_side.expressionOverride.empty()) {
+							part.expressionOverride = a_side.expressionOverride;
+						}
+					};
+					merge(actor, type->actor);
+					merge(target, type->target);
+					merge(performer, type->performer);
 					scene.actions.push_back({ std::move(type), static_cast<std::size_t>(actor), static_cast<std::size_t>(target), static_cast<std::size_t>(performer) });
 				}
 			}
