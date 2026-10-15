@@ -14,6 +14,7 @@
 
 #include <nlohmann/json.hpp>
 
+#include "Actions.h"
 #include "Console.h"
 #include "Excitement.h"
 

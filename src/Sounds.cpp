@@ -13,6 +13,7 @@
 
 #include <nlohmann/json.hpp>
 
+#include "Actions.h"
 #include "Bridge.h"
 #include "Expressions.h"
 
