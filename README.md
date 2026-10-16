@@ -34,6 +34,7 @@ Children are never eligible for scenes.
 - Fallout 4 **1.11.240**
 - [F4SE](https://f4se.silverlock.org/) for that runtime
 - Address Library for F4SE Plugins, for that runtime
+- 1.10.163 (pre-next-gen) is experimental, with F4SE 0.6.23 and no Address Library: see [docs/OLDGEN.md](docs/OLDGEN.md)
 - An animation pack with a 4Stim scene file (the test pack in `Data\F4SE\Plugins\4Stim\Scenes\` needs its matching `4StimTestAnims.esp` and animations, which aren't in this repository)
 
 ## Usage

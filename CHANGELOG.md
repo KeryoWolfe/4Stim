@@ -1,5 +1,9 @@
 # Changelog
 
+## Next
+
+- **Fallout 4 1.10.163 (experimental):** 4Stim can load on the pre-next-gen version from an address table in `Addresses\` (docs/OLDGEN.md). The table is still missing 31 addresses, which a tester on 1.10.163 can supply.
+
 ## 0.2.0 alpha (October 2026)
 
 Second test build: OStim's settings, file formats, faces, voices, peaks, events and lights (see `docs/ALPHA.md`).

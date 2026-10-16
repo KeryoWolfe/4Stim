@@ -22,6 +22,8 @@
 #include "SceneEvents.h"
 #include "Furniture.h"
 #include "SceneRegistry.h"
+#include "compat/Addresses.h"
+#include "compat/RequiredIDs.h"
 
 namespace
 {
@@ -5626,9 +5628,44 @@ F4SE_PLUGIN_PRELOAD(const F4SE::PreLoadInterface* a_f4se)
 	return true;
 }
 
+// Old-gen F4SE (0.6.x, for game version 1.10.163) asks plugins with
+// F4SEPlugin_Query whether they load; newer F4SE reads F4SEPlugin_Version
+// instead and never calls this. (OStim has no such thing: Skyrim's SKSE
+// versions differ in other ways.)
+extern "C" __declspec(dllexport) bool F4SEPlugin_Query(const F4SE::QueryInterface* a_f4se, F4SE::PluginInfo* a_info)
+{
+	if (a_info) {
+		a_info->infoVersion = F4SE::PluginInfo::kVersion;
+		a_info->name = "4Stim";
+		a_info->version = 1;
+	}
+	return a_f4se && !a_f4se->IsEditor();
+}
+
 F4SE_PLUGIN_LOAD(const F4SE::LoadInterface* a_f4se)
 {
 	F4SE::Init(a_f4se);
+
+	REX::INFO("Game version {}, F4SE {}", a_f4se->RuntimeVersion().string(), a_f4se->F4SEVersion().string());
+
+	// On an older game version 4Stim finds the game's code through its own
+	// address table (compat/IDDB.cpp). Every address it uses must be in it, or
+	// it doesn't load at all (instead of crashing later).
+	if (Compat::UsingAddressTable()) {
+		REX::INFO("Addresses: 4Stim's own table, {}", Compat::AddressTablePath().string());
+		int missing = 0;
+		for (const auto& required : Compat::REQUIRED_IDS) {
+			if (!Compat::HasAddress(required.id)) {
+				REX::ERROR("Addresses: {} ({}) isn't in the table", required.name, required.id);
+				++missing;
+			}
+		}
+		if (missing > 0) {
+			REX::ERROR("Addresses: {} of {} missing; 4Stim can't run on this game version and isn't loaded", missing, std::size(Compat::REQUIRED_IDS));
+			return false;
+		}
+		REX::INFO("Addresses: all {} found", std::size(Compat::REQUIRED_IDS));
+	}
 
 	LoadSettings();
 	HUD::SetOptions(g_settings.hudTheme, g_settings.hudEnabled, g_settings.hudColumns);
