@@ -85,3 +85,62 @@ Function DressIn(Actor akActor, int aiItemID) Global
 		akActor.EquipItem(akItem, false, true)
 	endif
 EndFunction
+
+; Equip objects (docs\ACTORS.md): strap-ons, tongues and other items 4Stim
+; puts on actors during scenes. Gives aiActorID each item they don't have and
+; puts it on.
+Function WearObject(int aiActorID, int[] aiItemIDs) Global
+	Actor akActor = Game.GetForm(aiActorID) as Actor
+	if akActor == None || aiItemIDs == None
+		return
+	endif
+	int i = 0
+	while i < aiItemIDs.Length
+		Form akItem = Game.GetForm(aiItemIDs[i])
+		if akItem
+			if akActor.GetItemCount(akItem) == 0
+				akActor.AddItem(akItem, 1, true)
+			endif
+			akActor.EquipItem(akItem, false, true)
+		endif
+		i += 1
+	endwhile
+EndFunction
+
+; Takes the items off aiActorID (they keep them until the scene ends: an NPC
+; would otherwise dress again).
+Function TakeOffObjects(int aiActorID, int[] aiItemIDs) Global
+	Actor akActor = Game.GetForm(aiActorID) as Actor
+	if akActor == None || aiItemIDs == None
+		return
+	endif
+	int i = 0
+	while i < aiItemIDs.Length
+		Form akItem = Game.GetForm(aiItemIDs[i])
+		if akItem && akActor.IsEquipped(akItem)
+			akActor.UnequipItem(akItem, false, true)
+		endif
+		i += 1
+	endwhile
+EndFunction
+
+; The scene is over: the items come off and go away.
+Function RemoveObjects(int aiActorID, int[] aiItemIDs) Global
+	Actor akActor = Game.GetForm(aiActorID) as Actor
+	if akActor == None || aiItemIDs == None
+		return
+	endif
+	int i = 0
+	while i < aiItemIDs.Length
+		Form akItem = Game.GetForm(aiItemIDs[i])
+		if akItem
+			if akActor.IsEquipped(akItem)
+				akActor.UnequipItem(akItem, false, true)
+			endif
+			if akActor.GetItemCount(akItem) > 0
+				akActor.RemoveItem(akItem, 1, true) ; as OStim: the one it gave
+			endif
+		endif
+		i += 1
+	endwhile
+EndFunction

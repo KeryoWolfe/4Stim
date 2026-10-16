@@ -37,6 +37,8 @@ namespace Actions
 						out.push_back(Lower(v.get<std::string>()));
 					}
 				}
+			} else if (it != a_obj.end() && it->is_string()) {
+				out.push_back(Lower(it->get<std::string>()));  // one, as a plain string
 			}
 			return out;
 		}
@@ -105,6 +107,7 @@ namespace Actions
 			side.talk = it->value("talk", false);
 			side.muffled = it->value("muffled", false);
 			side.expressionOverride = Lower(it->value("expressionOverride", std::string{}));
+			side.equipObjects = LowerList(*it, "equipObject");  // OStim's field name (a string or a list)
 			if (const auto v = it->find("undressSlots"); v != it->end() && v->is_array()) {
 				for (const auto& slot : *v) {
 					if (slot.is_number_integer() && slot.get<int>() >= 30 && slot.get<int>() <= 61) {
@@ -383,22 +386,4 @@ namespace Actions
 		return g_ids;
 	}
 
-	bool Provides(SceneRegistry::Sex a_sex, std::string_view a_requirement)
-	{
-		using SceneRegistry::Sex;
-		const auto req = Lower(a_requirement);
-		if (req == "hand" || req == "mouth" || req == "foot" || req == "anus" || req == "nipple") {
-			return true;
-		}
-		if (a_sex == Sex::kAny) {
-			return true;
-		}
-		if (req == "penis" || req == "testicles") {
-			return a_sex == Sex::kMale;  // strap-ons will add the penis
-		}
-		if (req == "vagina" || req == "breast") {
-			return a_sex == Sex::kFemale;
-		}
-		return false;
-	}
 }

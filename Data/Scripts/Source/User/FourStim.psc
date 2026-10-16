@@ -60,6 +60,31 @@ bool Function CallEvent(Actor akInScene, String asEvent, int aiActor = -1, int a
 ; Every event id loaded.
 String[] Function GetEvents() Global Native
 
+; ---- Actors: properties and equip objects ----
+; Actor properties and equip objects (docs\ACTORS.md), as OStim's: files in
+; Data\F4SE\Plugins\4Stim\Actor Properties\ and Equip Objects\.
+
+; Whether akActor has a penis (OStim's OActor.HasSchlong): an actor
+; property's "sex" if one gives them one (a futa), else whether he's a man.
+bool Function HasPenis(Actor akActor) Global Native
+
+; akActor's actor type ("npc" for people), "" if they can't be in scenes.
+String Function GetActorType(Actor akActor) Global Native
+
+; OStim's OActor equip object functions, for actors in a scene: puts on an
+; object of asType ("strapon", "tongue"...; false if there's none of that
+; type), takes it off, says if it's on, sets its variant ("cum"...) for
+; afDuration seconds (0: until unset; false if it has no such variant), or
+; back to the plain one. Everything put on goes away when the scene ends.
+bool Function EquipObject(Actor akActor, String asType) Global Native
+Function UnequipObject(Actor akActor, String asType) Global Native
+bool Function IsObjectEquipped(Actor akActor, String asType) Global Native
+bool Function SetObjectVariant(Actor akActor, String asType, String asVariant, float afDuration = 0.0) Global Native
+Function UnsetObjectVariant(Actor akActor, String asType) Global Native
+
+; Every equip object type there's a file for.
+String[] Function GetEquipObjectTypes() Global Native
+
 ; ---- Excitement ----
 ; Every actor in a scene has an excitement from 0 to 100 that rises with the
 ; scene's actions (their stimulation, docs\ACTIONS.md). At 100 they climax:

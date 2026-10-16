@@ -16,6 +16,7 @@
 
 #include "Actions.h"
 #include "Console.h"
+#include "ActorProperties.h"
 #include "Excitement.h"
 
 namespace Expressions
@@ -476,7 +477,10 @@ namespace Expressions
 		const float excitement = Excitement::Get(a_id);
 		// Override (OStim's updateOverrideExpression) and underlying.
 		state.overrides.clear();
-		if (const auto& set = a_scene.actors[a_role].expressionOverride; !set.empty()) {
+		// An actor property's expression (OStim's: a gag keeps the mouth
+		// open) overrules the scene's.
+		const auto fromActor = ActorProperties::Expression(actor);
+		if (const auto& set = fromActor.empty() ? a_scene.actors[a_role].expressionOverride : fromActor; !set.empty()) {
 			if (const auto list = Find(g_bySet, set)) {
 				state.overrides = *list;
 			}

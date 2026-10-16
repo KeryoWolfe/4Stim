@@ -33,7 +33,13 @@ Times given with OStim's names are in milliseconds, as in OStim. `SetFurnitureSe
 | `NPCSceneDuration` | 300000 ms | | Scenes without you end after this long |
 | `SetResetPosition` | 1 | `bResetPosition` | NPCs go back to where they stood |
 | `SetScaling` | 0 | | 1 = don't scale actors to the animation (`SCALING.md`) |
-| `SetOnlyGayAnimsInGayScenes` | 1 | `bMatchSex` | Only scenes whose roles the actors fit |
+| `SetOnlyGayAnimsInGayScenes` | 1 | `bMatchSex` | A role goes only to the sex it's meant for (type and requirements always count; `ACTORS.md`) |
+| `unrestrictedNavigation` | 0 | | Only the actor type counts for roles |
+| `PlayerAlwaysDomStraight` / `SubStraight` | 0 / 0 | | You take the first / second role with a man and a woman |
+| `PlayerAlwaysDomGay` / `SubGay` | 0 / 0 | | The same, with two of the same sex |
+| `playerSelectRoleStraight` / `Gay` / `Threesome` | 0 / 1 / 0 | | The picker asks which role you take |
+| `futaUseMaleRole` / `Excitement` / `Climax` | 1 / 0 / 1 | | Women with a penis take men's roles, the male excitement rate, a man's climax |
+| `unequipStrapOnIfNotNeeded` | 0 | | Strap-ons come off in any role that doesn't need one |
 | `SetFurnitureSearchDistance` | 15 (1600 units) | `fFurnitureRadius` (units) | How far to look for furniture |
 | `SetsexExcitementMult` / `SetFemaleSexExcitementMult` | 1 / 1 | `fMaleExcitementMult` / `fFemaleExcitementMult` | Excitement multipliers |
 | `excitementDecayRate` | 0.5 | `fExcitementDecayRate` | Excitement lost per second above the ceiling |

@@ -22,6 +22,8 @@
 #include "SceneEvents.h"
 #include "Furniture.h"
 #include "SceneRegistry.h"
+#include "ActorProperties.h"
+#include "EquipObjects.h"
 #include "compat/Addresses.h"
 #include "compat/RequiredIDs.h"
 
@@ -127,7 +129,18 @@ namespace
 		bool          hudColumns = false;     // sHUDControls=Columns: OStim's control scheme (Left / Right between the list and the tab buttons)
 		bool          logAnimEvents = false;  // log scene actors' animation events (for authors)
 		float         transitionLead = 0.0F;   // seconds before a transition's length to move on (see 4Stim.ini)
-		bool          matchSex = true;         // only offer scenes whose roles' sexes the actors fit
+		bool          matchSex = true;         // SetOnlyGayAnimsInGayScenes (OStim's intended sex only): a role's sex must be the actor's
+		// Who the player is in a scene for two (OStim's): always the first
+		// role (dominant) or the second, with a man and a woman (Straight)
+		// or two of the same sex (Gay); or asked (playerSelectRole...), with
+		// three or more for Threesome.
+		bool          playerAlwaysDomStraight = false;
+		bool          playerAlwaysSubStraight = false;
+		bool          playerAlwaysDomGay = false;
+		bool          playerAlwaysSubGay = false;
+		bool          playerSelectRoleStraight = false;
+		bool          playerSelectRoleGay = true;
+		bool          playerSelectRoleThreesome = false;
 		float         actorRadius = 1500.0F;     // how far from the player to list NPCs for a new scene
 		float         furnitureRadius = 1600.0F; // how far from the player to look for furniture (OStim's SetFurnitureSearchDistance 15)
 		float         furnitureHeight = 100.0F;  // and how far up or down
@@ -393,6 +406,30 @@ namespace
 					g_settings.logFurniture = std::stoi(value) != 0;
 				} else if (key == "bmatchsex") {
 					g_settings.matchSex = std::stoi(value) != 0;
+				} else if (key == "playeralwaysdomstraight") {
+					g_settings.playerAlwaysDomStraight = std::stoi(value) != 0;
+				} else if (key == "playeralwayssubstraight") {
+					g_settings.playerAlwaysSubStraight = std::stoi(value) != 0;
+				} else if (key == "playeralwaysdomgay") {
+					g_settings.playerAlwaysDomGay = std::stoi(value) != 0;
+				} else if (key == "playeralwayssubgay") {
+					g_settings.playerAlwaysSubGay = std::stoi(value) != 0;
+				} else if (key == "playerselectrolestraight") {
+					g_settings.playerSelectRoleStraight = std::stoi(value) != 0;
+				} else if (key == "playerselectrolegay") {
+					g_settings.playerSelectRoleGay = std::stoi(value) != 0;
+				} else if (key == "playerselectrolethreesome") {
+					g_settings.playerSelectRoleThreesome = std::stoi(value) != 0;
+				} else if (key == "unrestrictednavigation") {
+					SceneRegistry::Rules().unrestricted = std::stoi(value) != 0;
+				} else if (key == "futausemalerole") {
+					ActorProperties::Settings().futaUseMaleRole = std::stoi(value) != 0;
+				} else if (key == "futausemaleexcitement") {
+					ActorProperties::Settings().futaUseMaleExcitement = std::stoi(value) != 0;
+				} else if (key == "futausemaleclimax") {
+					ActorProperties::Settings().futaUseMaleClimax = std::stoi(value) != 0;
+				} else if (key == "unequipstraponifnotneeded") {
+					EquipObjects::Settings().unequipStrapOnIfNotNeeded = std::stoi(value) != 0;
 				} else if (key == "bloganimevents") {
 					g_settings.logAnimEvents = std::stoi(value) != 0;
 				} else if (key == "benableexcitement") {
@@ -541,6 +578,12 @@ namespace
 				g_settings.npcSceneDuration, g_settings.resumeScenes);
 		}
 		REX::INFO("Settings: HUD {}, theme \"{}\", transition lead {}s, match sex {}", g_settings.hudEnabled ? "on" : "off", g_settings.hudTheme, g_settings.transitionLead, g_settings.matchSex ? "on" : "off");
+		SceneRegistry::Rules().intendedSexOnly = g_settings.matchSex;
+		const auto& fu = ActorProperties::Settings();
+		REX::INFO("Settings: roles: player dom/sub straight {}/{}, gay {}/{}, choose straight {} gay {} threesome {}, unrestricted {}; futa male role {} excitement {} climax {}; strap-on off when not needed {}",
+			g_settings.playerAlwaysDomStraight, g_settings.playerAlwaysSubStraight, g_settings.playerAlwaysDomGay, g_settings.playerAlwaysSubGay,
+			g_settings.playerSelectRoleStraight, g_settings.playerSelectRoleGay, g_settings.playerSelectRoleThreesome, SceneRegistry::Rules().unrestricted,
+			fu.futaUseMaleRole, fu.futaUseMaleExcitement, fu.futaUseMaleClimax, EquipObjects::Settings().unequipStrapOnIfNotNeeded);
 		REX::INFO("Settings: furniture within {} (height {}), log {}", g_settings.furnitureRadius, g_settings.furnitureHeight, g_settings.logFurniture ? "on" : "off");
 		const auto& ex = Excitement::Settings();
 		REX::INFO("Settings: excitement {}, x{} male / x{} female, decay {}/s after {}s, climax scenes {}, end on climax: player {} male {} female {} all {} NPC scenes {} (after {}s)",
@@ -603,27 +646,32 @@ namespace
 		}
 	}
 
-	// ---- Sexes ----
-	// Scenes say who may take each role ("sex" on each actor, SCENES.md);
-	// with bMatchSex on, only scenes the actors fit are offered or played.
+	// ---- Roles ----
+	// Who may take each role of a scene (docs/ACTORS.md), as OStim: the
+	// actor's type, what they have for the role's requirements (their actor
+	// properties), and, with SetOnlyGayAnimsInGayScenes, the role's sex.
 
-	std::vector<SceneRegistry::Sex> SexesOf(const std::vector<std::uint32_t>& a_ids)
+	std::vector<SceneRegistry::ActorCondition> ConditionsOf(const std::vector<std::uint32_t>& a_ids)
 	{
-		std::vector<SceneRegistry::Sex> sexes;
+		std::vector<SceneRegistry::ActorCondition> conditions;
 		for (const auto id : a_ids) {
-			sexes.push_back(SceneRegistry::SexOf(RE::TESForm::GetFormByID<RE::Actor>(id)));
+			conditions.push_back(ActorProperties::Cached(id));
 		}
-		return sexes;
+		return conditions;
 	}
 
+	std::optional<std::size_t> PlayerPin(const std::vector<std::uint32_t>& a_cast);
+
 	// The filter for the picker's lists: these actors, roles open (a new
-	// scene) or already given (a running one).
+	// scene, the player's place kept if it's chosen) or already given (a
+	// running one).
 	SceneRegistry::ListFilter SexFilter(const std::vector<std::uint32_t>& a_ids, bool a_fixedOrder)
 	{
 		SceneRegistry::ListFilter filter;
 		filter.fixedOrder = a_fixedOrder;
-		if (g_settings.matchSex) {
-			filter.sexes = SexesOf(a_ids);
+		filter.actors = ConditionsOf(a_ids);
+		if (!a_fixedOrder) {
+			filter.pinned = PlayerPin(a_ids);
 		}
 		return filter;
 	}
@@ -631,7 +679,7 @@ namespace
 	// Whether the actors of a running scene (role order) may play a_scene.
 	bool SexesFit(const SceneRegistry::Scene& a_scene, const std::vector<std::uint32_t>& a_ids)
 	{
-		return !g_settings.matchSex || SceneRegistry::Fits(a_scene.actors, SexesOf(a_ids));
+		return SceneRegistry::Fits(a_scene.actors, ConditionsOf(a_ids));
 	}
 
 	// ---- Furniture ----
@@ -920,6 +968,7 @@ namespace
 				Sounds::Leave(left);
 				Peaks::Leave(left);
 				Lights::Leave(left);
+				EquipObjects::Leave(left);
 				UnlockActors(left);
 				RestoreScales(a_scene);
 				for (const auto id : left) {
@@ -1001,6 +1050,7 @@ namespace
 		RefreshExcitement(added);
 		if (const auto first = SceneRegistry::Find(added.sceneID)) {
 			Undress::SceneEntered(added.actors, *first, true);
+			EquipObjects::SceneEntered(added.actors, *first, true);
 		}
 		if (added.sequence && added.sequence->entries.front().speed != 0) {
 			PlayOnActiveScene(added, added.sequence->entries.front().scene, added.sequence->entries.front().speed);
@@ -1057,6 +1107,7 @@ namespace
 		Sounds::Leave(ended.actors);
 		Peaks::Leave(ended.actors);
 		Lights::Leave(ended.actors);
+		EquipObjects::Leave(ended.actors);
 		for (const auto id : ended.actors) {
 			Undress::Redress(id, false, true);
 		}
@@ -1083,6 +1134,7 @@ namespace
 		RefreshExcitement(*scene);
 		if (const auto entered = moved ? SceneRegistry::Find(a_sceneID) : nullptr) {
 			Undress::SceneEntered(scene->actors, *entered, false);
+			EquipObjects::SceneEntered(scene->actors, *entered, false);
 			LockScene(*scene);  // this scene's alignment
 		}
 		if (moved) {
@@ -1164,6 +1216,7 @@ namespace
 		RefreshExcitement(a_active);
 		if (_stricmp(previous.c_str(), scene->id.c_str()) != 0) {
 			Undress::SceneEntered(a_active.actors, *scene, false);
+			EquipObjects::SceneEntered(a_active.actors, *scene, false);
 			LockScene(a_active);  // this scene's alignment
 		}
 
@@ -1273,7 +1326,7 @@ namespace
 	{
 		float most = 0.0F;
 		for (const auto id : a_active.actors) {
-			if (a_menOnly && SceneRegistry::SexOf(RE::TESForm::GetFormByID<RE::Actor>(id)) != SceneRegistry::Sex::kMale) {
+			if (a_menOnly && !ActorProperties::HasPenis(RE::TESForm::GetFormByID<RE::Actor>(id))) {  // OStim: those with a penis
 				continue;
 			}
 			most = std::max(most, Excitement::Get(id));
@@ -1408,7 +1461,7 @@ namespace
 
 		std::function<bool(const SceneRegistry::Scene&)> wanted;
 		if (a_active.actors.size() == 1) {
-			const bool male = SceneRegistry::SexOf(RE::TESForm::GetFormByID<RE::Actor>(a_active.actors[0])) == SceneRegistry::Sex::kMale;
+			const bool male = ActorProperties::HasPenis(RE::TESForm::GetFormByID<RE::Actor>(a_active.actors[0]));  // OStim's hasSchlong
 			wanted = [male](const SceneRegistry::Scene& s) { return s.HasAction(male ? "malemasturbation" : "femalemasturbation"); };
 		} else if (state.stage == AutoStage::kForeplay) {
 			wanted = [](const SceneRegistry::Scene& s) { return !IsIntercourse(s) && s.HasActionTag("sexual"); };
@@ -2112,9 +2165,10 @@ namespace
 		if (!scene) {
 			return;
 		}
+		// The excitement rate by sex: a futa's the man's with futaUseMaleExcitement (OStim's).
 		std::vector<SceneRegistry::Sex> sexes;
 		for (const auto id : a_scene.actors) {
-			sexes.push_back(SceneRegistry::SexOf(RE::TESForm::GetFormByID<RE::Actor>(id)));
+			sexes.push_back(ActorProperties::MaleExcitement(RE::TESForm::GetFormByID<RE::Actor>(id)) ? SceneRegistry::Sex::kMale : SceneRegistry::Sex::kFemale);
 		}
 		Excitement::Enter(a_scene.actors, sexes, *scene, a_scene.speed);
 		// Faces and voices follow the scene too (OStim's changeNode).
@@ -2165,14 +2219,16 @@ namespace
 		}
 		const int  times = Excitement::TimesClimaxed(a_actorID);
 		const auto actor = RE::TESForm::GetFormByID<RE::Actor>(a_actorID);
-		const auto sex = SceneRegistry::SexOf(actor);
+		const bool penis = ActorProperties::HasPenis(actor);        // OStim's hasSchlong
+		const bool maleClimax = ActorProperties::MaleClimax(actor);  // a man's, or a futa's with futaUseMaleClimax
 		const auto role = static_cast<std::size_t>(std::ranges::find(a_active.actors, a_actorID) - a_active.actors.begin());
 		const auto scene = SceneRegistry::Find(a_active.sceneID);
 		REX::INFO("Climax: {:08X} (role {}) in \"{}\", climax {}", a_actorID, role, a_active.sceneID, times);
 
-		// As OStim: a man's climax drops the scene to its slowest speed (still
-		// in the climax animation: the scene it goes back to starts slowest).
-		if (sex == SceneRegistry::Sex::kMale && scene) {
+		// As OStim: the climax of someone with a penis drops the scene to its
+		// slowest speed (still in the climax animation: the scene it goes back
+		// to starts slowest).
+		if (penis && scene) {
 			if (scene->IsTransition()) {
 				a_active.carrySpeed = 0;
 			} else if (a_active.speed > 0 && PlayOnActiveScene(a_active, a_active.sceneID, 0)) {
@@ -2197,8 +2253,8 @@ namespace
 			end = std::ranges::all_of(a_active.actors, [](std::uint32_t id) { return Excitement::TimesClimaxed(id) > 0; });
 		} else {
 			end = (IsPlayer(actor) && config.endOnPlayer) ||
-			      (sex == SceneRegistry::Sex::kMale && config.endOnMale) ||
-			      (sex == SceneRegistry::Sex::kFemale && config.endOnFemale);
+			      (maleClimax && config.endOnMale) ||
+			      (!maleClimax && config.endOnFemale);
 		}
 		if (end && a_active.endIn < 0.0F) {
 			a_active.endIn = config.endDelay;
@@ -2221,7 +2277,7 @@ namespace
 		const auto climaxScene = scene && role < scene->actors.size() ? scene->actors[role].AutoTransition("climax") : std::string{};
 		if (config.climaxScenes && scene && !scene->IsTransition() && !climaxScene.empty() && a_active.queuedScene.empty() && !a_active.sequence &&
 			PlayOnActiveScene(a_active, climaxScene, 0)) {
-			if (SceneRegistry::SexOf(RE::TESForm::GetFormByID<RE::Actor>(a_actorID)) == SceneRegistry::Sex::kMale) {
+			if (ActorProperties::HasPenis(RE::TESForm::GetFormByID<RE::Actor>(a_actorID))) {
 				a_active.carrySpeed = 0;  // back at the slowest speed after it
 			}
 			ArmAutoplay(a_active);
@@ -2294,6 +2350,7 @@ namespace
 			UpdateClimaxShake();
 			GuardScenes(elapsed);
 			Undress::Tick(elapsed);
+			EquipObjects::Tick(elapsed);
 			for (auto& active : g_activeScenes) {
 				AutoModeTick(active, elapsed);
 			}
@@ -3228,8 +3285,57 @@ namespace
 		Events::Reload();
 		Lights::Reload();
 		Scaling::Reload();
+		ActorProperties::Reload();
+		EquipObjects::Reload();
 		HUD::LoadConfig();  // theme and Utility entries too, for HUD authors
 		return count;
+	}
+
+	// Equip objects (OStim's OActor functions), for actors in a scene.
+	bool EquipObject(std::monostate, RE::Actor* a_actor, std::string a_type)
+	{
+		return a_actor && EquipObjects::Equip(a_actor->GetFormID(), std::move(a_type));
+	}
+
+	void UnequipObject(std::monostate, RE::Actor* a_actor, std::string a_type)
+	{
+		if (a_actor) {
+			EquipObjects::Unequip(a_actor->GetFormID(), std::move(a_type));
+		}
+	}
+
+	bool IsObjectEquipped(std::monostate, RE::Actor* a_actor, std::string a_type)
+	{
+		return a_actor && EquipObjects::IsEquipped(a_actor->GetFormID(), std::move(a_type));
+	}
+
+	bool SetObjectVariant(std::monostate, RE::Actor* a_actor, std::string a_type, std::string a_variant, float a_duration)
+	{
+		return a_actor && EquipObjects::SetVariant(a_actor->GetFormID(), std::move(a_type), std::move(a_variant), a_duration);
+	}
+
+	void UnsetObjectVariant(std::monostate, RE::Actor* a_actor, std::string a_type)
+	{
+		if (a_actor) {
+			EquipObjects::UnsetVariant(a_actor->GetFormID(), std::move(a_type));
+		}
+	}
+
+	std::vector<std::string> GetEquipObjectTypes(std::monostate)
+	{
+		return EquipObjects::Types();
+	}
+
+	// Actor properties (docs/ACTORS.md): OStim's OActor.HasSchlong (4Stim:
+	// HasPenis) and the actor type.
+	bool HasPenis(std::monostate, RE::Actor* a_actor)
+	{
+		return ActorProperties::HasPenis(a_actor);
+	}
+
+	std::string GetActorType(std::monostate, RE::Actor* a_actor)
+	{
+		return a_actor ? ActorProperties::Type(a_actor) : std::string{};
 	}
 
 	bool RegisterForSceneEvents(std::monostate, RE::TESForm* a_receiver)
@@ -3920,6 +4026,7 @@ namespace
 	enum class StartStep
 	{
 		kActors,
+		kRole,      // which role the player takes (playerSelectRole...)
 		kPlace,
 		kBrowse,
 		kRunning,  // the scenes running now (to watch, end, or put in auto mode)
@@ -3951,18 +4058,93 @@ namespace
 	std::uint32_t              g_selectedScene = 0;  // kScene: its role 0
 	std::vector<Candidate>     g_candidates;      // eligible NPCs near the player
 	int                        g_placeChoice = -1;  // index into PickerFurniture(); -1 = right here
+	int                        g_playerRole = -1;   // the role the player chose (playerSelectRole...); -1 = none
 	std::size_t                g_maxCast = 2;       // the most actors any scene has
 
-	// The player (unless left out), then the picked NPCs.
+	// Where the player goes in a cast of two by OStim's PlayerAlways...
+	// settings: 0 (dominant), 1 (submissive), or -1 (no setting).
+	int PlayerAlwaysIndex(const std::vector<std::uint32_t>& a_cast)
+	{
+		if (a_cast.size() != 2) {
+			return -1;
+		}
+		const bool same = ActorProperties::Cached(a_cast[0]).penis == ActorProperties::Cached(a_cast[1]).penis;
+		if (same ? g_settings.playerAlwaysDomGay : g_settings.playerAlwaysDomStraight) {
+			return 0;
+		}
+		if (same ? g_settings.playerAlwaysSubGay : g_settings.playerAlwaysSubStraight) {
+			return 1;
+		}
+		return -1;
+	}
+
+	// The player (unless left out) and the picked NPCs, in the order they
+	// take the roles, as OStim's ActorUtil::sort: those with a penis first
+	// (otherwise in pick order), then the player moved to the role they
+	// chose, or for two, the one the PlayerAlways... settings say.
 	std::vector<std::uint32_t> CastIDs()
 	{
 		std::vector<std::uint32_t> ids;
-		std::scoped_lock lock(g_castLock);
-		if (g_includePlayer) {
-			ids.push_back(RE::PlayerCharacter::GetSingleton()->GetFormID());
+		int                        chosen;
+		{
+			std::scoped_lock lock(g_castLock);
+			if (g_includePlayer) {
+				ids.push_back(RE::PlayerCharacter::GetSingleton()->GetFormID());
+			}
+			ids.insert(ids.end(), g_cast.begin(), g_cast.end());
+			chosen = g_playerRole;
 		}
-		ids.insert(ids.end(), g_cast.begin(), g_cast.end());
+		std::ranges::stable_sort(ids, [](std::uint32_t a, std::uint32_t b) { return ActorProperties::Cached(a).penis && !ActorProperties::Cached(b).penis; });
+		const auto player = RE::PlayerCharacter::GetSingleton()->GetFormID();
+		const auto at = std::ranges::find(ids, player);
+		if (at == ids.end()) {
+			return ids;
+		}
+		const int want = chosen >= 0 ? chosen : PlayerAlwaysIndex(ids);
+		if (want >= 0 && static_cast<std::size_t>(want) < ids.size()) {
+			ids.erase(at);
+			ids.insert(ids.begin() + want, player);
+		}
 		return ids;
+	}
+
+	// The player's place in a_cast (CastIDs' order) if it's theirs to keep:
+	// chosen, or by the PlayerAlways... settings.
+	std::optional<std::size_t> PlayerPin(const std::vector<std::uint32_t>& a_cast)
+	{
+		const auto player = RE::PlayerCharacter::GetSingleton()->GetFormID();
+		const auto at = std::ranges::find(a_cast, player);
+		if (at == a_cast.end() || g_pickerMode != PickerMode::kStart) {
+			return std::nullopt;
+		}
+		int chosen;
+		{
+			std::scoped_lock lock(g_castLock);
+			chosen = g_playerRole;
+		}
+		if (chosen < 0 && PlayerAlwaysIndex(a_cast) < 0) {
+			return std::nullopt;
+		}
+		return static_cast<std::size_t>(at - a_cast.begin());
+	}
+
+	// Whether the player picks their role in this cast (OStim's
+	// SelectIndexAndSort): for three or more, playerSelectRoleThreesome;
+	// for two, by whether they look the same sex (Gay) or not (Straight).
+	bool PlayerChoosesRole(const std::vector<std::uint32_t>& a_cast)
+	{
+		const auto player = RE::PlayerCharacter::GetSingleton()->GetFormID();
+		if (a_cast.size() < 2 || std::ranges::find(a_cast, player) == a_cast.end()) {
+			return false;
+		}
+		if (a_cast.size() >= 3) {
+			return g_settings.playerSelectRoleThreesome;
+		}
+		const auto female = [](std::uint32_t a_id) {
+			const auto actor = RE::TESForm::GetFormByID<RE::Actor>(a_id);
+			return actor && actor->GetSex() == RE::SEX::kFemale;
+		};
+		return female(a_cast[0]) == female(a_cast[1]) ? g_settings.playerSelectRoleGay : g_settings.playerSelectRoleStraight;
 	}
 
 	// Snapshot of the running scenes for the picker. Main thread.
@@ -4030,6 +4212,7 @@ namespace
 			return out;
 		}
 		const auto center = player->GetPosition();
+		ActorProperties::Remember(player);
 		tes->ForEachReferenceInRange(center, a_radius, [&](RE::TESObjectREFR* a_ref) {
 			const auto actor = a_ref ? a_ref->As<RE::Actor>() : nullptr;
 			if (!actor || actor == player || actor->GetDelete() || (actor->formFlags & 0x800) != 0 || !actor->Get3D()) {
@@ -4039,9 +4222,11 @@ namespace
 			if (actor->IsChild() || actor->IsDead(false) || actor->IsInCombat() || FindActiveScene(actor->GetFormID())) {
 				return RE::BSContainer::ForEachResult::kContinue;
 			}
-			const auto npc = actor->GetNPC();
-			const bool human = (actor->race && actor->race->HasKeywordString("ActorTypeNPC")) || (npc && npc->HasKeywordString("ActorTypeNPC"));
-			if (!human) {
+			// As OStim: only actors with an actor type (docs/ACTORS.md:
+			// people, by the default actor properties). Worked out here, on
+			// the main thread, for the picker's lists.
+			ActorProperties::Remember(actor);
+			if (ActorProperties::Cached(actor->GetFormID()).type.empty()) {
 				return RE::BSContainer::ForEachResult::kContinue;
 			}
 			const char* name = actor->GetDisplayFullName();
@@ -4349,6 +4534,16 @@ namespace
 					rows.push_back({ "@back", "Back", "start a scene" });
 					title = "Running scenes";
 				}
+			} else if (g_startStep == StartStep::kRole) {
+				// OStim's role selection: the player picks their place in
+				// the cast's order (1 = first, usually the one giving).
+				for (std::size_t i = 0; i < cast.size(); ++i) {
+					const auto detail = i == 0 ? "first, usually the one giving" : i + 1 == cast.size() ? "last, usually the one receiving" : "";
+					rows.push_back({ std::format("@role:{}", i), std::format("Role {}", i + 1), detail });
+				}
+				rows.push_back({ "@role:any", "Any role", "whichever the scene gives you" });
+				rows.push_back({ "@back", "Back", "change who's in it" });
+				title = "Your role?";
 			} else {
 				// Where: right here, or a piece of furniture near, if any
 				// scene fits this cast there.
@@ -4404,6 +4599,17 @@ namespace
 				std::scoped_lock lock(g_castLock);
 				std::erase(g_cast, hex(a_id.substr(6)));
 			} else if (a_id == "@go") {
+				{
+					std::scoped_lock lock(g_castLock);
+					g_playerRole = -1;
+				}
+				g_startStep = PlayerChoosesRole(CastIDs()) ? StartStep::kRole : StartStep::kPlace;
+			} else if (a_id.starts_with("@role:")) {
+				{
+					std::scoped_lock lock(g_castLock);
+					g_playerRole = a_id == "@role:any" ? -1 : std::stoi(a_id.substr(6));
+				}
+				REX::INFO("Picker: the player takes {}", a_id == "@role:any" ? std::string("any role") : "role " + a_id.substr(6));
 				g_startStep = StartStep::kPlace;
 			} else if (a_id == "@none") {
 				// nothing to do yet
@@ -4612,9 +4818,10 @@ namespace
 				}
 			}
 
-			// Who takes which role: the cast's own order (the player first)
-			// unless only another order fits the roles' sexes.
-			auto order = SceneRegistry::AssignRoles(roles, SexesOf(cast));
+			// Who takes which role: the cast's order (CastIDs: OStim's sort)
+			// unless only another order fits the roles; the player keeps a
+			// role they chose.
+			auto order = SceneRegistry::AssignRoles(roles, ConditionsOf(cast), PlayerPin(cast));
 			if (order.size() != cast.size()) {
 				order.resize(cast.size());
 				for (std::size_t i = 0; i < order.size(); ++i) {
@@ -4677,6 +4884,7 @@ namespace
 				std::scoped_lock lock(g_castLock);
 				g_cast.clear();
 				g_placeChoice = -1;
+				g_playerRole = -1;
 				// In a scene yourself, you can't be in another.
 				g_playerBusy = FindActiveScene(RE::PlayerCharacter::GetSingleton()->GetFormID()) != nullptr;
 				g_includePlayer = !a_npcsOnly && !g_playerBusy;
@@ -5079,6 +5287,15 @@ namespace
 						Expressions::SetEvent(id, event, true);
 					}
 				});
+			} else if (_stricmp(a_event.tag.c_str(), "4StimEquipObject") == 0 || _stricmp(a_event.tag.c_str(), "4StimUnequipObject") == 0) {
+				// OStim's OStimEquipObject / OStimUnequipObject: "<type>".
+				const bool  equip = _stricmp(a_event.tag.c_str(), "4StimEquipObject") == 0;
+				std::string payload = a_event.payload.c_str();
+				if (equip) {
+					EquipObjects::Equip(id, payload);
+				} else {
+					EquipObjects::Unequip(id, payload);
+				}
 			}
 		}
 
@@ -5191,6 +5408,14 @@ namespace
 		a_vm->BindNativeMethod(SCRIPT_NAME, "PlaceGroup"sv, PlaceGroup);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "PlayGroupIdles"sv, PlayGroupIdles);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "StopGroup"sv, StopGroup);
+		a_vm->BindNativeMethod(SCRIPT_NAME, "EquipObject"sv, EquipObject);
+		a_vm->BindNativeMethod(SCRIPT_NAME, "UnequipObject"sv, UnequipObject);
+		a_vm->BindNativeMethod(SCRIPT_NAME, "IsObjectEquipped"sv, IsObjectEquipped);
+		a_vm->BindNativeMethod(SCRIPT_NAME, "SetObjectVariant"sv, SetObjectVariant);
+		a_vm->BindNativeMethod(SCRIPT_NAME, "UnsetObjectVariant"sv, UnsetObjectVariant);
+		a_vm->BindNativeMethod(SCRIPT_NAME, "GetEquipObjectTypes"sv, GetEquipObjectTypes);
+		a_vm->BindNativeMethod(SCRIPT_NAME, "HasPenis"sv, HasPenis);
+		a_vm->BindNativeMethod(SCRIPT_NAME, "GetActorType"sv, GetActorType);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "RegisterForSceneEvents"sv, RegisterForSceneEvents);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "UnregisterForSceneEvents"sv, UnregisterForSceneEvents);
 		REX::INFO("Papyrus functions bound");
@@ -5206,7 +5431,7 @@ namespace
 
 	constexpr std::uint32_t SAVE_UID = 'FSTM';
 	constexpr std::uint32_t SCENES_RECORD = 'SCNS';
-	constexpr std::uint32_t SCENES_VERSION = 2;  // 2: each actor's own scale (alignment scales them)
+	constexpr std::uint32_t SCENES_VERSION = 3;  // 2: each actor's own scale (alignment scales them); 3: equip objects given
 
 	struct SavedScene
 	{
@@ -5219,6 +5444,7 @@ namespace
 		std::vector<float>                      excitement;  // per actor
 		std::vector<std::vector<std::uint32_t>> stripped;    // per actor
 		std::vector<float>                      baseScale;   // per actor: their own scale (0 = unknown, version 1)
+		std::vector<std::vector<std::uint32_t>> given;       // per actor: equip objects 4Stim gave them (version 3)
 	};
 	std::mutex              g_savedLock;
 	std::vector<SavedScene> g_loadedScenes;  // read from the save being loaded
@@ -5258,6 +5484,11 @@ namespace
 				const auto items = Undress::Stripped(id);
 				a_intfc->WriteRecordData(static_cast<std::uint32_t>(items.size()));
 				for (const auto item : items) {
+					a_intfc->WriteRecordData(item);
+				}
+				const auto given = EquipObjects::Given(id);
+				a_intfc->WriteRecordData(static_cast<std::uint32_t>(given.size()));
+				for (const auto item : given) {
 					a_intfc->WriteRecordData(item);
 				}
 			}
@@ -5305,6 +5536,19 @@ namespace
 							stripped.push_back(resolved);
 						}
 					}
+					std::vector<std::uint32_t> given;
+					if (version >= 3) {
+						std::uint32_t givenCount = 0;
+						a_intfc->ReadRecordData(givenCount);
+						for (std::uint32_t n = 0; n < givenCount && n < 64; ++n) {
+							std::uint32_t item = 0;
+							a_intfc->ReadRecordData(item);
+							if (const auto resolved = resolve(item)) {
+								given.push_back(resolved);
+							}
+						}
+					}
+					saved.given.push_back(std::move(given));
 					saved.actors.push_back(resolve(id));  // 0 if its plugin is gone
 					saved.excitement.push_back(excitement);
 					saved.stripped.push_back(std::move(stripped));
@@ -5355,6 +5599,7 @@ namespace
 			if (a_saved.baseScale[i] > 0.0F) {
 				CallActorMethod(actor, "ObjectReference"sv, "SetScale"sv, a_saved.baseScale[i]);  // undo the alignment's size
 			}
+			EquipObjects::TakeBack(id, a_saved.given[i]);  // before dressing again
 			if (!a_saved.stripped[i].empty()) {
 				Undress::NoteStripped(id, a_saved.stripped[i]);
 				Undress::Redress(id, true);
@@ -5388,6 +5633,7 @@ namespace
 			if (!a_saved.stripped[i].empty()) {
 				Undress::NoteStripped(a_saved.actors[i], a_saved.stripped[i]);
 			}
+			EquipObjects::TakeBack(a_saved.actors[i], a_saved.given[i]);  // the scene puts them on again
 			// Their own size back first: the scene measures it again when it starts.
 			const auto actor = RE::TESForm::GetFormByID<RE::Actor>(a_saved.actors[i]);
 			if (actor && a_saved.baseScale[i] > 0.0F) {
@@ -5466,6 +5712,7 @@ namespace
 				Peaks::Clear();
 				Lights::Clear();
 				Undress::Clear();
+				EquipObjects::Clear();
 			});
 			{
 				std::scoped_lock lock(g_pendingSequenceLock);
@@ -5503,6 +5750,7 @@ namespace
 				Peaks::Clear();
 				Lights::Clear();
 				Undress::Clear();
+				EquipObjects::Clear();
 				g_focusNextScene = false;
 				SetPlayerScene({});
 				g_sceneCameraActive = false;

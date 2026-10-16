@@ -65,7 +65,7 @@ namespace FourStim
 	std::string FormatLabel(std::string a_label, const FocusedScene& a_scene);
 
 	// Whether the focused scene's actors (in their roles) may play a_scene:
-	// its roles' sexes, unless bMatchSex is off.
+	// its roles' types, requirements and (SetOnlyGayAnimsInGayScenes) sexes.
 	bool FocusedCanPlay(const SceneRegistry::Scene& a_scene);
 
 	// Alignment of the focused scene (docs/ALIGNMENT.md), for the HUD's Align

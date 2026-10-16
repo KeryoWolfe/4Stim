@@ -1,0 +1,9 @@
+{
+	"condition": {
+		"keywords": [ "ActorTypeGhoul" ]
+	},
+	"priority": 10,
+	"requirements": {
+		"ghoul": true
+	}
+}

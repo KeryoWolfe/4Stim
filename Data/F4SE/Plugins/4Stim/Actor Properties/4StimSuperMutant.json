@@ -1,0 +1,16 @@
+{
+	"condition": {
+		"keywords": [ "ActorTypeSuperMutant" ],
+		"child": false
+	},
+	"priority": 20,
+	"type": "supermutant",
+	"requirements": {
+		"anus": true,
+		"foot": true,
+		"hand": true,
+		"mouth": true,
+		"nipple": true,
+		"penis": true
+	}
+}

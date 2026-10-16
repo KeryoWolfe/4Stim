@@ -29,6 +29,7 @@ namespace Actions
 		bool                     talk = false;             // and may talk (kept for dialogue, not used yet)
 		bool                     muffled = false;          // their mouth is busy: muffled sounds
 		std::string              expressionOverride;       // facial expression set while doing it ("openmouth", "tongue"...)
+		std::vector<std::string> equipObjects;             // OStim's "equipObject": equip object types this side's actor wears ("tongue"...), lowercase
 	};
 
 	// How an action's peaks (its strokes, thrusts, slaps) are found, as
@@ -100,9 +101,4 @@ namespace Actions
 	// Every action type id, sorted.
 	std::vector<std::string> List();
 
-	// Whether an actor of sex a_sex has what a_requirement asks for. Until
-	// strap-ons: a penis and testicles for men, a vagina and breasts for
-	// women; hands, mouth, feet, nipples and anus for everyone. Anything unknown
-	// (tail, vampire...) no one has yet. An actor of unknown sex has it all.
-	bool Provides(SceneRegistry::Sex a_sex, std::string_view a_requirement);
 }

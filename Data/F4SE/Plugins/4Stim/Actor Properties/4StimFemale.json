@@ -1,0 +1,10 @@
+{
+	"condition": {
+		"sex": "female"
+	},
+	"priority": 10,
+	"requirements": {
+		"breast": true,
+		"vagina": true
+	}
+}

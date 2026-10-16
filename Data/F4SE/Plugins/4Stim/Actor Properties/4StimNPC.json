@@ -1,0 +1,16 @@
+{
+	"condition": {
+		"keywords": [ "ActorTypeNPC" ],
+		"child": false
+	},
+	"priority": 10,
+	"type": "npc",
+	"requirements": {
+		"anus": true,
+		"foot": true,
+		"hand": true,
+		"mouth": true,
+		"nipple": true,
+		"penis": true
+	}
+}

@@ -38,6 +38,7 @@ namespace Compat
 		{ 2201134, "ID::TESObjectREFR::SetAngleOnReference" },
 		{ 2202924, "ID::TESWorldSpace::GetSkyCell" },
 		{ 2204287, "ID::Script::CompileAndRun" },
+		{ 2211989, "ID::TESCondition::IsTrue" },
 		{ 2214742, "ID::PlayerCamera::SetState" },
 		{ 2229625, "ID::Actor::SetHeading" },
 		{ 2229674, "ID::Actor::GetSex" },
@@ -108,7 +109,9 @@ namespace Compat
 		{ 4796420, "ID::GameScript::GameVM::Singleton" },
 		{ 4796464, "ID::IFormFactory::Factories" },
 		{ 4796465, "ID::TESForm::AllForms" },
+		{ 4796466, "ID::TESForm::AllFormsByEditorID" },
 		{ 4796476, "ID::TESForm::AllFormsMapLock" },
+		{ 4796477, "ID::TESForm::AllFormsEditorIDMapLock" },
 		{ 4796889, "ID::BSScaleformManager::Singleton" },
 		{ 4798212, "ID::PlayerCharacter::Singleton" },
 	};

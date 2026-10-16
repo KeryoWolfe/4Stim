@@ -2,6 +2,7 @@
 
 #include <array>
 #include <memory>
+#include <optional>
 #include <span>
 #include <string>
 #include <string_view>
@@ -31,6 +32,29 @@ namespace SceneRegistry
 	// An actor's sex as the scenes see it.
 	Sex SexOf(RE::Actor* a_actor);  // GetSex() isn't const
 
+	// What an actor brings to a role, as OStim's ActorCondition: their actor
+	// type (OStim's: "npc" for people; only roles of the same type), their
+	// sex (kAny: counts as either, a futa with futaUseMaleRole), and what
+	// they have for the roles' requirements (penis, vagina, mouth...),
+	// lowercase. From their actor properties (ActorProperties.h).
+	struct ActorCondition
+	{
+		std::string              type = "npc";
+		Sex                      sex = Sex::kAny;
+		std::vector<std::string> requirements;
+		bool                     penis = false;  // OStim's hasSchlong (not a requirement: who goes first, strap-ons)
+	};
+
+	// How roles are matched (OStim's settings): SetOnlyGayAnimsInGayScenes
+	// (intended sex only: a role's sex must be the actor's) and
+	// unrestrictedNavigation (only the actor type counts).
+	struct MatchRules
+	{
+		bool intendedSexOnly = true;
+		bool unrestricted = false;
+	};
+	MatchRules& Rules();
+
 	// A position offset from the scene's spot (OStim's "offset": x right, y
 	// forward, z up, r degrees clockwise).
 	struct Position
@@ -45,9 +69,11 @@ namespace SceneRegistry
 
 	struct SceneActor
 	{
+		std::string              type = "npc";     // OStim's actor type: only actors of this type (ActorProperties.h)
 		Sex                      sex = Sex::kAny;  // who may take this role
 		std::vector<std::string> requirements;     // what the role needs (penis, mouth...): its own and its actions', lowercase
 		std::vector<std::string> tags;             // what the role is doing: standing, kneeling, lyingback... lowercase
+		std::vector<std::string> equipObjects;     // equip object types worn in it (OStim's, from its actions' "equipObject"), lowercase
 		// Scenes to move to on an event for this role's actor (OStim's
 		// autoTransitions): "climax", "pullout"... key lowercase.
 		std::vector<std::pair<std::string, std::string>> autoTransitions;
@@ -177,13 +203,17 @@ namespace SceneRegistry
 
 	// Which actor takes each role of a scene (or sequence) whose roles ask for
 	// a_roles: for each role, an index into a_actors. Empty if they can't fill
-	// it (wrong count, or a role's sex doesn't match). Keeps a_actors' own
-	// order when it fits, otherwise tries the other order (two actors).
-	std::vector<std::size_t> AssignRoles(std::span<const SceneActor> a_roles, std::span<const Sex> a_actors);
+	// it. Keeps a_actors' own order when it fits (OStim plays only that
+	// order), otherwise tries the others; a_pinned: that actor keeps their
+	// place (the player's chosen role).
+	std::vector<std::size_t> AssignRoles(std::span<const SceneActor> a_roles, std::span<const ActorCondition> a_actors,
+		std::optional<std::size_t> a_pinned = std::nullopt);
 
-	// Whether a_actors, in this role order, fit a_roles: each role's sex,
-	// and what its actions need (Actions::Provides).
-	bool Fits(std::span<const SceneActor> a_roles, std::span<const Sex> a_actors);
+	// Whether a_actors, in this role order, fit a_roles, as OStim's
+	// ActorCondition::fulfills: the same actor type, then (unless
+	// unrestrictedNavigation) the role's sex with intendedSexOnly, and
+	// everything the role requires.
+	bool Fits(std::span<const SceneActor> a_roles, std::span<const ActorCondition> a_actors);
 
 	// Re-reads every scene file. Returns the number of scenes loaded.
 	int Reload();
@@ -216,8 +246,9 @@ namespace SceneRegistry
 	// only those these actors can play.
 	struct ListFilter
 	{
-		std::vector<Sex> sexes;               // the actors; empty = no sex check
-		bool             fixedOrder = false;  // roles already given (a running scene)
+		std::vector<ActorCondition> actors;               // the actors; empty = no check
+		bool                        fixedOrder = false;   // roles already given (a running scene)
+		std::optional<std::size_t>  pinned;               // this actor keeps their place (the player's chosen role)
 	};
 
 	// All scenes with exactly a_actorCount actors that pass a_filter, sorted

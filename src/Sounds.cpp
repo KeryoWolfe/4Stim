@@ -15,6 +15,7 @@
 
 #include "Actions.h"
 #include "Bridge.h"
+#include "ActorProperties.h"
 #include "Expressions.h"
 
 namespace Sounds
@@ -57,6 +58,7 @@ namespace Sounds
 			std::shared_ptr<const VoiceSet>       voice;
 			bool                                  moan = false;
 			bool                                  muffled = false;
+			bool                                  muffledAlways = false;  // by an actor property, the whole scene
 			float                                 cooldown = 0.0F;
 			bool                                  playing = false;
 			Playing                               sound;
@@ -434,12 +436,15 @@ namespace Sounds
 		}
 		auto [it, added] = g_states.try_emplace(a_id);
 		auto& state = it->second;
+		const auto actor = RE::TESForm::GetFormByID<RE::Actor>(a_id);
 		if (added) {
-			state.voice = VoiceFor(RE::TESForm::GetFormByID<RE::Actor>(a_id));
+			// Muted by an actor property (OStim's "mute", a gag...): no voice.
+			state.voice = ActorProperties::Muted(actor) ? nullptr : VoiceFor(actor);
 			state.cooldown = RandomInterval();
+			state.muffledAlways = ActorProperties::Muffled(actor);  // OStim's actor property "muffle"
 		}
 		state.moan = a_scene.actors[a_role].moan;
-		state.muffled = a_scene.actors[a_role].muffled;
+		state.muffled = a_scene.actors[a_role].muffled || state.muffledAlways;
 		state.actions.clear();
 		for (const auto& action : a_scene.actions) {
 			if (action.actor == a_role || action.target == a_role || action.performer == a_role) {

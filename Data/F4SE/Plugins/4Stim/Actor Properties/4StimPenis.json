@@ -1,0 +1,9 @@
+{
+	"condition": {
+		"penis": true
+	},
+	"priority": 10,
+	"requirements": {
+		"testicles": true
+	}
+}

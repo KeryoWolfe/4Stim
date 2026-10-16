@@ -55,6 +55,7 @@ Action types are defined in JSON files in `Data\F4SE\Plugins\4Stim\Actions\`. Al
 | `fullStrip` | `true`: that side's actor takes everything off (UNDRESS.md). |
 | `undressSlots` | Otherwise, the Fallout 4 biped slots (30–61) that side's actor takes off, e.g. `[34, 35]` for gloves. |
 | `moan`, `talk`, `muffled`, `expressionOverride` | That side's actor moans, may talk (kept for dialogue), sounds muffled, makes this expression (`SOUND.md`, `EXPRESSIONS.md`). |
+| `equipObject` | Equip object types that side's actor wears while doing it (OStim's field: a type or a list, e.g. `"tongue"`; `ACTORS.md`). |
 | `peak` | How the action's peaks are found (`EVENTS.md`). |
 | `sounds` | Sounds it plays on peaks, as bones meet, or in a loop (`SOUND.md`). |
 
@@ -64,16 +65,17 @@ OStim's action files work too: one action per file in `Actions\`, the file name 
 
 ## Requirements
 
-A role collects the requirements of every action it's in. With `SetOnlyGayAnimsInGayScenes=1`, an actor can only take the role if they have everything it needs:
+A role collects the requirements of every action it's in, and only an actor who has all of them can take it, as in OStim. What an actor has comes from their actor properties (`ACTORS.md`); with 4Stim's default ones:
 
 | Requirement | Who has it |
 |---|---|
-| `hand`, `mouth`, `foot`, `nipple`, `anus` | everyone |
-| `penis`, `testicles` | men (strap-ons will add a penis for women; see TODO) |
+| `hand`, `mouth`, `foot`, `nipple`, `anus`, `penis` | everyone (OStim's: a woman takes a role that needs a penis with a strap-on) |
+| `testicles` | those with a penis: men, and futa |
 | `vagina`, `breast` | women |
-| `tail`, `vampire`, anything else | no one yet |
+| `ghoul` | ghouls |
+| `tail`, `vampire`, anything else | no one, unless an actor property gives it |
 
-So a scene with an action that needs a tail or a vampire never shows up. Fallout 4 has neither, which hides a few test-pack scenes.
+So a scene with an action that needs a tail or a vampire never shows up: Fallout 4 has neither, which hides a few test-pack scenes. With `SetOnlyGayAnimsInGayScenes=1` (the default), the role's sex counts too, so a woman takes a man's role only in scenes that leave it open.
 
 ## Papyrus
 

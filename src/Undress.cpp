@@ -7,7 +7,9 @@
 #include <unordered_map>
 
 #include "Actions.h"
+#include "ActorProperties.h"
 #include "Bridge.h"
+#include "EquipObjects.h"
 #include "HUD.h"
 
 namespace Undress
@@ -82,14 +84,18 @@ namespace Undress
 			return std::ranges::any_of(a_scene.tags, [&](const std::string& t) { return _stricmp(t.c_str(), std::string(a_tag).c_str()) == 0; });
 		}
 
-		// The redress scene for a_part and an actor of sex a_sex, if any.
-		std::optional<RedressAnim> FindRedressAnim(const RedressPart& a_part, SceneRegistry::Sex a_sex)
+		// The redress scene for a_part that a_actor fits (their role in it), if any.
+		std::optional<RedressAnim> FindRedressAnim(const RedressPart& a_part, const SceneRegistry::ActorCondition& a_actor)
 		{
 			SceneRegistry::ListFilter filter;
-			filter.sexes = { a_sex };
+			filter.actors = { a_actor };
 			for (const auto& summary : SceneRegistry::List(1, filter)) {
 				const auto scene = SceneRegistry::Find(summary.id);
 				if (!scene || !HasTag(*scene, "redress") || !HasTag(*scene, a_part.tag) || scene->speeds.empty() || scene->speeds[0].empty() || !scene->speeds[0][0]) {
+					continue;
+				}
+				// Dressing is by body: the role's sex counts even without SetOnlyGayAnimsInGayScenes.
+				if (const auto want = scene->actors[0].sex; want != SceneRegistry::Sex::kAny && a_actor.sex != SceneRegistry::Sex::kAny && want != a_actor.sex) {
 					continue;
 				}
 				const float length = scene->length > 0.0F ? scene->length : 3.0F;
@@ -154,7 +160,8 @@ namespace Undress
 				if (!actor) {
 					return;
 				}
-				const auto items = WornIn(actor, mask);
+				auto items = WornIn(actor, mask);
+				std::erase_if(items, [](std::uint32_t a_item) { return EquipObjects::IsObjectItem(a_item); });  // 4Stim's own strap-ons and such stay on
 				REX::INFO("Undress: {:08X}, slots 0x{:08X}: {} item(s) to take off", a_id, mask, items.size());
 				if (items.empty()) {
 					return;
@@ -295,7 +302,7 @@ namespace Undress
 		std::vector<float>        lengths, dressAts;
 		const auto                actor = RE::TESForm::GetFormByID<RE::Actor>(a_id);
 		if (a_afterScene && g_config.animateRedress && actor && !IsPlayer(a_id)) {
-			const auto sex = SceneRegistry::SexOf(actor);
+			const auto condition = ActorProperties::Condition(actor);
 			for (const auto& part : REDRESS_PARTS) {
 				std::vector<std::size_t> mine;
 				for (std::size_t i = 0; i < items.size(); ++i) {
@@ -307,7 +314,7 @@ namespace Undress
 				if (mine.empty()) {
 					continue;
 				}
-				if (const auto anim = FindRedressAnim(part, sex)) {
+				if (const auto anim = FindRedressAnim(part, condition)) {
 					for (const auto i : mine) {
 						groups[i] = static_cast<std::int32_t>(idles.size());
 					}

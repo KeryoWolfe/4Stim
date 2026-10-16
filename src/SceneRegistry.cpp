@@ -246,6 +246,7 @@ namespace SceneRegistry
 				if (a.is_object()) {
 					role.tags = StringList(a, "tags", true);
 					role.requirements = StringList(a, "requirements", true);
+					role.type = Lower(a.value("type", std::string{ "npc" }));  // OStim's actor type
 					// "autoTransitions": {"climax": id, ...}; "climax": id is short for the climax one.
 					if (const auto auto_ = a.find("autoTransitions"); auto_ != a.end() && auto_->is_object()) {
 						for (const auto& [event, dest] : auto_->items()) {
@@ -436,6 +437,12 @@ namespace SceneRegistry
 						for (const auto& r : a_side.requirements) {
 							if (std::ranges::find(reqs, r) == reqs.end()) {
 								reqs.push_back(r);
+							}
+						}
+						auto& objects = scene.actors[static_cast<std::size_t>(a_role)].equipObjects;
+						for (const auto& o : a_side.equipObjects) {
+							if (std::ranges::find(objects, o) == objects.end()) {
+								objects.push_back(o);
 							}
 						}
 					};
@@ -857,19 +864,32 @@ namespace SceneRegistry
 		}
 	}
 
-	bool Fits(std::span<const SceneActor> a_roles, std::span<const Sex> a_actors)
+	MatchRules& Rules()
+	{
+		static MatchRules rules;
+		return rules;
+	}
+
+	bool Fits(std::span<const SceneActor> a_roles, std::span<const ActorCondition> a_actors)
 	{
 		if (a_roles.size() != a_actors.size()) {
 			return false;
 		}
+		const auto& rules = Rules();
 		for (std::size_t i = 0; i < a_roles.size(); ++i) {
-			const auto want = a_roles[i].sex;
-			const auto have = a_actors[i];
-			if (want != Sex::kAny && have != Sex::kAny && want != have) {
+			const auto& role = a_roles[i];
+			const auto& have = a_actors[i];
+			if (role.type != have.type) {
 				return false;
 			}
-			for (const auto& req : a_roles[i].requirements) {
-				if (!Actions::Provides(have, req)) {
+			if (rules.unrestricted) {
+				continue;
+			}
+			if (rules.intendedSexOnly && role.sex != Sex::kAny && have.sex != Sex::kAny && role.sex != have.sex) {
+				return false;
+			}
+			for (const auto& req : role.requirements) {
+				if (std::ranges::find(have.requirements, req) == have.requirements.end()) {
 					return false;
 				}
 			}
@@ -907,7 +927,7 @@ namespace SceneRegistry
 		return std::ranges::any_of(actions, [&](const SceneAction& a) { return a.type->HasTag(a_tag); });
 	}
 
-	std::vector<std::size_t> AssignRoles(std::span<const SceneActor> a_roles, std::span<const Sex> a_actors)
+	std::vector<std::size_t> AssignRoles(std::span<const SceneActor> a_roles, std::span<const ActorCondition> a_actors, std::optional<std::size_t> a_pinned)
 	{
 		if (a_roles.size() != a_actors.size()) {
 			return {};
@@ -916,9 +936,12 @@ namespace SceneRegistry
 		for (std::size_t i = 0; i < order.size(); ++i) {
 			order[i] = i;
 		}
-		// Every order, starting with the actors' own (two actors: two orders).
+		// Every order, starting with the actors' own (OStim's sorted order).
 		do {
-			std::vector<Sex> ordered;
+			if (a_pinned && *a_pinned < order.size() && order[*a_pinned] != *a_pinned) {
+				continue;
+			}
+			std::vector<ActorCondition> ordered;
 			for (const auto index : order) {
 				ordered.push_back(a_actors[index]);
 			}
@@ -933,10 +956,10 @@ namespace SceneRegistry
 	{
 		bool Passes(std::span<const SceneActor> a_roles, const ListFilter& a_filter)
 		{
-			if (a_filter.sexes.empty()) {
+			if (a_filter.actors.empty()) {
 				return true;
 			}
-			return a_filter.fixedOrder ? Fits(a_roles, a_filter.sexes) : !AssignRoles(a_roles, a_filter.sexes).empty();
+			return a_filter.fixedOrder ? Fits(a_roles, a_filter.actors) : !AssignRoles(a_roles, a_filter.actors, a_filter.pinned).empty();
 		}
 	}
 
