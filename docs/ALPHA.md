@@ -1,4 +1,4 @@
-# 4Stim 0.1.0 alpha: tester's guide
+# 4Stim 0.2.0 alpha: tester's guide
 
 Thanks for testing. 4Stim is an OStim-style scene framework for Fallout 4: you pick someone (or several people), pick where, and a scene starts; from there you move between positions on a HUD, or let auto mode run it. This is an **alpha**: things will break, and what you report decides what gets fixed first.
 
@@ -11,6 +11,7 @@ Thanks for testing. 4Stim is an OStim-style scene framework for Fallout 4: you p
 - Address Library for F4SE Plugins, for 1.11.240.
 - A mod manager (Mod Organizer 2 or Vortex).
 - Optional: A-Body (male) with its SMP physics. 4Stim swaps to the erect physics during scenes when it's there.
+- Optional: the High Heels System. Actors in heels are scaled or lowered to fit the animation (docs/SCALING.md).
 
 **Use a separate save.** 4Stim keeps the scenes running when you save in that save, and moves NPCs and changes their equipment and AI for the length of a scene.
 
@@ -18,10 +19,12 @@ Thanks for testing. 4Stim is an OStim-style scene framework for Fallout 4: you p
 
 Install both archives with your mod manager, as two mods:
 
-1. **`4Stim-0.1.0-alpha.zip`**: the framework (plugin, settings, HUD, icons, scripts).
-2. **`4Stim-TestAnims-0.1.0-alpha.zip`**: the test animations and their scene file. Enable **`4StimTestAnims.esp`** in your load order.
+1. **`4Stim-0.2.0-alpha.zip`**: the framework (plugin, settings, HUD, icons, scripts).
+2. **`4Stim-TestAnims-0.2.0-alpha.zip`**: the test animations and their scene file. Enable **`4StimTestAnims.esp`** in your load order.
 
 If you're updating from an earlier test build, replace both mods (don't merge them), and remove any older `4StimTestAnims.json` that's left in another mod. The newest one has to win.
+
+**From 0.1.0:** take the new `4Stim.ini` and copy your changes into it. Settings now go by OStim's names (`docs/SETTINGS.md`); the old names still work, but the new file has the new settings. Your alignments are converted once to `Documents\My Games\Fallout4\4Stim\alignment.json`, in OStim's layout. Several defaults changed to OStim's (`CHANGELOG.md`): notably, scenes running when you save now end when the save loads, as in OStim (`bResumeScenes=1` brings back 0.1.0's behaviour).
 
 ## Playing
 
@@ -41,7 +44,18 @@ Every key and option is in `F4SE\Plugins\4Stim.ini`, with a comment on each. Edi
 
 ## What to test
 
-Anything goes, but these are new and the least tested:
+Anything goes, but these are new in 0.2.0 and the least tested:
+
+- **Faces:** expressions during scenes, moan and climax faces, open mouths during oral (docs/EXPRESSIONS.md).
+- **Voices:** moans, muffled moans during oral, climax sounds (docs/SOUND.md).
+- **Slaps and strokes** on each thrust or stroke (docs/EVENTS.md). Do they land on the motion, and stay quiet in scenes without it?
+- **Lights:** set `sMaleLight` / `sFemaleLight` (e.g. `facelight`) in `[Lights]`, optionally with `SetOnlyLightInDark=1` (docs/LIGHTS.md). The log gives the light level at each scene start: tell us what it reads where you'd want a light, and where you wouldn't.
+- **Heels** (with the High Heels System): do actors in heels line up with their partner, standing and lying?
+- **Scenes starting like OStim's:** with you, a scene starts with an intro (standing, or lying on a bed).
+- **OStim's HUD controls:** `sHUDControls=Columns` in `[HUD]`.
+- **Beds:** floor scenes played on a bed should lie along its middle.
+
+From 0.1.0, still worth checking:
 
 - **NPCs who were busy.** Settlers working a plot, sitting, leaning, using a workbench: do they drop what they're doing and stay in the scene, without props in their hands?
 - **Beds against a wall.** Does the scene use the open side of the bed?
@@ -58,10 +72,11 @@ Anything goes, but these are new and the least tested:
 
 ## Known problems
 
-- NPCs in scenes still talk (idle chatter, greetings).
+- NPCs in scenes still talk (idle chatter, greetings). 4Stim's own dialogue (comments, reactions) isn't in yet.
 - Picking a transition can hitch for a moment the first time.
-- No sounds or facial expressions yet.
 - Strap-ons aren't in yet, so roles that need a penis only go to men.
+- The test animations have no `4StimEvent` annotations, so there are no spanks in them yet.
+- Lights are game lights moved with the actor every frame; if one lags, flickers or doesn't show, send the log (`Lights:` lines).
 
 ## Reporting a problem
 

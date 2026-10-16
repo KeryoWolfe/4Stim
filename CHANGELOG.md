@@ -1,6 +1,8 @@
 # Changelog
 
-## Unreleased
+## 0.2.0 alpha (October 2026)
+
+Second test build: OStim's settings, file formats, faces, voices, peaks, events and lights (see `docs/ALPHA.md`).
 
 - **OStim's settings:** `4Stim.ini` now uses OStim NG's setting names and defaults (docs/SETTINGS.md); the older names still work. Changed defaults, to OStim's: post-climax excitement 10 / 30, auto mode 7.5-15 s per scene, pull-out up to 90, 5 navigation steps, auto speed every 2.5-7.5 s between 15 and 85 excitement, furniture search 1600 units, no redress animations, clothes off all at once, and scenes in a save end on load (`bResumeScenes=1` starts them again).
 - **OStim's file formats:** OStim-style scene files (one per file, id = file name, `speeds[].animation` found by Idle editor ID, `origin` / `priority` navigations, `offset`, `modpack`), sequence files, action files (Skyrim `strippingSlots` mapped to Fallout 4) and furniture type files are read alongside 4Stim's own.

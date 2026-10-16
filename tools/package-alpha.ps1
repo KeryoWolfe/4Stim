@@ -98,8 +98,16 @@ if (Test-Path -LiteralPath $dll) {
 }
 
 Add-File $core (Need (Join-Path $Repo "Data\F4SE\Plugins\4Stim.ini") "the default 4Stim.ini") "F4SE/Plugins/4Stim.ini"
-foreach ($sub in "Actions", "Furniture", "Physics") {
-    Add-Tree $core (Join-Path $Repo "Data\F4SE\Plugins\4Stim\$sub") "F4SE/Plugins/4Stim/$sub"
+# Every data folder and file in Data\F4SE\Plugins\4Stim (actions, events,
+# expressions, furniture, lights, physics, voice sets...), except the scene
+# files: the test pack brings its own.
+$dataRoot = Join-Path $Repo "Data\F4SE\Plugins\4Stim"
+foreach ($d in Get-ChildItem -LiteralPath $dataRoot -Directory) {
+    if ($d.Name -eq "Scenes") { continue }
+    Add-Tree $core $d.FullName "F4SE/Plugins/4Stim/$($d.Name)"
+}
+foreach ($f in Get-ChildItem -LiteralPath $dataRoot -File) {
+    Add-File $core $f.FullName "F4SE/Plugins/4Stim/$($f.Name)"
 }
 Add-Tree $core (Join-Path $Repo "Data\Interface\4Stim\Themes") "Interface/4Stim/Themes"
 

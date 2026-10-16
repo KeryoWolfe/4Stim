@@ -2,7 +2,7 @@
 
 An OStim-style scene framework for **Fallout 4** (1.11.240, "Anniversary Edition"), built as an F4SE plugin. Two actors (or one) share a spot, play paired animations, and move between scenes through an in-scene HUD. Animation authors add content with an Idle-record plugin and a JSON file, with no scripting.
 
-> **Status:** alpha (0.1.0), in private testing. Expect breaking changes. Testers: see [docs/ALPHA.md](docs/ALPHA.md); changes are in [CHANGELOG.md](CHANGELOG.md).
+> **Status:** alpha (0.2.0), in private testing. Expect breaking changes. Testers: see [docs/ALPHA.md](docs/ALPHA.md); changes are in [CHANGELOG.md](CHANGELOG.md).
 
 ## Features
 
