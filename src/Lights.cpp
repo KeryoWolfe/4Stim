@@ -197,8 +197,10 @@ namespace Lights
 		}
 		// As OStim's thread start: lights only if it's dark where the first
 		// actor is (with SetOnlyLightInDark), and only once per actor.
-		const float level = LightLevel(RE::TESForm::GetFormByID<RE::Actor>(a_actors.front()));
-		REX::INFO("Lights: light level {} where the scene starts (dark below {}{})", level, g_config.darkLevel, g_config.onlyInDark ? "" : "; lights regardless");
+		const auto  first = RE::TESForm::GetFormByID<RE::Actor>(a_actors.front());
+		const float level = LightLevel(first);
+		REX::INFO("Lights: light level {} at {:08X} where the scene starts, {} at the player (dark below {}{})", level, a_actors.front(),
+			LightLevel(RE::PlayerCharacter::GetSingleton()), g_config.darkLevel, g_config.onlyInDark ? "" : "; lights regardless");
 		if (g_config.onlyInDark) {
 			if (level >= g_config.darkLevel) {
 				for (const auto id : a_actors) {

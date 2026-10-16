@@ -173,6 +173,7 @@ namespace Actions
 			} else if (type == "bonedistance") {
 				peak.kind = Peak::Kind::kBoneDistance;
 				peak.inverse = it->value("inverse", false);
+				peak.minRange = it->value("minRange", 3.0F);
 				peak.actorBones = Bones(*it, "actorBone");
 				peak.targetBones = Bones(*it, "targetBone");
 				if (peak.actorBones.empty() || peak.targetBones.empty()) {
@@ -213,6 +214,7 @@ namespace Actions
 				} else if (type == "bonedistance") {
 					sound.kind = ActionSound::Kind::kBoneDistance;
 					sound.inverse = e.value("inverse", false);
+					sound.minRange = e.value("minRange", 3.0F);
 					sound.minInterval = Milliseconds(e, "minInterval", 0.05F);
 					sound.maxInterval = Milliseconds(e, "maxInterval", 0.0F);
 					sound.actorBones = Bones(e, "actorBone");

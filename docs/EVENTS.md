@@ -11,11 +11,12 @@ An action finds its peaks from its `peak` (in its action file, docs/ACTIONS.md),
 ```
 
 - **`bonedistance`**: a peak each time the action actor's bones and the target's come closest (with `"inverse": true`, furthest apart). `actorBone` and `targetBone` are a bone name or a list of them; with lists, the closest pair counts. 4Stim learns each animation's range as it plays, so it works at any size and speed, and waits a second after a scene change before measuring, as OStim does.
+- **4Stim's `minRange`** (bonedistance, default 3 units): the bones must move at least this far apart and back before there are any peaks, so actors who only sway give none. OStim has no such field: Skyrim's genital bones always move far enough.
 - **`loop`**: a peak every `interval` milliseconds, divided by the speed's `displaySpeed` (scene files) when it has one.
 
 On each peak, the action's `peak` sounds play (docs/SOUND.md, "Action sounds").
 
-4Stim's default actions use Fallout 4's vanilla bones, which every body has: vaginal and anal sex the two pelvises (`Pelvis`); a handjob and male masturbation the hands (`RArm_Hand`, `LArm_Hand`) furthest from the pelvis; a footjob the toes (`RLeg_Toe1`, `LLeg_Toe1`). OStim's use Skyrim's genital bones. With an extended skeleton (ZeX), `Penis_00`, `Vagina_00` and `Anus_00` can be used too. The head is `HEAD`.
+4Stim's default actions use Fallout 4's vanilla bones, which every body has: vaginal and anal sex the two pelvises (`Pelvis`); a handjob and male masturbation the hands (`RArm_Hand`, `LArm_Hand`) furthest from the pelvis; a footjob the toes (`RLeg_Toe1`, `LLeg_Toe1`). `4Stim.log` says how many peak finders and sounds each scene got (`Peaks:`). OStim's use Skyrim's genital bones. With an extended skeleton (ZeX), `Penis_00`, `Vagina_00` and `Anus_00` can be used too. The head is `HEAD`.
 
 In a scene file, each action can say (OStim's fields):
 

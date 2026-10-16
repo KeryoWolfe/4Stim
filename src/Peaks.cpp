@@ -65,8 +65,11 @@ namespace Peaks
 			float minDistance = -1.0F;
 			float maxDistance = -1.0F;
 
-			// Returns false until there's a range.
-			bool Add(float a_distance)
+			// Returns false until the range is at least a_minRange: bones that
+			// barely move (an actor swaying in a scene with no real thrusting)
+			// give no peaks. 4Stim's: OStim's Skyrim genital bones always
+			// move far enough; Fallout 4's pelvises can sway a little.
+			bool Add(float a_distance, float a_minRange)
 			{
 				if (minDistance < 0.0F || a_distance < minDistance) {
 					minDistance = a_distance;
@@ -74,7 +77,7 @@ namespace Peaks
 				if (maxDistance < 0.0F || a_distance > maxDistance) {
 					maxDistance = a_distance;
 				}
-				return maxDistance > minDistance;
+				return maxDistance - minDistance >= std::max(a_minRange, 0.001F);
 			}
 			[[nodiscard]] float At(float a_fraction) const { return minDistance + (maxDistance - minDistance) * a_fraction; }
 		};
@@ -87,6 +90,7 @@ namespace Peaks
 			// loop
 			float                interval = 1.0F;
 			float                countdown = 1.0F;
+			float                minRange = 3.0F;
 			// bonedistance (OStim's DistancePeakHandler)
 			bool                 inverse = false;
 			Bones                actorBones;
@@ -181,6 +185,7 @@ namespace Peaks
 					handler.interval = peak.interval;
 					handler.countdown = peak.interval;
 					handler.inverse = peak.inverse;
+					handler.minRange = peak.minRange;
 					if (peak.kind == Actions::Peak::Kind::kBoneDistance) {
 						handler.actorBones = FindBones(actorID, peak.actorBones);
 						handler.targetBones = FindBones(targetID, peak.targetBones);
@@ -213,6 +218,9 @@ namespace Peaks
 					a_state.sounds.push_back(std::move(player));
 				}
 			}
+			if (!a_state.peaks.empty() || !a_state.sounds.empty()) {
+				REX::INFO("Peaks: \"{}\": {} peak finder(s), {} action sound(s)", scene.id, a_state.peaks.size(), a_state.sounds.size());
+			}
 		}
 
 		void TickPeak(SceneState& a_state, PeakHandler& a_peak, float a_seconds)
@@ -234,7 +242,7 @@ namespace Peaks
 				return;
 			}
 			const float distance = Distance(a_peak.actorBones, a_peak.targetBones);
-			if (std::isnan(distance) || !a_peak.range.Add(distance)) {
+			if (std::isnan(distance) || !a_peak.range.Add(distance, a_peak.minRange)) {
 				return;
 			}
 			if (a_peak.movingIn) {
@@ -278,7 +286,7 @@ namespace Peaks
 				return;
 			}
 			const float distance = Distance(a_player.actorBones, a_player.targetBones);
-			if (std::isnan(distance) || !a_player.range.Add(distance)) {
+			if (std::isnan(distance) || !a_player.range.Add(distance, sound.minRange)) {
 				a_player.sinceLast += a_seconds;
 				return;
 			}

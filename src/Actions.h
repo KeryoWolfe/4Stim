@@ -45,6 +45,7 @@ namespace Actions
 		Kind                     kind = Kind::kNone;
 		float                    interval = 1.0F;  // loop: seconds between peaks (OStim: ms), divided by the speed's displaySpeed
 		bool                     inverse = false;
+		float                    minRange = 3.0F;  // 4Stim: bonedistance: the bones must move at least this far (units)
 		std::vector<std::string> actorBones;   // bonedistance: the action actor's bones
 		std::vector<std::string> targetBones;  // and the target's
 	};
@@ -65,6 +66,7 @@ namespace Actions
 		bool                     muteWithTarget = false;
 		bool                     playerThreadOnly = false;
 		bool                     inverse = false;          // bonedistance
+		float                    minRange = 3.0F;          // 4Stim: bonedistance, as Peak's
 		float                    minInterval = 0.05F;      // bonedistance: seconds (OStim: ms, default 50)
 		float                    maxInterval = 0.0F;       // bonedistance: 0 = none
 		float                    delay = 0.0F;             // loop: seconds after one ends before the next

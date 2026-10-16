@@ -689,7 +689,7 @@
 			"sounds": [
 				{
 					"type": "peak",
-					"file": "fx/4Stim/effects/thrust"
+					"file": "fx/4Stim/effects/HJ"
 				}
 			],
 			"peak": {
@@ -1513,7 +1513,7 @@
 			"sounds": [
 				{
 					"type": "peak",
-					"file": "fx/4Stim/effects/thrust"
+					"file": "fx/4Stim/effects/HJ"
 				}
 			],
 			"peak": {
