@@ -1,0 +1,21 @@
+{
+	"actor":{
+		"stimulation":2.5,
+		"maxStimulation":50,
+		"reactionDelay": 0.5
+	},
+	"target":{
+		"stimulation":5.0,
+		"maxStimulation":75,
+		"reactionDelay": 0.5
+	},
+	"info": "OStim's spank.json; its sound (OStim.esp 0xE13) is 4Stim's sound files here ('file': a file or folder under Data\\Sound).",
+	"file": "fx/4Stim/effects/spank",
+	"cameraShakeStrength":0.5,
+	"cameraShakeDuration":0.1,
+	"controllerRumbleStrength":0.3,
+	"controllerRumbleDuration": 0.1,
+	"tags":[
+		"sensual"
+	]
+}

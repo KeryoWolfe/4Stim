@@ -1,0 +1,15 @@
+{
+	"name": "Face light",
+	"light": {
+		"info": "defaultPipboyLight",
+		"mod": "Fallout4.esm",
+		"formid": "0x01ED2D"
+	},
+	"node": "HEAD",
+	"offset": {
+		"x": 0,
+		"y": 30,
+		"z": 5
+	},
+	"brightness": 1.0
+}

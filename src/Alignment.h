@@ -18,8 +18,8 @@
 // The actor set key is OStim's: one "<sex><height>x<heels>" per role, joined
 // by "&" (e.g. "M100x0&F100x0"). Sex is M / F (or N when not grouped by sex),
 // height the actor's scale x 100 (100 when not grouped by height), heels the
-// heel height x 100 (0 when not grouped by heels; Fallout 4 has no standard
-// heels system, so it's always 0 for now). The scene lock (main.cpp) holds
+// heel height x 100 (0 when not grouped by heels; heels come from the High
+// Heels System, see Scaling.h). The scene lock (main.cpp) holds
 // each actor at the scene's spot plus their offset.
 namespace Alignment
 {

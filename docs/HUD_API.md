@@ -315,7 +315,12 @@ Function FourStim_OnSceneStart(Actor[] akActors, String asSceneID)
 Function FourStim_OnSceneChange(Actor[] akActors, String asOldID, String asNewID)
 Function FourStim_OnSpeedChange(Actor[] akActors, String asSceneID, int aiLevel, int aiCount)
 Function FourStim_OnSceneEnd(Actor[] akActors, String asSceneID)
+Function FourStim_OnClimax(Actor akActor, Actor[] akActors, String asSceneID, int aiTimes)
+Function FourStim_OnEvent(String asEvent, Actor akActor, Actor akTarget, Actor akPerformer, Actor[] akActors, String asSceneID)
 ```
+
+`FourStim_OnClimax` is in `EXCITEMENT.md`, `FourStim_OnEvent` (spanks and other
+events, OStim's `ostim_event`) in `EVENTS.md`.
 
 `akActors` is in role order, and `aiLevel` is 0 for the slowest speed. Start
 and end fire for every scene started through 4Stim; change and speed fire for

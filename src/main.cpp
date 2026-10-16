@@ -14,6 +14,9 @@
 #include "Scaling.h"
 #include "Expressions.h"
 #include "Sounds.h"
+#include "Events.h"
+#include "Peaks.h"
+#include "Lights.h"
 #include "Bridge.h"
 #include "HUD.h"
 #include "SceneEvents.h"
@@ -199,6 +202,8 @@ namespace
 		{ "moanintervalmin", { "fmoanintervalmin", OStimUnit::kMilliseconds } },
 		{ "moanintervalmax", { "fmoanintervalmax", OStimUnit::kMilliseconds } },
 		{ "moanvolume", { "fmoanvolume", OStimUnit::kSame } },
+		{ "soundvolume", { "fsoundvolume", OStimUnit::kSame } },
+		{ "setonlylightindark", { "bonlylightindark", OStimUnit::kSame } },
 		{ "setuseautofades", { "buseautofades", OStimUnit::kSame } },
 		{ "npcsceneduration", { "fnpcsceneduration", OStimUnit::kMilliseconds } },
 		// Excitement and climax.
@@ -330,6 +335,16 @@ namespace
 					Sounds::Settings().moanVolume = std::clamp(std::stof(value), 0.0F, 1.0F);
 				} else if (key == "bsounds") {
 					Sounds::Settings().disabled = std::stoi(value) == 0;
+				} else if (key == "fsoundvolume") {
+					Sounds::Settings().soundVolume = std::clamp(std::stof(value), 0.0F, 1.0F);
+				} else if (key == "bonlylightindark") {
+					Lights::Settings().onlyInDark = std::stoi(value) != 0;
+				} else if (key == "flightleveldark") {
+					Lights::Settings().darkLevel = std::stof(value);
+				} else if (key == "smalelight") {
+					Lights::Settings().maleLight = value;
+				} else if (key == "sfemalelight") {
+					Lights::Settings().femaleLight = value;
 				} else if (key == "isoundflags") {
 					Sounds::Settings().flags = static_cast<std::uint32_t>(std::stoul(value, nullptr, 0));
 				} else if (key == "isoundpriority") {
@@ -901,6 +916,8 @@ namespace
 				Excitement::Leave(left);
 				Expressions::Leave(left);
 				Sounds::Leave(left);
+				Peaks::Leave(left);
+				Lights::Leave(left);
 				UnlockActors(left);
 				RestoreScales(a_scene);
 				for (const auto id : left) {
@@ -1036,6 +1053,8 @@ namespace
 		Excitement::Leave(ended.actors);
 		Expressions::Leave(ended.actors);
 		Sounds::Leave(ended.actors);
+		Peaks::Leave(ended.actors);
+		Lights::Leave(ended.actors);
 		for (const auto id : ended.actors) {
 			Undress::Redress(id, false, true);
 		}
@@ -2037,6 +2056,52 @@ namespace
 		}
 	}
 
+	// Fires an event (docs/EVENTS.md) in a_active: a_actor did it to
+	// a_target, a_performer moving (roles; -1 = none). Its sound,
+	// stimulation and reactions come from Events; the camera shake and
+	// rumble only in a scene the player is in or watching (OStim shakes for
+	// any thread). Then FourStim_OnEvent for registered scripts. Main thread.
+	bool FireEvent(ActiveScene& a_active, const std::string& a_event, int a_actor, int a_target, int a_performer)
+	{
+		const auto effects = Events::Fire(a_event, a_active.actors, a_actor, a_target, a_performer);
+		if (!effects.found) {
+			return false;
+		}
+		const bool withPlayer = std::ranges::any_of(a_active.actors, [](std::uint32_t id) { return IsPlayer(RE::TESForm::GetFormByID<RE::Actor>(id)); });
+		const auto focused = GetPlayerScene();
+		const bool watched = focused.Active() && focused.role0 == a_active.actors[0];
+		if (withPlayer || watched) {
+			const auto& config = Excitement::Settings();
+			// SetUseScreenShake / SetUseRumble, as OStim's CameraUtil and
+			// ControlUtil check (4Stim: fClimaxShake 0 turns shakes off).
+			const float shake = config.shake > 0.0F && effects.shakeDuration > 0.0F ? effects.shakeStrength : 0.0F;
+			const float rumble = config.rumble && effects.rumbleDuration > 0.0F ? effects.rumbleStrength : 0.0F;
+			const bool  freeCamera = FreeCamera() != nullptr;
+			if (shake > 0.0F && freeCamera) {
+				if (g_climaxShake.active) {
+					// Already shaking: start over from where the camera is now
+					// (its offset is undone as it goes).
+					g_climaxShake.start = std::chrono::steady_clock::now();
+					g_climaxShake.duration = std::max(effects.shakeDuration, 0.05F);
+					g_climaxShake.strength = shake;
+				} else {
+					g_climaxShake = { true, std::chrono::steady_clock::now(), std::max(effects.shakeDuration, 0.05F), shake };
+				}
+				StartAutoplayTicks();
+			}
+			const float papyrusShake = freeCamera ? 0.0F : shake;
+			if ((papyrusShake > 0.0F || rumble > 0.0F) && g_vm) {
+				RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
+				g_vm->DispatchStaticCall("FourStimMenu"sv, "EventEffects"sv, callback, papyrusShake, effects.shakeDuration, rumble, effects.rumbleDuration);
+			}
+		}
+		auto role = [&](int a_index) {
+			return a_index >= 0 && static_cast<std::size_t>(a_index) < a_active.actors.size() ? a_active.actors[static_cast<std::size_t>(a_index)] : 0u;
+		};
+		SceneEvents::EventFired(a_event, role(a_actor), role(a_target), role(a_performer), a_active.actors, a_active.sceneID);
+		return true;
+	}
+
 	// Hands a running scene's current scene and speed to the excitement
 	// system (rates come from its actions), and keeps the clock running.
 	void RefreshExcitement(const ActiveScene& a_scene)
@@ -2056,6 +2121,10 @@ namespace
 			Expressions::Enter(a_scene.actors[role], *scene, role, relativeSpeed);
 			Sounds::Enter(a_scene.actors[role], *scene, role);
 		}
+		// Peaks and action sounds (OStim's node handler), and lights.
+		const bool withPlayer = std::ranges::any_of(a_scene.actors, [](std::uint32_t id) { return IsPlayer(RE::TESForm::GetFormByID<RE::Actor>(id)); });
+		Peaks::Enter(a_scene.actors, scene, a_scene.speed, withPlayer);
+		Lights::Enter(a_scene.actors);
 		StartAutoplayTicks();
 	}
 
@@ -2218,6 +2287,7 @@ namespace
 				ResolveAwaitingClimaxes(active);
 			}
 			Sounds::Tick(elapsed);
+			Peaks::Tick(elapsed);
 			Expressions::Tick(elapsed);
 			UpdateClimaxShake();
 			GuardScenes(elapsed);
@@ -2249,6 +2319,7 @@ namespace
 				}
 			}
 		}
+		Lights::Tick();  // lights follow their bones, paused or not
 		const bool waiting = !g_activeScenes.empty();  // faces and voices run as long as any scene does
 		if (!waiting && !g_climaxShake.active) {
 			g_autoplayTicking = false;
@@ -2930,6 +3001,40 @@ namespace
 		return Actions::List();
 	}
 
+	// Events (docs/EVENTS.md), OStim's OThread.CallEvent: fires a_event in
+	// the scene a_inScene is in; roles -1: a_inScene's own (actor and
+	// performer) or none (target). False if there's no such event. The event
+	// fires on the main thread right after.
+	bool CallEvent(std::monostate, RE::Actor* a_inScene, std::string a_event, std::int32_t a_actor, std::int32_t a_target, std::int32_t a_performer)
+	{
+		if (!a_inScene) {
+			return false;
+		}
+		auto lower = a_event;
+		std::ranges::transform(lower, lower.begin(), [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+		const auto events = Events::List();
+		if (std::ranges::find(events, lower) == events.end()) {
+			REX::WARN("CallEvent: no event \"{}\"", a_event);
+			return false;
+		}
+		const auto id = a_inScene->GetFormID();
+		F4SE::GetTaskInterface()->AddTask([id, lower, a_actor, a_target, a_performer]() {
+			const auto active = FindActiveScene(id);
+			if (!active) {
+				REX::WARN("CallEvent \"{}\": {:08X} isn't in a scene", lower, id);
+				return;
+			}
+			const int self = static_cast<int>(std::ranges::find(active->actors, id) - active->actors.begin());
+			FireEvent(*active, lower, a_actor < 0 ? self : a_actor, a_target, a_performer < 0 ? (a_actor < 0 ? self : a_actor) : a_performer);
+		});
+		return true;
+	}
+
+	std::vector<std::string> GetEvents(std::monostate)
+	{
+		return Events::List();
+	}
+
 	std::string GetActionName(std::monostate, std::string a_type)
 	{
 		const auto type = Actions::Find(a_type);
@@ -3118,6 +3223,8 @@ namespace
 		Alignment::Reload();
 		Expressions::Reload();
 		Sounds::Reload();
+		Events::Reload();
+		Lights::Reload();
 		Scaling::Reload();
 		HUD::LoadConfig();  // theme and Utility entries too, for HUD authors
 		return count;
@@ -4864,20 +4971,29 @@ namespace
 		{
 			const auto ref = reinterpret_cast<RE::TESObjectREFR*>(reinterpret_cast<std::uintptr_t>(a_this) - 0x38);
 			const auto id = ref->GetFormID();
+			// 4Stim's annotations count for as long as the actor is in a scene
+			// (checked on the main thread); the rest only shortly after a
+			// scene change.
+			const char* tag = a_event.tag.c_str();
+			const bool  ours = tag && _strnicmp(tag, "4Stim", 5) == 0;
 			std::string sceneID;
 			float       seconds = 0.0F;
 			{
 				std::scoped_lock lock(g_animWatchLock);
 				const auto it = g_animWatch.find(id);
 				if (it == g_animWatch.end()) {
-					return;
+					seconds = 1000.0F;
+				} else {
+					seconds = std::chrono::duration<float>(std::chrono::steady_clock::now() - it->second.start).count();
+					if (seconds > 60.0F) {  // long enough for any transition
+						g_animWatch.erase(it);
+					} else {
+						sceneID = it->second.sceneID;
+					}
 				}
-				seconds = std::chrono::duration<float>(std::chrono::steady_clock::now() - it->second.start).count();
-				if (seconds > 60.0F) {  // long enough for any transition
-					g_animWatch.erase(it);
-					return;
-				}
-				sceneID = it->second.sceneID;
+			}
+			if (sceneID.empty() && !ours) {
+				return;
 			}
 			if (g_settings.logAnimEvents && seconds <= 5.0F) {
 				REX::INFO("AnimEvent: {:08X} +{:.2f}s in \"{}\": \"{}\" ({})", id, seconds, sceneID,
@@ -4906,6 +5022,59 @@ namespace
 					if (const auto active = FindActiveScene(id)) {
 						REX::INFO("Climax: {:08X} 4StimClimax annotation", id);
 						ClimaxNow(*active, id);
+					}
+				});
+			} else if (_stricmp(a_event.tag.c_str(), "4StimEvent") == 0) {
+				// OStim's OStimEvent: "4StimEvent.<event>,<target>" (this actor
+				// did it to role <target>) or "4StimEvent.<event>,<actor>,
+				// <target>,<performer>" (roles).
+				std::string payload = a_event.payload.c_str();
+				F4SE::GetTaskInterface()->AddTask([id, payload]() {
+					const auto active = FindActiveScene(id);
+					if (!active) {
+						return;
+					}
+					std::vector<std::string> parts;
+					for (std::size_t start = 0;;) {
+						const auto comma = payload.find(',', start);
+						parts.push_back(payload.substr(start, comma == std::string::npos ? std::string::npos : comma - start));
+						if (comma == std::string::npos) {
+							break;
+						}
+						start = comma + 1;
+					}
+					const int self = static_cast<int>(std::ranges::find(active->actors, id) - active->actors.begin());
+					try {
+						if (parts.size() == 2) {
+							FireEvent(*active, parts[0], self, std::stoi(parts[1]), self);
+						} else if (parts.size() == 4) {
+							FireEvent(*active, parts[0], std::stoi(parts[1]), std::stoi(parts[2]), std::stoi(parts[3]));
+						} else {
+							REX::WARN("Events: 4StimEvent.{} on {:08X}: expected <event>,<target> or <event>,<actor>,<target>,<performer>", payload, id);
+						}
+					} catch (const std::exception&) {
+						REX::WARN("Events: 4StimEvent.{} on {:08X}: roles must be numbers", payload, id);
+					}
+				});
+			} else if (_stricmp(a_event.tag.c_str(), "4StimPeak") == 0) {
+				// OStim's OStimPeak: "4StimPeak.<action index>", for actions
+				// with "peaksAnnotated".
+				std::string payload = a_event.payload.c_str();
+				F4SE::GetTaskInterface()->AddTask([id, payload]() {
+					try {
+						Peaks::Annotated(id, std::stoi(payload));
+					} catch (const std::exception&) {
+						REX::WARN("Peaks: 4StimPeak.{} on {:08X}: the action must be a number", payload, id);
+					}
+				});
+			} else if (_stricmp(a_event.tag.c_str(), "4StimPlayExpression") == 0) {
+				// OStim's OStimPlayExpression: the event expression, no sound.
+				std::string payload = a_event.payload.c_str();
+				F4SE::GetTaskInterface()->AddTask([id, payload]() {
+					if (FindActiveScene(id)) {
+						std::string event = payload;
+						std::ranges::transform(event, event.begin(), [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+						Expressions::SetEvent(id, event, true);
 					}
 				});
 			}
@@ -4977,6 +5146,8 @@ namespace
 		a_vm->BindNativeMethod(SCRIPT_NAME, "GetSceneActionType"sv, GetSceneActionType);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "GetSceneActionRole"sv, GetSceneActionRole);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "GetActionTypes"sv, GetActionTypes);
+		a_vm->BindNativeMethod(SCRIPT_NAME, "CallEvent"sv, CallEvent);
+		a_vm->BindNativeMethod(SCRIPT_NAME, "GetEvents"sv, GetEvents);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "GetActionName"sv, GetActionName);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "GetActionTags"sv, GetActionTags);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "ActionHasTag"sv, ActionHasTag);
@@ -5290,6 +5461,8 @@ namespace
 				Excitement::Clear();
 				Expressions::Clear();
 				Sounds::Clear();
+				Peaks::Clear();
+				Lights::Clear();
 				Undress::Clear();
 			});
 			{
@@ -5299,6 +5472,11 @@ namespace
 			break;
 		case F4SE::MessagingInterface::kPostLoadGame:
 			ResumeSavedScenes();
+			break;
+		case F4SE::MessagingInterface::kPreSaveGame:
+			// Lights are placed references: none go into the save (the scene
+			// clock puts them back).
+			Lights::RemoveAll();
 			break;
 		case F4SE::MessagingInterface::kGameLoaded:
 			{
@@ -5320,6 +5498,8 @@ namespace
 				Excitement::Clear();
 				Expressions::Clear();
 				Sounds::Clear();
+				Peaks::Clear();
+				Lights::Clear();
 				Undress::Clear();
 				g_focusNextScene = false;
 				SetPlayerScene({});

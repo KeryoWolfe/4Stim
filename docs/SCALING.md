@@ -20,8 +20,9 @@ An actor's heel height is read from what they wear, the way **Fallout 4's High H
 
 1. HHS `.json` files in `Data\F4SE\Plugins\HHS\`: an armor (or armor addon) by plugin and form ID, for one sex or both (`{"MyShoes.esp": [{"formid": "00800", "gender": 1, "value": 10}]}`), or a mesh by its path under `Meshes\` (`{"MyShoes": [{"key": "MyShoes\\MyShoes.nif", "value": 10}]}`).
 2. An HHS `.txt` next to the shoe's mesh (`Data\Meshes\MyArmor\MyArmor.nif` -> `MyArmor.txt`), or with the mesh's file name in `Data\F4SE\Plugins\HHS\`, holding `Height=10.0`.
+3. The mesh's own extra data, as HHS's docs show it for NifSkope and Outfit Studio: an `NiFloatExtraData` named `HHS` on a shape (or node) of the shoe's mesh, holding the height. Read from the actor's loaded model when no file above gives a height.
 
-Heights set in HHS's MCM, or written into the mesh as extra data, aren't read. Heels are read again on every scene change, so taking shoes off mid-scene is noticed at the next one. The heights found are logged (`Heels:` in `4Stim.log`). The `.json` files are read once per game session (again with `FourStim.ReloadScenes()`).
+Heights set in HHS's MCM aren't read. Heels are read again on every scene change, so taking shoes off mid-scene is noticed at the next one. The heights found are logged (`Heels:` in `4Stim.log`). The `.json` files are read once per game session (again with `FourStim.ReloadScenes()`).
 
 As OStim does with its heel offsets:
 

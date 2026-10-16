@@ -45,6 +45,21 @@ String Function GetActionName(String asType) Global Native
 String[] Function GetActionTags(String asType) Global Native
 bool Function ActionHasTag(String asType, String asTag) Global Native
 
+; ---- Events ----
+; Events (docs\EVENTS.md), as OStim's: spank, wash... from the files in
+; Data\F4SE\Plugins\4Stim\Events\. Animations fire them with the
+; 4StimEvent annotation; scripts with CallEvent.
+
+; Fires asEvent in the scene akInScene is in: role aiActor did it to role
+; aiTarget, role aiPerformer moving (OStim's OThread.CallEvent). aiActor -1:
+; akInScene's role; aiPerformer -1: the actor's. Plays its sound, gives its
+; stimulation and reactions, shakes the camera if you're in or watching the
+; scene, and calls FourStim_OnEvent. False if there's no such event.
+bool Function CallEvent(Actor akInScene, String asEvent, int aiActor = -1, int aiTarget = -1, int aiPerformer = -1) Global Native
+
+; Every event id loaded.
+String[] Function GetEvents() Global Native
+
 ; ---- Excitement ----
 ; Every actor in a scene has an excitement from 0 to 100 that rises with the
 ; scene's actions (their stimulation, docs\ACTIONS.md). At 100 they climax:
@@ -275,7 +290,10 @@ int Function GetPlayerSceneActorCount() Global Native
 ;   Function FourStim_OnSceneChange(Actor[] akActors, String asOldID, String asNewID)
 ;   Function FourStim_OnSpeedChange(Actor[] akActors, String asSceneID, int aiLevel, int aiCount)
 ;   Function FourStim_OnSceneEnd(Actor[] akActors, String asSceneID)
-; akActors is in role order; aiLevel is 0 for the slowest speed.
+;   Function FourStim_OnClimax(Actor akActor, Actor[] akActors, String asSceneID, int aiTimes)
+;   Function FourStim_OnEvent(String asEvent, Actor akActor, Actor akTarget, Actor akPerformer, Actor[] akActors, String asSceneID)
+; akActors is in role order; aiLevel is 0 for the slowest speed. In
+; FourStim_OnEvent, akTarget / akPerformer are None when the event has none.
 ; Registrations are NOT saved: register again on every game load.
 bool Function RegisterForSceneEvents(Form akReceiver) Global Native
 Function UnregisterForSceneEvents(Form akReceiver) Global Native

@@ -86,6 +86,9 @@ namespace SceneRegistry
 		std::size_t                          actor = 0;      // role doing it
 		std::size_t                          target = 0;     // role it's done to (= actor: done to themselves)
 		std::size_t                          performer = 0;  // role moving
+		bool                                 muted = false;           // OStim's: plays none of its sounds
+		bool                                 doPeaks = true;          // OStim's: has peaks at all
+		bool                                 peaksAnnotated = false;  // OStim's: peaks come from 4StimPeak annotations
 	};
 
 	struct Navigation

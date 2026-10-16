@@ -27,8 +27,7 @@ namespace Sounds
 		// sound files (one picked at random).
 		struct SoundEntry
 		{
-			std::uint32_t            descriptor = 0;  // a sound descriptor (SNDR) form
-			std::vector<std::string> files;           // paths under Data\ ("Sound\...")
+			Sound                    sound;
 			std::string              expression;      // event expression while it plays
 			float                    moanIntervalOverride = -1.0F;  // seconds; < 0 = none
 			// 4Stim, in place of OStim's perk "condition": only while the
@@ -47,6 +46,10 @@ namespace Sounds
 			std::string name;
 			ReactionSet moan;
 			ReactionSet climax;
+			// OStim's event reactions, by event id.
+			std::unordered_map<std::string, ReactionSet> eventActorReactions;
+			std::unordered_map<std::string, ReactionSet> eventTargetReactions;
+			std::unordered_map<std::string, ReactionSet> eventPerformerReactions;
 		};
 
 		struct State
@@ -56,9 +59,10 @@ namespace Sounds
 			bool                                  muffled = false;
 			float                                 cooldown = 0.0F;
 			bool                                  playing = false;
-			RE::BSSoundHandle                     handle;
-			std::chrono::steady_clock::time_point playingUntil{};  // descriptor sounds: an estimate
+			Playing                               sound;
 			bool                                  eventExpression = false;
+			const ReactionSet*                    reaction = nullptr;  // an event reaction waiting...
+			float                                 reactionIn = 0.0F;   // ...this long
 			std::vector<std::string>              actions;  // action type ids the actor takes part in
 		};
 
@@ -79,7 +83,7 @@ namespace Sounds
 
 		// {"mod": "Fallout4.esm", "formid": "0x..."} -> its full form ID, or
 		// the raw ID for OStim's default targets (0 male, 1 female).
-		std::optional<std::uint32_t> ReadForm(const nlohmann::json& a_value, bool a_raw = false)
+		std::optional<std::uint32_t> ReadFormRaw(const nlohmann::json& a_value, bool a_raw)
 		{
 			if (!a_value.is_object()) {
 				return std::nullopt;
@@ -145,12 +149,8 @@ namespace Sounds
 					continue;
 				}
 				SoundEntry entry;
-				if (const auto file = e.find("file"); file != e.end() && file->is_string()) {
-					entry.files = ReadFiles(file->get<std::string>());
-				} else if (const auto sound = e.find("sound"); sound != e.end()) {
-					entry.descriptor = ReadForm(*sound).value_or(0);
-				}
-				if (entry.files.empty() && entry.descriptor == 0) {
+				entry.sound = ReadSound(e);
+				if (entry.sound.Empty()) {
 					continue;
 				}
 				entry.expression = Lower(e.value("expression", std::string{}));
@@ -169,14 +169,32 @@ namespace Sounds
 			return out;
 		}
 
-		ReactionSet ReadReaction(const nlohmann::json& a_root, const char* a_key)
+		ReactionSet ReadReactionSet(const nlohmann::json& a_set)
 		{
 			ReactionSet set;
-			if (const auto it = a_root.find(a_key); it != a_root.end() && it->is_object()) {
-				set.sound = ReadEntries(*it, "sound");
-				set.soundMuffled = ReadEntries(*it, "soundMuffled");
+			if (a_set.is_object()) {
+				set.sound = ReadEntries(a_set, "sound");
+				set.soundMuffled = ReadEntries(a_set, "soundMuffled");
 			}
 			return set;
+		}
+
+		ReactionSet ReadReaction(const nlohmann::json& a_root, const char* a_key)
+		{
+			const auto it = a_root.find(a_key);
+			return it != a_root.end() ? ReadReactionSet(*it) : ReactionSet{};
+		}
+
+		// OStim's eventActorReactions...: {"<event id>": {"sound": [...], ...}}.
+		std::unordered_map<std::string, ReactionSet> ReadReactionMap(const nlohmann::json& a_root, const char* a_key)
+		{
+			std::unordered_map<std::string, ReactionSet> out;
+			if (const auto it = a_root.find(a_key); it != a_root.end() && it->is_object()) {
+				for (const auto& [event, set] : it->items()) {
+					out[Lower(event)] = ReadReactionSet(set);
+				}
+			}
+			return out;
 		}
 
 		void Load()
@@ -198,9 +216,12 @@ namespace Sounds
 					voice->name = root.value("name", e.path().stem().string());
 					voice->moan = ReadReaction(root, "moan");
 					voice->climax = ReadReaction(root, "climax");
+					voice->eventActorReactions = ReadReactionMap(root, "eventActorReactions");
+					voice->eventTargetReactions = ReadReactionMap(root, "eventTargetReactions");
+					voice->eventPerformerReactions = ReadReactionMap(root, "eventPerformerReactions");
 					std::shared_ptr<const VoiceSet> shared = voice;
 					auto target = [&](const nlohmann::json& a_form) {
-						const auto id = ReadForm(a_form, true);
+						const auto id = ReadFormRaw(a_form, true);
 						if (!id) {
 							return;
 						}
@@ -258,7 +279,7 @@ namespace Sounds
 
 		// Plays a random entry of a_set (muffled ones when muffled) on
 		// a_actor. Returns the entry played, or null.
-		const SoundEntry* Play(RE::Actor* a_actor, State& a_state, const ReactionSet& a_set)
+		const SoundEntry* PlayReaction(RE::Actor* a_actor, State& a_state, const ReactionSet& a_set)
 		{
 			std::vector<const SoundEntry*> list;
 			for (const auto& e : a_state.muffled ? a_set.soundMuffled : a_set.sound) {
@@ -270,52 +291,14 @@ namespace Sounds
 				return nullptr;
 			}
 			const auto& entry = *list[std::uniform_int_distribution<std::size_t>(0, list.size() - 1)(g_random)];
-			if (!entry.files.empty()) {
-				const auto audio = RE::BSAudioManager::GetSingleton();
-				const auto root = a_actor->Get3D();
-				if (!audio || !root) {
-					return nullptr;
-				}
-				const auto&       file = entry.files[std::uniform_int_distribution<std::size_t>(0, entry.files.size() - 1)(g_random)];
-				RE::BSSoundHandle handle;
-				audio->GetSoundHandleByFile(handle, RE::BSResource::ID(file.c_str()), g_config.flags, g_config.priority);
-				if (handle.soundID == static_cast<std::uint32_t>(-1)) {
-					REX::WARN("Sound: couldn't load {}", file);
-					return nullptr;
-				}
-				if (g_config.moanVolume < 1.0F) {
-					// Attenuation in hundredths of a decibel.
-					const float db = -20.0F * std::log10(g_config.moanVolume);
-					handle.SetStaticAttenuation(static_cast<std::uint16_t>(std::clamp(db * 100.0F, 0.0F, 10000.0F)));
-				}
-				handle.SetObjectToFollow(root);
-				handle.Play();
-				a_state.handle = handle;
-				a_state.playingUntil = std::chrono::steady_clock::now() + std::chrono::seconds(10);  // safety net
-			} else {
-				// A sound descriptor: through Papyrus (Sound.Play); its length
-				// isn't known here, so it counts as playing for 2 s.
-				const auto vm = FourStim::GetVM();
-				if (!vm) {
-					return nullptr;
-				}
-				RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
-				vm->DispatchStaticCall("FourStimScene"sv, "PlaySoundForm"sv, callback, static_cast<std::int32_t>(entry.descriptor),
-					static_cast<std::int32_t>(a_actor->GetFormID()));
-				a_state.handle = RE::BSSoundHandle{};
-				a_state.playingUntil = std::chrono::steady_clock::now() + std::chrono::seconds(2);
+			a_state.sound = Play(entry.sound, a_actor, g_config.moanVolume);
+			if (!a_state.sound.started) {
+				return nullptr;
 			}
 			a_state.playing = true;
 			return &entry;
 		}
 
-		bool StillPlaying(State& a_state)
-		{
-			if (std::chrono::steady_clock::now() >= a_state.playingUntil) {
-				return false;
-			}
-			return a_state.handle.soundID == static_cast<std::uint32_t>(-1) || a_state.handle.IsPlaying();
-		}
 
 		void StartReaction(std::uint32_t a_id, State& a_state, const ReactionSet& a_set, const char* a_fallbackEvent)
 		{
@@ -323,7 +306,7 @@ namespace Sounds
 			if (!actor) {
 				return;
 			}
-			const auto entry = Play(actor, a_state, a_set);
+			const auto entry = PlayReaction(actor, a_state, a_set);
 			const auto event = entry && !entry->expression.empty() ? entry->expression : std::string(a_fallbackEvent ? a_fallbackEvent : "");
 			if (!event.empty()) {
 				// With a sound: until it ends; without, for the expression's own duration.
@@ -341,6 +324,107 @@ namespace Sounds
 	void Reload()
 	{
 		Load();
+	}
+
+	std::uint32_t ReadForm(const nlohmann::json& a_value)
+	{
+		return ReadFormRaw(a_value, false).value_or(0);
+	}
+
+	Sound ReadSound(const nlohmann::json& a_entry)
+	{
+		Sound sound;
+		if (!a_entry.is_object()) {
+			return sound;
+		}
+		if (const auto file = a_entry.find("file"); file != a_entry.end() && file->is_string()) {
+			sound.files = ReadFiles(file->get<std::string>());
+		} else if (const auto form = a_entry.find("sound"); form != a_entry.end()) {
+			sound.descriptor = ReadForm(*form);
+		}
+		return sound;
+	}
+
+	bool Playing::IsPlaying() const
+	{
+		if (!started || std::chrono::steady_clock::now() >= until) {
+			return false;
+		}
+		// A descriptor (no handle) counts as playing until its estimate.
+		return handle.soundID == static_cast<std::uint32_t>(-1) || handle.IsPlaying();
+	}
+
+	void Playing::Stop()
+	{
+		if (started && handle.soundID != static_cast<std::uint32_t>(-1)) {
+			handle.FadeOutAndRelease(200);
+		}
+		started = false;
+	}
+
+	Playing Play(const Sound& a_sound, RE::Actor* a_actor, float a_volume)
+	{
+		Playing playing;
+		if (a_sound.Empty() || !a_actor || g_config.disabled || a_volume <= 0.0F) {
+			return playing;
+		}
+		if (!a_sound.files.empty()) {
+			const auto audio = RE::BSAudioManager::GetSingleton();
+			const auto root = a_actor->Get3D();
+			if (!audio || !root) {
+				return playing;
+			}
+			const auto& file = a_sound.files[std::uniform_int_distribution<std::size_t>(0, a_sound.files.size() - 1)(g_random)];
+			audio->GetSoundHandleByFile(playing.handle, RE::BSResource::ID(file.c_str()), g_config.flags, g_config.priority);
+			if (playing.handle.soundID == static_cast<std::uint32_t>(-1)) {
+				REX::WARN("Sound: couldn't load {}", file);
+				return playing;
+			}
+			if (a_volume < 1.0F) {
+				// Attenuation in hundredths of a decibel.
+				const float db = -20.0F * std::log10(a_volume);
+				playing.handle.SetStaticAttenuation(static_cast<std::uint16_t>(std::clamp(db * 100.0F, 0.0F, 10000.0F)));
+			}
+			playing.handle.SetObjectToFollow(root);
+			playing.handle.Play();
+			playing.until = std::chrono::steady_clock::now() + std::chrono::seconds(10);  // safety net
+		} else {
+			// A sound descriptor: through Papyrus (Sound.Play), which has no
+			// volume; its length isn't known here, so it counts as playing
+			// for 2 s.
+			const auto vm = FourStim::GetVM();
+			if (!vm) {
+				return playing;
+			}
+			RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
+			vm->DispatchStaticCall("FourStimScene"sv, "PlaySoundForm"sv, callback, static_cast<std::int32_t>(a_sound.descriptor),
+				static_cast<std::int32_t>(a_actor->GetFormID()));
+			playing.until = std::chrono::steady_clock::now() + std::chrono::seconds(2);
+		}
+		playing.started = true;
+		return playing;
+	}
+
+	void ReactToEvent(std::uint32_t a_id, const std::vector<std::string>& a_events, std::string_view a_which, float a_delay)
+	{
+		const auto it = g_states.find(a_id);
+		if (it == g_states.end() || !it->second.voice) {
+			return;
+		}
+		auto&       state = it->second;
+		const auto& voice = *state.voice;
+		const auto& map = a_which == "target"    ? voice.eventTargetReactions :
+		                  a_which == "performer" ? voice.eventPerformerReactions :
+		                                           voice.eventActorReactions;
+		// As OStim's reactToEvent: the event's own reaction, else its
+		// supertype's.
+		for (const auto& event : a_events) {
+			if (const auto found = map.find(event); found != map.end()) {
+				state.reaction = &found->second;
+				state.reactionIn = std::max(a_delay, 0.0F);
+				return;
+			}
+		}
 	}
 
 	void Enter(std::uint32_t a_id, const SceneRegistry::Scene& a_scene, std::size_t a_role)
@@ -372,10 +456,11 @@ namespace Sounds
 			return;
 		}
 		auto& state = it->second;
-		if (state.playing && state.handle.soundID != static_cast<std::uint32_t>(-1)) {
-			state.handle.Stop();
+		if (state.playing) {
+			state.sound.Stop();
 		}
 		state.playing = false;
+		state.reaction = nullptr;
 		if (state.voice) {
 			StartReaction(a_id, state, state.voice->climax, "climax");
 		} else {
@@ -386,8 +471,20 @@ namespace Sounds
 	void Tick(float a_seconds)
 	{
 		for (auto& [id, state] : g_states) {
+			// An event reaction (OStim's eventTimer): when it's due, it cuts
+			// in over a moan.
+			if (state.reaction && (state.reactionIn -= a_seconds) <= 0.0F) {
+				const auto reaction = state.reaction;
+				state.reaction = nullptr;
+				if (state.playing) {
+					state.sound.Stop();
+					state.playing = false;
+				}
+				StartReaction(id, state, *reaction, nullptr);
+				continue;
+			}
 			if (state.playing) {
-				if (StillPlaying(state)) {
+				if (state.sound.IsPlaying()) {
 					continue;
 				}
 				state.playing = false;
@@ -413,8 +510,8 @@ namespace Sounds
 			if (it == g_states.end()) {
 				continue;
 			}
-			if (it->second.playing && it->second.handle.soundID != static_cast<std::uint32_t>(-1)) {
-				it->second.handle.FadeOutAndRelease(200);
+			if (it->second.playing) {
+				it->second.sound.Stop();
 			}
 			g_states.erase(it);
 		}

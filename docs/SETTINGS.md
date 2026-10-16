@@ -65,18 +65,20 @@ Times given with OStim's names are in milliseconds, as in OStim. `SetFurnitureSe
 | `SetAnimateRedress` | 0 | `bAnimateRedress` | Redress animations after a scene |
 | `alignmentGroupBySex` | 1 | | Alignments kept per sex of the actors |
 | `alignmentGroupByHeight` | 0 | | And per height (scale) |
-| `alignmentGroupByHeels` | 1 | | And per heel height (no heels system yet) |
+| `alignmentGroupByHeels` | 1 | | And per heel height (High Heels System) |
 | `noFacialExpressions` | 0 | | No facial expressions (`EXPRESSIONS.md`) |
 | `SetExpressionDurationMin` / `Max` | 1000 / 3000 ms | | How long a picked expression stays |
 | `moanIntervalMin` / `Max` | 2500 / 4000 ms | | Time between moans (`SOUND.md`) |
 | `moanVolume` | 1 | | Moan and climax volume, 0-1 |
+| `soundVolume` | 1 | | Action and event sound volume, 0-1 (`SOUND.md`) |
+| `SetOnlyLightInDark` | 0 | | Lights only in the dark (`LIGHTS.md`) |
 
 Older 4Stim names in seconds (`fAutoModeSceneMin`, `fExcitementDecayGrace`...) are still read in seconds.
 
 ## 4Stim's own settings
 
-These have no OStim counterpart, and keep their names: `bResumeScenes` (0, as OStim, which ends scenes on load), `sTargetMode`, `fMaxDistance`, `fCrosshairCone`, `fProximityRadius`, `fActorRadius`, `fFurnitureHeight`, `fTransitionLead`, `bLockScenes`, `bGuardScenes`, the logging switches, `[HUD]` (including `sHUDControls`, which offers OStim's control scheme as `Columns`), `bEnableExcitement`, `fClimaxEndDelay`, `fClimaxShake` (OStim's shake is a fixed on / off), `fClimaxBlur` (the blur's strength), `fClimaxFlash`, `bAutoModeNPC` (OStim's NPC scenes always use auto mode), `bAutoModeStandingOnFloor`, `bUndress`, `bUndressPlayer`, `bRedress`, `sUndressSlots` (Fallout 4's slots), `fUndressItemDelay` (0, all at once as OStim), `bSounds` (OStim has no off switch for sound), and `iSoundFlags` / `iSoundPriority` (how Fallout 4 plays sound files; OStim plays sound descriptors).
+These have no OStim counterpart, and keep their names: `bResumeScenes` (0, as OStim, which ends scenes on load), `sTargetMode`, `fMaxDistance`, `fCrosshairCone`, `fProximityRadius`, `fActorRadius`, `fFurnitureHeight`, `fTransitionLead`, `bLockScenes`, `bGuardScenes`, the logging switches, `[HUD]` (including `sHUDControls`, which offers OStim's control scheme as `Columns`), `bEnableExcitement`, `fClimaxEndDelay`, `fClimaxShake` (OStim's shake is a fixed on / off), `fClimaxBlur` (the blur's strength), `fClimaxFlash`, `bAutoModeNPC` (OStim's NPC scenes always use auto mode), `bAutoModeStandingOnFloor`, `bUndress`, `bUndressPlayer`, `bRedress`, `sUndressSlots` (Fallout 4's slots), `fUndressItemDelay` (0, all at once as OStim), `bSounds` (OStim has no off switch for sound), `iSoundFlags` / `iSoundPriority` (how Fallout 4 plays sound files; OStim plays sound descriptors), `sMaleLight` / `sFemaleLight` (OStim chooses lights in its MCM) and `fLightLevelDark` (OStim's is a fixed 20).
 
 ## Not in yet
 
-OStim settings that come with features 4Stim doesn't have yet: clutter reset (`SetResetClutter`), the custom time scale (`SetCustomTimescale`), dialogue and action sounds, strap-ons, and the rest of OStim's MCM. They'll take OStim's names when they come.
+OStim settings that come with features 4Stim doesn't have yet: clutter reset (`SetResetClutter`), the custom time scale (`SetCustomTimescale`), dialogue, strap-ons and other equip objects, and the rest of OStim's MCM. They'll take OStim's names when they come.

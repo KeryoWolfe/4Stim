@@ -456,7 +456,11 @@ namespace SceneRegistry
 					merge(actor, type->actor);
 					merge(target, type->target);
 					merge(performer, type->performer);
-					scene.actions.push_back({ std::move(type), static_cast<std::size_t>(actor), static_cast<std::size_t>(target), static_cast<std::size_t>(performer) });
+					SceneAction action{ std::move(type), static_cast<std::size_t>(actor), static_cast<std::size_t>(target), static_cast<std::size_t>(performer) };
+					action.muted = a.value("muted", false);
+					action.doPeaks = a.value("doPeaks", true);
+					action.peaksAnnotated = a.value("peaksAnnotated", false);
+					scene.actions.push_back(std::move(action));
 				}
 			}
 

@@ -47,7 +47,7 @@ As in OStim, alignments are saved per **set of actors**, scene and role, to `Doc
 }
 ```
 
-- **The actor set** is OStim's key: one `<sex><height>x<heels>` per role, joined by `&`. By default actors are grouped by sex only, as OStim's defaults (`alignmentGroupBySex=1`, `alignmentGroupByHeight=0`, `alignmentGroupByHeels=1` in `4Stim.ini`), so a man and a woman in missionary share one alignment, and two women in the same scene have their own. With `alignmentGroupByHeight=1`, actors of different scales get their own too (height = scale x 100). Heels are read from the High Heels System's files (`SCALING.md`), and count only while an actor's heels are on (feet on the ground).
+- **The actor set** is OStim's key: one `<sex><height>x<heels>` per role, joined by `&`. By default actors are grouped by sex only, as OStim's defaults (`alignmentGroupBySex=1`, `alignmentGroupByHeight=0`, `alignmentGroupByHeels=1` in `4Stim.ini`), so a man and a woman in missionary share one alignment, and two women in the same scene have their own. With `alignmentGroupByHeight=1`, actors of different scales get their own too (height = scale x 100). Heels are read from the High Heels System's files and mesh extra data (`SCALING.md`), and count only while an actor's heels are on (feet on the ground).
 - **A transition** uses the alignment of the scene it goes to, so no one jumps when it arrives.
 - **Size** is on top of the actor's own scale, and is undone when they leave the scene (also when a save made mid-scene is loaded).
 - **`sosBend`** (penis bend) is kept, for when bendable bodies are supported.

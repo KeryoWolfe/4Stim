@@ -19,6 +19,7 @@ The types and their ids follow OStim's. A scene converted from OStim keeps its `
 | `actor` | no (0) | The role doing the action. |
 | `target` | no (the actor) | The role it's done to. Leave it out for something an actor does to themselves (masturbation). |
 | `performer` | no (the actor) | The role that's moving. |
+| `muted`, `doPeaks`, `peaksAnnotated` | no | OStim's: no sounds from this action here / no peaks / peaks from annotations only (`EVENTS.md`). |
 
 **Actor, target and performer** follow OStim's convention. Actor and target are fixed by what the action is, not by who's active. In vaginal sex the one with the penis is always the actor and the one with the vagina the target. In a blowjob the one with the mouth is the actor. Who's doing the moving goes in `performer`, so a cowgirl scene is `vaginalsex` with actor 0 (him), target 1 (her) and performer 1.
 
@@ -53,10 +54,13 @@ Action types are defined in JSON files in `Data\F4SE\Plugins\4Stim\Actions\`. Al
 | `requirements` | Body parts that side needs (see below). |
 | `fullStrip` | `true`: that side's actor takes everything off (UNDRESS.md). |
 | `undressSlots` | Otherwise, the Fallout 4 biped slots (30–61) that side's actor takes off, e.g. `[34, 35]` for gloves. |
+| `moan`, `talk`, `muffled`, `expressionOverride` | That side's actor moans, may talk (kept for dialogue), sounds muffled, makes this expression (`SOUND.md`, `EXPRESSIONS.md`). |
+| `peak` | How the action's peaks are found (`EVENTS.md`). |
+| `sounds` | Sounds it plays on peaks, as bones meet, or in a loop (`SOUND.md`). |
 
 ### OStim's layout
 
-OStim's action files work too: one action per file in `Actions\`, the file name being the id (`Actions\vaginalsex.json`), with no `actions` list. Their `strippingSlots` are Skyrim's biped slots, and 4Stim maps them to Fallout 4's with the table in `UNDRESS.md` (an `undressSlots` on the same side wins). OStim's other side fields (`moan`, `talk`, `muffled`, `expressionOverride`, factions, stats, toy slots) and the action's `sounds` and `peak` are skipped until the features they belong to come. Such an action has no `name`, so it's shown as its id with a capital letter.
+OStim's action files work too: one action per file in `Actions\`, the file name being the id (`Actions\vaginalsex.json`), with no `actions` list. Their `strippingSlots` are Skyrim's biped slots, and 4Stim maps them to Fallout 4's with the table in `UNDRESS.md` (an `undressSlots` on the same side wins). Their `moan`, `talk`, `muffled`, `expressionOverride`, `sounds` and `peak` are read too (sounds as sound descriptors, or 4Stim's `file`); OStim's factions, stats and toy slots are skipped until the features they belong to come. Such an action has no `name`, so it's shown as its id with a capital letter.
 
 ## Requirements
 

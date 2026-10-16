@@ -9,6 +9,11 @@
 - **Climax timed by the animation:** with a climax animation, the climax happens at its `4StimClimax` annotation (or when it ends), not as it starts.
 - **Auto mode fades** (`SetUseAutoFades`, and scenes marked `fadeOnEntry`).
 - **Actor scaling and heels** (OStim's): actors are scaled to the animation's size, and heels from the High Heels System are scaled out or taken off (docs/SCALING.md).
+- **Peaks and action sounds** (OStim's): actions find their thrusts and strokes from the actors' bones (or a timer, or the animation's `4StimPeak` annotations) and play their slaps and strokes on them (docs/EVENTS.md).
+- **Events** (OStim's): spank and wash events with their sound, stimulation, camera shake, rumble and voice reactions, from the animation's `4StimEvent` annotations or Papyrus `FourStim.CallEvent`; scripts hear them through `FourStim_OnEvent` (docs/EVENTS.md). Also the `4StimPlayExpression` annotation.
+- **Lights** (OStim's): a face, crotch or ass light on each actor during scenes, per sex, optionally only in the dark (docs/LIGHTS.md). Off by default, as OStim.
+- **Heels from the mesh:** the High Heels System's `HHS` extra data in a shoe's mesh is read too (docs/SCALING.md).
+- **Fixed:** 4Stim annotations (such as `4StimClimax`) were ignored more than a minute into a scene.
 - **Facial expressions** (OStim's): faces by action, moan and climax faces, open mouths for oral, from OStim's own expression files mapped onto Fallout 4's face morphs (docs/EXPRESSIONS.md).
 - **Sound** (OStim's voice sets): moans, muffled moans during oral, and climax sounds, per NPC, voice type or sex (docs/SOUND.md).
 - **OStim's HUD controls** as an option (`sHUDControls=Columns`): Left / Right move between the list and the tab buttons.

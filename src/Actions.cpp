@@ -127,6 +127,114 @@ namespace Actions
 			return side;
 		}
 
+		// A bone name or a list of them.
+		std::vector<std::string> Bones(const nlohmann::json& a_object, const char* a_key)
+		{
+			std::vector<std::string> out;
+			const auto it = a_object.find(a_key);
+			if (it == a_object.end()) {
+				return out;
+			}
+			if (it->is_string()) {
+				out.push_back(it->get<std::string>());
+			} else if (it->is_array()) {
+				for (const auto& b : *it) {
+					if (b.is_string()) {
+						out.push_back(b.get<std::string>());
+					}
+				}
+			}
+			return out;
+		}
+
+		float Milliseconds(const nlohmann::json& a_object, const char* a_key, float a_default)
+		{
+			const auto it = a_object.find(a_key);
+			return it != a_object.end() && it->is_number() ? it->get<float>() / 1000.0F : a_default;
+		}
+
+		// OStim's "peak": {"type": "loop", "interval": ms} or {"type":
+		// "bonedistance", "actorBone", "targetBone", "inverse"}.
+		Peak ParsePeak(const nlohmann::json& a_action, const std::string& a_id, const std::string& a_file)
+		{
+			Peak peak;
+			const auto it = a_action.find("peak");
+			if (it == a_action.end()) {
+				return peak;
+			}
+			if (!it->is_object() || !it->contains("type")) {
+				REX::WARN("Actions: {}: \"peak\" of action \"{}\" is malformed", a_file, a_id);
+				return peak;
+			}
+			const auto type = Lower(it->value("type", std::string{}));
+			if (type == "loop") {
+				peak.kind = Peak::Kind::kLoop;
+				peak.interval = std::max(Milliseconds(*it, "interval", 1.0F), 0.05F);
+			} else if (type == "bonedistance") {
+				peak.kind = Peak::Kind::kBoneDistance;
+				peak.inverse = it->value("inverse", false);
+				peak.actorBones = Bones(*it, "actorBone");
+				peak.targetBones = Bones(*it, "targetBone");
+				if (peak.actorBones.empty() || peak.targetBones.empty()) {
+					REX::WARN("Actions: {}: \"peak\" of action \"{}\" needs \"actorBone\" and \"targetBone\"", a_file, a_id);
+					peak.kind = Peak::Kind::kNone;
+				}
+			} else {
+				REX::WARN("Actions: {}: action \"{}\" has unknown peak type \"{}\"", a_file, a_id, type);
+			}
+			return peak;
+		}
+
+		// OStim's "sounds": [{"type": "peak" | "bonedistance" | "loop",
+		// "sound": form (4Stim: or "file"), ...}].
+		std::vector<ActionSound> ParseSounds(const nlohmann::json& a_action, const std::string& a_id, const std::string& a_file)
+		{
+			std::vector<ActionSound> out;
+			const auto list = a_action.find("sounds");
+			if (list == a_action.end() || !list->is_array()) {
+				return out;
+			}
+			for (const auto& e : *list) {
+				if (!e.is_object()) {
+					continue;
+				}
+				ActionSound sound;
+				sound.sound = Sounds::ReadSound(e);
+				if (sound.sound.Empty()) {
+					REX::WARN("Actions: {}: a sound of action \"{}\" has no usable \"sound\" or \"file\"", a_file, a_id);
+					continue;
+				}
+				sound.muteWithActor = e.value("muteWithActor", false);
+				sound.muteWithTarget = e.value("muteWithTarget", false);
+				sound.playerThreadOnly = e.value("playerThreadOnly", false);
+				const auto type = Lower(e.value("type", std::string{}));
+				if (type == "peak") {
+					sound.kind = ActionSound::Kind::kPeak;
+				} else if (type == "bonedistance") {
+					sound.kind = ActionSound::Kind::kBoneDistance;
+					sound.inverse = e.value("inverse", false);
+					sound.minInterval = Milliseconds(e, "minInterval", 0.05F);
+					sound.maxInterval = Milliseconds(e, "maxInterval", 0.0F);
+					sound.actorBones = Bones(e, "actorBone");
+					// OStim reads "actorBone" for the target's bones too (a slip);
+					// 4Stim reads "targetBone".
+					sound.targetBones = Bones(e, "targetBone");
+					if (sound.actorBones.empty() || sound.targetBones.empty()) {
+						REX::WARN("Actions: {}: a bonedistance sound of action \"{}\" needs \"actorBone\" and \"targetBone\"", a_file, a_id);
+						continue;
+					}
+				} else if (type == "loop") {
+					sound.kind = ActionSound::Kind::kLoop;
+					sound.delay = Milliseconds(e, "delay", 0.0F);
+				} else {
+					REX::WARN("Actions: {}: action \"{}\" has a sound of unknown type \"{}\"", a_file, a_id, type);
+					continue;
+				}
+				out.push_back(std::move(sound));
+			}
+			return out;
+		}
+
 		// "vaginalsex" -> "Vaginalsex"; files should give a "name".
 		std::string DefaultName(const std::string& a_id)
 		{
@@ -185,6 +293,8 @@ namespace Actions
 				type.actor = ParseSide(entry, "actor");
 				type.target = ParseSide(entry, "target");
 				type.performer = ParseSide(entry, "performer");
+				type.peak = ParsePeak(entry, id, file);
+				type.sounds = ParseSounds(entry, id, file);
 				type.sourceFile = file;
 
 				if (const auto existing = a_out.find(id); existing != a_out.end()) {

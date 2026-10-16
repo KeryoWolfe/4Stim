@@ -1,0 +1,15 @@
+{
+	"name": "Crotch light (dim)",
+	"light": {
+		"info": "defaultPipboyLight",
+		"mod": "Fallout4.esm",
+		"formid": "0x01ED2D"
+	},
+	"node": "Pelvis",
+	"offset": {
+		"x": 0,
+		"y": 35,
+		"z": 0
+	},
+	"brightness": 0.4
+}

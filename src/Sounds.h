@@ -1,7 +1,11 @@
 #pragma once
 
+#include <chrono>
 #include <cstdint>
+#include <string>
 #include <vector>
+
+#include <nlohmann/json.hpp>
 
 #include "SceneRegistry.h"
 
@@ -21,6 +25,7 @@ namespace Sounds
 		float moanIntervalMin = 2.5F;  // moanIntervalMin (OStim: ms)
 		float moanIntervalMax = 4.0F;  // moanIntervalMax
 		float moanVolume = 1.0F;       // moanVolume, 0-1
+		float soundVolume = 1.0F;      // soundVolume, 0-1: action and event sounds
 		bool  disabled = false;        // 4Stim: bSounds=0
 		// 4Stim: how sound files are played (BSAudioManager usage flags
 		// and priority; iSoundFlags / iSoundPriority). OStim has no such
@@ -32,6 +37,45 @@ namespace Sounds
 
 	// Re-reads the voice sets.
 	void Reload();
+
+	// A sound to play: OStim's sound descriptor, or 4Stim's sound files (one
+	// picked at random). Shared by voice sets, actions and events.
+	struct Sound
+	{
+		std::uint32_t            descriptor = 0;  // a sound descriptor (SNDR) form
+		std::vector<std::string> files;           // paths under Data\ ("Sound\...")
+
+		[[nodiscard]] bool Empty() const { return descriptor == 0 && files.empty(); }
+	};
+
+	// From a JSON object with "file" (a file or folder under Data\Sound\) or
+	// OStim's "sound" ({"mod", "formid"}). Empty if neither is usable.
+	Sound ReadSound(const nlohmann::json& a_entry);
+
+	// {"mod": "Fallout4.esm", "formid": "0x..."} -> its full form ID (0 if
+	// not loaded).
+	std::uint32_t ReadForm(const nlohmann::json& a_value);
+
+	// A sound playing on an actor.
+	struct Playing
+	{
+		RE::BSSoundHandle                     handle;           // files: the engine's handle
+		std::chrono::steady_clock::time_point until{};          // descriptors: an estimate
+		bool                                  started = false;
+
+		[[nodiscard]] bool IsPlaying() const;
+		void               Stop();
+	};
+
+	// Plays a_sound on a_actor (following them) at a_volume (0-1). Main
+	// thread. Nothing plays with sound off (bSounds=0).
+	Playing Play(const Sound& a_sound, RE::Actor* a_actor, float a_volume);
+
+	// An event happened to a_id (docs/EVENTS.md): their voice set's reaction
+	// for it after a_delay seconds, if it has one. a_events is the event and
+	// its supertypes, nearest first; a_which is "actor", "target" or
+	// "performer" (OStim's eventActorReactions...). Main thread.
+	void ReactToEvent(std::uint32_t a_id, const std::vector<std::string>& a_events, std::string_view a_which, float a_delay);
 
 	// a_id plays role a_role of a_scene. Main thread.
 	void Enter(std::uint32_t a_id, const SceneRegistry::Scene& a_scene, std::size_t a_role);

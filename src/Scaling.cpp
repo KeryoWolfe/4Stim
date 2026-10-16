@@ -9,6 +9,8 @@
 
 #include "Undress.h"
 
+#include "RE/N/NiFloatExtraData.h"
+
 #include <nlohmann/json.hpp>
 
 namespace Scaling
@@ -178,6 +180,28 @@ namespace Scaling
 			}
 			return -1.0F;
 		}
+		// The High Heels System's mesh extra data: an NiFloatExtraData named
+		// "HHS" on a shape (or node) of the shoe's mesh, holding the height
+		// (set in NifSkope or Outfit Studio, as HHS's docs show). Read from the
+		// actor's loaded third-person model, where worn armor is attached; the
+		// highest one counts. 0 if none, or the model isn't loaded.
+		float ExtraDataHeight(const RE::NiAVObject* a_object, int a_depth)
+		{
+			if (!a_object) {
+				return 0.0F;
+			}
+			static const RE::BSFixedString key("HHS");
+			float                          best = 0.0F;
+			if (const auto extra = netimmerse_cast<RE::NiFloatExtraData*>(a_object->GetExtraData(key))) {
+				best = std::max(best, extra->GetValue());
+			}
+			if (const auto node = a_depth > 0 ? a_object->IsNode() : nullptr) {
+				for (const auto& child : node->children) {
+					best = std::max(best, ExtraDataHeight(child.get(), a_depth - 1));
+				}
+			}
+			return best;
+		}
 	}
 
 	Config& Settings()
@@ -224,6 +248,13 @@ namespace Scaling
 				if (model && *model) {
 					best = std::max(best, HeightFor(model));
 				}
+			}
+		}
+		// No .json or .txt height: the mesh's own "HHS" extra data.
+		if (best <= 0.0F) {
+			best = ExtraDataHeight(a_actor->Get3D(false), 64);
+			if (best > 0.0F) {
+				REX::INFO("Heels: {:08X} -> height {} (mesh extra data)", a_actor->GetFormID(), best);
 			}
 		}
 		return best;

@@ -116,4 +116,11 @@ namespace SceneEvents
 		const auto who = FourStim::ResolveActors({ a_actor });
 		Send("FourStim_OnClimax"sv, who.front(), FourStim::ResolveActors(a_actors), a_sceneID, a_times);
 	}
+
+	void EventFired(const std::string& a_event, std::uint32_t a_actor, std::uint32_t a_target, std::uint32_t a_performer,
+		const std::vector<std::uint32_t>& a_actors, const std::string& a_sceneID)
+	{
+		const auto who = FourStim::ResolveActors({ a_actor, a_target, a_performer });
+		Send("FourStim_OnEvent"sv, a_event, who[0], who[1], who[2], FourStim::ResolveActors(a_actors), a_sceneID);
+	}
 }

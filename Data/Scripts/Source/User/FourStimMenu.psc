@@ -62,6 +62,17 @@ Function ClimaxEffects(float afShake, bool abRumble) Global
 	endif
 EndFunction
 
+; An event's camera shake and controller rumble (docs\EVENTS.md), with the
+; event file's strengths (0-1) and durations (seconds).
+Function EventEffects(float afShake, float afShakeDuration, float afRumble, float afRumbleDuration) Global
+	if afShake > 0.0
+		Game.ShakeCamera(None, afShake, afShakeDuration)
+	endif
+	if afRumble > 0.0
+		Game.ShakeController(afRumble, afRumble, afRumbleDuration)
+	endif
+EndFunction
+
 ; ---- Fades (OStim's SetUseFades) ----
 ; As OStim's: to black over 1 s, the scene starts or ends 0.7 s in, and
 ; 0.55 s later back from black over 1 s. Fallout 4's FadeOutGame can stay

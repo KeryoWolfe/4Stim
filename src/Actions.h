@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "SceneRegistry.h"
+#include "Sounds.h"
 
 // Action types: what a scene's actors do to each other (vaginal sex,
 // kissing, a handjob...), as OStim's actions. Defined in JSON files under
@@ -30,6 +31,47 @@ namespace Actions
 		std::string              expressionOverride;       // facial expression set while doing it ("openmouth", "tongue"...)
 	};
 
+	// How an action's peaks (its strokes, thrusts, slaps) are found, as
+	// OStim's "peak": a timer ("loop") or two sets of bones moving closest
+	// together ("bonedistance"; furthest apart with "inverse").
+	struct Peak
+	{
+		enum class Kind
+		{
+			kNone,
+			kLoop,
+			kBoneDistance
+		};
+		Kind                     kind = Kind::kNone;
+		float                    interval = 1.0F;  // loop: seconds between peaks (OStim: ms), divided by the speed's displaySpeed
+		bool                     inverse = false;
+		std::vector<std::string> actorBones;   // bonedistance: the action actor's bones
+		std::vector<std::string> targetBones;  // and the target's
+	};
+
+	// A sound an action plays, as OStim's "sounds" entries: on each peak
+	// ("peak"), when bones meet ("bonedistance"), or over and over ("loop").
+	struct ActionSound
+	{
+		enum class Kind
+		{
+			kPeak,
+			kBoneDistance,
+			kLoop
+		};
+		Kind                     kind = Kind::kPeak;
+		Sounds::Sound            sound;
+		bool                     muteWithActor = false;
+		bool                     muteWithTarget = false;
+		bool                     playerThreadOnly = false;
+		bool                     inverse = false;          // bonedistance
+		float                    minInterval = 0.05F;      // bonedistance: seconds (OStim: ms, default 50)
+		float                    maxInterval = 0.0F;       // bonedistance: 0 = none
+		float                    delay = 0.0F;             // loop: seconds after one ends before the next
+		std::vector<std::string> actorBones;
+		std::vector<std::string> targetBones;
+	};
+
 	struct Type
 	{
 		std::string              id;    // lowercase
@@ -38,6 +80,8 @@ namespace Actions
 		Side                     actor;      // who does it ("the one with the penis" in vaginal sex)
 		Side                     target;     // who it's done to
 		Side                     performer;  // who's moving (cowgirl: the target)
+		Peak                     peak;       // OStim's "peak" (docs/EVENTS.md)
+		std::vector<ActionSound> sounds;     // OStim's "sounds" (docs/SOUND.md)
 		std::string              sourceFile;
 
 		[[nodiscard]] bool HasTag(std::string_view a_tag) const;

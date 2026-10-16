@@ -1,5 +1,5 @@
 {
-	"_comment": "Action types, adapted from OStim NG's actions (GPL-3.0, github.com/VersuchDrei/OStimNG). See docs/ACTIONS.md. undressSlots are Fallout 4 biped slots (30-61) mapped from OStim's Skyrim strippingSlots (docs/UNDRESS.md).",
+	"_comment": "Action types, adapted from OStim NG's actions (GPL-3.0, github.com/VersuchDrei/OStimNG). See docs/ACTIONS.md. undressSlots are Fallout 4 biped slots (30-61) mapped from OStim's Skyrim strippingSlots (docs/UNDRESS.md). Peaks use Fallout 4's vanilla bones (OStim's are Skyrim's); sounds are 4Stim's sound files (OStim's are sound records in OStim.esp), see docs/EVENTS.md and docs/SOUND.md.",
 	"actions": [
 		{
 			"id": "analfingering",
@@ -134,6 +134,17 @@
 				"fullStrip": true,
 				"moan": true,
 				"talk": true
+			},
+			"sounds": [
+				{
+					"type": "peak",
+					"file": "fx/4Stim/effects/thrust"
+				}
+			],
+			"peak": {
+				"type": "bonedistance",
+				"actorBone": "Pelvis",
+				"targetBone": "Pelvis"
 			}
 		},
 		{
@@ -674,6 +685,20 @@
 				"fullStrip": true,
 				"moan": true,
 				"talk": true
+			},
+			"sounds": [
+				{
+					"type": "peak",
+					"file": "fx/4Stim/effects/thrust"
+				}
+			],
+			"peak": {
+				"type": "bonedistance",
+				"actorBone": [
+					"RLeg_Toe1",
+					"LLeg_Toe1"
+				],
+				"targetBone": "Pelvis"
 			}
 		},
 		{
@@ -995,6 +1020,21 @@
 				"fullStrip": true,
 				"moan": true,
 				"talk": true
+			},
+			"sounds": [
+				{
+					"type": "peak",
+					"file": "fx/4Stim/effects/HJ"
+				}
+			],
+			"peak": {
+				"type": "bonedistance",
+				"actorBone": [
+					"RArm_Hand",
+					"LArm_Hand"
+				],
+				"targetBone": "Pelvis",
+				"inverse": true
 			}
 		},
 		{
@@ -1469,6 +1509,21 @@
 				"fullStrip": true,
 				"moan": true,
 				"talk": true
+			},
+			"sounds": [
+				{
+					"type": "peak",
+					"file": "fx/4Stim/effects/thrust"
+				}
+			],
+			"peak": {
+				"type": "bonedistance",
+				"actorBone": [
+					"RArm_Hand",
+					"LArm_Hand"
+				],
+				"targetBone": "Pelvis",
+				"inverse": true
 			}
 		},
 		{
@@ -2175,6 +2230,17 @@
 				"fullStrip": true,
 				"moan": true,
 				"talk": true
+			},
+			"sounds": [
+				{
+					"type": "peak",
+					"file": "fx/4Stim/effects/thrust"
+				}
+			],
+			"peak": {
+				"type": "bonedistance",
+				"actorBone": "Pelvis",
+				"targetBone": "Pelvis"
 			}
 		},
 		{

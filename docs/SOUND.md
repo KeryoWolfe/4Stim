@@ -48,10 +48,34 @@ As in OStim:
 
 Sound files are played with Fallout 4's audio usage flags `iSoundFlags` (`0x1A`) and priority `iSoundPriority` (128). If no sound plays, `4Stim.log` says `Sound: couldn't load ...` for files the game couldn't open.
 
+## Action sounds
+
+Actions play sounds of their own, as OStim's: the slaps and strokes of sex. In an action file (docs/ACTIONS.md), `sounds` lists them, in OStim's format:
+
+```json
+"sounds": [ { "type": "peak", "file": "fx/4Stim/effects/thrust" } ]
+```
+
+- `type`: `peak` plays on each of the action's peaks (docs/EVENTS.md); `bonedistance` plays as the `actorBone` and `targetBone` move apart after being closest (`inverse`: after being furthest apart), at least `minInterval` ms after the last (50 by default) and, with `maxInterval`, no more than that; `loop` plays one after another, `delay` ms apart.
+- `sound` (OStim's descriptor form) or `file` (4Stim: a sound file or folder under `Data\Sound\`).
+- `playerThreadOnly`: only in scenes with you. `muteWithActor` / `muteWithTarget` are read, but nothing mutes an actor yet.
+
+They play on the action's actor at `soundVolume` (0-1, OStim's setting). A scene's action with `"muted": true` plays none. 4Stim's default actions use OStim's choice: `effects\thrust` on the peaks of vaginal and anal sex, footjobs and male masturbation, `effects\HJ` for handjobs.
+
+## Event reactions
+
+A voice set can react to events (docs/EVENTS.md), as OStim's: `eventActorReactions`, `eventTargetReactions` and `eventPerformerReactions` map an event id to a reaction set like `moan`'s (`sound`, `soundMuffled`, with an `expression`). The reaction plays after the event's `reactionDelay`, cutting in over a moan; an event with no reaction of its own uses its supertype's. The default sets have none, as OStim's.
+
+```json
+"eventTargetReactions": {
+	"spank": { "sound": [ { "file": "fx/4Stim/actor/moan/female", "expression": "moan" } ] }
+}
+```
+
 ## The default sets
 
 4Stim's default sets use the OStim sounds in `4Stim Core\Sound\fx\4Stim\`: `actor\moan\female|male`, `actor\climax\female|male`, and `effects\suck` for muffled moans during oral.
 
 ## Not in yet
 
-OStim's action sounds (slaps on peaks, bone distance sounds), dialogue (comments, reactions, post-scene lines), `talk`, and the `muted` scene field.
+Dialogue (comments, climax comments, post-scene lines), `talk`, and muting actors (OStim's actor `muted` and its Papyrus mute).
