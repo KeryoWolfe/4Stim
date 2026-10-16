@@ -1,6 +1,8 @@
 # Changelog
 
-## Next
+## 0.2.1 alpha (October 2026)
+
+The 0.2.0 build, plus experimental support for the pre-next-gen game.
 
 - **Fallout 4 1.10.163 (experimental):** 4Stim can load on the pre-next-gen version from an address table in `Addresses\` (docs/OLDGEN.md). The table is still missing 31 addresses, which a tester on 1.10.163 can supply.
 

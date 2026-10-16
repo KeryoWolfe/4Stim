@@ -1,4 +1,4 @@
-# 4Stim 0.2.0 alpha: tester's guide
+# 4Stim 0.2.1 alpha: tester's guide
 
 Thanks for testing. 4Stim is an OStim-style scene framework for Fallout 4: you pick someone (or several people), pick where, and a scene starts; from there you move between positions on a HUD, or let auto mode run it. This is an **alpha**: things will break, and what you report decides what gets fixed first.
 
@@ -6,9 +6,9 @@ Thanks for testing. 4Stim is an OStim-style scene framework for Fallout 4: you p
 
 ## What you need
 
-- Fallout 4 **1.11.240** (the "Anniversary Edition" update). Older or newer game versions won't load the plugin.
-- [F4SE](https://f4se.silverlock.org/) for 1.11.240.
-- Address Library for F4SE Plugins, for 1.11.240.
+- Fallout 4 **1.11.240** (the "Anniversary Edition" update), with [F4SE](https://f4se.silverlock.org/) and Address Library for F4SE Plugins for 1.11.240.
+- Or, experimental: Fallout 4 **1.10.163** (before the next-gen update) with F4SE 0.6.23. No Address Library needed. See "Testing on 1.10.163" below.
+- Other game versions won't load the plugin.
 - A mod manager (Mod Organizer 2 or Vortex).
 - Optional: A-Body (male) with its SMP physics. 4Stim swaps to the erect physics during scenes when it's there.
 - Optional: the High Heels System. Actors in heels are scaled or lowered to fit the animation (docs/SCALING.md).
@@ -19,10 +19,12 @@ Thanks for testing. 4Stim is an OStim-style scene framework for Fallout 4: you p
 
 Install both archives with your mod manager, as two mods:
 
-1. **`4Stim-0.2.0-alpha.zip`**: the framework (plugin, settings, HUD, icons, scripts).
-2. **`4Stim-TestAnims-0.2.0-alpha.zip`**: the test animations and their scene file. Enable **`4StimTestAnims.esp`** in your load order.
+1. **`4Stim-0.2.1-alpha.zip`**: the framework (plugin, settings, HUD, icons, scripts).
+2. **`4Stim-TestAnims-0.2.1-alpha.zip`**: the test animations and their scene file. Enable **`4StimTestAnims.esp`** in your load order.
 
 If you're updating from an earlier test build, replace both mods (don't merge them), and remove any older `4StimTestAnims.json` that's left in another mod. The newest one has to win.
+
+**From 0.2.0:** just replace the framework mod; nothing else changed for 1.11.240.
 
 **From 0.1.0:** take the new `4Stim.ini` and copy your changes into it. Settings now go by OStim's names (`docs/SETTINGS.md`); the old names still work, but the new file has the new settings. Your alignments are converted once to `Documents\My Games\Fallout4\4Stim\alignment.json`, in OStim's layout. Several defaults changed to OStim's (`CHANGELOG.md`): notably, scenes running when you save now end when the save loads, as in OStim (`bResumeScenes=1` brings back 0.1.0's behaviour).
 
@@ -42,9 +44,20 @@ Starting a scene: press `N` near someone. Add more people if the scene allows, p
 
 Every key and option is in `F4SE\Plugins\4Stim.ini`, with a comment on each. Edit it with the game closed. Settings OStim also has use OStim's names and defaults (`docs/SETTINGS.md`), and OStim's other scene keys (pull out, end scene, search, align, free camera, hide HUD) are there, unbound.
 
+## Testing on 1.10.163
+
+4Stim finds the game's code on 1.10.163 through its own address table (`F4SE\Plugins\4Stim\Addresses\`), which is still missing 31 addresses, so for now it **won't load** there: `4Stim.log` (in `Documents\My Games\Fallout4\F4SE\`) lists what's missing. To fill them in, one run with Runtime Database is needed:
+
+1. Install [Runtime Database](https://www.nexusmods.com/fallout4/mods/108394) and any mod built for it (an "- RD" version, such as Mod Configuration Menu - RD).
+2. Next to that mod's `.dll` in `Data\F4SE\Plugins\`, make an empty file with the same name ending in `.mapping` (`ModConfigurationMenuRD.dll` → `ModConfigurationMenuRD.mapping`).
+3. Start the game to the main menu and quit.
+4. Send us that `.mapping` file (and `.mapping.fail`, if there is one) along with `4Stim.log`, then delete the `.mapping` file (it slows startup). Runtime Database can be removed afterwards; 4Stim doesn't need it.
+
+Details: `docs/OLDGEN.md`.
+
 ## What to test
 
-Anything goes, but these are new in 0.2.0 and the least tested:
+Anything goes, but these are new in 0.2.x and the least tested:
 
 - **Faces:** expressions during scenes, moan and climax faces, open mouths during oral (docs/EXPRESSIONS.md).
 - **Voices:** moans, muffled moans during oral, climax sounds (docs/SOUND.md).
