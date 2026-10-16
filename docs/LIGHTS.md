@@ -10,7 +10,7 @@ In `4Stim.ini`, `[Lights]`:
 |---|---|---|
 | `sMaleLight` / `sFemaleLight` | `nolight` | The light men / women get: a file name in `Data\F4SE\Plugins\4Stim\Lights\` without `.json`. |
 | `SetOnlyLightInDark` | 0 | 1 = only when it's dark where the scene starts (OStim's setting). |
-| `fLightLevelDark` | 20 | Below this light level counts as dark: the game's own measure, as for stealth. 20 is OStim's (Skyrim's scale); `4Stim.log` gives the level at each scene start, at the first actor and at you (`Lights: light level ...`), so you can tune it. It's the game's stealth measure, so lamps nearby count: a settlement at night can be well over 20. |
+| `fLightLevelDark` | 20 | Below this light level counts as dark: the game's own measure, as for stealth. 20 is OStim's (Skyrim's scale); `4Stim.log` gives the level at each scene start, at the first actor and at you (`Lights: light level ...`), so you can tune it. It is the game's GetLightLevel (the condition function), at the actor. |
 
 The lights that come with 4Stim are OStim's: `facelight`, `facelightdim`, `crotchlight`, `crotchlightdim`, `asslight`, `asslightdim`, and `nolight` (OStim's default: none). In OStim the light is chosen per sex (or per NPC) in its MCM; 4Stim has no MCM, so it's per sex in the ini.
 

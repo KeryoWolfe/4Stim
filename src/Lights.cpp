@@ -106,13 +106,24 @@ namespace Lights
 			return it->second->form ? it->second : nullptr;
 		}
 
-		// How bright it is where a_actor stands, as the game measures it for
-		// stealth (OStim's GetLightLevel). -1 if not known.
+		// How bright it is where a_actor stands: the game's own GetLightLevel
+		// condition (what OStim's Papyrus GetLightLevel gives in Skyrim).
+		// -1 if it can't be read. (The AI process's cached lightLevel isn't
+		// it: it read 134 in pitch dark.)
 		float LightLevel(RE::Actor* a_actor)
 		{
-			const auto process = a_actor ? a_actor->currentProcess : nullptr;
-			const auto high = process ? process->high : nullptr;
-			return high ? high->lightLevel : -1.0F;
+			static const auto function = RE::SCRIPT_FUNCTION::LocateScriptCommand("GetLightLevel");
+			if (!a_actor || !function || !function->conditionFunction) {
+				return -1.0F;
+			}
+			RE::ConditionCheckParams params;
+			params.actionRef = a_actor;
+			params.targetRef = a_actor;
+			float value = -1.0F;
+			if (!function->conditionFunction(params, nullptr, nullptr, value)) {
+				return -1.0F;
+			}
+			return value;
 		}
 
 		// Where a_type's light goes on a_actor now, or false if their model
@@ -246,6 +257,7 @@ namespace Lights
 					lit.failed = true;
 					continue;
 				}
+				REX::INFO("Lights: \"{}\" placed on {:08X} (light {:08X} at their {})", lit.type->id, id, ref->GetFormID(), lit.type->node);
 			}
 			RE::NiPoint3 at{};
 			if (PositionFor(actor, *lit.type, at)) {
