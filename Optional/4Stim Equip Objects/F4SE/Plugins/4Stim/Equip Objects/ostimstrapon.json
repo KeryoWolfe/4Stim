@@ -1,0 +1,7 @@
+{
+	"type": "strapon",
+	"name": "Strap-on (OStim, Calyps)",
+	"default": true,
+	"mod": "4Stim - Equip Objects.esp",
+	"formid": "0x801"
+}

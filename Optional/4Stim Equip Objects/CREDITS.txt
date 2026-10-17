@@ -1,0 +1,11 @@
+4Stim Equip Objects (optional add-on, docs/ACTORS.md)
+
+Strap-on: OStim NG's "Calyps Strap-On" (meshes and textures by Calyps,
+3BA conversion by VersuchDrei), from OStim NG (GPL-3.0,
+github.com/VersuchDrei/OStimNG). Refit to Fallout 4's True Wasteland Body
+for 4Stim by tools/refit/build_strapon.cpp: the harness takes TWB's weights
+and sliders, the dildo is weighted to ZeX's Penis_00-05 bones so it bends
+with 4Stim's penis bend.
+
+Build it in BodySlide ("4Stim OStim Strap-On (TWB)") with your preset, and
+enable "4Stim - Equip Objects.esp".

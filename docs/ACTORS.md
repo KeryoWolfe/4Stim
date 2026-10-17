@@ -112,7 +112,7 @@ Armor items 4Stim puts on actors during scenes and takes away at the end (OStim'
 | `mod`, `formid` | The armor. Make it non-playable and use it for nothing else. |
 | `variants` | Other armors for it (`"cum"`...), switched to by scripts. |
 
-4Stim comes with none: Fallout 4 has no strap-on or tongue of its own. Fill the folder from a strap-on mod's armors.
+4Stim's optional **4Stim Equip Objects** add-on (`Optional\4Stim Equip Objects` in the repository) has OStim's own strap-on (Calyps', refit to True Wasteland Body): build "4Stim OStim Strap-On (TWB)" in BodySlide with your preset and enable `4Stim - Equip Objects.esp`. Its harness follows TWB's sliders and weights; its dildo is weighted to ZeX's penis bones, so it bends with the scene's penis bend (`ALIGNMENT.md`). Without the add-on there's none: fill the folder from a strap-on mod's armors. OStim's tongues aren't converted yet.
 
 An actor wears one:
 

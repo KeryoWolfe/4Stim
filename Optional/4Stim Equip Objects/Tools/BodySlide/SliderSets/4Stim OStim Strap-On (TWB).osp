@@ -1,0 +1,654 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<SliderSetInfo version="1">
+    <SliderSet name="4Stim OStim Strap-On (TWB)">
+        <DataFolder>4Stim OStim Strap-On (TWB)</DataFolder>
+        <SourceFile>4Stim OStim Strap-On (TWB).nif</SourceFile>
+        <OutputPath>meshes\4Stim\EquipObjects</OutputPath>
+        <OutputFile GenWeights="false">OStimStrapOn</OutputFile>
+        <Shape target="OStim Strap-On GearCore">OStim Strap-On GearCore</Shape>
+        <Shape target="OStim Strap-On GearExtra">OStim Strap-On GearExtra</Shape>
+        <Shape target="OStim Strap-On Dildo">OStim Strap-On Dildo</Shape>
+        <Slider name="Breasts" invert="false" default="0">
+        </Slider>
+        <Slider name="BreastsCleavage" invert="false" default="0">
+        </Slider>
+        <Slider name="BreastsGone" invert="false" default="0">
+        </Slider>
+        <Slider name="BreastsNewSH" invert="false" default="0">
+        </Slider>
+        <Slider name="BreastsSmall" invert="false" default="0">
+            <Data name="OStim Strap-On GearExtraBreastsSmall" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraBreastsSmall</Data>
+        </Slider>
+        <Slider name="BreastsSmall2" invert="false" default="0">
+            <Data name="OStim Strap-On GearExtraBreastsSmall2" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraBreastsSmall2</Data>
+        </Slider>
+        <Slider name="BreastsTogether" invert="false" default="0">
+        </Slider>
+        <Slider name="BreastTopSlope" invert="false" default="0">
+        </Slider>
+        <Slider name="BreastWidth" invert="false" default="0">
+            <Data name="OStim Strap-On GearExtraBreastWidth" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraBreastWidth</Data>
+        </Slider>
+        <Slider name="Butt" invert="false" default="0">
+            <Data name="OStim Strap-On GearCoreButt" target="OStim Strap-On GearCore" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearCoreButt</Data>
+            <Data name="OStim Strap-On GearExtraButt" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraButt</Data>
+        </Slider>
+        <Slider name="ButtCrack" invert="false" default="0">
+            <Data name="OStim Strap-On GearCoreButtCrack" target="OStim Strap-On GearCore" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearCoreButtCrack</Data>
+            <Data name="OStim Strap-On GearExtraButtCrack" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraButtCrack</Data>
+        </Slider>
+        <Slider name="ButtNew" invert="false" default="0">
+            <Data name="OStim Strap-On GearCoreButtNew" target="OStim Strap-On GearCore" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearCoreButtNew</Data>
+            <Data name="OStim Strap-On GearExtraButtNew" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraButtNew</Data>
+            <Data name="OStim Strap-On DildoButtNew" target="OStim Strap-On Dildo" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On DildoButtNew</Data>
+        </Slider>
+        <Slider name="ButtShape2" invert="false" default="0">
+            <Data name="OStim Strap-On GearCoreButtShape2" target="OStim Strap-On GearCore" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearCoreButtShape2</Data>
+            <Data name="OStim Strap-On GearExtraButtShape2" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraButtShape2</Data>
+            <Data name="OStim Strap-On DildoButtShape2" target="OStim Strap-On Dildo" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On DildoButtShape2</Data>
+        </Slider>
+        <Slider name="ButtSmall" invert="false" default="0">
+            <Data name="OStim Strap-On GearCoreButtSmall" target="OStim Strap-On GearCore" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearCoreButtSmall</Data>
+            <Data name="OStim Strap-On GearExtraButtSmall" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraButtSmall</Data>
+            <Data name="OStim Strap-On DildoButtSmall" target="OStim Strap-On Dildo" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On DildoButtSmall</Data>
+        </Slider>
+        <Slider name="CalfSize" invert="false" default="0">
+        </Slider>
+        <Slider name="CalfSmooth" invert="false" default="0">
+        </Slider>
+        <Slider name="ChestDepth" invert="false" default="0">
+            <Data name="OStim Strap-On GearCoreChestDepth" target="OStim Strap-On GearCore" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearCoreChestDepth</Data>
+            <Data name="OStim Strap-On GearExtraChestDepth" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraChestDepth</Data>
+        </Slider>
+        <Slider name="ChestWidth" invert="false" default="0">
+            <Data name="OStim Strap-On GearExtraChestWidth" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraChestWidth</Data>
+        </Slider>
+        <Slider name="ChubbyArms" invert="false" default="0">
+        </Slider>
+        <Slider name="ChubbyButt" invert="false" default="0">
+            <Data name="OStim Strap-On GearCoreChubbyButt" target="OStim Strap-On GearCore" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearCoreChubbyButt</Data>
+            <Data name="OStim Strap-On GearExtraChubbyButt" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraChubbyButt</Data>
+            <Data name="OStim Strap-On DildoChubbyButt" target="OStim Strap-On Dildo" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On DildoChubbyButt</Data>
+        </Slider>
+        <Slider name="ChubbyLegs" invert="false" default="0">
+            <Data name="OStim Strap-On GearCoreChubbyLegs" target="OStim Strap-On GearCore" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearCoreChubbyLegs</Data>
+            <Data name="OStim Strap-On GearExtraChubbyLegs" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraChubbyLegs</Data>
+            <Data name="OStim Strap-On DildoChubbyLegs" target="OStim Strap-On Dildo" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On DildoChubbyLegs</Data>
+        </Slider>
+        <Slider name="ChubbyWaist" invert="false" default="0">
+            <Data name="OStim Strap-On GearCoreChubbyWaist" target="OStim Strap-On GearCore" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearCoreChubbyWaist</Data>
+            <Data name="OStim Strap-On GearExtraChubbyWaist" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraChubbyWaist</Data>
+            <Data name="OStim Strap-On DildoChubbyWaist" target="OStim Strap-On Dildo" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On DildoChubbyWaist</Data>
+        </Slider>
+        <Slider name="CrotchBack" invert="false" default="0">
+            <Data name="OStim Strap-On GearCoreCrotchBack" target="OStim Strap-On GearCore" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearCoreCrotchBack</Data>
+            <Data name="OStim Strap-On GearExtraCrotchBack" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraCrotchBack</Data>
+            <Data name="OStim Strap-On DildoCrotchBack" target="OStim Strap-On Dildo" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On DildoCrotchBack</Data>
+        </Slider>
+        <Slider name="DoubleMelon" invert="false" default="0">
+        </Slider>
+        <Slider name="Groin" invert="false" default="0">
+            <Data name="OStim Strap-On GearCoreGroin" target="OStim Strap-On GearCore" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearCoreGroin</Data>
+            <Data name="OStim Strap-On GearExtraGroin" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraGroin</Data>
+            <Data name="OStim Strap-On DildoGroin" target="OStim Strap-On Dildo" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On DildoGroin</Data>
+        </Slider>
+        <Slider name="HipBack" invert="false" default="0">
+            <Data name="OStim Strap-On GearCoreHipBack" target="OStim Strap-On GearCore" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearCoreHipBack</Data>
+            <Data name="OStim Strap-On GearExtraHipBack" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraHipBack</Data>
+            <Data name="OStim Strap-On DildoHipBack" target="OStim Strap-On Dildo" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On DildoHipBack</Data>
+        </Slider>
+        <Slider name="HipBone" invert="false" default="0">
+            <Data name="OStim Strap-On GearCoreHipBone" target="OStim Strap-On GearCore" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearCoreHipBone</Data>
+            <Data name="OStim Strap-On GearExtraHipBone" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraHipBone</Data>
+        </Slider>
+        <Slider name="Hips" invert="false" default="0">
+            <Data name="OStim Strap-On GearCoreHips" target="OStim Strap-On GearCore" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearCoreHips</Data>
+            <Data name="OStim Strap-On GearExtraHips" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraHips</Data>
+            <Data name="OStim Strap-On DildoHips" target="OStim Strap-On Dildo" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On DildoHips</Data>
+        </Slider>
+        <Slider name="HipUpperWidth" invert="false" default="0">
+            <Data name="OStim Strap-On GearCoreHipUpperWidth" target="OStim Strap-On GearCore" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearCoreHipUpperWidth</Data>
+            <Data name="OStim Strap-On GearExtraHipUpperWidth" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraHipUpperWidth</Data>
+        </Slider>
+        <Slider name="KneeHeight" invert="false" default="0">
+        </Slider>
+        <Slider name="LegShape" invert="false" default="0">
+            <Data name="OStim Strap-On GearCoreLegShape" target="OStim Strap-On GearCore" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearCoreLegShape</Data>
+            <Data name="OStim Strap-On GearExtraLegShape" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraLegShape</Data>
+        </Slider>
+        <Slider name="LegsThin" invert="false" default="0">
+            <Data name="OStim Strap-On GearCoreLegsThin" target="OStim Strap-On GearCore" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearCoreLegsThin</Data>
+            <Data name="OStim Strap-On GearExtraLegsThin" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraLegsThin</Data>
+            <Data name="OStim Strap-On DildoLegsThin" target="OStim Strap-On Dildo" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On DildoLegsThin</Data>
+        </Slider>
+        <Slider name="NipBGone" invert="false" default="0">
+        </Slider>
+        <Slider name="NippleAreola" invert="false" default="0">
+        </Slider>
+        <Slider name="NippleDistance" invert="false" default="0">
+        </Slider>
+        <Slider name="NippleDown" invert="false" default="0">
+        </Slider>
+        <Slider name="NippleLength" invert="false" default="0">
+        </Slider>
+        <Slider name="NipplePerk2" invert="false" default="0">
+        </Slider>
+        <Slider name="NipplePerkiness" invert="false" default="0">
+        </Slider>
+        <Slider name="NippleSize" invert="false" default="0">
+        </Slider>
+        <Slider name="NippleTip" invert="false" default="0">
+        </Slider>
+        <Slider name="NippleUp" invert="false" default="0">
+        </Slider>
+        <Slider name="PregnancyBelly" invert="false" default="0">
+            <Data name="OStim Strap-On GearCorePregnancyBelly" target="OStim Strap-On GearCore" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearCorePregnancyBelly</Data>
+            <Data name="OStim Strap-On GearExtraPregnancyBelly" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraPregnancyBelly</Data>
+            <Data name="OStim Strap-On DildoPregnancyBelly" target="OStim Strap-On Dildo" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On DildoPregnancyBelly</Data>
+        </Slider>
+        <Slider name="PushUp" invert="false" default="0">
+        </Slider>
+        <Slider name="RoundAss" invert="false" default="0">
+            <Data name="OStim Strap-On GearCoreRoundAss" target="OStim Strap-On GearCore" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearCoreRoundAss</Data>
+            <Data name="OStim Strap-On GearExtraRoundAss" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraRoundAss</Data>
+            <Data name="OStim Strap-On DildoRoundAss" target="OStim Strap-On Dildo" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On DildoRoundAss</Data>
+        </Slider>
+        <Slider name="ShoulderSmooth" invert="false" default="0">
+        </Slider>
+        <Slider name="ShoulderTweak" invert="false" default="0">
+        </Slider>
+        <Slider name="ShoulderWidth" invert="false" default="0">
+        </Slider>
+        <Slider name="SlimThighs" invert="false" default="0">
+            <Data name="OStim Strap-On GearCoreSlimThighs" target="OStim Strap-On GearCore" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearCoreSlimThighs</Data>
+            <Data name="OStim Strap-On GearExtraSlimThighs" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraSlimThighs</Data>
+            <Data name="OStim Strap-On DildoSlimThighs" target="OStim Strap-On Dildo" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On DildoSlimThighs</Data>
+        </Slider>
+        <Slider name="SternumDepth" invert="false" default="0">
+        </Slider>
+        <Slider name="SternumHeight" invert="false" default="0">
+            <Data name="OStim Strap-On GearExtraSternumHeight" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraSternumHeight</Data>
+        </Slider>
+        <Slider name="Thighs" invert="false" default="0">
+            <Data name="OStim Strap-On GearCoreThighs" target="OStim Strap-On GearCore" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearCoreThighs</Data>
+            <Data name="OStim Strap-On GearExtraThighs" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraThighs</Data>
+            <Data name="OStim Strap-On DildoThighs" target="OStim Strap-On Dildo" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On DildoThighs</Data>
+        </Slider>
+        <Slider name="TummyTuck" invert="false" default="0">
+            <Data name="OStim Strap-On GearCoreTummyTuck" target="OStim Strap-On GearCore" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearCoreTummyTuck</Data>
+            <Data name="OStim Strap-On GearExtraTummyTuck" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraTummyTuck</Data>
+            <Data name="OStim Strap-On DildoTummyTuck" target="OStim Strap-On Dildo" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On DildoTummyTuck</Data>
+        </Slider>
+        <Slider name="VanillaFo4" invert="false" default="0">
+            <Data name="OStim Strap-On GearCoreVanillaFo4" target="OStim Strap-On GearCore" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearCoreVanillaFo4</Data>
+            <Data name="OStim Strap-On GearExtraVanillaFo4" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraVanillaFo4</Data>
+            <Data name="OStim Strap-On DildoVanillaFo4" target="OStim Strap-On Dildo" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On DildoVanillaFo4</Data>
+        </Slider>
+        <Slider name="Waist" invert="false" default="0">
+            <Data name="OStim Strap-On GearCoreWaist" target="OStim Strap-On GearCore" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearCoreWaist</Data>
+            <Data name="OStim Strap-On GearExtraWaist" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraWaist</Data>
+            <Data name="OStim Strap-On DildoWaist" target="OStim Strap-On Dildo" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On DildoWaist</Data>
+        </Slider>
+        <Slider name="WaistHeight" invert="false" default="0">
+            <Data name="OStim Strap-On GearCoreWaistHeight" target="OStim Strap-On GearCore" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearCoreWaistHeight</Data>
+            <Data name="OStim Strap-On GearExtraWaistHeight" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraWaistHeight</Data>
+        </Slider>
+        <Slider name="WideWaistLine" invert="false" default="0">
+            <Data name="OStim Strap-On GearCoreWideWaistLine" target="OStim Strap-On GearCore" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearCoreWideWaistLine</Data>
+            <Data name="OStim Strap-On GearExtraWideWaistLine" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraWideWaistLine</Data>
+        </Slider>
+        <Slider name="Ankles" invert="false" default="0">
+        </Slider>
+        <Slider name="AppleCheeks" invert="false" default="0">
+            <Data name="OStim Strap-On GearCoreAppleCheeks" target="OStim Strap-On GearCore" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearCoreAppleCheeks</Data>
+            <Data name="OStim Strap-On GearExtraAppleCheeks" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraAppleCheeks</Data>
+            <Data name="OStim Strap-On DildoAppleCheeks" target="OStim Strap-On Dildo" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On DildoAppleCheeks</Data>
+        </Slider>
+        <Slider name="Arms" invert="false" default="0">
+        </Slider>
+        <Slider name="Back" invert="false" default="0">
+            <Data name="OStim Strap-On GearCoreBack" target="OStim Strap-On GearCore" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearCoreBack</Data>
+            <Data name="OStim Strap-On GearExtraBack" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraBack</Data>
+        </Slider>
+        <Slider name="BackArch" invert="false" default="0">
+            <Data name="OStim Strap-On GearExtraBackArch" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraBackArch</Data>
+        </Slider>
+        <Slider name="Belly" invert="false" default="0">
+            <Data name="OStim Strap-On GearCoreBelly" target="OStim Strap-On GearCore" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearCoreBelly</Data>
+            <Data name="OStim Strap-On GearExtraBelly" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraBelly</Data>
+            <Data name="OStim Strap-On DildoBelly" target="OStim Strap-On Dildo" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On DildoBelly</Data>
+        </Slider>
+        <Slider name="BigBelly" invert="false" default="0">
+            <Data name="OStim Strap-On GearCoreBigBelly" target="OStim Strap-On GearCore" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearCoreBigBelly</Data>
+            <Data name="OStim Strap-On GearExtraBigBelly" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraBigBelly</Data>
+            <Data name="OStim Strap-On DildoBigBelly" target="OStim Strap-On Dildo" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On DildoBigBelly</Data>
+        </Slider>
+        <Slider name="BigButt" invert="false" default="0">
+            <Data name="OStim Strap-On GearCoreBigButt" target="OStim Strap-On GearCore" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearCoreBigButt</Data>
+            <Data name="OStim Strap-On GearExtraBigButt" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraBigButt</Data>
+            <Data name="OStim Strap-On DildoBigButt" target="OStim Strap-On Dildo" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On DildoBigButt</Data>
+        </Slider>
+        <Slider name="BigTorso" invert="false" default="0">
+            <Data name="OStim Strap-On GearCoreBigTorso" target="OStim Strap-On GearCore" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearCoreBigTorso</Data>
+            <Data name="OStim Strap-On GearExtraBigTorso" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraBigTorso</Data>
+            <Data name="OStim Strap-On DildoBigTorso" target="OStim Strap-On Dildo" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On DildoBigTorso</Data>
+        </Slider>
+        <Slider name="BreastCenter" invert="false" default="0">
+        </Slider>
+        <Slider name="BreastCenterBig" invert="false" default="0">
+        </Slider>
+        <Slider name="BreastFantasy" invert="false" default="0">
+        </Slider>
+        <Slider name="BreastFlatness2" invert="false" default="0">
+        </Slider>
+        <Slider name="BreastGravity2" invert="false" default="0">
+        </Slider>
+        <Slider name="BreastHeight" invert="false" default="0">
+            <Data name="OStim Strap-On GearExtraBreastHeight" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraBreastHeight</Data>
+        </Slider>
+        <Slider name="BreastPerkiness" invert="false" default="0">
+        </Slider>
+        <Slider name="ArmpitHeight" invert="false" default="0">
+        </Slider>
+        <Slider name="ForearmSize" invert="false" default="0">
+        </Slider>
+        <Slider name="NippleShape" invert="false" default="0">
+        </Slider>
+        <Slider name="NippleTwistUp" invert="false" default="0">
+        </Slider>
+        <Slider name="7B Upper" invert="false" default="0">
+            <Data name="OStim Strap-On GearExtra7B Upper" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtra7B Upper</Data>
+        </Slider>
+        <Slider name="7B Lower" invert="false" default="0">
+            <Data name="OStim Strap-On GearCore7B Lower" target="OStim Strap-On GearCore" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearCore7B Lower</Data>
+            <Data name="OStim Strap-On GearExtra7B Lower" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtra7B Lower</Data>
+            <Data name="OStim Strap-On Dildo7B Lower" target="OStim Strap-On Dildo" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On Dildo7B Lower</Data>
+        </Slider>
+        <Slider name="MuscularChest" invert="false" default="0">
+            <Data name="OStim Strap-On GearCoreMuscularChest" target="OStim Strap-On GearCore" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearCoreMuscularChest</Data>
+            <Data name="OStim Strap-On GearExtraMuscularChest" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraMuscularChest</Data>
+        </Slider>
+        <Slider name="MuscularArms" invert="false" default="0">
+            <Data name="OStim Strap-On GearExtraMuscularArms" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraMuscularArms</Data>
+        </Slider>
+        <Slider name="MuscularButt" invert="false" default="0">
+            <Data name="OStim Strap-On GearCoreMuscularButt" target="OStim Strap-On GearCore" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearCoreMuscularButt</Data>
+            <Data name="OStim Strap-On GearExtraMuscularButt" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraMuscularButt</Data>
+        </Slider>
+        <Slider name="MuscularLegs" invert="false" default="0">
+            <Data name="OStim Strap-On GearCoreMuscularLegs" target="OStim Strap-On GearCore" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearCoreMuscularLegs</Data>
+            <Data name="OStim Strap-On GearExtraMuscularLegs" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraMuscularLegs</Data>
+        </Slider>
+        <Slider name="FFB Fitness Less" invert="false" default="0">
+            <Data name="OStim Strap-On GearCoreFFB Fitness Less" target="OStim Strap-On GearCore" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearCoreFFB Fitness Less</Data>
+            <Data name="OStim Strap-On GearExtraFFB Fitness Less" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraFFB Fitness Less</Data>
+            <Data name="OStim Strap-On DildoFFB Fitness Less" target="OStim Strap-On Dildo" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On DildoFFB Fitness Less</Data>
+        </Slider>
+        <Slider name="FFB Fitness More" invert="false" default="0">
+            <Data name="OStim Strap-On GearCoreFFB Fitness More" target="OStim Strap-On GearCore" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearCoreFFB Fitness More</Data>
+            <Data name="OStim Strap-On GearExtraFFB Fitness More" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraFFB Fitness More</Data>
+            <Data name="OStim Strap-On DildoFFB Fitness More" target="OStim Strap-On Dildo" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On DildoFFB Fitness More</Data>
+        </Slider>
+        <Slider name="FFB Fitness Very" invert="false" default="0">
+            <Data name="OStim Strap-On GearCoreFFB Fitness Very" target="OStim Strap-On GearCore" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearCoreFFB Fitness Very</Data>
+            <Data name="OStim Strap-On GearExtraFFB Fitness Very" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraFFB Fitness Very</Data>
+        </Slider>
+        <Slider name="FFB High Heels Feet" invert="false" default="0">
+        </Slider>
+        <Slider name="CBBE to FFB" invert="false" default="0">
+            <Data name="OStim Strap-On GearCoreCBBE to FFB" target="OStim Strap-On GearCore" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearCoreCBBE to FFB</Data>
+            <Data name="OStim Strap-On GearExtraCBBE to FFB" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraCBBE to FFB</Data>
+            <Data name="OStim Strap-On DildoCBBE to FFB" target="OStim Strap-On Dildo" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On DildoCBBE to FFB</Data>
+        </Slider>
+        <Slider name="Athlete" invert="false" default="0">
+            <Data name="OStim Strap-On GearCoreAthlete" target="OStim Strap-On GearCore" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearCoreAthlete</Data>
+            <Data name="OStim Strap-On GearExtraAthlete" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraAthlete</Data>
+            <Data name="OStim Strap-On DildoAthlete" target="OStim Strap-On Dildo" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On DildoAthlete</Data>
+        </Slider>
+        <Slider name="BodyBuilder" invert="false" default="0">
+            <Data name="OStim Strap-On GearCoreBodyBuilder" target="OStim Strap-On GearCore" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearCoreBodyBuilder</Data>
+            <Data name="OStim Strap-On GearExtraBodyBuilder" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraBodyBuilder</Data>
+            <Data name="OStim Strap-On DildoBodyBuilder" target="OStim Strap-On Dildo" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On DildoBodyBuilder</Data>
+        </Slider>
+        <Slider name="Muscle Definition" invert="false" default="0">
+            <Data name="OStim Strap-On GearCoreMuscle Definition" target="OStim Strap-On GearCore" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearCoreMuscle Definition</Data>
+            <Data name="OStim Strap-On GearExtraMuscle Definition" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraMuscle Definition</Data>
+            <Data name="OStim Strap-On DildoMuscle Definition" target="OStim Strap-On Dildo" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On DildoMuscle Definition</Data>
+        </Slider>
+        <Slider name="Fitness" invert="false" default="0">
+            <Data name="OStim Strap-On GearCoreFitness" target="OStim Strap-On GearCore" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearCoreFitness</Data>
+            <Data name="OStim Strap-On GearExtraFitness" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraFitness</Data>
+            <Data name="OStim Strap-On DildoFitness" target="OStim Strap-On Dildo" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On DildoFitness</Data>
+        </Slider>
+        <Slider name="Tone" invert="false" default="0">
+            <Data name="OStim Strap-On GearCoreTone" target="OStim Strap-On GearCore" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearCoreTone</Data>
+            <Data name="OStim Strap-On GearExtraTone" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraTone</Data>
+            <Data name="OStim Strap-On DildoTone" target="OStim Strap-On Dildo" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On DildoTone</Data>
+        </Slider>
+        <Slider name="Shades " invert="false" default="0">
+            <Data name="OStim Strap-On GearCoreShades " target="OStim Strap-On GearCore" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearCoreShades </Data>
+            <Data name="OStim Strap-On GearExtraShades " target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraShades </Data>
+            <Data name="OStim Strap-On DildoShades " target="OStim Strap-On Dildo" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On DildoShades </Data>
+        </Slider>
+        <Slider name="Dibella" invert="false" default="0">
+            <Data name="OStim Strap-On GearCoreDibella" target="OStim Strap-On GearCore" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearCoreDibella</Data>
+            <Data name="OStim Strap-On GearExtraDibella" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraDibella</Data>
+            <Data name="OStim Strap-On DildoDibella" target="OStim Strap-On Dildo" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On DildoDibella</Data>
+        </Slider>
+        <Slider name="Atomic Beauty" invert="false" default="0">
+            <Data name="OStim Strap-On GearCoreAtomic Beauty" target="OStim Strap-On GearCore" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearCoreAtomic Beauty</Data>
+            <Data name="OStim Strap-On GearExtraAtomic Beauty" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraAtomic Beauty</Data>
+            <Data name="OStim Strap-On DildoAtomic Beauty" target="OStim Strap-On Dildo" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On DildoAtomic Beauty</Data>
+        </Slider>
+        <Slider name="Big Soft Belly" invert="false" default="0">
+            <Data name="OStim Strap-On GearCoreBig Soft Belly" target="OStim Strap-On GearCore" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearCoreBig Soft Belly</Data>
+            <Data name="OStim Strap-On GearExtraBig Soft Belly" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraBig Soft Belly</Data>
+            <Data name="OStim Strap-On DildoBig Soft Belly" target="OStim Strap-On Dildo" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On DildoBig Soft Belly</Data>
+        </Slider>
+        <Slider name="Explosion" invert="false" default="0">
+            <Data name="OStim Strap-On GearCoreExplosion" target="OStim Strap-On GearCore" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearCoreExplosion</Data>
+            <Data name="OStim Strap-On GearExtraExplosion" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraExplosion</Data>
+            <Data name="OStim Strap-On DildoExplosion" target="OStim Strap-On Dildo" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On DildoExplosion</Data>
+        </Slider>
+        <Slider name="BBW" invert="false" default="0">
+            <Data name="OStim Strap-On GearCoreBBW" target="OStim Strap-On GearCore" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearCoreBBW</Data>
+            <Data name="OStim Strap-On GearExtraBBW" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraBBW</Data>
+            <Data name="OStim Strap-On DildoBBW" target="OStim Strap-On Dildo" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On DildoBBW</Data>
+        </Slider>
+        <Slider name="Detailed" invert="false" default="0">
+            <Data name="OStim Strap-On GearCoreDetailed" target="OStim Strap-On GearCore" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearCoreDetailed</Data>
+            <Data name="OStim Strap-On GearExtraDetailed" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraDetailed</Data>
+            <Data name="OStim Strap-On DildoDetailed" target="OStim Strap-On Dildo" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On DildoDetailed</Data>
+        </Slider>
+        <Slider name="Xun ABS" invert="false" default="0">
+            <Data name="OStim Strap-On GearCoreXun ABS" target="OStim Strap-On GearCore" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearCoreXun ABS</Data>
+            <Data name="OStim Strap-On GearExtraXun ABS" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraXun ABS</Data>
+        </Slider>
+        <Slider name="Boob Concave" invert="false" default="0">
+        </Slider>
+        <Slider name="Belly Smooth" invert="false" default="0">
+            <Data name="OStim Strap-On GearExtraBelly Smooth" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraBelly Smooth</Data>
+        </Slider>
+        <Slider name="AB Template" invert="false" default="0">
+            <Data name="OStim Strap-On GearCoreAB Template" target="OStim Strap-On GearCore" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearCoreAB Template</Data>
+            <Data name="OStim Strap-On GearExtraAB Template" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraAB Template</Data>
+            <Data name="OStim Strap-On DildoAB Template" target="OStim Strap-On Dildo" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On DildoAB Template</Data>
+        </Slider>
+        <Slider name="Real Atomic Beauty" invert="false" default="0">
+            <Data name="OStim Strap-On GearCoreReal Atomic Beauty" target="OStim Strap-On GearCore" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearCoreReal Atomic Beauty</Data>
+            <Data name="OStim Strap-On GearExtraReal Atomic Beauty" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraReal Atomic Beauty</Data>
+            <Data name="OStim Strap-On DildoReal Atomic Beauty" target="OStim Strap-On Dildo" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On DildoReal Atomic Beauty</Data>
+        </Slider>
+        <Slider name="New Atomic" invert="false" default="0">
+            <Data name="OStim Strap-On GearCoreNew Atomic" target="OStim Strap-On GearCore" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearCoreNew Atomic</Data>
+            <Data name="OStim Strap-On GearExtraNew Atomic" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraNew Atomic</Data>
+            <Data name="OStim Strap-On DildoNew Atomic" target="OStim Strap-On Dildo" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On DildoNew Atomic</Data>
+        </Slider>
+        <Slider name="Narrow Hips" invert="false" default="0">
+            <Data name="OStim Strap-On GearCoreNarrow Hips" target="OStim Strap-On GearCore" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearCoreNarrow Hips</Data>
+            <Data name="OStim Strap-On GearExtraNarrow Hips" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraNarrow Hips</Data>
+        </Slider>
+        <Slider name="Leg Slimmer" invert="false" default="0">
+            <Data name="OStim Strap-On GearCoreLeg Slimmer" target="OStim Strap-On GearCore" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearCoreLeg Slimmer</Data>
+            <Data name="OStim Strap-On GearExtraLeg Slimmer" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraLeg Slimmer</Data>
+            <Data name="OStim Strap-On DildoLeg Slimmer" target="OStim Strap-On Dildo" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On DildoLeg Slimmer</Data>
+        </Slider>
+        <Slider name="More Chest Depth" invert="false" default="0">
+        </Slider>
+        <Slider name="Lower Waist" invert="false" default="0">
+            <Data name="OStim Strap-On GearExtraLower Waist" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraLower Waist</Data>
+        </Slider>
+        <Slider name="Wider Back" invert="false" default="0">
+            <Data name="OStim Strap-On GearExtraWider Back" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraWider Back</Data>
+        </Slider>
+        <Slider name="Hips Forward" invert="false" default="0">
+            <Data name="OStim Strap-On GearCoreHips Forward" target="OStim Strap-On GearCore" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearCoreHips Forward</Data>
+            <Data name="OStim Strap-On GearExtraHips Forward" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraHips Forward</Data>
+            <Data name="OStim Strap-On DildoHips Forward" target="OStim Strap-On Dildo" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On DildoHips Forward</Data>
+        </Slider>
+        <Slider name="Lower Back Smooth" invert="false" default="0">
+            <Data name="OStim Strap-On GearCoreLower Back Smooth" target="OStim Strap-On GearCore" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearCoreLower Back Smooth</Data>
+            <Data name="OStim Strap-On GearExtraLower Back Smooth" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraLower Back Smooth</Data>
+        </Slider>
+        <Slider name="Smooth Thighs" invert="false" default="0">
+            <Data name="OStim Strap-On GearCoreSmooth Thighs" target="OStim Strap-On GearCore" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearCoreSmooth Thighs</Data>
+            <Data name="OStim Strap-On GearExtraSmooth Thighs" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraSmooth Thighs</Data>
+        </Slider>
+        <Slider name="Boob Height" invert="false" default="0">
+        </Slider>
+        <Slider name="Smaller Torso" invert="false" default="0">
+            <Data name="OStim Strap-On GearExtraSmaller Torso" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraSmaller Torso</Data>
+        </Slider>
+        <Slider name="Larger Nipples" invert="false" default="0">
+        </Slider>
+        <Slider name="Wider Ass" invert="false" default="0">
+            <Data name="OStim Strap-On GearCoreWider Ass" target="OStim Strap-On GearCore" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearCoreWider Ass</Data>
+            <Data name="OStim Strap-On GearExtraWider Ass" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraWider Ass</Data>
+        </Slider>
+        <Slider name="Ass Stretch" invert="false" default="0">
+            <Data name="OStim Strap-On GearCoreAss Stretch" target="OStim Strap-On GearCore" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearCoreAss Stretch</Data>
+        </Slider>
+        <Slider name="Narrow Ass" invert="false" default="0">
+            <Data name="OStim Strap-On GearCoreNarrow Ass" target="OStim Strap-On GearCore" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearCoreNarrow Ass</Data>
+            <Data name="OStim Strap-On GearExtraNarrow Ass" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraNarrow Ass</Data>
+        </Slider>
+        <Slider name="Ass Height" invert="false" default="0">
+            <Data name="OStim Strap-On GearCoreAss Height" target="OStim Strap-On GearCore" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearCoreAss Height</Data>
+            <Data name="OStim Strap-On GearExtraAss Height" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraAss Height</Data>
+        </Slider>
+        <Slider name="Larger Torso" invert="false" default="0">
+            <Data name="OStim Strap-On GearExtraLarger Torso" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraLarger Torso</Data>
+        </Slider>
+        <Slider name="Muscular Body" invert="false" default="0">
+            <Data name="OStim Strap-On GearCoreMuscular Body" target="OStim Strap-On GearCore" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearCoreMuscular Body</Data>
+            <Data name="OStim Strap-On GearExtraMuscular Body" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraMuscular Body</Data>
+        </Slider>
+        <Slider name="Tigersan" invert="false" default="0">
+            <Data name="OStim Strap-On GearCoreTigersan" target="OStim Strap-On GearCore" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearCoreTigersan</Data>
+            <Data name="OStim Strap-On GearExtraTigersan" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraTigersan</Data>
+            <Data name="OStim Strap-On DildoTigersan" target="OStim Strap-On Dildo" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On DildoTigersan</Data>
+        </Slider>
+        <Slider name="Breast Narrow" invert="false" default="0">
+        </Slider>
+        <Slider name="Breast Curve Down" invert="false" default="0">
+            <Data name="OStim Strap-On GearExtraBreast Curve Down" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraBreast Curve Down</Data>
+        </Slider>
+        <Slider name="Breast Curve" invert="false" default="0">
+        </Slider>
+        <Slider name="Breast Armpit In" invert="false" default="0">
+        </Slider>
+        <Slider name="Breast Armpit Wide" invert="false" default="0">
+        </Slider>
+        <Slider name="Nipple Shape Depth" invert="false" default="0">
+        </Slider>
+        <Slider name="Nipple Tips Flat" invert="false" default="0">
+        </Slider>
+        <Slider name="Big Rib Cage" invert="false" default="0">
+            <Data name="OStim Strap-On GearExtraBig Rib Cage" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraBig Rib Cage</Data>
+        </Slider>
+        <Slider name="Butt Dimples" invert="false" default="0">
+            <Data name="OStim Strap-On GearExtraButt Dimples" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraButt Dimples</Data>
+        </Slider>
+        <Slider name="Butt Thin" invert="false" default="0">
+            <Data name="OStim Strap-On GearCoreButt Thin" target="OStim Strap-On GearCore" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearCoreButt Thin</Data>
+            <Data name="OStim Strap-On GearExtraButt Thin" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraButt Thin</Data>
+        </Slider>
+        <Slider name="Butt Up" invert="false" default="0">
+            <Data name="OStim Strap-On GearCoreButt Up" target="OStim Strap-On GearCore" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearCoreButt Up</Data>
+            <Data name="OStim Strap-On GearExtraButt Up" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraButt Up</Data>
+            <Data name="OStim Strap-On DildoButt Up" target="OStim Strap-On Dildo" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On DildoButt Up</Data>
+        </Slider>
+        <Slider name="Butt Crease" invert="false" default="0">
+        </Slider>
+        <Slider name="Hips Up" invert="false" default="0">
+            <Data name="OStim Strap-On GearCoreHips Up" target="OStim Strap-On GearCore" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearCoreHips Up</Data>
+            <Data name="OStim Strap-On GearExtraHips Up" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraHips Up</Data>
+        </Slider>
+        <Slider name="Hip Line" invert="false" default="0">
+            <Data name="OStim Strap-On GearCoreHip Line" target="OStim Strap-On GearCore" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearCoreHip Line</Data>
+            <Data name="OStim Strap-On GearExtraHip Line" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraHip Line</Data>
+        </Slider>
+        <Slider name="Hip Rotate Forward" invert="false" default="0">
+            <Data name="OStim Strap-On GearCoreHip Rotate Forward" target="OStim Strap-On GearCore" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearCoreHip Rotate Forward</Data>
+            <Data name="OStim Strap-On GearExtraHip Rotate Forward" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraHip Rotate Forward</Data>
+        </Slider>
+        <Slider name="Pelvis Up" invert="false" default="0">
+            <Data name="OStim Strap-On GearCorePelvis Up" target="OStim Strap-On GearCore" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearCorePelvis Up</Data>
+            <Data name="OStim Strap-On GearExtraPelvis Up" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraPelvis Up</Data>
+            <Data name="OStim Strap-On DildoPelvis Up" target="OStim Strap-On Dildo" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On DildoPelvis Up</Data>
+        </Slider>
+        <Slider name="Pussy Down" invert="false" default="0">
+            <Data name="OStim Strap-On GearCorePussy Down" target="OStim Strap-On GearCore" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearCorePussy Down</Data>
+            <Data name="OStim Strap-On DildoPussy Down" target="OStim Strap-On Dildo" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On DildoPussy Down</Data>
+        </Slider>
+        <Slider name="Pussy Pinch" invert="false" default="0">
+            <Data name="OStim Strap-On GearCorePussy Pinch" target="OStim Strap-On GearCore" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearCorePussy Pinch</Data>
+            <Data name="OStim Strap-On DildoPussy Pinch" target="OStim Strap-On Dildo" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On DildoPussy Pinch</Data>
+        </Slider>
+        <Slider name="Thigh Tone" invert="false" default="0">
+            <Data name="OStim Strap-On GearCoreThigh Tone" target="OStim Strap-On GearCore" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearCoreThigh Tone</Data>
+            <Data name="OStim Strap-On GearExtraThigh Tone" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraThigh Tone</Data>
+        </Slider>
+        <Slider name="Thigh Together" invert="false" default="0">
+            <Data name="OStim Strap-On GearCoreThigh Together" target="OStim Strap-On GearCore" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearCoreThigh Together</Data>
+            <Data name="OStim Strap-On GearExtraThigh Together" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraThigh Together</Data>
+            <Data name="OStim Strap-On DildoThigh Together" target="OStim Strap-On Dildo" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On DildoThigh Together</Data>
+        </Slider>
+        <Slider name="Thigh Apart" invert="false" default="0">
+            <Data name="OStim Strap-On GearCoreThigh Apart" target="OStim Strap-On GearCore" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearCoreThigh Apart</Data>
+            <Data name="OStim Strap-On GearExtraThigh Apart" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraThigh Apart</Data>
+            <Data name="OStim Strap-On DildoThigh Apart" target="OStim Strap-On Dildo" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On DildoThigh Apart</Data>
+        </Slider>
+        <Slider name="Thigh Back Thick" invert="false" default="0">
+            <Data name="OStim Strap-On GearCoreThigh Back Thick" target="OStim Strap-On GearCore" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearCoreThigh Back Thick</Data>
+            <Data name="OStim Strap-On GearExtraThigh Back Thick" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraThigh Back Thick</Data>
+            <Data name="OStim Strap-On DildoThigh Back Thick" target="OStim Strap-On Dildo" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On DildoThigh Back Thick</Data>
+        </Slider>
+        <Slider name="Thigh Gap" invert="false" default="0">
+            <Data name="OStim Strap-On GearCoreThigh Gap" target="OStim Strap-On GearCore" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearCoreThigh Gap</Data>
+            <Data name="OStim Strap-On GearExtraThigh Gap" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraThigh Gap</Data>
+            <Data name="OStim Strap-On DildoThigh Gap" target="OStim Strap-On Dildo" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On DildoThigh Gap</Data>
+        </Slider>
+        <Slider name="Knee Detail" invert="false" default="0">
+        </Slider>
+        <Slider name="Abdomin Down" invert="false" default="0">
+            <Data name="OStim Strap-On GearCoreAbdomin Down" target="OStim Strap-On GearCore" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearCoreAbdomin Down</Data>
+            <Data name="OStim Strap-On GearExtraAbdomin Down" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraAbdomin Down</Data>
+        </Slider>
+        <Slider name="Abdomin Size" invert="false" default="0">
+            <Data name="OStim Strap-On GearCoreAbdomin Size" target="OStim Strap-On GearCore" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearCoreAbdomin Size</Data>
+            <Data name="OStim Strap-On GearExtraAbdomin Size" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraAbdomin Size</Data>
+        </Slider>
+        <Slider name="Smoother Belly" invert="false" default="0">
+            <Data name="OStim Strap-On GearExtraSmoother Belly" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraSmoother Belly</Data>
+        </Slider>
+        <Slider name="Belly Define" invert="false" default="0">
+            <Data name="OStim Strap-On GearCoreBelly Define" target="OStim Strap-On GearCore" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearCoreBelly Define</Data>
+            <Data name="OStim Strap-On GearExtraBelly Define" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraBelly Define</Data>
+        </Slider>
+        <Slider name="Belly Diameter" invert="false" default="0">
+            <Data name="OStim Strap-On GearCoreBelly Diameter" target="OStim Strap-On GearCore" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearCoreBelly Diameter</Data>
+            <Data name="OStim Strap-On GearExtraBelly Diameter" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraBelly Diameter</Data>
+            <Data name="OStim Strap-On DildoBelly Diameter" target="OStim Strap-On Dildo" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On DildoBelly Diameter</Data>
+        </Slider>
+        <Slider name="Belly Up" invert="false" default="0">
+            <Data name="OStim Strap-On GearCoreBelly Up" target="OStim Strap-On GearCore" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearCoreBelly Up</Data>
+            <Data name="OStim Strap-On GearExtraBelly Up" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraBelly Up</Data>
+            <Data name="OStim Strap-On DildoBelly Up" target="OStim Strap-On Dildo" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On DildoBelly Up</Data>
+        </Slider>
+        <Slider name="Belly Tight" invert="false" default="0">
+            <Data name="OStim Strap-On GearCoreBelly Tight" target="OStim Strap-On GearCore" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearCoreBelly Tight</Data>
+            <Data name="OStim Strap-On GearExtraBelly Tight" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraBelly Tight</Data>
+            <Data name="OStim Strap-On DildoBelly Tight" target="OStim Strap-On Dildo" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On DildoBelly Tight</Data>
+        </Slider>
+        <Slider name="Belly In" invert="false" default="0">
+            <Data name="OStim Strap-On GearCoreBelly In" target="OStim Strap-On GearCore" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearCoreBelly In</Data>
+            <Data name="OStim Strap-On GearExtraBelly In" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraBelly In</Data>
+            <Data name="OStim Strap-On DildoBelly In" target="OStim Strap-On Dildo" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On DildoBelly In</Data>
+        </Slider>
+        <Slider name="Belly Rotate Up" invert="false" default="0">
+            <Data name="OStim Strap-On GearCoreBelly Rotate Up" target="OStim Strap-On GearCore" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearCoreBelly Rotate Up</Data>
+            <Data name="OStim Strap-On GearExtraBelly Rotate Up" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraBelly Rotate Up</Data>
+            <Data name="OStim Strap-On DildoBelly Rotate Up" target="OStim Strap-On Dildo" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On DildoBelly Rotate Up</Data>
+        </Slider>
+        <Slider name="Belly Wider" invert="false" default="0">
+            <Data name="OStim Strap-On GearCoreBelly Wider" target="OStim Strap-On GearCore" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearCoreBelly Wider</Data>
+            <Data name="OStim Strap-On GearExtraBelly Wider" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraBelly Wider</Data>
+        </Slider>
+        <Slider name="Chest Definition" invert="false" default="0">
+            <Data name="OStim Strap-On GearExtraChest Definition" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraChest Definition</Data>
+        </Slider>
+        <Slider name="Belly Line" invert="false" default="0">
+            <Data name="OStim Strap-On GearExtraBelly Line" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraBelly Line</Data>
+        </Slider>
+        <Slider name="Thin Belly" invert="false" default="0">
+            <Data name="OStim Strap-On GearCoreThin Belly" target="OStim Strap-On GearCore" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearCoreThin Belly</Data>
+            <Data name="OStim Strap-On GearExtraThin Belly" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraThin Belly</Data>
+            <Data name="OStim Strap-On DildoThin Belly" target="OStim Strap-On Dildo" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On DildoThin Belly</Data>
+        </Slider>
+        <Slider name="Belly Thicc" invert="false" default="0">
+            <Data name="OStim Strap-On GearCoreBelly Thicc" target="OStim Strap-On GearCore" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearCoreBelly Thicc</Data>
+            <Data name="OStim Strap-On GearExtraBelly Thicc" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraBelly Thicc</Data>
+            <Data name="OStim Strap-On DildoBelly Thicc" target="OStim Strap-On Dildo" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On DildoBelly Thicc</Data>
+        </Slider>
+        <Slider name="Biceps" invert="false" default="0">
+        </Slider>
+        <Slider name="Back Bulge" invert="false" default="0">
+            <Data name="OStim Strap-On GearCoreBack Bulge" target="OStim Strap-On GearCore" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearCoreBack Bulge</Data>
+            <Data name="OStim Strap-On GearExtraBack Bulge" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraBack Bulge</Data>
+        </Slider>
+        <Slider name="Thigh Muscular" invert="false" default="0">
+            <Data name="OStim Strap-On GearCoreThigh Muscular" target="OStim Strap-On GearCore" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearCoreThigh Muscular</Data>
+        </Slider>
+        <Slider name="Knee Thing" invert="false" default="0">
+        </Slider>
+        <Slider name="More Abs" invert="false" default="0">
+            <Data name="OStim Strap-On GearCoreMore Abs" target="OStim Strap-On GearCore" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearCoreMore Abs</Data>
+            <Data name="OStim Strap-On GearExtraMore Abs" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraMore Abs</Data>
+        </Slider>
+        <Slider name="Abdomin Smooth" invert="false" default="0">
+            <Data name="OStim Strap-On GearExtraAbdomin Smooth" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraAbdomin Smooth</Data>
+        </Slider>
+        <Slider name="Shoulder Flex" invert="false" default="0">
+            <Data name="OStim Strap-On GearExtraShoulder Flex" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraShoulder Flex</Data>
+        </Slider>
+        <Slider name="Plump Ass" invert="false" default="0">
+            <Data name="OStim Strap-On GearCorePlump Ass" target="OStim Strap-On GearCore" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearCorePlump Ass</Data>
+            <Data name="OStim Strap-On GearExtraPlump Ass" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraPlump Ass</Data>
+        </Slider>
+        <Slider name="Thicc Knees" invert="false" default="0">
+        </Slider>
+        <Slider name="Upper Arm Mass" invert="false" default="0">
+        </Slider>
+        <Slider name="Body aTightTiger" invert="false" default="0">
+            <Data name="OStim Strap-On GearCoreBody aTightTiger" target="OStim Strap-On GearCore" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearCoreBody aTightTiger</Data>
+            <Data name="OStim Strap-On GearExtraBody aTightTiger" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraBody aTightTiger</Data>
+            <Data name="OStim Strap-On DildoBody aTightTiger" target="OStim Strap-On Dildo" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On DildoBody aTightTiger</Data>
+        </Slider>
+        <Slider name="Body Clamp" invert="false" default="0">
+            <Data name="OStim Strap-On GearCoreBody Clamp" target="OStim Strap-On GearCore" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearCoreBody Clamp</Data>
+            <Data name="OStim Strap-On GearExtraBody Clamp" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraBody Clamp</Data>
+            <Data name="OStim Strap-On DildoBody Clamp" target="OStim Strap-On Dildo" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On DildoBody Clamp</Data>
+        </Slider>
+        <Slider name="Body WINININININ" invert="false" default="0">
+            <Data name="OStim Strap-On GearCoreBody WINININININ" target="OStim Strap-On GearCore" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearCoreBody WINININININ</Data>
+            <Data name="OStim Strap-On GearExtraBody WINININININ" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraBody WINININININ</Data>
+            <Data name="OStim Strap-On DildoBody WINININININ" target="OStim Strap-On Dildo" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On DildoBody WINININININ</Data>
+        </Slider>
+        <Slider name="Body Keep" invert="false" default="0">
+            <Data name="OStim Strap-On GearCoreBody Keep" target="OStim Strap-On GearCore" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearCoreBody Keep</Data>
+            <Data name="OStim Strap-On GearExtraBody Keep" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraBody Keep</Data>
+            <Data name="OStim Strap-On DildoBody Keep" target="OStim Strap-On Dildo" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On DildoBody Keep</Data>
+        </Slider>
+        <Slider name="Body a Soul Body" invert="false" default="0">
+            <Data name="OStim Strap-On GearCoreBody a Soul Body" target="OStim Strap-On GearCore" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearCoreBody a Soul Body</Data>
+            <Data name="OStim Strap-On GearExtraBody a Soul Body" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraBody a Soul Body</Data>
+            <Data name="OStim Strap-On DildoBody a Soul Body" target="OStim Strap-On Dildo" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On DildoBody a Soul Body</Data>
+        </Slider>
+        <Slider name="Body Vanilla Coke" invert="false" default="0">
+            <Data name="OStim Strap-On GearCoreBody Vanilla Coke" target="OStim Strap-On GearCore" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearCoreBody Vanilla Coke</Data>
+            <Data name="OStim Strap-On GearExtraBody Vanilla Coke" target="OStim Strap-On GearExtra" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On GearExtraBody Vanilla Coke</Data>
+            <Data name="OStim Strap-On DildoBody Vanilla Coke" target="OStim Strap-On Dildo" local="true">4Stim OStim Strap-On (TWB).osd\OStim Strap-On DildoBody Vanilla Coke</Data>
+        </Slider>
+    </SliderSet>
+</SliderSetInfo>
