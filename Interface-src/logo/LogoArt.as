@@ -5,9 +5,8 @@ package
 	import flash.geom.Matrix;
 
 	// The 4Stim logo as vector art (traced from 4StimLogo.png), shared by the
-	// HUD's logo movie (HUDLogo.as); drawPath also draws the MCM page's logo.
-	// Vectors because Scaleform didn't show an embedded bitmap, and MCM's
-	// image control takes vector art only.
+	// HUD's logo movie (HUDLogo.as).
+	// Vectors because Scaleform didn't show an embedded bitmap in the HUD.
 	public class LogoArt
 	{
 		public static const SIZE:Number = 256;  // the outline spans -128..128

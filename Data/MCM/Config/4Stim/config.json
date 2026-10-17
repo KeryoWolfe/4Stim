@@ -9,11 +9,6 @@
 		{
 			"type": "image",
 			"libName": "4Stim",
-			"className": "FourStimLogoBitmap"
-		},
-		{
-			"type": "image",
-			"libName": "4Stim",
 			"className": "FourStimLogo"
 		},
 		{
