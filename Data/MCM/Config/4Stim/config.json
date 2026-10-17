@@ -7,9 +7,9 @@
 			"type": "spacer"
 		},
 		{
-			"text": "4Stim",
-			"type": "text",
-			"align": "center"
+			"type": "image",
+			"libName": "4Stim",
+			"className": "FourStimLogoBitmap"
 		},
 		{
 			"type": "image",

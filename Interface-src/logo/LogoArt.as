@@ -5,7 +5,7 @@ package
 	import flash.geom.Matrix;
 
 	// The 4Stim logo as vector art (traced from 4StimLogo.png), shared by the
-	// HUD's logo movie (HUDLogo.as) and the MCM page's image (MCMLib.as).
+	// HUD's logo movie (HUDLogo.as); drawPath also draws the MCM page's logo.
 	// Vectors because Scaleform didn't show an embedded bitmap, and MCM's
 	// image control takes vector art only.
 	public class LogoArt
@@ -21,7 +21,16 @@ package
 			var m:Matrix = new Matrix();
 			m.createGradientBox(SIZE, SIZE, -Math.PI / 4, -SIZE / 2, -SIZE / 2);
 			a_g.beginGradientFill(GradientType.LINEAR, [BLUE, PINK], [1, 1], [0, 255], m);
-			var d:Array = PATH;
+			drawPath(a_g, PATH);
+			a_g.endFill();
+		}
+
+		// Draws outline data (0 = moveTo x y, 1 = lineTo x y, 2 = curveTo cx
+		// cy x y) into the fill begun on a_g. Holes are separate outlines
+		// (even-odd fill).
+		public static function drawPath(a_g:Graphics, a_d:Array):void
+		{
+			var d:Array = a_d;
 			var i:int = 0;
 			while (i < d.length) {
 				switch (d[i]) {
@@ -39,7 +48,6 @@ package
 						break;
 				}
 			}
-			a_g.endFill();
 		}
 
 		// The outline, centered on (0, 0): 0 = moveTo x y, 1 = lineTo x y,
