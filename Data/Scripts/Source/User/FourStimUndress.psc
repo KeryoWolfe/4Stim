@@ -22,6 +22,7 @@ Function Strip(int aiActorID, int[] aiItemIDs, float afDelay = 0.0) Global
 		endif
 		i += 1
 	endwhile
+	FourStim.HeelsChanged(aiActorID)  ; shoes may have come off (High Heels System)
 EndFunction
 
 ; Puts the items aiItemIDs back on aiActorID, if they still have them,
@@ -76,6 +77,7 @@ Function Redress(int aiActorID, int[] aiItemIDs, float afDelay = 0.0, int[] aiGr
 		endif
 		i += 1
 	endwhile
+	FourStim.HeelsChanged(aiActorID)  ; shoes may be back on (High Heels System)
 EndFunction
 
 ; Equips aiItemID on akActor if they still have it and it isn't on.

@@ -85,6 +85,11 @@ Function UnsetObjectVariant(Actor akActor, String asType) Global Native
 ; Every equip object type there's a file for.
 String[] Function GetEquipObjectTypes() Global Native
 
+; Tells the plugin aiActorID's clothes changed (4Stim's undressing calls it
+; after taking things off or putting them on): heels are measured again and
+; the High Heels System's height turned off or back on to match.
+Function HeelsChanged(int aiActorID) Global Native
+
 ; ---- Excitement ----
 ; Every actor in a scene has an excitement from 0 to 100 that rises with the
 ; scene's actions (their stimulation, docs\ACTIONS.md). At 100 they climax:

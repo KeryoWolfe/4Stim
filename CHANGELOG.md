@@ -8,6 +8,7 @@
 - **Your role:** OStim's order (those with a penis first), `PlayerAlwaysDom` / `Sub` settings, and the picker's "Your role?" step (`playerSelectRoleGay` on by default, as OStim).
 - **Penis bend** (OStim's sosBend): per scene and role, from the scene file, the Align tab's new "Penis bend" row and `4StimBendSoS` annotations, by turning ZeX's `Penis_01_Offset` (docs/ALIGNMENT.md).
 - **Test pack:** OStim's penis bends (`sosBend`) copied into the test scenes' roles as `penisBend` (149 scenes).
+- **Fixed:** an actor whose high heels came off mid-scene floated at the heel height for the rest of the scene.
 - **Heels off with HHS's own API:** in roles with the feet off the ground, the High Heels System's height is turned off for the scene (and back on after), instead of lowering the actor.
 - **Changed:** `SetOnlyGayAnimsInGayScenes=0` no longer offers every scene: roles still need an actor of their type with what they require (OStim's; `unrestrictedNavigation=1` drops that too).
 

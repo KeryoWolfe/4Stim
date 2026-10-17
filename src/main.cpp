@@ -7,6 +7,7 @@
 #include <fstream>
 #include <filesystem>
 #include <unordered_map>
+#include <unordered_set>
 
 #include "Actions.h"
 #include "Excitement.h"
@@ -884,7 +885,8 @@ namespace
 		std::vector<float>                    appliedScale;  // per role: the scale the alignment last set (0 = none)
 		std::string                           alignKey;      // OStim's actor set key for alignment (Alignment::KeyFor), for the scene playing
 		std::vector<float>                    heels;         // per role: how high their heels lift them (Scaling::HeelHeight), read on each scene change
-		std::vector<bool>                     heelsOff;      // per role: the High Heels System's height turned off for this scene (feet not on the ground)
+		std::vector<bool>                     heelsOff;      // per role: the High Heels System's height turned off (feet not on the ground, or shoes taken off)
+		std::vector<bool>                     hadHeels;      // per role: wore heels at some point in this scene
 		// On edge furniture (beds): the spots for its own scenes and for floor
 		// scenes; SpotOf picks by the scene playing (center / heading are the
 		// first scene's).
@@ -1678,6 +1680,21 @@ namespace
 		float        scale = 1.0F;    // times the actor's own scale
 	};
 
+	// Actors whose HHS height 4Stim turned off and who left their scene
+	// barefoot: back on when their shoes are (HeelsChanged).
+	std::mutex                        g_heelsWaitingLock;
+	std::unordered_set<std::uint32_t> g_heelsWaiting;
+
+	void RestartHeels(std::uint32_t a_id, const char* a_why)
+	{
+		if (!g_vm) {
+			return;
+		}
+		REX::INFO("Heels: {:08X} back on ({})", a_id, a_why);
+		RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
+		g_vm->DispatchStaticCall("FourStimScene"sv, "SetHeels"sv, callback, static_cast<std::int32_t>(a_id), true);
+	}
+
 	// Whether the High Heels System's plugin is there (its Papyrus API turns
 	// an actor's height off and on).
 	bool HHSInstalled()
@@ -1770,8 +1787,19 @@ namespace
 				continue;
 			}
 			const auto spot = SpotOf(a_active, role);
-			if (HHSInstalled() && role < a_active.heels.size() && a_active.heels[role] > 0.0F) {
-				SetHeelsOff(a_active, role, settled && role < settled->actors.size() && !settled->actors[role].feetOnGround);
+			// HHS on only while they wear heels with their feet on the ground.
+			// HHS ignores shoes coming off while its height is off, and turning
+			// it back on restores the old height: so with the shoes off it
+			// stays off (else they float), and comes back on with the shoes.
+			if (HHSInstalled() && role < a_active.heels.size()) {
+				a_active.hadHeels.resize(a_active.actors.size(), false);
+				if (a_active.heels[role] > 0.0F) {
+					a_active.hadHeels[role] = true;
+				}
+				if (a_active.hadHeels[role]) {
+					const bool feet = settled && role < settled->actors.size() && settled->actors[role].feetOnGround;
+					SetHeelsOff(a_active, role, a_active.heels[role] <= 0.0F || !feet);
+				}
 			}
 			// The penis bend (OStim's setSoSBend): the alignment's, else the scene's.
 			{
@@ -1814,10 +1842,17 @@ namespace
 	void RestoreScales(const ActiveScene& a_active)
 	{
 		for (std::size_t role = 0; role < a_active.actors.size() && role < a_active.heelsOff.size(); ++role) {
-			if (a_active.heelsOff[role] && g_vm) {
-				REX::INFO("Heels: {:08X} back on (scene over)", a_active.actors[role]);
-				RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
-				g_vm->DispatchStaticCall("FourStimScene"sv, "SetHeels"sv, callback, static_cast<std::int32_t>(a_active.actors[role]), true);
+			if (a_active.heelsOff[role]) {
+				// Back on now if they wear heels; else once they're dressed
+				// again (HeelsChanged, from the redress).
+				const auto id = a_active.actors[role];
+				if (Scaling::HeelHeight(RE::TESForm::GetFormByID<RE::Actor>(id)) > 0.0F) {
+					RestartHeels(id, "scene over");
+				} else {
+					std::scoped_lock lock(g_heelsWaitingLock);
+					g_heelsWaiting.insert(id);
+					REX::INFO("Heels: {:08X} stay off until their shoes are back on", id);
+				}
 			}
 		}
 		for (std::size_t role = 0; role < a_active.actors.size() && role < a_active.appliedScale.size(); ++role) {
@@ -3386,6 +3421,31 @@ namespace
 	std::vector<std::string> GetEquipObjectTypes(std::monostate)
 	{
 		return EquipObjects::Types();
+	}
+
+	// 4Stim's undressing took clothes off or put them on (Papyrus, after the
+	// items): heels are measured again and HHS turned off or on to match.
+	void HeelsChanged(std::monostate, std::int32_t a_actorID)
+	{
+		const auto id = static_cast<std::uint32_t>(a_actorID);
+		F4SE::GetTaskInterface()->AddTask([id]() {
+			if (const auto active = FindActiveScene(id)) {
+				LockScene(*active);  // measures heels again, rescales, HHS on / off
+				return;
+			}
+			bool waiting;
+			{
+				std::scoped_lock lock(g_heelsWaitingLock);
+				waiting = g_heelsWaiting.contains(id);
+			}
+			if (waiting && Scaling::HeelHeight(RE::TESForm::GetFormByID<RE::Actor>(id)) > 0.0F) {
+				{
+					std::scoped_lock lock(g_heelsWaitingLock);
+					g_heelsWaiting.erase(id);
+				}
+				RestartHeels(id, "dressed again");
+			}
+		});
 	}
 
 	// Actor properties (docs/ACTORS.md): OStim's OActor.HasSchlong (4Stim:
@@ -5486,6 +5546,7 @@ namespace
 		a_vm->BindNativeMethod(SCRIPT_NAME, "UnsetObjectVariant"sv, UnsetObjectVariant);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "GetEquipObjectTypes"sv, GetEquipObjectTypes);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "HasPenis"sv, HasPenis);
+		a_vm->BindNativeMethod(SCRIPT_NAME, "HeelsChanged"sv, HeelsChanged);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "GetActorType"sv, GetActorType);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "RegisterForSceneEvents"sv, RegisterForSceneEvents);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "UnregisterForSceneEvents"sv, UnregisterForSceneEvents);
