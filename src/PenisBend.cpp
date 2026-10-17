@@ -14,6 +14,7 @@ namespace PenisBend
 			float steps = 0.0F;   // the scene's / alignment's
 			int   offset = 0;     // the annotation's
 			bool  applied = false;
+			bool  warned = false;  // said once that the node isn't there
 		};
 
 		Config                                   g_config;
@@ -88,8 +89,14 @@ namespace PenisBend
 			}
 			const auto actor = RE::TESForm::GetFormByID<RE::Actor>(id);
 			if (const auto node = Node(actor)) {
+				if (!state.applied && total != 0.0F) {
+					REX::INFO("Penis bend: {:08X} bent {} step(s) ({} degrees) at {}", id, total, total * g_config.stepDegrees, g_config.node);
+				}
 				node->SetLocalRotate(Turn(total * g_config.stepDegrees));
 				state.applied = total != 0.0F;
+			} else if (actor && actor->Get3D(false) && !state.warned) {
+				state.warned = true;
+				REX::INFO("Penis bend: {:08X} has no \"{}\" node in their skeleton (not ZeX, or no penis): not bent", id, g_config.node);
 			}
 		}
 	}

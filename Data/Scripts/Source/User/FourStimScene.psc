@@ -404,3 +404,27 @@ Function EndPairScene(Actor akActor0, Actor akActor1) Global
 	RestoreActorInteraction(akActor0)
 	RestoreActorInteraction(akActor1)
 EndFunction
+
+; The High Heels System's height for aiActorID off (abOn false: feet not on
+; the ground in this scene, as OStim takes heels off) or back on. Through
+; HHS's own Papyrus API, called by name so this compiles without HHS.
+Function SetHeels(int aiActorID, bool abOn) Global
+	Actor akActor = Game.GetForm(aiActorID) as Actor
+	if akActor == None
+		return
+	endif
+	Var[] args = new Var[1]
+	args[0] = akActor as ObjectReference
+	Var[] noArgs
+	if !(Utility.CallGlobalFunction("HHS", "IsValidF4SE_HHS", noArgs) as bool)
+		return
+	endif
+	bool stopped = Utility.CallGlobalFunction("HHS", "IsStop_HHS", args) as bool
+	if abOn
+		if stopped
+			Utility.CallGlobalFunction("HHS", "StartHeight_HHS", args)
+		endif
+	elseif !stopped && (Utility.CallGlobalFunction("HHS", "HasHeight_HHS", args) as bool)
+		Utility.CallGlobalFunction("HHS", "StopHeight_HHS", args)
+	endif
+EndFunction

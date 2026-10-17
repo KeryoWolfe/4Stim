@@ -5,6 +5,7 @@
 #include <random>
 #include <thread>
 #include <fstream>
+#include <filesystem>
 #include <unordered_map>
 
 #include "Actions.h"
@@ -883,6 +884,7 @@ namespace
 		std::vector<float>                    appliedScale;  // per role: the scale the alignment last set (0 = none)
 		std::string                           alignKey;      // OStim's actor set key for alignment (Alignment::KeyFor), for the scene playing
 		std::vector<float>                    heels;         // per role: how high their heels lift them (Scaling::HeelHeight), read on each scene change
+		std::vector<bool>                     heelsOff;      // per role: the High Heels System's height turned off for this scene (feet not on the ground)
 		// On edge furniture (beds): the spots for its own scenes and for floor
 		// scenes; SpotOf picks by the scene playing (center / heading are the
 		// first scene's).
@@ -1676,6 +1678,27 @@ namespace
 		float        scale = 1.0F;    // times the actor's own scale
 	};
 
+	// Whether the High Heels System's plugin is there (its Papyrus API turns
+	// an actor's height off and on).
+	bool HHSInstalled()
+	{
+		static const bool installed = std::filesystem::exists("Data/F4SE/Plugins/HHS.dll");
+		return installed;
+	}
+
+	// Turns role a_role's heel height off (or back on) through HHS. Main thread.
+	void SetHeelsOff(ActiveScene& a_active, std::size_t a_role, bool a_off)
+	{
+		a_active.heelsOff.resize(a_active.actors.size(), false);
+		if (!g_vm || a_role >= a_active.actors.size() || a_active.heelsOff[a_role] == a_off) {
+			return;
+		}
+		a_active.heelsOff[a_role] = a_off;
+		REX::INFO("Heels: {:08X} {} (High Heels System)", a_active.actors[a_role], a_off ? "off: feet not on the ground" : "back on");
+		RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
+		g_vm->DispatchStaticCall("FourStimScene"sv, "SetHeels"sv, callback, static_cast<std::int32_t>(a_active.actors[a_role]), !a_off);
+	}
+
 	ActorSpot SpotOf(const ActiveScene& a_active, std::size_t a_role)
 	{
 		const auto scene = SceneRegistry::Find(a_active.sceneID);
@@ -1703,9 +1726,10 @@ namespace
 		spot.position = { center.x + x * c + y * s, center.y - x * s + y * c, center.z + z };
 		spot.heading = heading + r * PI_F / 180.0F;
 		// As OStim: heels come off an actor whose feet aren't on the ground
-		// (lying, kneeling...): OStim moves their skeleton down by the heel
-		// height; here their spot is lowered by it.
-		if (a_role < a_active.heels.size() && a_active.heels[a_role] > 0.0F && settled && a_role < settled->actors.size() &&
+		// (lying, kneeling...). With the High Heels System, its own height is
+		// turned off (LockScene, HHS's StopHeight_HHS, as OStim takes the
+		// NiOverride offset off); without it, their spot is lowered by it.
+		if (!HHSInstalled() && a_role < a_active.heels.size() && a_active.heels[a_role] > 0.0F && settled && a_role < settled->actors.size() &&
 			!settled->actors[a_role].feetOnGround) {
 			spot.position.z -= a_active.heels[a_role];
 		}
@@ -1746,6 +1770,9 @@ namespace
 				continue;
 			}
 			const auto spot = SpotOf(a_active, role);
+			if (HHSInstalled() && role < a_active.heels.size() && a_active.heels[role] > 0.0F) {
+				SetHeelsOff(a_active, role, settled && role < settled->actors.size() && !settled->actors[role].feetOnGround);
+			}
 			// The penis bend (OStim's setSoSBend): the alignment's, else the scene's.
 			{
 				const auto found = settled ? Alignment::Find(a_active.alignKey, settled->id, role) : std::nullopt;
@@ -1769,6 +1796,8 @@ namespace
 				if (std::fabs(wanted - current) > 0.001F) {
 					CallActorMethod(actor, "ObjectReference"sv, "SetScale"sv, wanted);
 					a_active.appliedScale[role] = wanted;
+					REX::INFO("Scaling: {:08X} (role {}) scaled to {:.3f} (heels {:.1f}, feet on the ground {})", id, role, wanted,
+						role < a_active.heels.size() ? a_active.heels[role] : 0.0F, settled && role < settled->actors.size() && settled->actors[role].feetOnGround);
 				}
 			}
 			if (!g_lockScenes) {
@@ -1781,9 +1810,16 @@ namespace
 		}
 	}
 
-	// Actors leaving a scene: their own scale back.
+	// Actors leaving a scene: their own scale back (and their heels).
 	void RestoreScales(const ActiveScene& a_active)
 	{
+		for (std::size_t role = 0; role < a_active.actors.size() && role < a_active.heelsOff.size(); ++role) {
+			if (a_active.heelsOff[role] && g_vm) {
+				REX::INFO("Heels: {:08X} back on (scene over)", a_active.actors[role]);
+				RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
+				g_vm->DispatchStaticCall("FourStimScene"sv, "SetHeels"sv, callback, static_cast<std::int32_t>(a_active.actors[role]), true);
+			}
+		}
 		for (std::size_t role = 0; role < a_active.actors.size() && role < a_active.appliedScale.size(); ++role) {
 			if (a_active.appliedScale[role] > 0.0F) {
 				if (const auto actor = RE::TESForm::GetFormByID<RE::Actor>(a_active.actors[role])) {

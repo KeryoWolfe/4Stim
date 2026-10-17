@@ -27,7 +27,9 @@ Heights made in HHS's MCM ("Create height in game") are saved as these same `.tx
 As OStim does with its heel offsets:
 
 - **Feet on the ground** (the role is tagged `standing` or `squatting`, or the scene file says `"feetOnGround": true`): the heels stay on, and the actor is scaled down so body and heels together match the animation: × `scaleHeight` ÷ (`scaleHeight` + heel height). `scaleHeight` is the height the animation was made for, 120.748 units by default (OStim's), settable per role.
-- **Feet off the ground** (lying, kneeling, sitting...): the heels come off. OStim moves the actor's skeleton down by the heel height; 4Stim lowers their spot by it, which has the same effect while the scene lock holds them.
+- **Feet off the ground** (lying, kneeling, sitting...): the heels come off. OStim takes the heel offset off the skeleton; 4Stim turns HHS's height off for the scene with HHS's own Papyrus API (`StopHeight_HHS`, and `StartHeight_HHS` when their feet are back on the ground or the scene ends), called by name so 4Stim's scripts don't need HHS to compile. Without HHS's plugin, 4Stim lowers their spot by the heel height instead.
+
+`4Stim.log` says when heels go off and on (`Heels: ... off` / `back on`) and the scale each actor gets (`Scaling: ...`).
 
 Alignments are kept separately for actors in heels (`alignmentGroupByHeels=1`, OStim's default; `ALIGNMENT.md`), only while their heels are on.
 
