@@ -92,6 +92,10 @@ namespace Furniture
 	// middle, lengthwise, at the edge spot's height.
 	Spot SpotFor(RE::TESObjectREFR* a_ref, std::string_view a_type, const RE::NiPoint3& a_near, bool a_floorScene = false);
 
+	// OStim's multiplyScale: actors on furniture of a_type are scaled by it
+	// (1 for unknown types).
+	float MultiplyScale(std::string_view a_type);
+
 	// Whether type a_type places scenes on an edge (beds, tables): floor
 	// scenes on it get their own spot (SpotFor's a_floorScene).
 	bool IsEdgeAnchored(std::string_view a_type);

@@ -15,6 +15,8 @@
 - **Heels off with HHS's own API:** in roles with the feet off the ground, the High Heels System's height is turned off for the scene (and back on after), instead of lowering the actor.
 - **Furniture** (OStim's, docs/FURNITURE.md): change furniture mid-scene (the HUD's Utility tab, "Change furniture..."); `SetSelectFurniture=0` puts a new scene on the nearest furniture without asking, `SetEnableFurniture=0` leaves furniture out; furniture in use can't be used by anyone else; `SetResetClutter` puts back the loose items a furniture scene knocked about (only what it moved). Furniture another scene is on isn't offered.
 - **Walls and shelves:** the test pack's wall and shelf scenes now play: walls are found by ray casts (Fallout 4 has hardly any wall-lean markers), shelves by their models. Spots are first guesses to tune.
+- **Walls and edges, refined:** a wall only counts when nothing stands in front of it (an open shelf no longer lets a wall scene through), and furniture scenes take the side away from a wall, checked at several heights.
+- **OStim's scene format, complete:** the actor `noStrip`, `singleSpeed`, OStim's eye directions (`lookUp` / `lookLeft`..., by turning the eye bones), `scaleOffsetWithFurniture` and furniture `multiplyScale`. The test pack now has OStim's actor scales, eye directions and the rest from its scene files.
 - **Papyrus:** `GetFurnitureType`, `IsFurnitureChildOf`, `GetSceneFurniture`, `GetSceneFurnitureType`, `ChangeFurniture`, `OpenFurnitureMenu`, and the `FourStim_OnFurnitureChange` scene event.
 - **Changed:** `SetOnlyGayAnimsInGayScenes=0` no longer offers every scene: roles still need an actor of their type with what they require (OStim's; `unrestrictedNavigation=1` drops that too).
 

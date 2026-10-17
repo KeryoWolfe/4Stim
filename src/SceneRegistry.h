@@ -99,6 +99,13 @@ namespace SceneRegistry
 		std::string expressionOverride;
 		std::string underlyingExpression;
 		int         expressionAction = -1;
+		// OStim's eye directions (its lookUp / lookDown, lookLeft /
+		// lookRight; 0-100, Skyrim's look modifiers): up (+) or down (-), left
+		// (+) or right (-). 0 = the expressions' own.
+		float lookUp = 0.0F;
+		float lookLeft = 0.0F;
+		bool  noStrip = false;      // OStim's actor noStrip: this role isn't undressed
+		bool  singleSpeed = false;  // OStim's: this role plays the slowest speed's animation at every speed
 
 		[[nodiscard]] bool HasTag(std::string_view a_tag) const;
 		// The scene for a_event, or "".
@@ -160,6 +167,7 @@ namespace SceneRegistry
 		int                                        defaultSpeed = 0;   // 0-based speed it starts at (auto mode, new scenes)
 		bool                                       noRandomSelection = false;  // auto mode never picks it
 		bool                                       noStrip = false;            // no undressing in this scene
+		bool                                       scaleOffsetWithFurniture = false;  // OStim's: the actors' offsets grow and shrink with the furniture's scale
 		std::vector<SceneUndress>                  undress;                    // animated undressing steps
 		float                                      dressAt = -1.0F;            // redress animations: when the clothes go on (s); -1 = not given
 		std::string                                furniture;      // furniture type it's played on (lowercase); "" = anywhere

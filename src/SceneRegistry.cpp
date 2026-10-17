@@ -208,6 +208,7 @@ namespace SceneRegistry
 			scene.sourceFile = file;
 			scene.noRandomSelection = entry.value("noRandomSelection", false);
 			scene.noStrip = entry.value("noStrip", false);
+			scene.scaleOffsetWithFurniture = entry.value("scaleOffsetWithFurniture", false);
 			if (const auto at = entry.find("dressAt"); at != entry.end() && at->is_number()) {
 				scene.dressAt = std::max(at->get<float>(), 0.0F);
 			}
@@ -290,6 +291,26 @@ namespace SceneRegistry
 						role.expressionAction = v->get<int>();
 					}
 					role.muffled = a.value("muffled", false);
+					role.noStrip = a.value("noStrip", false);
+					role.singleSpeed = a.value("singleSpeed", false);
+					// As OStim: lookUp, else lookDown (negated); lookLeft, else
+					// lookRight. Negative values look the other way.
+					auto number = [&](const char* a_key) -> std::optional<float> {
+						const auto v = a.find(a_key);
+						return v != a.end() && v->is_number() ? std::optional<float>(v->get<float>()) : std::nullopt;
+					};
+					if (const auto up = number("lookUp")) {
+						role.lookUp = *up;
+					} else if (const auto down = number("lookDown")) {
+						role.lookUp = -*down;
+					}
+					if (const auto left = number("lookLeft")) {
+						role.lookLeft = *left;
+					} else if (const auto right = number("lookRight")) {
+						role.lookLeft = -*right;
+					}
+					role.lookUp = std::clamp(role.lookUp, -100.0F, 100.0F);
+					role.lookLeft = std::clamp(role.lookLeft, -100.0F, 100.0F);
 				}
 				role.offset.x += sceneOffset.x;
 				role.offset.y += sceneOffset.y;
@@ -408,6 +429,14 @@ namespace SceneRegistry
 			if (!ok) {
 				++a_skipped;
 				return;
+			}
+			// OStim's singleSpeed: that role's slowest animation at every speed.
+			for (std::size_t role = 0; role < roles; ++role) {
+				if (scene.actors[role].singleSpeed) {
+					for (auto& set : scene.speeds) {
+						set[role] = scene.speeds.front()[role];
+					}
+				}
 			}
 
 			// Actions: who does what to whom. Each role collects what its

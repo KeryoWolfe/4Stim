@@ -64,7 +64,7 @@ namespace Furniture
 			RE::NiPoint3                   offset;            // in the furniture's own frame
 			float                          rotation = 0.0F;   // radians
 			bool                           listIndividually = false;  // OStim's: list every piece of it, not just the nearest
-			float                          multiplyScale = 1.0F;      // OStim's: kept, not used yet
+			float                          multiplyScale = 1.0F;      // OStim's: actors on it are scaled by this
 		};
 
 		std::mutex                  g_lock;
@@ -408,6 +408,7 @@ namespace Furniture
 			bool               hit = false;
 			float              fraction = 1.0F;
 			RE::TESObjectREFR* ref = nullptr;  // what it hit, if an object
+			bool               actor = false;  // it hit an actor
 		};
 
 		RayHit CastRay(RE::TESObjectCELL* a_cell, const RE::NiPoint3& a_from, const RE::NiPoint3& a_to)
@@ -424,19 +425,67 @@ namespace Furniture
 				return out;
 			}
 			out.ref = object ? RE::TESObjectREFR::FindReferenceFor3D(object) : nullptr;
-			if (out.ref && out.ref->As<RE::Actor>()) {
-				out.ref = nullptr;
-				return out;  // an actor in the way: not a wall
-			}
+			out.actor = out.ref && out.ref->As<RE::Actor>();
 			out.hit = true;
 			out.fraction = std::clamp(pick.GetHitFraction(), 0.0F, 1.0F);
 			return out;
+		}
+
+		// How far a_from -> a_to is clear, looking past actors and a_self (the
+		// furniture being measured around: a ray starting over a bed goes on
+		// through the bed): the distance to the first other thing, or the
+		// whole length.
+		float FreeDistance(RE::TESObjectCELL* a_cell, RE::TESObjectREFR* a_self, const RE::NiPoint3& a_from, const RE::NiPoint3& a_to)
+		{
+			const auto  full = a_to - a_from;
+			const float length = std::sqrt(full.x * full.x + full.y * full.y + full.z * full.z);
+			if (length < 0.01F) {
+				return 0.0F;
+			}
+			const auto dir = full * (1.0F / length);
+			float      start = 0.0F;
+			for (int i = 0; i < 6 && start < length; ++i) {
+				const auto hit = CastRay(a_cell, a_from + dir * start, a_to);
+				if (!hit.hit) {
+					return length;
+				}
+				const float at = start + hit.fraction * (length - start);
+				if (!hit.actor && (!a_self || hit.ref != a_self)) {
+					return at;
+				}
+				start = at + 2.0F;  // on past it
+			}
+			return length;
+		}
+
+		// Whether a_point is within a_ref's bounding box grown by a_margin
+		// (sideways; up to its top, from a little below it).
+		bool InBounds(RE::TESObjectREFR* a_ref, const RE::NiPoint3& a_point, float a_margin)
+		{
+			const auto base = a_ref ? a_ref->GetObjectReference() : nullptr;
+			if (!base) {
+				return false;
+			}
+			const auto& b = base->boundData;
+			const float scale = a_ref->refScale > 0 ? a_ref->refScale / 100.0F : 1.0F;
+			const float yaw = a_ref->data.angle.z;
+			const auto  origin = a_ref->GetPosition();
+			const float dx = a_point.x - origin.x, dy = a_point.y - origin.y;
+			const float c = std::cos(yaw), s = std::sin(yaw);
+			const float x = (dx * c - dy * s) / scale, y = (dx * s + dy * c) / scale, z = (a_point.z - origin.z) / scale;
+			const float m = a_margin / scale;
+			return x >= b.boundMin.x - m && x <= b.boundMax.x + m && y >= b.boundMin.y - m && y <= b.boundMax.y + m && z >= b.boundMin.z - 50.0F &&
+			       z <= b.boundMax.z;
 		}
 
 		// The nearest wall around a_center (feet height), within a_distance:
 		// rays out in 24 directions at two heights must both hit the same
 		// upright surface (not a door, not an actor). Where it is (on the
 		// floor, at the foot of the wall) and which way is out from it.
+		// A wall with something in front of it doesn't count: rays at five
+		// heights, straight and a little to each side (an actor's width), must
+		// all reach it (an open shelf lets the first two through to the wall
+		// behind), and the spot can't be in or right beside any of a_furniture.
 		struct WallHit
 		{
 			RE::NiPoint3 point;
@@ -444,22 +493,33 @@ namespace Furniture
 			float        distance = 0.0F;
 		};
 
-		std::optional<WallHit> FindWall(RE::TESObjectCELL* a_cell, const RE::NiPoint3& a_center, float a_distance)
+		std::optional<WallHit> FindWall(RE::TESObjectCELL* a_cell, const RE::NiPoint3& a_center, float a_distance,
+			const std::vector<RE::TESObjectREFR*>& a_furniture, float a_standOff)
 		{
 			constexpr float LOW = 50.0F, HIGH = 110.0F, MID = 80.0F;  // above the floor
 			constexpr float SAME_SURFACE = 12.0F;                    // the two heights' hits may differ by this much
 			constexpr float MIN_DISTANCE = 15.0F;
+			constexpr float CLEAR_HEIGHTS[] = { 15.0F, 40.0F, 80.0F, 130.0F, 170.0F };
+			constexpr float CLEAR_SIDE = 20.0F;    // either side of the straight ray
+			constexpr float CLEAR_SLACK = 20.0F;   // a clearance ray may stop this much short of the wall
+			constexpr float FURNITURE_MARGIN = 30.0F;
 			auto dirOf = [](float a_angle) { return RE::NiPoint3{ std::sin(a_angle), std::cos(a_angle), 0.0F }; };
 			auto distanceAt = [&](float a_angle, float a_height) -> std::optional<float> {
 				const RE::NiPoint3 from{ a_center.x, a_center.y, a_center.z + a_height };
 				const auto         hit = CastRay(a_cell, from, from + dirOf(a_angle) * a_distance);
-				if (!hit.hit || (hit.ref && hit.ref->GetObjectReference() && hit.ref->GetObjectReference()->GetFormType() == RE::ENUM_FORM_ID::kDOOR)) {
+				if (!hit.hit || hit.actor ||
+					(hit.ref && hit.ref->GetObjectReference() && hit.ref->GetObjectReference()->GetFormType() == RE::ENUM_FORM_ID::kDOOR)) {
 					return std::nullopt;
 				}
 				return hit.fraction * a_distance;
 			};
-			std::optional<WallHit> best;
-			float                  bestAngle = 0.0F;
+			// Every direction where both heights hit one upright surface.
+			struct Candidate
+			{
+				float angle;
+				float distance;
+			};
+			std::vector<Candidate> candidates;
 			for (int i = 0; i < 24; ++i) {
 				const float angle = static_cast<float>(i) * 15.0F * DEG;
 				const auto  low = distanceAt(angle, LOW);
@@ -468,36 +528,65 @@ namespace Furniture
 					continue;
 				}
 				const float d = (*low + *high) * 0.5F;
-				if (d < MIN_DISTANCE || (best && d >= best->distance)) {
+				if (d >= MIN_DISTANCE) {
+					candidates.push_back({ angle, d });
+				}
+			}
+			std::ranges::sort(candidates, [](const Candidate& a, const Candidate& b) { return a.distance < b.distance; });
+			for (const auto& candidate : candidates) {
+				const auto dir = dirOf(candidate.angle);
+				const RE::NiPoint3 side{ dir.y, -dir.x, 0.0F };
+				// Clear all the way to the wall: nothing in front of it.
+				bool clear = true;
+				for (const float height : CLEAR_HEIGHTS) {
+					for (const float offset : { -CLEAR_SIDE, 0.0F, CLEAR_SIDE }) {
+						const RE::NiPoint3 from = RE::NiPoint3{ a_center.x, a_center.y, a_center.z + height } + side * offset;
+						const float        free = FreeDistance(a_cell, nullptr, from, from + dir * (candidate.distance + 10.0F));
+						if (free < candidate.distance - CLEAR_SLACK) {
+							clear = false;
+							break;
+						}
+					}
+					if (!clear) {
+						break;
+					}
+				}
+				if (!clear) {
 					continue;
 				}
-				const auto dir = dirOf(angle);
-				best = WallHit{ a_center + dir * d, dir * -1.0F, d };
-				bestAngle = angle;
-			}
-			if (!best) {
-				return std::nullopt;
-			}
-			// The wall's own direction from two rays either side: out from it
-			// is square to it, toward the center (else straight back).
-			const auto left = distanceAt(bestAngle - 6.0F * DEG, MID);
-			const auto right = distanceAt(bestAngle + 6.0F * DEG, MID);
-			if (left && right && std::fabs(*left - *right) < 60.0F) {
-				const auto   a = a_center + dirOf(bestAngle - 6.0F * DEG) * *left;
-				const auto   b = a_center + dirOf(bestAngle + 6.0F * DEG) * *right;
-				RE::NiPoint3 normal{ b.y - a.y, -(b.x - a.x), 0.0F };
-				const float  length = std::sqrt(normal.x * normal.x + normal.y * normal.y);
-				if (length > 0.01F) {
-					normal = normal * (1.0F / length);
-					const auto toCenter = a_center - best->point;
-					if (normal.x * toCenter.x + normal.y * toCenter.y < 0.0F) {
-						normal = normal * -1.0F;
+				WallHit wall{ a_center + dir * candidate.distance, dir * -1.0F, candidate.distance };
+				// The wall's own direction from two rays either side: out from it
+				// is square to it, toward the center (else straight back).
+				const auto left = distanceAt(candidate.angle - 6.0F * DEG, MID);
+				const auto right = distanceAt(candidate.angle + 6.0F * DEG, MID);
+				if (left && right && std::fabs(*left - *right) < 60.0F) {
+					const auto   a = a_center + dirOf(candidate.angle - 6.0F * DEG) * *left;
+					const auto   b = a_center + dirOf(candidate.angle + 6.0F * DEG) * *right;
+					RE::NiPoint3 normal{ b.y - a.y, -(b.x - a.x), 0.0F };
+					const float  length = std::sqrt(normal.x * normal.x + normal.y * normal.y);
+					if (length > 0.01F) {
+						normal = normal * (1.0F / length);
+						const auto toCenter = a_center - wall.point;
+						if (normal.x * toCenter.x + normal.y * toCenter.y < 0.0F) {
+							normal = normal * -1.0F;
+						}
+						wall.normal = normal;
 					}
-					best->normal = normal;
 				}
+				wall.point.z = a_center.z;
+				// Not where furniture stands: the spot out from the wall, and the
+				// wall itself (a wall behind a shelf).
+				const auto spot = wall.point + wall.normal * a_standOff;
+				const auto blocked = std::ranges::find_if(a_furniture, [&](RE::TESObjectREFR* a_ref) {
+					return InBounds(a_ref, spot, FURNITURE_MARGIN) || InBounds(a_ref, wall.point, FURNITURE_MARGIN);
+				});
+				if (blocked != a_furniture.end()) {
+					REX::INFO("Furniture: a wall {:.0f} away, but {:08X} stands there", candidate.distance, (*blocked)->GetFormID());
+					continue;
+				}
+				return wall;
 			}
-			best->point.z = a_center.z;
-			return best;
+			return std::nullopt;
 		}
 
 		// g_lock held.
@@ -575,6 +664,8 @@ namespace Furniture
 		if (!tes) {
 			return found;
 		}
+		// Furniture near enough to stand in front of a wall: no wall spot there.
+		std::vector<RE::TESObjectREFR*> obstacles;
 		tes->ForEachReferenceInRange(a_center, a_radius, [&](RE::TESObjectREFR* a_ref) {
 			const auto base = a_ref ? a_ref->GetObjectReference() : nullptr;
 			if (!base) {
@@ -593,6 +684,9 @@ namespace Furniture
 			}
 			const auto type = ClassifyLocked(a_ref);
 			const auto distance = a_center.GetDistance(pos);
+			if ((!type.empty() || formType == RE::ENUM_FORM_ID::kFURN || formType == RE::ENUM_FORM_ID::kCONT) && distance < 600.0F) {
+				obstacles.push_back(a_ref);
+			}
 			if (a_log && (formType == RE::ENUM_FORM_ID::kFURN || !type.empty())) {
 				const char* code = formType == RE::ENUM_FORM_ID::kFURN ? "FURN" : formType == RE::ENUM_FORM_ID::kSTAT ? "STAT" :
 				                   formType == RE::ENUM_FORM_ID::kMSTT ? "MSTT" :
@@ -622,7 +716,7 @@ namespace Furniture
 				if (!type.wall) {
 					continue;
 				}
-				const auto wall = FindWall(cell, a_center, std::min(type.wallDistance, a_radius));
+				const auto wall = FindWall(cell, a_center, std::min(type.wallDistance, a_radius), obstacles, std::max(type.offset.y, 15.0F));
 				if (a_log) {
 					REX::INFO("Furniture: wall for \"{}\": {}", type.id,
 						wall ? std::format("{:.0f} away at ({:.1f}, {:.1f}, {:.1f}), out ({:.2f}, {:.2f})", wall->distance, wall->point.x, wall->point.y,
@@ -677,6 +771,14 @@ namespace Furniture
 			}
 			return std::clamp(pick.GetHitFraction(), 0.0F, 1.0F);
 		}
+	}
+
+	float MultiplyScale(std::string_view a_type)
+	{
+		std::scoped_lock lock(g_lock);
+		EnsureLoaded();
+		const auto it = g_types.find(Lower(a_type));
+		return it != g_types.end() && it->second.multiplyScale > 0.0F ? it->second.multiplyScale : 1.0F;
 	}
 
 	bool IsEdgeAnchored(std::string_view a_type)
@@ -765,15 +867,23 @@ namespace Furniture
 				// not at its edge: a bed pushed against a wall has its edge in
 				// or touching the wall, and a ray starting inside a wall
 				// doesn't see it.
+				// At knee, chest and head height above the floor it stands on,
+				// and just over its top, looking past the furniture itself: the
+				// least room of those (a low wall, a gap above a short one, a
+				// crate beside a bed all count).
 				auto roomOutside = [&](bool a_plus) {
 					const float sign = a_plus ? 1.0F : -1.0F;
 					const RE::NiPoint3 dir = sidesOnY ? RE::NiPoint3{ 0.0F, sign, 0.0F } : RE::NiPoint3{ sign, 0.0F, 0.0F };
-					const float height = static_cast<float>(b.boundMax.z) + 30.0F;
-					const RE::NiPoint3 start = RE::NiPoint3{ midX, midY, height } * scale;
 					const float toEdge = (sidesOnY ? (a_plus ? maxY - midY : midY - minY) : (a_plus ? maxX - midX : midX - minX)) * scale;
 					const float length = toEdge + WALL_CHECK_DISTANCE;
-					const float free = FreeFraction(a_ref, ToWorld(a_ref, start), ToWorld(a_ref, start + dir * length)) * length;
-					return std::clamp(free - toEdge, 0.0F, WALL_CHECK_DISTANCE);
+					const float floor = static_cast<float>(b.boundMin.z);
+					float       room = WALL_CHECK_DISTANCE;
+					for (const float height : { floor + 40.0F, floor + 100.0F, floor + 150.0F, static_cast<float>(b.boundMax.z) + 30.0F }) {
+						const RE::NiPoint3 start = RE::NiPoint3{ midX, midY, height } * scale;
+						const float free = FreeDistance(a_ref->GetParentCell(), a_ref, ToWorld(a_ref, start), ToWorld(a_ref, start + dir * length));
+						room = std::min(room, std::clamp(free - toEdge, 0.0F, WALL_CHECK_DISTANCE));
+					}
+					return room;
 				};
 				const float nearRoom = roomOutside(plus);
 				const float farRoom = roomOutside(!plus);
@@ -781,6 +891,7 @@ namespace Furniture
 					WALL_CHECK_DISTANCE);
 				if (nearRoom < WALL_CHECK_DISTANCE && farRoom > nearRoom) {
 					plus = !plus;
+					REX::INFO("Furniture: {:08X}: the side away from the wall", a_ref->GetFormID());
 				}
 			}
 			if (sidesOnY) {

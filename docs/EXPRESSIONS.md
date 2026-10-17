@@ -63,4 +63,8 @@ Morphs are set with the console command `mfg morphs <morph> <0-100>`, only when 
 
 ## Not in yet
 
-OStim's eye and head `look` directions, expression `delay`, and expressions outside scenes.
+Expression `delay`, OStim's head `look` (OStim turns the head too, with its own Skyrim plugin), and expressions outside scenes.
+
+## Eye directions
+
+OStim's scene actors can look up, down, left or right (`lookUp` / `lookDown` / `lookLeft` / `lookRight`, 0-100, SCENES.md), which OStim plays with Skyrim's look modifiers and keeps over the expressions' own. Fallout 4's face has no look morphs, so 4Stim turns the face skeleton's eye bones (`skin_bone_L_Eye` / `skin_bone_R_Eye`) about the actor's up and side axes instead: 100 is `fLookMaxSide` (25) degrees sideways, `fLookMaxUp` (18) up or down. If the game's eye tracking sets the bones too, 4Stim turns from where it left them. `bDisableEyeLook=1` turns it off; `sLeftEyeNode` / `sRightEyeNode` name other bones. An actor whose head has no such bones logs "Eyes: ... no bones" once and is left alone. The test pack's scenes have OStim's values.

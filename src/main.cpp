@@ -27,6 +27,7 @@
 #include "ActorProperties.h"
 #include "EquipObjects.h"
 #include "PenisBend.h"
+#include "EyeLook.h"
 #include "compat/Addresses.h"
 #include "compat/RequiredIDs.h"
 
@@ -592,6 +593,18 @@ namespace
 				} else if (key == "ftransitionlead") {
 					g_settings.transitionLead = std::clamp(std::stof(value), -2.0F, 5.0F);
 				}
+				// OStim's look directions (EyeLook.h).
+				if (key == "bdisableeyelook") {
+					EyeLook::Settings().disabled = std::stoi(value) != 0;
+				} else if (key == "flookmaxside") {
+					EyeLook::Settings().maxSide = std::clamp(std::stof(value), 0.0F, 60.0F);
+				} else if (key == "flookmaxup") {
+					EyeLook::Settings().maxUp = std::clamp(std::stof(value), 0.0F, 60.0F);
+				} else if (key == "slefteyenode") {
+					EyeLook::Settings().leftEye = value;
+				} else if (key == "srighteyenode") {
+					EyeLook::Settings().rightEye = value;
+				}
 			} catch (...) {
 				REX::WARN("Settings: couldn't read \"{}\" for {}", value, key);
 			}
@@ -615,6 +628,9 @@ namespace
 		SceneRegistry::Rules().intendedSexOnly = g_settings.matchSex;
 		const auto& pb = PenisBend::Settings();
 		REX::INFO("Settings: penis bend {}, {} degree(s) per step around {} axis {}", pb.disabled ? "off" : "on", pb.stepDegrees, pb.node, "xyz"[pb.axis]);
+		const auto& eyes = EyeLook::Settings();
+		REX::INFO("Settings: eye directions {}, {} degree(s) sideways, {} up / down, bones {} / {}", eyes.disabled ? "off" : "on", eyes.maxSide, eyes.maxUp,
+			eyes.leftEye, eyes.rightEye);
 		const auto& fu = ActorProperties::Settings();
 		REX::INFO("Settings: roles: player dom/sub straight {}/{}, gay {}/{}, choose straight {} gay {} threesome {}, unrestricted {}; futa male role {} excitement {} climax {}; strap-on off when not needed {}",
 			g_settings.playerAlwaysDomStraight, g_settings.playerAlwaysSubStraight, g_settings.playerAlwaysDomGay, g_settings.playerAlwaysSubGay,
@@ -1018,6 +1034,11 @@ namespace
 		std::uint32_t                  furnitureRef = 0;
 		std::string                    furnitureType;
 		std::optional<Furniture::Spot> furnitureFixedSpot;
+		// OStim's furnitureScaleMult (the type's multiplyScale: actors on it
+		// are scaled by it) and the furniture's own scale (for scenes with
+		// scaleOffsetWithFurniture, the actors' offsets).
+		float furnitureScaleMult = 1.0F;
+		float furnitureRefScale = 1.0F;
 		// Loose items around the furniture when the scene went on it, put back
 		// when it leaves (SetResetClutter).
 		std::vector<Furniture::ClutterItem> clutter;
@@ -1156,6 +1177,14 @@ namespace
 		return found;
 	}
 
+	// The scales furniture a_ref of type a_type gives a scene on it.
+	void SetFurnitureScales(ActiveScene& a_scene, std::uint32_t a_ref, const std::string& a_type)
+	{
+		a_scene.furnitureScaleMult = a_type.empty() ? 1.0F : Furniture::MultiplyScale(a_type);
+		const auto ref = a_ref ? RE::TESForm::GetFormByID<RE::TESObjectREFR>(a_ref) : nullptr;
+		a_scene.furnitureRefScale = ref && ref->refScale > 0 ? ref->refScale / 100.0F : 1.0F;
+	}
+
 	ActiveScene* FindActiveScene(std::uint32_t a_actorID)
 	{
 		const auto it = std::ranges::find_if(g_activeScenes, [&](const ActiveScene& a_scene) {
@@ -1185,6 +1214,7 @@ namespace
 				Lights::Leave(left);
 				EquipObjects::Leave(left);
 				PenisBend::Leave(left);
+				EyeLook::Leave(left);
 				UnlockActors(left);
 				RestoreScales(a_scene);
 				for (const auto id : left) {
@@ -1198,6 +1228,7 @@ namespace
 			scene.furnitureRef = furniture->ref;
 			scene.furnitureType = furniture->type;
 			scene.furnitureFixedSpot = furniture->fixedSpot;
+			SetFurnitureScales(scene, furniture->ref, furniture->type);
 			{
 				auto sorted = a_actors;
 				std::ranges::sort(sorted);
@@ -1337,6 +1368,7 @@ namespace
 		Lights::Leave(ended.actors);
 		EquipObjects::Leave(ended.actors);
 		PenisBend::Leave(ended.actors);
+		EyeLook::Leave(ended.actors);
 		for (const auto id : ended.actors) {
 			Undress::Redress(id, false, true);
 		}
@@ -1938,6 +1970,13 @@ namespace
 		SceneRegistry::Position base;
 		if (settled && a_role < settled->actors.size()) {
 			base = settled->actors[a_role].offset;
+			// OStim's scaleOffsetWithFurniture: on furniture, the offset grows
+			// and shrinks with it.
+			if (settled->scaleOffsetWithFurniture && !a_active.furnitureType.empty()) {
+				base.x *= a_active.furnitureRefScale;
+				base.y *= a_active.furnitureRefScale;
+				base.z *= a_active.furnitureRefScale;
+			}
 		}
 		const float x = o.x + base.x, y = o.y + base.y, z = o.z + base.z, r = o.rot + base.r;
 		// On a bed: its own scenes at the edge spot, floor scenes along the middle.
@@ -2017,16 +2056,24 @@ namespace
 				const auto found = settled ? Alignment::Find(a_active.alignKey, settled->id, role) : std::nullopt;
 				PenisBend::Set(id, found ? found->bend : settled && role < settled->actors.size() ? settled->actors[role].penisBend : 0.0F);
 			}
+			// OStim's look directions (its eyeballModifierOverride), for this scene.
+			if (settled && role < settled->actors.size()) {
+				EyeLook::Set(id, settled->actors[role].lookUp, settled->actors[role].lookLeft);
+			} else {
+				EyeLook::Set(id, 0.0F, 0.0F);
+			}
 			// The actor's scale, only when it changes. As OStim's
 			// ThreadActor::scale: the role's scale times the alignment's,
 			// over their own NPC height, and with heels on, times
 			// scaleHeight / (scaleHeight + heels); with SetScaling=1 their
 			// own scale times the alignment's.
 			if (role < a_active.baseScale.size()) {
-				float wanted = a_active.baseScale[role] * spot.scale;
+				// OStim's setScaleMult(alignment.scale * furnitureScaleMult).
+				const float mult = spot.scale * a_active.furnitureScaleMult;
+				float       wanted = a_active.baseScale[role] * mult;
 				if (!Scaling::Settings().disabled && settled && role < settled->actors.size()) {
 					const auto& part = settled->actors[role];
-					wanted = part.scale * spot.scale / Scaling::NPCHeight(actor);
+					wanted = part.scale * mult / Scaling::NPCHeight(actor);
 					if (role < a_active.heels.size() && a_active.heels[role] > 0.0F && part.feetOnGround) {
 						wanted *= part.scaleHeight / (part.scaleHeight + a_active.heels[role]);
 					}
@@ -2138,6 +2185,7 @@ namespace
 		a_active.furnitureRef = a_piece.ref;
 		a_active.furnitureType = a_piece.type;
 		a_active.furnitureFixedSpot = a_piece.spot;
+		SetFurnitureScales(a_active, a_piece.ref, a_piece.type);
 		a_active.center = spot.position;
 		a_active.heading = spot.heading;
 		BlockFurniture(a_piece.ref);
@@ -2835,6 +2883,7 @@ namespace
 		}
 		Lights::Tick();  // lights follow their bones, paused or not
 		PenisBend::Tick();
+		EyeLook::Tick();
 		const bool waiting = !g_activeScenes.empty();  // faces and voices run as long as any scene does
 		if (!waiting && !g_climaxShake.active) {
 			g_autoplayTicking = false;
@@ -6500,6 +6549,7 @@ namespace
 				Undress::Clear();
 				EquipObjects::Clear();
 				PenisBend::Clear();
+				EyeLook::Clear();
 			});
 			{
 				std::scoped_lock lock(g_pendingSequenceLock);
@@ -6539,6 +6589,7 @@ namespace
 				Undress::Clear();
 				EquipObjects::Clear();
 				PenisBend::Clear();
+				EyeLook::Clear();
 				g_focusNextScene = false;
 				SetPlayerScene({});
 				g_sceneCameraActive = false;

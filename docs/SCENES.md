@@ -78,7 +78,7 @@ The first scene has two speeds and one navigation option. The second uses the si
 | `name` | scene | no | Display name. Defaults to the ID. |
 | `actors` | scene | yes | One entry per role, **in role order**: the first entry is role 0, the second role 1, and so on. |
 | `sex` | actor | no | Who may take this role: `"male"`, `"female"` or `"any"` (default). The picker, the HUD and navigation only offer scenes and sequences whose roles the actors fit (their type and requirements, `ACTORS.md`; with `SetOnlyGayAnimsInGayScenes=1`, the default, also this sex), and a new scene gives each actor the role that fits, trying OStim's order first: those with a penis first, the player where they chose or the `PlayerAlways...` settings say (`ACTORS.md`, Roles). A sequence's role asks for whatever its scenes ask for; scenes that ask for different sexes in the same role can't share a sequence. OStim's `intendedSex` is read the same way. |
-| `speeds` | scene | one of `speeds` or actor `idle` | List of speeds, slowest first. Each has `idles`: one Idle form ID per role, in role order; or OStim's `animation` (see "OStim's layout"). A speed can also have OStim's `displaySpeed` and `playbackSpeed` (kept, not used yet: Fallout 4's behavior graphs have no speed variable). |
+| `speeds` | scene | one of `speeds` or actor `idle` | List of speeds, slowest first. Each has `idles`: one Idle form ID per role, in role order; or OStim's `animation` (see "OStim's layout"). A speed can also have OStim's `displaySpeed` (peaks on a `loop` keep time with it, EVENTS.md) and `playbackSpeed` (read, but Fallout 4's behavior graphs have no speed variable to set). |
 | `autoTransitions` | actor or scene | no | Scenes to move to on an event for the actor in this role, OStim's format: `{"climax": "MyPack_MissionaryClimax", "pullout": "MyPack_MissionaryPullout"}`. `climax` plays when the actor climaxes (see `EXCITEMENT.md`), `pullout` when auto mode has a man pull out (`AUTOMODE.md`); scripts can play any other with `FourStim.AutoTransition`. Each must be a scene with the same number of actors, usually a transition back. `"climax": "..."` on the actor is short for the climax one. |
 | `tags` | actor | no | What the actor in this role is doing: `standing`, `kneeling`, `sitting`, `lyingback`, `lyingfront`, `allfours`, `ontop`, `onbottom`, `facingaway`... (OStim's actor tags). Auto mode uses `standing` (`AUTOMODE.md`); scripts can query them (`SceneActorHasTag`). |
 | `requirements` | actor | no | Body parts the actor in this role needs besides what the scene's actions ask for (`ACTIONS.md`, Requirements), e.g. `["penis"]`. |
@@ -101,7 +101,10 @@ The first scene has two speeds and one navigation option. The second uses the si
 | `fadeOnEntry` | scene | no | OStim's: in a scene with the player, fade to black when auto mode moves to this scene (as `SetUseAutoFades` does for every scene, `AUTOMODE.md`). |
 | `scale`, `scaleHeight`, `feetOnGround` | actor | no | OStim's actor scaling and heels: the scale the role is played at, the height the animation was made for, and whether heels stay on (`SCALING.md`). |
 | `penisBend` | actor | no | The penis bend for this role, in SoS steps from -9 to +9 (OStim's `sosBend` and `tngBend`, also read): the default until an alignment sets one (`ALIGNMENT.md`, Penis bend). |
-| `noStrip` | scene | no | `true`: no one undresses in this scene, whatever its actions (UNDRESS.md). Scenes after it still undress as usual. |
+| `noStrip` | scene or actor | no | `true` on the scene: no one undresses in this scene, whatever its actions (UNDRESS.md). Scenes after it still undress as usual. On an actor (OStim's): that role's actions don't undress them (undressing at the start still does). |
+| `lookUp` / `lookDown`, `lookLeft` / `lookRight` | actor | no | OStim's eye directions, 0-100 (negative looks the other way; `lookUp` wins over `lookDown`, `lookLeft` over `lookRight`). Fallout 4's face has no look morphs, so 4Stim turns the face skeleton's eye bones (EXPRESSIONS.md, Eye directions). |
+| `singleSpeed` | actor | no | OStim's: `true` plays this role's slowest animation at every speed. |
+| `scaleOffsetWithFurniture` | scene | no | OStim's: on furniture, the actors' offsets grow and shrink with the furniture's own scale. (A furniture type's `multiplyScale` scales the actors themselves, FURNITURE.md.) |
 
 ## OStim's layout
 
@@ -112,7 +115,7 @@ The first scene has two speeds and one navigation option. The second uses the si
 - **`speeds[].animation`**: one name for all actors, as OStim's: role 0 plays the Idle whose **editor ID** is `<animation>_0`, role 1 `<animation>_1`, and so on (OStim appends the actor's index the same way, or the actor's `animationIndex`). Name your Idle records after OStim's animations (the converter does) and no plugin or form IDs are needed.
 - **Sequences**: one per file in `Data\F4SE\Plugins\4Stim\Sequences\`, the file name being the sequence id, with OStim's `scenes` (`id`, `duration`) and `tags`.
 
-What OStim has that Fallout 4 can't use is skipped: `lookUp` / `lookDown` / `lookLeft` / `lookRight` and expressions (until facial expressions), `playbackSpeed`.
+Every field of OStim NG's scene files is read. Two do nothing in Fallout 4: `playbackSpeed` (OStim sets its `OStimSpeed` behavior variable, which only OStim's Skyrim behavior patch has; Fallout 4's behavior graphs have no speed variable) and navigations' `border` / `noWarnings` (OStim's scene menu; the HUD has no borders or warnings).
 
 ## Speeds and navigation in game
 

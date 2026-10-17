@@ -334,7 +334,8 @@
 					"idle": "0x00080E",
 					"tags": [
 						"standing"
-					]
+					],
+					"scale": 1.03
 				}
 			],
 			"tags": [
@@ -367,14 +368,16 @@
 					"idle": "0x00080F",
 					"tags": [
 						"kneeling"
-					]
+					],
+					"lookUp": -40
 				},
 				{
 					"sex": "female",
 					"idle": "0x000810",
 					"tags": [
 						"lyingback"
-					]
+					],
+					"lookUp": -85
 				}
 			],
 			"tags": [
@@ -532,14 +535,17 @@
 					"idle": "0x000815",
 					"tags": [
 						"lyingback"
-					]
+					],
+					"scale": 1.03,
+					"lookLeft": 50
 				},
 				{
 					"sex": "female",
 					"idle": "0x000816",
 					"tags": [
 						"lyingback"
-					]
+					],
+					"lookLeft": -50
 				}
 			],
 			"tags": [
@@ -591,7 +597,9 @@
 					"tags": [
 						"lyingback",
 						"onbottom"
-					]
+					],
+					"scale": 1.03,
+					"lookUp": 25
 				},
 				{
 					"sex": "female",
@@ -599,7 +607,8 @@
 					"tags": [
 						"kneeling",
 						"ontop"
-					]
+					],
+					"lookUp": -70
 				}
 			],
 			"tags": [
@@ -660,7 +669,9 @@
 					"tags": [
 						"lyingback",
 						"onbottom"
-					]
+					],
+					"scale": 1.03,
+					"lookUp": -25
 				},
 				{
 					"sex": "female",
@@ -669,7 +680,8 @@
 						"kneeling",
 						"facingaway",
 						"ontop"
-					]
+					],
+					"lookUp": -60
 				}
 			],
 			"tags": [
@@ -697,7 +709,9 @@
 					"idle": "0x00081B",
 					"tags": [
 						"kneeling"
-					]
+					],
+					"scale": 1.03,
+					"lookUp": -50
 				},
 				{
 					"sex": "female",
@@ -705,7 +719,9 @@
 					"tags": [
 						"allfours",
 						"facingaway"
-					]
+					],
+					"lookUp": -100,
+					"lookLeft": 30
 				}
 			],
 			"tags": [
@@ -752,14 +768,18 @@
 					"idle": "0x00081D",
 					"tags": [
 						"lyingback"
-					]
+					],
+					"scale": 1.03,
+					"lookUp": 30
 				},
 				{
 					"sex": "female",
 					"idle": "0x00081E",
 					"tags": [
 						"kneeling"
-					]
+					],
+					"lookUp": -20,
+					"lookLeft": 10
 				}
 			],
 			"tags": [
@@ -810,14 +830,19 @@
 					"idle": "0x00081F",
 					"tags": [
 						"lyingfront"
-					]
+					],
+					"scale": 1.03,
+					"lookUp": 30,
+					"lookLeft": -30
 				},
 				{
 					"sex": "female",
 					"idle": "0x000820",
 					"tags": [
 						"lyingback"
-					]
+					],
+					"lookUp": -30,
+					"lookLeft": -20
 				}
 			],
 			"tags": [
@@ -868,7 +893,8 @@
 					"tags": [
 						"kneeling",
 						"ontop"
-					]
+					],
+					"scale": 1.03
 				},
 				{
 					"sex": "female",
@@ -876,7 +902,8 @@
 					"tags": [
 						"lyingback",
 						"onbottom"
-					]
+					],
+					"lookUp": -75
 				}
 			],
 			"tags": [
@@ -929,7 +956,8 @@
 					"idle": "0x000823",
 					"tags": [
 						"kneeling"
-					]
+					],
+					"scale": 1.03
 				},
 				{
 					"sex": "female",
@@ -937,7 +965,8 @@
 					"tags": [
 						"lyingback",
 						"lyingside"
-					]
+					],
+					"lookUp": -40
 				}
 			],
 			"tags": [
@@ -960,7 +989,9 @@
 					"tags": [
 						"lyingback",
 						"onbottom"
-					]
+					],
+					"scale": 1.03,
+					"lookUp": -75
 				},
 				{
 					"sex": "female",
@@ -969,7 +1000,8 @@
 						"facingaway",
 						"kneeling",
 						"ontop"
-					]
+					],
+					"lookUp": -50
 				}
 			],
 			"tags": [
@@ -1025,7 +1057,9 @@
 					"tags": [
 						"lyingback",
 						"onbottom"
-					]
+					],
+					"scale": 1.03,
+					"lookUp": -25
 				},
 				{
 					"sex": "female",
@@ -1033,7 +1067,8 @@
 					"tags": [
 						"kneeling",
 						"ontop"
-					]
+					],
+					"lookUp": -50
 				}
 			],
 			"tags": [
@@ -1061,14 +1096,17 @@
 					"idle": "0x000829",
 					"tags": [
 						"kneeling"
-					]
+					],
+					"scale": 1.03
 				},
 				{
 					"sex": "female",
 					"idle": "0x00082A",
 					"tags": [
 						"lyingside"
-					]
+					],
+					"lookUp": 30,
+					"lookLeft": -80
 				}
 			],
 			"tags": [
@@ -1116,7 +1154,8 @@
 					"idle": "0x00082B",
 					"tags": [
 						"sitting"
-					]
+					],
+					"scale": 1.03
 				},
 				{
 					"sex": "female",
@@ -1188,7 +1227,8 @@
 					"idle": "0x00082D",
 					"tags": [
 						"sitting"
-					]
+					],
+					"scale": 1.03
 				},
 				{
 					"sex": "female",
@@ -1265,7 +1305,8 @@
 					"idle": "0x00082F",
 					"tags": [
 						"sitting"
-					]
+					],
+					"scale": 1.03
 				},
 				{
 					"sex": "female",
@@ -1326,7 +1367,8 @@
 					"tags": [
 						"facingaway",
 						"standing"
-					]
+					],
+					"scale": 1.03
 				},
 				{
 					"sex": "female",
@@ -1367,7 +1409,8 @@
 					"idle": "0x000833",
 					"tags": [
 						"standing"
-					]
+					],
+					"scale": 1.03
 				},
 				{
 					"sex": "female",
@@ -1494,7 +1537,8 @@
 					"idle": "0x000835",
 					"tags": [
 						"standing"
-					]
+					],
+					"scale": 1.03
 				},
 				{
 					"sex": "female",
@@ -1524,7 +1568,8 @@
 					"idle": "0x000837",
 					"tags": [
 						"standing"
-					]
+					],
+					"scale": 1.03
 				},
 				{
 					"sex": "female",
@@ -1555,7 +1600,8 @@
 					"idle": "0x000839",
 					"tags": [
 						"standing"
-					]
+					],
+					"scale": 1.03
 				},
 				{
 					"sex": "female",
@@ -1585,7 +1631,10 @@
 					"idle": "0x00083B",
 					"tags": [
 						"standing"
-					]
+					],
+					"scale": 1.03,
+					"lookUp": -35,
+					"lookLeft": -25
 				},
 				{
 					"sex": "female",
@@ -1593,7 +1642,9 @@
 					"tags": [
 						"facingaway",
 						"standing"
-					]
+					],
+					"lookUp": 35,
+					"lookLeft": 50
 				}
 			],
 			"tags": [
@@ -1680,7 +1731,8 @@
 					"idle": "0x00083D",
 					"tags": [
 						"standing"
-					]
+					],
+					"scale": 1.03
 				},
 				{
 					"sex": "female",
@@ -1717,14 +1769,16 @@
 					"idle": "0x00083F",
 					"tags": [
 						"standing"
-					]
+					],
+					"scale": 1.03
 				},
 				{
 					"sex": "female",
 					"idle": "0x000840",
 					"tags": [
 						"standing"
-					]
+					],
+					"lookLeft": 0
 				}
 			],
 			"tags": [
@@ -1805,7 +1859,8 @@
 					"idle": "0x000841",
 					"tags": [
 						"standing"
-					]
+					],
+					"scale": 1.03
 				},
 				{
 					"sex": "female",
@@ -1835,7 +1890,8 @@
 					"idle": "0x000843",
 					"tags": [
 						"standing"
-					]
+					],
+					"scale": 1.03
 				},
 				{
 					"sex": "female",
@@ -1873,14 +1929,17 @@
 					"tags": [
 						"facingaway",
 						"standing"
-					]
+					],
+					"scale": 1.03
 				},
 				{
 					"sex": "female",
 					"idle": "0x000846",
 					"tags": [
 						"kneeling"
-					]
+					],
+					"lookUp": 50,
+					"feetOnGround": true
 				}
 			],
 			"tags": [
@@ -1915,14 +1974,17 @@
 					"idle": "0x000847",
 					"tags": [
 						"standing"
-					]
+					],
+					"scale": 1.03,
+					"lookUp": -50
 				},
 				{
 					"sex": "female",
 					"idle": "0x000848",
 					"tags": [
 						"kneeling"
-					]
+					],
+					"lookUp": 50
 				}
 			],
 			"tags": [
@@ -1986,14 +2048,17 @@
 					"idle": "0x000849",
 					"tags": [
 						"standing"
-					]
+					],
+					"scale": 1.03
 				},
 				{
 					"sex": "female",
 					"idle": "0x00084A",
 					"tags": [
 						"squatting"
-					]
+					],
+					"scale": 1.0,
+					"scaleHeight": 67
 				}
 			],
 			"tags": [
@@ -2053,7 +2118,8 @@
 					"idle": "0x00084B",
 					"tags": [
 						"standing"
-					]
+					],
+					"scale": 1.03
 				},
 				{
 					"sex": "female",
@@ -2084,7 +2150,8 @@
 					"idle": "0x00084D",
 					"tags": [
 						"standing"
-					]
+					],
+					"scale": 1.03
 				},
 				{
 					"sex": "female",
@@ -2113,7 +2180,10 @@
 					"idle": "0x00084F",
 					"tags": [
 						"standing"
-					]
+					],
+					"scale": 1.03,
+					"lookUp": -35,
+					"lookLeft": -25
 				},
 				{
 					"sex": "female",
@@ -2121,7 +2191,9 @@
 					"tags": [
 						"facingaway",
 						"standing"
-					]
+					],
+					"lookUp": 35,
+					"lookLeft": 50
 				}
 			],
 			"tags": [
@@ -2177,14 +2249,17 @@
 					"idle": "0x000851",
 					"tags": [
 						"standing"
-					]
+					],
+					"scale": 1.03,
+					"lookUp": -30
 				},
 				{
 					"sex": "female",
 					"idle": "0x000852",
 					"tags": [
 						"standing"
-					]
+					],
+					"lookUp": -30
 				}
 			],
 			"tags": [
@@ -2239,7 +2314,8 @@
 					"idle": "0x000853",
 					"tags": [
 						"standing"
-					]
+					],
+					"scale": 1.03
 				},
 				{
 					"sex": "female",
@@ -2291,7 +2367,8 @@
 					"idle": "0x000855",
 					"tags": [
 						"standing"
-					]
+					],
+					"scale": 1.03
 				},
 				{
 					"sex": "female",
@@ -2363,7 +2440,8 @@
 					"idle": "0x000857",
 					"tags": [
 						"standing"
-					]
+					],
+					"scale": 1.03
 				},
 				{
 					"sex": "female",
@@ -2416,7 +2494,8 @@
 					"idle": "0x000859",
 					"tags": [
 						"standing"
-					]
+					],
+					"scale": 1.03
 				},
 				{
 					"sex": "female",
@@ -2445,14 +2524,19 @@
 					"idle": "0x00085B",
 					"tags": [
 						"standing"
-					]
+					],
+					"scale": 1.03,
+					"lookUp": -20,
+					"lookLeft": 40
 				},
 				{
 					"sex": "female",
 					"idle": "0x00085C",
 					"tags": [
 						"standing"
-					]
+					],
+					"lookUp": 20,
+					"lookLeft": -40
 				}
 			],
 			"tags": [
@@ -2522,7 +2606,8 @@
 					"idle": "0x00085D",
 					"tags": [
 						"standing"
-					]
+					],
+					"scale": 1.03
 				},
 				{
 					"sex": "female",
@@ -2619,14 +2704,19 @@
 					"idle": "0x00085F",
 					"tags": [
 						"standing"
-					]
+					],
+					"scale": 1.03,
+					"lookUp": -20,
+					"lookLeft": 40
 				},
 				{
 					"sex": "female",
 					"idle": "0x000860",
 					"tags": [
 						"standing"
-					]
+					],
+					"lookUp": 20,
+					"lookLeft": -40
 				}
 			],
 			"tags": [
@@ -2687,14 +2777,19 @@
 					"idle": "0x000861",
 					"tags": [
 						"standing"
-					]
+					],
+					"scale": 1.03,
+					"lookUp": -20,
+					"lookLeft": 40
 				},
 				{
 					"sex": "female",
 					"idle": "0x000862",
 					"tags": [
 						"standing"
-					]
+					],
+					"lookUp": 20,
+					"lookLeft": -40
 				}
 			],
 			"tags": [
@@ -2723,7 +2818,10 @@
 					"idle": "0x000863",
 					"tags": [
 						"standing"
-					]
+					],
+					"scale": 1.03,
+					"lookUp": -35,
+					"lookLeft": -25
 				},
 				{
 					"sex": "female",
@@ -2731,7 +2829,9 @@
 					"tags": [
 						"facingaway",
 						"standing"
-					]
+					],
+					"lookUp": 35,
+					"lookLeft": 50
 				}
 			],
 			"tags": [
@@ -2787,14 +2887,17 @@
 					"idle": "0x000865",
 					"tags": [
 						"standing"
-					]
+					],
+					"scale": 1.03,
+					"lookUp": -30
 				},
 				{
 					"sex": "female",
 					"idle": "0x000866",
 					"tags": [
 						"standing"
-					]
+					],
+					"lookUp": -30
 				}
 			],
 			"tags": [
@@ -2864,7 +2967,8 @@
 					"idle": "0x000869",
 					"tags": [
 						"standing"
-					]
+					],
+					"scale": 1.03
 				},
 				{
 					"sex": "female",
@@ -2956,7 +3060,8 @@
 					"idle": "0x00086B",
 					"tags": [
 						"standing"
-					]
+					],
+					"scale": 1.03
 				},
 				{
 					"sex": "female",
@@ -3043,7 +3148,8 @@
 					"idle": "0x00086D",
 					"tags": [
 						"standing"
-					]
+					],
+					"scale": 1.03
 				},
 				{
 					"sex": "female",
@@ -3140,7 +3246,9 @@
 					"idle": "0x00086F",
 					"tags": [
 						"standing"
-					]
+					],
+					"scale": 1.03,
+					"lookUp": -50
 				},
 				{
 					"sex": "female",
@@ -3149,7 +3257,9 @@
 						"bendover",
 						"facingaway",
 						"standing"
-					]
+					],
+					"lookUp": -30,
+					"lookLeft": 75
 				}
 			],
 			"tags": [
@@ -3205,14 +3315,18 @@
 					"idle": "0x000871",
 					"tags": [
 						"standing"
-					]
+					],
+					"scale": 1.03,
+					"lookUp": -50
 				},
 				{
 					"sex": "female",
 					"idle": "0x000872",
 					"tags": [
 						"standing"
-					]
+					],
+					"lookUp": -30,
+					"lookLeft": 75
 				}
 			],
 			"tags": [
@@ -3239,14 +3353,19 @@
 					"penisBend": 6,
 					"tags": [
 						"squatting"
-					]
+					],
+					"scale": 1.03
 				},
 				{
 					"sex": "female",
 					"tags": [
 						"standing",
 						"facingaway"
-					]
+					],
+					"scale": 1.0,
+					"scaleHeight": 118,
+					"lookUp": -77,
+					"lookLeft": 33
 				}
 			],
 			"speeds": [
@@ -3322,14 +3441,20 @@
 					"penisBend": 2,
 					"tags": [
 						"standing"
-					]
+					],
+					"scale": 1.03,
+					"lookUp": -50,
+					"noStrip": true
 				},
 				{
 					"sex": "female",
 					"tags": [
 						"facingaway",
 						"standing"
-					]
+					],
+					"lookUp": -30,
+					"lookLeft": 100,
+					"noStrip": true
 				}
 			],
 			"speeds": [
@@ -3422,7 +3547,8 @@
 					"penisBend": 7,
 					"tags": [
 						"standing"
-					]
+					],
+					"scale": 1.03
 				},
 				{
 					"sex": "female",
@@ -3493,14 +3619,18 @@
 					"penisBend": 7,
 					"tags": [
 						"standing"
-					]
+					],
+					"scale": 1.03,
+					"lookUp": -75,
+					"lookLeft": 50
 				},
 				{
 					"sex": "female",
 					"tags": [
 						"facingaway",
 						"standing"
-					]
+					],
+					"lookLeft": -75
 				}
 			],
 			"speeds": [
@@ -3586,13 +3716,15 @@
 					"penisBend": 2,
 					"tags": [
 						"standing"
-					]
+					],
+					"scale": 1.03
 				},
 				{
 					"sex": "female",
 					"tags": [
 						"standing"
-					]
+					],
+					"lookUp": 75
 				}
 			],
 			"speeds": [
@@ -3657,7 +3789,8 @@
 					"penisBend": -5,
 					"tags": [
 						"standing"
-					]
+					],
+					"scale": 1.03
 				},
 				{
 					"sex": "female",
@@ -3773,14 +3906,17 @@
 					"tags": [
 						"lyingback",
 						"onbottom"
-					]
+					],
+					"scale": 1.03,
+					"lookUp": 25
 				},
 				{
 					"sex": "female",
 					"tags": [
 						"kneeling",
 						"ontop"
-					]
+					],
+					"lookUp": -80
 				}
 			],
 			"speeds": [
@@ -3865,14 +4001,17 @@
 					"tags": [
 						"lyingback",
 						"onbottom"
-					]
+					],
+					"scale": 1.03,
+					"lookUp": 25
 				},
 				{
 					"sex": "female",
 					"tags": [
 						"kneeling",
 						"ontop"
-					]
+					],
+					"lookUp": -80
 				}
 			],
 			"speeds": [
@@ -3958,14 +4097,17 @@
 					"tags": [
 						"lyingback",
 						"onbottom"
-					]
+					],
+					"scale": 1.03,
+					"lookUp": 25
 				},
 				{
 					"sex": "female",
 					"tags": [
 						"kneeling",
 						"ontop"
-					]
+					],
+					"lookUp": -80
 				}
 			],
 			"speeds": [
@@ -4051,7 +4193,9 @@
 					"tags": [
 						"lyingback",
 						"onbottom"
-					]
+					],
+					"scale": 1.03,
+					"lookUp": 25
 				},
 				{
 					"sex": "female",
@@ -4059,7 +4203,8 @@
 						"kneeling",
 						"facingaway",
 						"ontop"
-					]
+					],
+					"lookUp": -80
 				}
 			],
 			"speeds": [
@@ -4125,7 +4270,9 @@
 					"tags": [
 						"lyingback",
 						"onbottom"
-					]
+					],
+					"scale": 1.03,
+					"lookUp": -100
 				},
 				{
 					"sex": "female",
@@ -4133,7 +4280,9 @@
 						"kneeling",
 						"facingaway",
 						"ontop"
-					]
+					],
+					"scale": 1.0,
+					"lookUp": -50
 				}
 			],
 			"speeds": [
@@ -4211,7 +4360,9 @@
 					"tags": [
 						"lyingback",
 						"onbottom"
-					]
+					],
+					"scale": 1.03,
+					"lookUp": -75
 				},
 				{
 					"sex": "female",
@@ -4220,7 +4371,8 @@
 						"kneeling",
 						"facingaway",
 						"ontop"
-					]
+					],
+					"lookUp": -60
 				}
 			],
 			"tags": [
@@ -4250,7 +4402,9 @@
 					"tags": [
 						"lyingback",
 						"onbottom"
-					]
+					],
+					"scale": 1.03,
+					"lookUp": -75
 				},
 				{
 					"sex": "female",
@@ -4259,7 +4413,8 @@
 						"kneeling",
 						"facingaway",
 						"ontop"
-					]
+					],
+					"lookUp": -50
 				}
 			],
 			"tags": [
@@ -4286,7 +4441,8 @@
 					"penisBend": 2,
 					"tags": [
 						"kneeling"
-					]
+					],
+					"scale": 1.03
 				},
 				{
 					"sex": "female",
@@ -4372,7 +4528,8 @@
 					"penisBend": 2,
 					"tags": [
 						"kneeling"
-					]
+					],
+					"scale": 1.03
 				},
 				{
 					"sex": "female",
@@ -4449,14 +4606,18 @@
 					"penisBend": 2,
 					"tags": [
 						"kneeling"
-					]
+					],
+					"scale": 1.03,
+					"lookUp": -50
 				},
 				{
 					"sex": "female",
 					"tags": [
 						"allfours",
 						"facingaway"
-					]
+					],
+					"lookUp": -100,
+					"lookLeft": 75
 				}
 			],
 			"speeds": [
@@ -4540,14 +4701,18 @@
 					"penisBend": 2,
 					"tags": [
 						"kneeling"
-					]
+					],
+					"scale": 1.03,
+					"lookUp": -50
 				},
 				{
 					"sex": "female",
 					"tags": [
 						"allfours",
 						"facingaway"
-					]
+					],
+					"lookUp": -100,
+					"lookLeft": 75
 				}
 			],
 			"speeds": [
@@ -4631,7 +4796,9 @@
 					"penisBend": 2,
 					"tags": [
 						"kneeling"
-					]
+					],
+					"scale": 1.03,
+					"lookUp": -50
 				},
 				{
 					"sex": "female",
@@ -4722,7 +4889,9 @@
 					"penisBend": 2,
 					"tags": [
 						"kneeling"
-					]
+					],
+					"scale": 1.03,
+					"lookUp": -50
 				},
 				{
 					"sex": "female",
@@ -4818,14 +4987,17 @@
 					"penisBend": 2,
 					"tags": [
 						"kneeling"
-					]
+					],
+					"scale": 1.03,
+					"lookUp": -50
 				},
 				{
 					"sex": "female",
 					"tags": [
 						"allfours",
 						"facingaway"
-					]
+					],
+					"lookUp": -50
 				}
 			],
 			"speeds": [
@@ -4900,7 +5072,10 @@
 					"penisBend": 2,
 					"tags": [
 						"squatting"
-					]
+					],
+					"scale": 1.03,
+					"lookUp": -50,
+					"feetOnGround": false
 				},
 				{
 					"sex": "female",
@@ -4986,7 +5161,9 @@
 					"penisBend": 2,
 					"tags": [
 						"kneeling"
-					]
+					],
+					"scale": 1.03,
+					"lookUp": -50
 				},
 				{
 					"sex": "female",
@@ -5067,7 +5244,10 @@
 					"penisBend": 3,
 					"tags": [
 						"squatting"
-					]
+					],
+					"scale": 1.03,
+					"lookUp": -50,
+					"feetOnGround": false
 				},
 				{
 					"sex": "female",
@@ -5154,14 +5334,18 @@
 					"penisBend": 2,
 					"tags": [
 						"sitting"
-					]
+					],
+					"scale": 1.03,
+					"lookUp": 50
 				},
 				{
 					"sex": "female",
 					"tags": [
 						"facingaway",
 						"kneeling"
-					]
+					],
+					"lookUp": -50,
+					"lookLeft": 100
 				}
 			],
 			"speeds": [
@@ -5233,13 +5417,16 @@
 					"penisBend": 9,
 					"tags": [
 						"lyingback"
-					]
+					],
+					"scale": 1.03,
+					"lookUp": 20
 				},
 				{
 					"sex": "female",
 					"tags": [
 						"kneeling"
-					]
+					],
+					"lookUp": -100
 				}
 			],
 			"speeds": [
@@ -5313,14 +5500,17 @@
 					"penisBend": 9,
 					"tags": [
 						"lyingback"
-					]
+					],
+					"scale": 1.03,
+					"lookUp": 20
 				},
 				{
 					"sex": "female",
 					"tags": [
 						"kneeling",
 						"facingaway"
-					]
+					],
+					"lookUp": -100
 				}
 			],
 			"speeds": [
@@ -5395,14 +5585,19 @@
 					"penisBend": 2,
 					"tags": [
 						"kneeling"
-					]
+					],
+					"scale": 1.03,
+					"lookUp": -100
 				},
 				{
 					"sex": "female",
 					"tags": [
 						"standing",
 						"facingaway"
-					]
+					],
+					"scale": 1.0,
+					"scaleHeight": 102,
+					"lookUp": -100
 				}
 			],
 			"speeds": [
@@ -5473,14 +5668,21 @@
 					"penisBend": 2,
 					"tags": [
 						"squatting"
-					]
+					],
+					"scale": 1.03,
+					"lookUp": -100,
+					"feetOnGround": false
 				},
 				{
 					"sex": "female",
 					"tags": [
 						"standing",
 						"facingaway"
-					]
+					],
+					"scale": 1.0,
+					"scaleHeight": 106,
+					"lookUp": -100,
+					"lookLeft": -100
 				}
 			],
 			"speeds": [
@@ -5551,14 +5753,19 @@
 					"penisBend": 2,
 					"tags": [
 						"kneeling"
-					]
+					],
+					"scale": 1.03,
+					"lookUp": -25
 				},
 				{
 					"sex": "female",
 					"tags": [
 						"facingaway",
 						"standing"
-					]
+					],
+					"scaleHeight": 106,
+					"lookUp": -30,
+					"lookLeft": 100
 				}
 			],
 			"speeds": [
@@ -5629,13 +5836,17 @@
 					"penisBend": 1,
 					"tags": [
 						"standing"
-					]
+					],
+					"scale": 1.03,
+					"lookUp": -75
 				},
 				{
 					"sex": "female",
 					"tags": [
 						"kneeling"
-					]
+					],
+					"scale": 1.0,
+					"lookUp": 100
 				}
 			],
 			"speeds": [
@@ -5730,13 +5941,17 @@
 					"penisBend": -6,
 					"tags": [
 						"standing"
-					]
+					],
+					"scale": 1.03,
+					"lookUp": -75
 				},
 				{
 					"sex": "female",
 					"tags": [
 						"kneeling"
-					]
+					],
+					"scale": 1.0,
+					"lookUp": 100
 				}
 			],
 			"speeds": [
@@ -5836,13 +6051,18 @@
 					"penisBend": -5,
 					"tags": [
 						"standing"
-					]
+					],
+					"scale": 1.03,
+					"scaleHeight": 67,
+					"lookUp": -75
 				},
 				{
 					"sex": "female",
 					"tags": [
 						"kneeling"
-					]
+					],
+					"scaleHeight": 67,
+					"lookUp": 100
 				}
 			],
 			"speeds": [
@@ -5937,13 +6157,17 @@
 					"penisBend": 2,
 					"tags": [
 						"standing"
-					]
+					],
+					"scale": 1.03,
+					"lookUp": -75
 				},
 				{
 					"sex": "female",
 					"tags": [
 						"sitting"
-					]
+					],
+					"scale": 1.0,
+					"lookUp": 100
 				}
 			],
 			"speeds": [
@@ -6039,13 +6263,17 @@
 					"penisBend": 2,
 					"tags": [
 						"standing"
-					]
+					],
+					"scale": 1.03,
+					"scaleHeight": 67,
+					"lookUp": -75
 				},
 				{
 					"sex": "female",
 					"tags": [
 						"kneeling"
-					]
+					],
+					"lookUp": 50
 				}
 			],
 			"speeds": [
@@ -6135,13 +6363,17 @@
 					"penisBend": 2,
 					"tags": [
 						"standing"
-					]
+					],
+					"scale": 1.03,
+					"lookUp": -50
 				},
 				{
 					"sex": "female",
 					"tags": [
 						"kneeling"
-					]
+					],
+					"scale": 1.0,
+					"lookLeft": 0
 				}
 			],
 			"speeds": [
@@ -6251,13 +6483,16 @@
 					"penisBend": -4,
 					"tags": [
 						"standing"
-					]
+					],
+					"scale": 1.03,
+					"lookUp": -75
 				},
 				{
 					"sex": "female",
 					"tags": [
 						"kneeling"
-					]
+					],
+					"lookUp": 100
 				}
 			],
 			"speeds": [
@@ -6337,13 +6572,16 @@
 					"penisBend": 2,
 					"tags": [
 						"standing"
-					]
+					],
+					"scale": 1.03,
+					"lookUp": -50
 				},
 				{
 					"sex": "female",
 					"tags": [
 						"kneeling"
-					]
+					],
+					"scale": 1.0
 				}
 			],
 			"speeds": [
@@ -6419,13 +6657,16 @@
 					"penisBend": 2,
 					"tags": [
 						"standing"
-					]
+					],
+					"scale": 1.03,
+					"lookUp": -50
 				},
 				{
 					"sex": "female",
 					"tags": [
 						"kneeling"
-					]
+					],
+					"scale": 1.0
 				}
 			],
 			"speeds": [
@@ -6507,14 +6748,18 @@
 					"tags": [
 						"lyingback",
 						"onbottom"
-					]
+					],
+					"scale": 1.03,
+					"lookUp": -25,
+					"singleSpeed": true
 				},
 				{
 					"sex": "female",
 					"tags": [
 						"kneeling",
 						"ontop"
-					]
+					],
+					"lookUp": -25
 				}
 			],
 			"speeds": [
@@ -6579,13 +6824,16 @@
 					"penisBend": 2,
 					"tags": [
 						"lyingfront"
-					]
+					],
+					"scale": 1.03,
+					"lookUp": 100
 				},
 				{
 					"sex": "female",
 					"tags": [
 						"lyingback"
-					]
+					],
+					"lookUp": -100
 				}
 			],
 			"speeds": [
@@ -6660,13 +6908,16 @@
 					"penisBend": 2,
 					"tags": [
 						"lyingfront"
-					]
+					],
+					"scale": 1.03,
+					"lookUp": 100
 				},
 				{
 					"sex": "female",
 					"tags": [
 						"lyingback"
-					]
+					],
+					"lookUp": -100
 				}
 			],
 			"speeds": [
@@ -6736,13 +6987,16 @@
 					"penisBend": 2,
 					"tags": [
 						"lyingfront"
-					]
+					],
+					"scale": 1.03,
+					"lookUp": 100
 				},
 				{
 					"sex": "female",
 					"tags": [
 						"lyingback"
-					]
+					],
+					"lookUp": -100
 				}
 			],
 			"speeds": [
@@ -6812,13 +7066,17 @@
 					"penisBend": 1,
 					"tags": [
 						"kneeling"
-					]
+					],
+					"scale": 1.03,
+					"lookUp": -75
 				},
 				{
 					"sex": "female",
 					"tags": [
 						"allfours"
-					]
+					],
+					"lookUp": 100,
+					"lookLeft": 0
 				}
 			],
 			"speeds": [
@@ -6894,14 +7152,18 @@
 					"idle": "0x0009B0",
 					"tags": [
 						"kneeling"
-					]
+					],
+					"scale": 1.03,
+					"lookUp": 50
 				},
 				{
 					"sex": "female",
 					"idle": "0x0009B1",
 					"tags": [
 						"allfours"
-					]
+					],
+					"lookUp": -10,
+					"lookLeft": 0
 				}
 			],
 			"tags": [
@@ -6961,14 +7223,18 @@
 					"tags": [
 						"sitting",
 						"onbottom"
-					]
+					],
+					"scale": 1.03,
+					"lookUp": -75
 				},
 				{
 					"sex": "female",
 					"tags": [
 						"kneeling",
 						"ontop"
-					]
+					],
+					"lookUp": 100,
+					"lookLeft": 0
 				}
 			],
 			"speeds": [
@@ -7054,14 +7320,18 @@
 					"tags": [
 						"lyingback",
 						"onbottom"
-					]
+					],
+					"scale": 1.03,
+					"lookUp": -75
 				},
 				{
 					"sex": "female",
 					"tags": [
 						"lyingfront",
 						"ontop"
-					]
+					],
+					"lookUp": 40,
+					"lookLeft": -20
 				}
 			],
 			"speeds": [
@@ -7143,7 +7413,9 @@
 					"tags": [
 						"sitting",
 						"onbottom"
-					]
+					],
+					"scale": 1.03,
+					"lookUp": 50
 				},
 				{
 					"sex": "female",
@@ -7151,7 +7423,9 @@
 					"tags": [
 						"kneeling",
 						"ontop"
-					]
+					],
+					"lookUp": 90,
+					"lookLeft": 0
 				}
 			],
 			"tags": [
@@ -7216,14 +7490,18 @@
 					"tags": [
 						"sitting",
 						"onbottom"
-					]
+					],
+					"scale": 1.03,
+					"lookUp": -75
 				},
 				{
 					"sex": "female",
 					"tags": [
 						"lyingfront",
 						"ontop"
-					]
+					],
+					"lookUp": 100,
+					"lookLeft": 0
 				}
 			],
 			"speeds": [
@@ -7302,7 +7580,9 @@
 					"tags": [
 						"kneeling",
 						"ontop"
-					]
+					],
+					"scale": 1.03,
+					"lookUp": -25
 				},
 				{
 					"sex": "female",
@@ -7310,7 +7590,8 @@
 					"tags": [
 						"lyingback",
 						"onbottom"
-					]
+					],
+					"lookUp": -50
 				}
 			],
 			"tags": [
@@ -7342,14 +7623,17 @@
 					"tags": [
 						"kneeling",
 						"ontop"
-					]
+					],
+					"scale": 1.03,
+					"lookUp": -25
 				},
 				{
 					"sex": "female",
 					"tags": [
 						"lyingback",
 						"onbottom"
-					]
+					],
+					"lookUp": -50
 				}
 			],
 			"speeds": [
@@ -7434,14 +7718,18 @@
 					"tags": [
 						"kneeling",
 						"ontop"
-					]
+					],
+					"scale": 1.03,
+					"lookUp": 50
 				},
 				{
 					"sex": "female",
 					"tags": [
 						"lyingback",
 						"onbottom"
-					]
+					],
+					"scale": 1.0,
+					"lookUp": -60
 				}
 			],
 			"speeds": [
@@ -7513,14 +7801,17 @@
 					"tags": [
 						"kneeling",
 						"ontop"
-					]
+					],
+					"scale": 1.03,
+					"lookUp": -100
 				},
 				{
 					"sex": "female",
 					"tags": [
 						"lyingback",
 						"onbottom"
-					]
+					],
+					"lookUp": -100
 				}
 			],
 			"speeds": [
@@ -7599,7 +7890,8 @@
 					"tags": [
 						"kneeling",
 						"ontop"
-					]
+					],
+					"scale": 1.03
 				},
 				{
 					"sex": "female",
@@ -7705,7 +7997,8 @@
 					"tags": [
 						"kneeling",
 						"ontop"
-					]
+					],
+					"scale": 1.03
 				},
 				{
 					"sex": "female",
@@ -7808,14 +8101,17 @@
 					"tags": [
 						"kneeling",
 						"ontop"
-					]
+					],
+					"scale": 1.03,
+					"lookUp": -25
 				},
 				{
 					"sex": "female",
 					"tags": [
 						"lyingback",
 						"onbottom"
-					]
+					],
+					"lookUp": -50
 				}
 			],
 			"speeds": [
@@ -7915,14 +8211,17 @@
 					"tags": [
 						"kneeling",
 						"ontop"
-					]
+					],
+					"scale": 1.03,
+					"lookUp": -25
 				},
 				{
 					"sex": "female",
 					"tags": [
 						"lyingback",
 						"onbottom"
-					]
+					],
+					"lookUp": -50
 				}
 			],
 			"speeds": [
@@ -8007,14 +8306,17 @@
 					"tags": [
 						"kneeling",
 						"ontop"
-					]
+					],
+					"scale": 1.03,
+					"lookUp": -25
 				},
 				{
 					"sex": "female",
 					"tags": [
 						"lyingback",
 						"onbottom"
-					]
+					],
+					"lookUp": -50
 				}
 			],
 			"speeds": [
@@ -8099,14 +8401,17 @@
 					"tags": [
 						"kneeling",
 						"ontop"
-					]
+					],
+					"scale": 1.03,
+					"lookUp": -25
 				},
 				{
 					"sex": "female",
 					"tags": [
 						"lyingback",
 						"onbottom"
-					]
+					],
+					"lookUp": -50
 				}
 			],
 			"speeds": [
@@ -8206,7 +8511,8 @@
 					"tags": [
 						"lyingfront",
 						"ontop"
-					]
+					],
+					"scale": 1.03
 				},
 				{
 					"sex": "female",
@@ -8290,7 +8596,8 @@
 					"tags": [
 						"lyingfront",
 						"ontop"
-					]
+					],
+					"scale": 1.03
 				},
 				{
 					"sex": "female",
@@ -8375,7 +8682,9 @@
 					"tags": [
 						"kneeling",
 						"ontop"
-					]
+					],
+					"scale": 1.03,
+					"lookUp": 20
 				},
 				{
 					"sex": "female",
@@ -8384,7 +8693,9 @@
 						"lyingfront",
 						"facingaway",
 						"onbottom"
-					]
+					],
+					"lookUp": -50,
+					"lookLeft": 100
 				}
 			],
 			"tags": [
@@ -8449,7 +8760,8 @@
 					"tags": [
 						"lyingfront",
 						"ontop"
-					]
+					],
+					"scale": 1.03
 				},
 				{
 					"sex": "female",
@@ -8528,7 +8840,9 @@
 					"tags": [
 						"kneeling",
 						"ontop"
-					]
+					],
+					"scale": 1.03,
+					"lookUp": -25
 				},
 				{
 					"sex": "female",
@@ -8608,7 +8922,9 @@
 					"tags": [
 						"kneeling",
 						"ontop"
-					]
+					],
+					"scale": 1.03,
+					"lookUp": -25
 				},
 				{
 					"sex": "female",
@@ -8692,7 +9008,8 @@
 					"tags": [
 						"lyingfront",
 						"ontop"
-					]
+					],
+					"scale": 1.03
 				},
 				{
 					"sex": "female",
@@ -8786,14 +9103,18 @@
 					"tags": [
 						"kneeling",
 						"ontop"
-					]
+					],
+					"scale": 1.03,
+					"lookUp": -25
 				},
 				{
 					"sex": "female",
 					"tags": [
 						"lyingside",
 						"onbottom"
-					]
+					],
+					"lookUp": 25,
+					"lookLeft": -50
 				}
 			],
 			"speeds": [
@@ -8869,14 +9190,18 @@
 					"tags": [
 						"kneeling",
 						"ontop"
-					]
+					],
+					"scale": 1.03,
+					"lookUp": -25
 				},
 				{
 					"sex": "female",
 					"tags": [
 						"lyingside",
 						"onbottom"
-					]
+					],
+					"lookUp": -50,
+					"lookLeft": -75
 				}
 			],
 			"speeds": [
@@ -8952,14 +9277,18 @@
 					"tags": [
 						"kneeling",
 						"ontop"
-					]
+					],
+					"scale": 1.03,
+					"lookUp": 50
 				},
 				{
 					"sex": "female",
 					"tags": [
 						"lyingside",
 						"onbottom"
-					]
+					],
+					"scale": 1.0,
+					"lookUp": -60
 				}
 			],
 			"speeds": [
@@ -9027,14 +9356,18 @@
 					"tags": [
 						"kneeling",
 						"ontop"
-					]
+					],
+					"scale": 1.03,
+					"lookUp": -25
 				},
 				{
 					"sex": "female",
 					"tags": [
 						"lyingside",
 						"onbottom"
-					]
+					],
+					"lookUp": -50,
+					"lookLeft": -75
 				}
 			],
 			"speeds": [
@@ -9109,13 +9442,18 @@
 					"penisBend": -1,
 					"tags": [
 						"standing"
-					]
+					],
+					"scale": 1.03,
+					"lookUp": -50
 				},
 				{
 					"sex": "female",
 					"tags": [
 						"squatting"
-					]
+					],
+					"scale": 1.0,
+					"scaleHeight": 67,
+					"lookUp": -100
 				}
 			],
 			"speeds": [
@@ -9195,13 +9533,18 @@
 					"penisBend": -1,
 					"tags": [
 						"standing"
-					]
+					],
+					"scale": 1.03,
+					"lookUp": -50
 				},
 				{
 					"sex": "female",
 					"tags": [
 						"squatting"
-					]
+					],
+					"scale": 1.0,
+					"scaleHeight": 67,
+					"lookUp": -100
 				}
 			],
 			"speeds": [
@@ -9275,13 +9618,18 @@
 					"penisBend": -1,
 					"tags": [
 						"standing"
-					]
+					],
+					"scale": 1.03,
+					"lookUp": -50
 				},
 				{
 					"sex": "female",
 					"tags": [
 						"squatting"
-					]
+					],
+					"scale": 1.0,
+					"scaleHeight": 67,
+					"lookUp": -100
 				}
 			],
 			"speeds": [
@@ -9366,13 +9714,18 @@
 					"penisBend": -1,
 					"tags": [
 						"standing"
-					]
+					],
+					"scale": 1.03,
+					"lookUp": -75
 				},
 				{
 					"sex": "female",
 					"tags": [
 						"squatting"
-					]
+					],
+					"scale": 1.0,
+					"scaleHeight": 67,
+					"lookUp": -100
 				}
 			],
 			"speeds": [
@@ -9448,13 +9801,18 @@
 					"penisBend": 7,
 					"tags": [
 						"standing"
-					]
+					],
+					"scale": 1.03,
+					"lookUp": -50
 				},
 				{
 					"sex": "female",
 					"tags": [
 						"squatting"
-					]
+					],
+					"scale": 1.0,
+					"scaleHeight": 67,
+					"lookUp": -50
 				}
 			],
 			"speeds": [
@@ -9524,13 +9882,18 @@
 					"penisBend": 2,
 					"tags": [
 						"standing"
-					]
+					],
+					"scale": 1.03,
+					"lookUp": -50
 				},
 				{
 					"sex": "female",
 					"tags": [
 						"squatting"
-					]
+					],
+					"scale": 1.0,
+					"scaleHeight": 67,
+					"lookLeft": 0
 				}
 			],
 			"speeds": [
@@ -9630,13 +9993,18 @@
 					"penisBend": 2,
 					"tags": [
 						"standing"
-					]
+					],
+					"scale": 1.03,
+					"scaleHeight": 80,
+					"lookUp": -25
 				},
 				{
 					"sex": "female",
 					"tags": [
 						"standing"
-					]
+					],
+					"scaleHeight": 80,
+					"lookUp": 75
 				}
 			],
 			"speeds": [
@@ -9706,7 +10074,9 @@
 					"penisBend": -3,
 					"tags": [
 						"standing"
-					]
+					],
+					"scale": 1.03,
+					"lookUp": -75
 				},
 				{
 					"sex": "female",
@@ -9714,7 +10084,9 @@
 						"bendover",
 						"facingaway",
 						"standing"
-					]
+					],
+					"scale": 1.0,
+					"scaleHeight": 67
 				}
 			],
 			"speeds": [
@@ -9807,7 +10179,9 @@
 					"penisBend": 8,
 					"tags": [
 						"standing"
-					]
+					],
+					"scale": 1.03,
+					"lookUp": -50
 				},
 				{
 					"sex": "female",
@@ -9815,7 +10189,10 @@
 						"bendover",
 						"facingaway",
 						"standing"
-					]
+					],
+					"scale": 1.0,
+					"scaleHeight": 102,
+					"lookUp": -30
 				}
 			],
 			"speeds": [
@@ -9901,7 +10278,9 @@
 					"penisBend": 2,
 					"tags": [
 						"standing"
-					]
+					],
+					"scale": 1.03,
+					"lookUp": -50
 				},
 				{
 					"sex": "female",
@@ -9909,7 +10288,10 @@
 						"bendover",
 						"facingaway",
 						"standing"
-					]
+					],
+					"scale": 1.0,
+					"scaleHeight": 67,
+					"lookUp": -30
 				}
 			],
 			"speeds": [
@@ -10001,7 +10383,9 @@
 					"penisBend": 3,
 					"tags": [
 						"standing"
-					]
+					],
+					"scale": 1.03,
+					"lookUp": -50
 				},
 				{
 					"sex": "female",
@@ -10009,7 +10393,9 @@
 						"bendover",
 						"facingaway",
 						"standing"
-					]
+					],
+					"scale": 1.0,
+					"scaleHeight": 67
 				}
 			],
 			"speeds": [
@@ -10094,7 +10480,9 @@
 					"penisBend": 2,
 					"tags": [
 						"standing"
-					]
+					],
+					"scale": 1.03,
+					"lookUp": -50
 				},
 				{
 					"sex": "female",
@@ -10102,7 +10490,9 @@
 						"bendover",
 						"facingaway",
 						"standing"
-					]
+					],
+					"scale": 1.0,
+					"scaleHeight": 67
 				}
 			],
 			"speeds": [
@@ -10203,7 +10593,9 @@
 					"penisBend": 3,
 					"tags": [
 						"standing"
-					]
+					],
+					"scale": 1.03,
+					"lookUp": -50
 				},
 				{
 					"sex": "female",
@@ -10211,7 +10603,9 @@
 						"bendover",
 						"facingaway",
 						"standing"
-					]
+					],
+					"scale": 1.0,
+					"scaleHeight": 67
 				}
 			],
 			"speeds": [
@@ -10302,14 +10696,18 @@
 					"penisBend": 2,
 					"tags": [
 						"standing"
-					]
+					],
+					"scale": 1.03,
+					"lookUp": -50
 				},
 				{
 					"sex": "female",
 					"tags": [
 						"facingaway",
 						"standing"
-					]
+					],
+					"lookUp": -30,
+					"lookLeft": 100
 				}
 			],
 			"speeds": [
@@ -10391,14 +10789,20 @@
 					"penisBend": 9,
 					"tags": [
 						"standing"
-					]
+					],
+					"scale": 1.03,
+					"lookUp": -50
 				},
 				{
 					"sex": "female",
 					"tags": [
 						"facingaway",
 						"standing"
-					]
+					],
+					"scale": 1.0,
+					"scaleHeight": 106,
+					"lookUp": -30,
+					"lookLeft": 75
 				}
 			],
 			"speeds": [
@@ -10474,13 +10878,18 @@
 					"penisBend": 2,
 					"tags": [
 						"kneeling"
-					]
+					],
+					"scale": 1.03,
+					"lookUp": -100
 				},
 				{
 					"sex": "female",
 					"tags": [
 						"standing"
-					]
+					],
+					"scale": 1.0,
+					"scaleHeight": 118,
+					"lookUp": -100
 				}
 			],
 			"speeds": [
@@ -10550,14 +10959,18 @@
 					"penisBend": -7,
 					"tags": [
 						"standing"
-					]
+					],
+					"scale": 1.03,
+					"lookUp": -75,
+					"lookLeft": 50
 				},
 				{
 					"sex": "female",
 					"tags": [
 						"facingaway",
 						"standing"
-					]
+					],
+					"lookLeft": -75
 				}
 			],
 			"speeds": [
@@ -10638,13 +11051,18 @@
 					"penisBend": -3,
 					"tags": [
 						"standing"
-					]
+					],
+					"scale": 1.03,
+					"scaleHeight": 80,
+					"expressionAction": 1
 				},
 				{
 					"sex": "female",
 					"tags": [
 						"standing"
-					]
+					],
+					"scaleHeight": 80,
+					"expressionAction": 1
 				}
 			],
 			"speeds": [
@@ -10734,13 +11152,16 @@
 					"penisBend": 7,
 					"tags": [
 						"standing"
-					]
+					],
+					"scale": 1.03,
+					"expressionAction": 1
 				},
 				{
 					"sex": "female",
 					"tags": [
 						"standing"
-					]
+					],
+					"expressionAction": 1
 				}
 			],
 			"speeds": [
@@ -10825,13 +11246,17 @@
 					"penisBend": 7,
 					"tags": [
 						"standing"
-					]
+					],
+					"scale": 1.03,
+					"lookUp": -100
 				},
 				{
 					"sex": "female",
 					"tags": [
 						"standing"
-					]
+					],
+					"lookUp": -100,
+					"lookLeft": 40
 				}
 			],
 			"speeds": [
@@ -10897,13 +11322,16 @@
 					"penisBend": 2,
 					"tags": [
 						"standing"
-					]
+					],
+					"scale": 1.03,
+					"lookUp": -50
 				},
 				{
 					"sex": "female",
 					"tags": [
 						"sitting"
-					]
+					],
+					"lookLeft": 0
 				}
 			],
 			"speeds": [
@@ -11004,7 +11432,8 @@
 					"idle": "0x000AFF",
 					"tags": [
 						"standing"
-					]
+					],
+					"scale": 1.03
 				},
 				{
 					"sex": "female",
@@ -11046,7 +11475,8 @@
 					"idle": "0x000B01",
 					"tags": [
 						"standing"
-					]
+					],
+					"scale": 1.03
 				},
 				{
 					"sex": "female",
@@ -11090,7 +11520,8 @@
 					"idle": "0x000B03",
 					"tags": [
 						"standing"
-					]
+					],
+					"scale": 1.03
 				},
 				{
 					"sex": "female",
@@ -11134,7 +11565,8 @@
 					"idle": "0x000B05",
 					"tags": [
 						"standing"
-					]
+					],
+					"scale": 1.03
 				},
 				{
 					"sex": "female",
@@ -11174,7 +11606,8 @@
 					"idle": "0x000B07",
 					"tags": [
 						"standing"
-					]
+					],
+					"scale": 1.03
 				},
 				{
 					"sex": "female",
@@ -11214,7 +11647,8 @@
 					"idle": "0x000B09",
 					"tags": [
 						"standing"
-					]
+					],
+					"scale": 1.03
 				},
 				{
 					"sex": "female",
@@ -11261,7 +11695,8 @@
 					"idle": "0x000B0B",
 					"tags": [
 						"standing"
-					]
+					],
+					"scale": 1.03
 				},
 				{
 					"sex": "female",
@@ -11291,7 +11726,9 @@
 					"tags": [
 						"drowsy",
 						"standing"
-					]
+					],
+					"scale": 1.03,
+					"lookUp": -75
 				},
 				{
 					"sex": "female",
@@ -11326,14 +11763,18 @@
 					"idle": "0x000B0F",
 					"tags": [
 						"standing"
-					]
+					],
+					"scale": 1.03,
+					"lookUp": -75,
+					"lookLeft": -75
 				},
 				{
 					"sex": "female",
 					"idle": "0x000B10",
 					"tags": [
 						"standing"
-					]
+					],
+					"lookUp": -25
 				}
 			],
 			"tags": [
@@ -11380,7 +11821,8 @@
 					"tags": [
 						"drowsy",
 						"standing"
-					]
+					],
+					"scale": 1.03
 				},
 				{
 					"sex": "female",
@@ -11410,7 +11852,8 @@
 					"idle": "0x000B13",
 					"tags": [
 						"standing"
-					]
+					],
+					"scale": 1.03
 				},
 				{
 					"sex": "female",
@@ -11439,7 +11882,8 @@
 					"idle": "0x000B15",
 					"tags": [
 						"standing"
-					]
+					],
+					"scale": 1.03
 				},
 				{
 					"sex": "female",
@@ -11447,7 +11891,8 @@
 					"tags": [
 						"drowsy",
 						"standing"
-					]
+					],
+					"lookUp": -75
 				}
 			],
 			"tags": [
@@ -11475,14 +11920,18 @@
 					"idle": "0x000B17",
 					"tags": [
 						"standing"
-					]
+					],
+					"scale": 1.03,
+					"lookUp": -25
 				},
 				{
 					"sex": "female",
 					"idle": "0x000B18",
 					"tags": [
 						"standing"
-					]
+					],
+					"lookUp": -75,
+					"lookLeft": -75
 				}
 			],
 			"tags": [
@@ -11528,7 +11977,8 @@
 					"idle": "0x000B19",
 					"tags": [
 						"standing"
-					]
+					],
+					"scale": 1.03
 				},
 				{
 					"sex": "female",
@@ -11558,7 +12008,8 @@
 					"idle": "0x000B1B",
 					"tags": [
 						"kneeling"
-					]
+					],
+					"lookUp": -30
 				},
 				{
 					"sex": "male",
@@ -11566,7 +12017,9 @@
 					"idle": "0x000B1C",
 					"tags": [
 						"lying"
-					]
+					],
+					"lookUp": -20,
+					"lookLeft": -90
 				}
 			],
 			"tags": [
@@ -12040,7 +12493,9 @@
 					"idle": "0x000B31",
 					"tags": [
 						"lyingback"
-					]
+					],
+					"lookUp": -80,
+					"lookLeft": 40
 				},
 				{
 					"sex": "male",
@@ -12048,14 +12503,18 @@
 					"idle": "0x000B32",
 					"tags": [
 						"lyingback"
-					]
+					],
+					"lookUp": -60,
+					"lookLeft": -10
 				},
 				{
 					"sex": "female",
 					"idle": "0x000B33",
 					"tags": [
 						"lyingback"
-					]
+					],
+					"lookUp": -70,
+					"lookLeft": -30
 				}
 			],
 			"tags": [
@@ -12099,7 +12558,9 @@
 					"idle": "0x000B34",
 					"tags": [
 						"standing"
-					]
+					],
+					"lookUp": -50,
+					"lookLeft": 40
 				},
 				{
 					"sex": "male",
@@ -12107,14 +12568,18 @@
 					"idle": "0x000B35",
 					"tags": [
 						"standing"
-					]
+					],
+					"lookUp": -30,
+					"lookLeft": 10
 				},
 				{
 					"sex": "female",
 					"idle": "0x000B36",
 					"tags": [
 						"standing"
-					]
+					],
+					"lookUp": 20,
+					"lookLeft": -80
 				}
 			],
 			"tags": [
@@ -12272,7 +12737,9 @@
 					"idle": "0x000B3D",
 					"tags": [
 						"lyingback"
-					]
+					],
+					"lookUp": -80,
+					"lookLeft": 40
 				},
 				{
 					"sex": "male",
@@ -12280,7 +12747,9 @@
 					"idle": "0x000B3E",
 					"tags": [
 						"lyingback"
-					]
+					],
+					"lookUp": -60,
+					"lookLeft": -10
 				},
 				{
 					"sex": "male",
@@ -12295,7 +12764,9 @@
 					"idle": "0x000B40",
 					"tags": [
 						"lyingback"
-					]
+					],
+					"lookUp": -70,
+					"lookLeft": -30
 				}
 			],
 			"tags": [
@@ -12324,7 +12795,9 @@
 					"idle": "0x000B41",
 					"tags": [
 						"standing"
-					]
+					],
+					"lookUp": -50,
+					"lookLeft": 40
 				},
 				{
 					"sex": "male",
@@ -12332,7 +12805,9 @@
 					"idle": "0x000B42",
 					"tags": [
 						"standing"
-					]
+					],
+					"lookUp": -30,
+					"lookLeft": 10
 				},
 				{
 					"sex": "male",
@@ -12347,7 +12822,9 @@
 					"idle": "0x000B44",
 					"tags": [
 						"standing"
-					]
+					],
+					"lookUp": 20,
+					"lookLeft": -80
 				}
 			],
 			"tags": [
@@ -12376,7 +12853,9 @@
 					"idle": "0x000B45",
 					"tags": [
 						"lyingback"
-					]
+					],
+					"lookUp": -80,
+					"lookLeft": 40
 				},
 				{
 					"sex": "male",
@@ -12384,7 +12863,9 @@
 					"idle": "0x000B46",
 					"tags": [
 						"lyingback"
-					]
+					],
+					"lookUp": -60,
+					"lookLeft": -10
 				},
 				{
 					"sex": "male",
@@ -12407,7 +12888,9 @@
 					"idle": "0x000B49",
 					"tags": [
 						"lyingback"
-					]
+					],
+					"lookUp": -70,
+					"lookLeft": -30
 				}
 			],
 			"tags": [
@@ -12436,7 +12919,9 @@
 					"idle": "0x000B4A",
 					"tags": [
 						"standing"
-					]
+					],
+					"lookUp": -50,
+					"lookLeft": 40
 				},
 				{
 					"sex": "male",
@@ -12444,7 +12929,9 @@
 					"idle": "0x000B4B",
 					"tags": [
 						"standing"
-					]
+					],
+					"lookUp": -30,
+					"lookLeft": 10
 				},
 				{
 					"sex": "male",
@@ -12467,7 +12954,9 @@
 					"idle": "0x000B4E",
 					"tags": [
 						"standing"
-					]
+					],
+					"lookUp": 20,
+					"lookLeft": -80
 				}
 			],
 			"tags": [
@@ -13005,14 +13494,18 @@
 					"idle": "0x000B79",
 					"tags": [
 						"sitting"
-					]
+					],
+					"lookUp": 10,
+					"lookLeft": 70
 				},
 				{
 					"sex": "female",
 					"idle": "0x000B7A",
 					"tags": [
 						"sitting"
-					]
+					],
+					"lookUp": -50,
+					"lookLeft": -65
 				}
 			],
 			"tags": [
@@ -13116,14 +13609,17 @@
 					"idle": "0x000B81",
 					"tags": [
 						"sitting"
-					]
+					],
+					"scale": 1.03,
+					"lookLeft": -25
 				},
 				{
 					"sex": "female",
 					"idle": "0x000B82",
 					"tags": [
 						"sitting"
-					]
+					],
+					"lookLeft": 35
 				}
 			],
 			"tags": [
@@ -13272,7 +13768,8 @@
 					"idle": "0x000B8D",
 					"tags": [
 						"sitting"
-					]
+					],
+					"scale": 1.03
 				},
 				{
 					"sex": "male",
@@ -13526,7 +14023,8 @@
 					"idle": "0x000BA1",
 					"tags": [
 						"standing"
-					]
+					],
+					"scale": 1.03
 				},
 				{
 					"sex": "female",
@@ -13569,7 +14067,8 @@
 					"idle": "0x000BA3",
 					"tags": [
 						"standing"
-					]
+					],
+					"scale": 1.03
 				},
 				{
 					"sex": "female",
@@ -13606,7 +14105,8 @@
 					"idle": "0x000BA5",
 					"tags": [
 						"standing"
-					]
+					],
+					"scale": 1.03
 				},
 				{
 					"sex": "female",
@@ -13653,7 +14153,8 @@
 					"idle": "0x000BA7",
 					"tags": [
 						"standing"
-					]
+					],
+					"scale": 1.03
 				},
 				{
 					"sex": "male",
@@ -13791,7 +14292,8 @@
 					"idle": "0x000BAC",
 					"tags": [
 						"standing"
-					]
+					],
+					"scale": 1.03
 				},
 				{
 					"sex": "female",
@@ -13839,7 +14341,8 @@
 					"idle": "0x000BAE",
 					"tags": [
 						"standing"
-					]
+					],
+					"scale": 1.03
 				},
 				{
 					"sex": "female",
@@ -13883,7 +14386,8 @@
 					"idle": "0x000BB0",
 					"tags": [
 						"standing"
-					]
+					],
+					"scale": 1.03
 				},
 				{
 					"sex": "female",
@@ -13931,7 +14435,8 @@
 					"idle": "0x000BB2",
 					"tags": [
 						"standing"
-					]
+					],
+					"scale": 1.03
 				},
 				{
 					"sex": "female",
@@ -13975,7 +14480,8 @@
 					"idle": "0x000BB4",
 					"tags": [
 						"standing"
-					]
+					],
+					"scale": 1.03
 				},
 				{
 					"sex": "male",
@@ -14078,7 +14584,8 @@
 					"idle": "0x000BB8",
 					"tags": [
 						"standing"
-					]
+					],
+					"scale": 1.03
 				},
 				{
 					"sex": "female",
@@ -14121,7 +14628,8 @@
 					"idle": "0x000BBA",
 					"tags": [
 						"standing"
-					]
+					],
+					"scale": 1.03
 				},
 				{
 					"sex": "female",
@@ -14174,7 +14682,8 @@
 					"idle": "0x000BBC",
 					"tags": [
 						"standing"
-					]
+					],
+					"scale": 1.03
 				},
 				{
 					"sex": "female",
@@ -14217,7 +14726,8 @@
 					"idle": "0x000BBE",
 					"tags": [
 						"standing"
-					]
+					],
+					"scale": 1.03
 				},
 				{
 					"sex": "female",
@@ -14260,7 +14770,8 @@
 					"idle": "0x000BC0",
 					"tags": [
 						"standing"
-					]
+					],
+					"scale": 1.03
 				},
 				{
 					"sex": "female",
@@ -14313,7 +14824,8 @@
 					"idle": "0x000BC2",
 					"tags": [
 						"standing"
-					]
+					],
+					"scale": 1.03
 				},
 				{
 					"sex": "female",
@@ -14356,7 +14868,8 @@
 					"idle": "0x000BC4",
 					"tags": [
 						"standing"
-					]
+					],
+					"scale": 1.03
 				},
 				{
 					"sex": "male",
@@ -14502,7 +15015,8 @@
 					"idle": "0x000BCA",
 					"tags": [
 						"standing"
-					]
+					],
+					"scale": 1.0
 				},
 				{
 					"sex": "female",
@@ -14545,7 +15059,8 @@
 					"idle": "0x000BCC",
 					"tags": [
 						"standing"
-					]
+					],
+					"scale": 1.0
 				},
 				{
 					"sex": "male",

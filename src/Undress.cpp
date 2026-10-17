@@ -199,6 +199,10 @@ namespace Undress
 				Strip(a_ids[role], g_config.slots);
 				continue;
 			}
+			// OStim's actor noStrip: no undressing by this role's actions.
+			if (role < a_scene.actors.size() && a_scene.actors[role].noStrip) {
+				continue;
+			}
 			std::vector<int> slots;
 			bool             full = false;
 			for (const auto& action : a_scene.actions) {
