@@ -528,6 +528,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 9,
 					"idle": "0x000815",
 					"tags": [
 						"lyingback"
@@ -585,6 +586,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 9,
 					"idle": "0x000817",
 					"tags": [
 						"lyingback",
@@ -653,6 +655,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 4,
 					"idle": "0x000819",
 					"tags": [
 						"lyingback",
@@ -690,6 +693,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 2,
 					"idle": "0x00081B",
 					"tags": [
 						"kneeling"
@@ -744,6 +748,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 3,
 					"idle": "0x00081D",
 					"tags": [
 						"lyingback"
@@ -801,6 +806,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 3,
 					"idle": "0x00081F",
 					"tags": [
 						"lyingfront"
@@ -857,6 +863,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 7,
 					"idle": "0x000821",
 					"tags": [
 						"kneeling",
@@ -918,6 +925,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 4,
 					"idle": "0x000823",
 					"tags": [
 						"kneeling"
@@ -947,6 +955,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 9,
 					"idle": "0x000825",
 					"tags": [
 						"lyingback",
@@ -1011,6 +1020,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 4,
 					"idle": "0x000827",
 					"tags": [
 						"lyingback",
@@ -1047,6 +1057,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 2,
 					"idle": "0x000829",
 					"tags": [
 						"kneeling"
@@ -1101,6 +1112,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 7,
 					"idle": "0x00082B",
 					"tags": [
 						"sitting"
@@ -1172,6 +1184,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 7,
 					"idle": "0x00082D",
 					"tags": [
 						"sitting"
@@ -1248,6 +1261,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 7,
 					"idle": "0x00082F",
 					"tags": [
 						"sitting"
@@ -1307,6 +1321,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 7,
 					"idle": "0x000831",
 					"tags": [
 						"facingaway",
@@ -1348,6 +1363,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 7,
 					"idle": "0x000833",
 					"tags": [
 						"standing"
@@ -1474,6 +1490,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 7,
 					"idle": "0x000835",
 					"tags": [
 						"standing"
@@ -1503,6 +1520,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 7,
 					"idle": "0x000837",
 					"tags": [
 						"standing"
@@ -1533,6 +1551,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 7,
 					"idle": "0x000839",
 					"tags": [
 						"standing"
@@ -1562,6 +1581,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 1,
 					"idle": "0x00083B",
 					"tags": [
 						"standing"
@@ -1656,6 +1676,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 7,
 					"idle": "0x00083D",
 					"tags": [
 						"standing"
@@ -1692,6 +1713,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 7,
 					"idle": "0x00083F",
 					"tags": [
 						"standing"
@@ -1779,6 +1801,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 7,
 					"idle": "0x000841",
 					"tags": [
 						"standing"
@@ -1808,6 +1831,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 7,
 					"idle": "0x000843",
 					"tags": [
 						"standing"
@@ -1844,6 +1868,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 7,
 					"idle": "0x000845",
 					"tags": [
 						"facingaway",
@@ -1886,6 +1911,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 7,
 					"idle": "0x000847",
 					"tags": [
 						"standing"
@@ -1956,6 +1982,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 7,
 					"idle": "0x000849",
 					"tags": [
 						"standing"
@@ -2022,6 +2049,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 7,
 					"idle": "0x00084B",
 					"tags": [
 						"standing"
@@ -2052,6 +2080,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 7,
 					"idle": "0x00084D",
 					"tags": [
 						"standing"
@@ -2080,6 +2109,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 7,
 					"idle": "0x00084F",
 					"tags": [
 						"standing"
@@ -2143,6 +2173,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": -5,
 					"idle": "0x000851",
 					"tags": [
 						"standing"
@@ -2204,6 +2235,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 7,
 					"idle": "0x000853",
 					"tags": [
 						"standing"
@@ -2255,6 +2287,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 7,
 					"idle": "0x000855",
 					"tags": [
 						"standing"
@@ -2326,6 +2359,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 7,
 					"idle": "0x000857",
 					"tags": [
 						"standing"
@@ -2378,6 +2412,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 7,
 					"idle": "0x000859",
 					"tags": [
 						"standing"
@@ -2406,6 +2441,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 6,
 					"idle": "0x00085B",
 					"tags": [
 						"standing"
@@ -2482,6 +2518,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 6,
 					"idle": "0x00085D",
 					"tags": [
 						"standing"
@@ -2578,6 +2615,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 6,
 					"idle": "0x00085F",
 					"tags": [
 						"standing"
@@ -2645,6 +2683,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 6,
 					"idle": "0x000861",
 					"tags": [
 						"standing"
@@ -2680,6 +2719,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": -7,
 					"idle": "0x000863",
 					"tags": [
 						"standing"
@@ -2743,6 +2783,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": -5,
 					"idle": "0x000865",
 					"tags": [
 						"standing"
@@ -2819,6 +2860,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": -5,
 					"idle": "0x000869",
 					"tags": [
 						"standing"
@@ -2910,6 +2952,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": -5,
 					"idle": "0x00086B",
 					"tags": [
 						"standing"
@@ -2996,6 +3039,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": -5,
 					"idle": "0x00086D",
 					"tags": [
 						"standing"
@@ -3092,6 +3136,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 7,
 					"idle": "0x00086F",
 					"tags": [
 						"standing"
@@ -3156,6 +3201,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 7,
 					"idle": "0x000871",
 					"tags": [
 						"standing"
@@ -3190,6 +3236,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 6,
 					"tags": [
 						"squatting"
 					]
@@ -3272,6 +3319,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 2,
 					"tags": [
 						"standing"
 					]
@@ -3371,6 +3419,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 7,
 					"tags": [
 						"standing"
 					]
@@ -3441,6 +3490,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 7,
 					"tags": [
 						"standing"
 					]
@@ -3533,6 +3583,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 2,
 					"tags": [
 						"standing"
 					]
@@ -3603,6 +3654,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": -5,
 					"tags": [
 						"standing"
 					]
@@ -3902,6 +3954,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": -2,
 					"tags": [
 						"lyingback",
 						"onbottom"
@@ -3994,6 +4047,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": -2,
 					"tags": [
 						"lyingback",
 						"onbottom"
@@ -4067,6 +4121,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": -5,
 					"tags": [
 						"lyingback",
 						"onbottom"
@@ -4151,6 +4206,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 9,
 					"idle": "0x0008CB",
 					"tags": [
 						"lyingback",
@@ -4189,6 +4245,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": -5,
 					"idle": "0x0008CD",
 					"tags": [
 						"lyingback",
@@ -4226,6 +4283,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 2,
 					"tags": [
 						"kneeling"
 					]
@@ -4311,6 +4369,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 2,
 					"tags": [
 						"kneeling"
 					]
@@ -4387,6 +4446,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 2,
 					"tags": [
 						"kneeling"
 					]
@@ -4477,6 +4537,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 2,
 					"tags": [
 						"kneeling"
 					]
@@ -4567,6 +4628,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 2,
 					"tags": [
 						"kneeling"
 					]
@@ -4657,6 +4719,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 2,
 					"tags": [
 						"kneeling"
 					]
@@ -4752,6 +4815,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 2,
 					"tags": [
 						"kneeling"
 					]
@@ -4833,6 +4897,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 2,
 					"tags": [
 						"squatting"
 					]
@@ -4918,6 +4983,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 2,
 					"tags": [
 						"kneeling"
 					]
@@ -4998,6 +5064,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 3,
 					"tags": [
 						"squatting"
 					]
@@ -5084,6 +5151,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 2,
 					"tags": [
 						"sitting"
 					]
@@ -5162,6 +5230,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 9,
 					"tags": [
 						"lyingback"
 					]
@@ -5241,6 +5310,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 9,
 					"tags": [
 						"lyingback"
 					]
@@ -5322,6 +5392,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 2,
 					"tags": [
 						"kneeling"
 					]
@@ -5399,6 +5470,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 2,
 					"tags": [
 						"squatting"
 					]
@@ -5476,6 +5548,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 2,
 					"tags": [
 						"kneeling"
 					]
@@ -5553,6 +5626,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 1,
 					"tags": [
 						"standing"
 					]
@@ -5653,6 +5727,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": -6,
 					"tags": [
 						"standing"
 					]
@@ -5758,6 +5833,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": -5,
 					"tags": [
 						"standing"
 					]
@@ -5858,6 +5934,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 2,
 					"tags": [
 						"standing"
 					]
@@ -5959,6 +6036,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 2,
 					"tags": [
 						"standing"
 					]
@@ -6054,6 +6132,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 2,
 					"tags": [
 						"standing"
 					]
@@ -6169,6 +6248,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": -4,
 					"tags": [
 						"standing"
 					]
@@ -6254,6 +6334,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 2,
 					"tags": [
 						"standing"
 					]
@@ -6335,6 +6416,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 2,
 					"tags": [
 						"standing"
 					]
@@ -6494,6 +6576,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 2,
 					"tags": [
 						"lyingfront"
 					]
@@ -6574,6 +6657,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 2,
 					"tags": [
 						"lyingfront"
 					]
@@ -6649,6 +6733,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 2,
 					"tags": [
 						"lyingfront"
 					]
@@ -6724,6 +6809,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 1,
 					"tags": [
 						"kneeling"
 					]
@@ -6804,6 +6890,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 2,
 					"idle": "0x0009B0",
 					"tags": [
 						"kneeling"
@@ -6870,6 +6957,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": -3,
 					"tags": [
 						"sitting",
 						"onbottom"
@@ -6962,6 +7050,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 3,
 					"tags": [
 						"lyingback",
 						"onbottom"
@@ -7049,6 +7138,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 2,
 					"idle": "0x0009C2",
 					"tags": [
 						"sitting",
@@ -7122,6 +7212,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": -4,
 					"tags": [
 						"sitting",
 						"onbottom"
@@ -7339,6 +7430,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 2,
 					"tags": [
 						"kneeling",
 						"ontop"
@@ -7417,6 +7509,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 2,
 					"tags": [
 						"kneeling",
 						"ontop"
@@ -7710,6 +7803,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": -1,
 					"climax": "4StimTest_OStim2PMissionaryClimaxMF",
 					"tags": [
 						"kneeling",
@@ -7817,6 +7911,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": -2,
 					"tags": [
 						"kneeling",
 						"ontop"
@@ -7908,6 +8003,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": -1,
 					"tags": [
 						"kneeling",
 						"ontop"
@@ -8106,6 +8202,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 5,
 					"tags": [
 						"lyingfront",
 						"ontop"
@@ -8189,6 +8286,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 5,
 					"tags": [
 						"lyingfront",
 						"ontop"
@@ -8272,6 +8370,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 2,
 					"idle": "0x000A20",
 					"tags": [
 						"kneeling",
@@ -8346,6 +8445,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 5,
 					"tags": [
 						"lyingfront",
 						"ontop"
@@ -8424,6 +8524,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 2,
 					"tags": [
 						"kneeling",
 						"ontop"
@@ -8503,6 +8604,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": -2,
 					"tags": [
 						"kneeling",
 						"ontop"
@@ -8586,6 +8688,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 5,
 					"tags": [
 						"lyingfront",
 						"ontop"
@@ -8679,6 +8782,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 2,
 					"tags": [
 						"kneeling",
 						"ontop"
@@ -8761,6 +8865,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": -1,
 					"tags": [
 						"kneeling",
 						"ontop"
@@ -8843,6 +8948,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 2,
 					"tags": [
 						"kneeling",
 						"ontop"
@@ -8917,6 +9023,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 2,
 					"tags": [
 						"kneeling",
 						"ontop"
@@ -8999,6 +9106,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": -1,
 					"tags": [
 						"standing"
 					]
@@ -9084,6 +9192,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": -1,
 					"tags": [
 						"standing"
 					]
@@ -9163,6 +9272,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": -1,
 					"tags": [
 						"standing"
 					]
@@ -9253,6 +9363,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": -1,
 					"tags": [
 						"standing"
 					]
@@ -9334,6 +9445,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 7,
 					"tags": [
 						"standing"
 					]
@@ -9409,6 +9521,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 2,
 					"tags": [
 						"standing"
 					]
@@ -9514,6 +9627,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 2,
 					"tags": [
 						"standing"
 					]
@@ -9589,6 +9703,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": -3,
 					"tags": [
 						"standing"
 					]
@@ -9689,6 +9804,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 8,
 					"tags": [
 						"standing"
 					]
@@ -9782,6 +9898,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 2,
 					"tags": [
 						"standing"
 					]
@@ -9881,6 +9998,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 3,
 					"tags": [
 						"standing"
 					]
@@ -9973,6 +10091,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 2,
 					"tags": [
 						"standing"
 					]
@@ -10081,6 +10200,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 3,
 					"tags": [
 						"standing"
 					]
@@ -10179,6 +10299,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 2,
 					"tags": [
 						"standing"
 					]
@@ -10267,6 +10388,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 9,
 					"tags": [
 						"standing"
 					]
@@ -10349,6 +10471,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 2,
 					"tags": [
 						"kneeling"
 					]
@@ -10424,6 +10547,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": -7,
 					"tags": [
 						"standing"
 					]
@@ -10511,6 +10635,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": -3,
 					"tags": [
 						"standing"
 					]
@@ -10606,6 +10731,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 7,
 					"tags": [
 						"standing"
 					]
@@ -10696,6 +10822,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 7,
 					"tags": [
 						"standing"
 					]
@@ -10767,6 +10894,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 2,
 					"tags": [
 						"standing"
 					]
@@ -10872,6 +11000,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 7,
 					"idle": "0x000AFF",
 					"tags": [
 						"standing"
@@ -10913,6 +11042,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 7,
 					"idle": "0x000B01",
 					"tags": [
 						"standing"
@@ -10956,6 +11086,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 7,
 					"idle": "0x000B03",
 					"tags": [
 						"standing"
@@ -10999,6 +11130,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 7,
 					"idle": "0x000B05",
 					"tags": [
 						"standing"
@@ -11038,6 +11170,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 7,
 					"idle": "0x000B07",
 					"tags": [
 						"standing"
@@ -11077,6 +11210,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 7,
 					"idle": "0x000B09",
 					"tags": [
 						"standing"
@@ -11123,6 +11257,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": -5,
 					"idle": "0x000B0B",
 					"tags": [
 						"standing"
@@ -11151,6 +11286,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": -5,
 					"idle": "0x000B0D",
 					"tags": [
 						"drowsy",
@@ -11186,6 +11322,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": -5,
 					"idle": "0x000B0F",
 					"tags": [
 						"standing"
@@ -11238,6 +11375,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": -5,
 					"idle": "0x000B11",
 					"tags": [
 						"drowsy",
@@ -11268,6 +11406,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": -5,
 					"idle": "0x000B13",
 					"tags": [
 						"standing"
@@ -11296,6 +11435,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": -5,
 					"idle": "0x000B15",
 					"tags": [
 						"standing"
@@ -11331,6 +11471,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": -5,
 					"idle": "0x000B17",
 					"tags": [
 						"standing"
@@ -11383,6 +11524,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": -5,
 					"idle": "0x000B19",
 					"tags": [
 						"standing"
@@ -11412,6 +11554,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": 1,
 					"idle": "0x000B1B",
 					"tags": [
 						"kneeling"
@@ -11419,6 +11562,7 @@
 				},
 				{
 					"sex": "male",
+					"penisBend": -10,
 					"idle": "0x000B1C",
 					"tags": [
 						"lying"
@@ -11892,6 +12036,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": -10,
 					"idle": "0x000B31",
 					"tags": [
 						"lyingback"
@@ -11899,6 +12044,7 @@
 				},
 				{
 					"sex": "male",
+					"penisBend": -10,
 					"idle": "0x000B32",
 					"tags": [
 						"lyingback"
@@ -11949,6 +12095,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": -10,
 					"idle": "0x000B34",
 					"tags": [
 						"standing"
@@ -11956,6 +12103,7 @@
 				},
 				{
 					"sex": "male",
+					"penisBend": -10,
 					"idle": "0x000B35",
 					"tags": [
 						"standing"
@@ -12120,6 +12268,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": -10,
 					"idle": "0x000B3D",
 					"tags": [
 						"lyingback"
@@ -12127,6 +12276,7 @@
 				},
 				{
 					"sex": "male",
+					"penisBend": -10,
 					"idle": "0x000B3E",
 					"tags": [
 						"lyingback"
@@ -12134,6 +12284,7 @@
 				},
 				{
 					"sex": "male",
+					"penisBend": -10,
 					"idle": "0x000B3F",
 					"tags": [
 						"sitting"
@@ -12169,6 +12320,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": -10,
 					"idle": "0x000B41",
 					"tags": [
 						"standing"
@@ -12176,6 +12328,7 @@
 				},
 				{
 					"sex": "male",
+					"penisBend": -10,
 					"idle": "0x000B42",
 					"tags": [
 						"standing"
@@ -12183,6 +12336,7 @@
 				},
 				{
 					"sex": "male",
+					"penisBend": -10,
 					"idle": "0x000B43",
 					"tags": [
 						"standing"
@@ -12218,6 +12372,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": -10,
 					"idle": "0x000B45",
 					"tags": [
 						"lyingback"
@@ -12225,6 +12380,7 @@
 				},
 				{
 					"sex": "male",
+					"penisBend": -10,
 					"idle": "0x000B46",
 					"tags": [
 						"lyingback"
@@ -12232,6 +12388,7 @@
 				},
 				{
 					"sex": "male",
+					"penisBend": -10,
 					"idle": "0x000B47",
 					"tags": [
 						"sitting"
@@ -12239,6 +12396,7 @@
 				},
 				{
 					"sex": "male",
+					"penisBend": -10,
 					"idle": "0x000B48",
 					"tags": [
 						"sitting"
@@ -12274,6 +12432,7 @@
 			"actors": [
 				{
 					"sex": "male",
+					"penisBend": -10,
 					"idle": "0x000B4A",
 					"tags": [
 						"standing"
@@ -12281,6 +12440,7 @@
 				},
 				{
 					"sex": "male",
+					"penisBend": -10,
 					"idle": "0x000B4B",
 					"tags": [
 						"standing"
@@ -12288,6 +12448,7 @@
 				},
 				{
 					"sex": "male",
+					"penisBend": -10,
 					"idle": "0x000B4C",
 					"tags": [
 						"standing"
@@ -12295,6 +12456,7 @@
 				},
 				{
 					"sex": "male",
+					"penisBend": -10,
 					"idle": "0x000B4D",
 					"tags": [
 						"standing"
