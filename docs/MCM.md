@@ -27,3 +27,5 @@ As OStim's: **Export settings** writes the settings in effect to `Documents\My G
 ## For authors
 
 `tools/make-mcm.py` writes the page (`config.json`, `settings.ini`, `keybinds.json`) from `4Stim.ini`: its table has each setting's label, kind and range. Its labels are `$4Stim_MCM_...` texts, translated like the rest (TRANSLATIONS.md).
+
+The logo on the first page is MCM's `image` control: the class `FourStimLogo` in `Data\MCM\Config\4Stim\lib.swf`, which `Interface-src\build.bat` builds from `Interface-src\logo\` (the same vector art as the HUD's logo; MCM's images have to be vector art). MCM's image has no alignment, so the logo is centered in a clear box as wide as the page; `ROW_WIDTH` in `FourStimLogo.as` moves it.

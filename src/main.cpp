@@ -6728,6 +6728,7 @@ namespace
 				static bool translated = false;
 				if (!translated) {
 					Translations::Load();  // the game's language is known by now
+					Translations::AddToGame();  // MCM's "$4Stim_..." labels
 					translated = true;
 				}
 				HUD::LoadConfig();

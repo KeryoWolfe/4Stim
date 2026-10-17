@@ -3,8 +3,9 @@ rem Builds 4Stim's Scaleform movies with the Apache Flex SDK's mxmlc:
 rem   FourStimPickerMenu.swf, FourStimHUDMenu.swf    -> Data\Interface\
 rem   HUDLogo.swf                                    -> Data\Interface\4Stim\
 rem   Search/Align/Utility/Navigation.swf (tab icons) -> Data\Interface\4Stim\Icons\Tabs\
-rem The built files go into .\out\ in that same folder layout, ready to copy
-rem into Data\.
+rem   lib.swf (the MCM page's logo)                   -> Data\MCM\Config\4Stim\
+rem The built files go into .\out\ in that same folder layout (Interface\
+rem and MCM\), ready to copy into Data\.
 rem
 rem FLEX_HOME:      the folder the Flex SDK installer put the SDK in.
 rem PLAYER_VERSION: the folder name under %FLEX_HOME%\frameworks\libs\player\
@@ -18,12 +19,15 @@ set PLAYER_VERSION=11.0
 
 cd /d "%~dp0"
 set OUT=%~dp0out\Interface
+set MCMOUT=%~dp0out\MCM\Config\4Stim
 if not exist "%OUT%\4Stim\Icons\Tabs" mkdir "%OUT%\4Stim\Icons\Tabs"
+if not exist "%MCMOUT%" mkdir "%MCMOUT%"
 set FAILED=0
 
 call :build . FourStimPickerMenu.as "%OUT%\FourStimPickerMenu.swf" 1280 720
 call :build . FourStimHUDMenu.as "%OUT%\FourStimHUDMenu.swf" 1280 720
 call :build logo HUDLogo.as "%OUT%\4Stim\HUDLogo.swf" 256 256
+call :build logo MCMLib.as "%MCMOUT%\lib.swf" 256 256
 for %%I in (Search Align Utility Navigation) do call :build icons %%I.as "%OUT%\4Stim\Icons\Tabs\%%I.swf" 64 64
 
 if %FAILED%==1 (
@@ -31,7 +35,7 @@ if %FAILED%==1 (
   echo Some movies failed to build - see the errors above.
 ) else (
   echo.
-  echo Built everything into %~dp0out\Interface - copy that folder into Data\.
+  echo Built everything into %~dp0out - copy its Interface and MCM folders into Data\.
 )
 pause
 exit /b

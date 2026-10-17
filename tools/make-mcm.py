@@ -335,6 +335,9 @@ def main():
         'content': [
             {'type': 'spacer'},
             {'text': '4Stim', 'type': 'text', 'align': 'center'},
+            # The logo: Interface-src/logo/FourStimLogo.as, built into
+            # Data/MCM/Config/4Stim/lib.swf by Interface-src/build.bat.
+            {'type': 'image', 'libName': '4Stim', 'className': 'FourStimLogo'},
             {'text': text('$4Stim_MCM_Intro', 'OStim NG for Fallout 4. Every setting is also in Data\\F4SE\\Plugins\\4Stim.ini.'), 'type': 'text', 'align': 'center'},
         ],
         'pages': pages,

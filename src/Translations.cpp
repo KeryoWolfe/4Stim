@@ -130,6 +130,35 @@ namespace Translations
 		}
 	}
 
+	void AddToGame()
+	{
+		// Fallout 4 reads Interface\Translations\<plugin>_<language>.txt only
+		// for a plugin of that name, and 4Stim is an F4SE plugin with no
+		// 4Stim.esp, so MCM showed the bare "$4Stim_..." keys. Hand the file
+		// to the game's Scaleform translator ourselves: the game's language's,
+		// else the English. (One file only: whether the translator lets a
+		// second file's keys replace the first's isn't known, so a
+		// translation should carry every key, as make-translations.py writes.)
+		const auto manager = RE::BSScaleformManager::GetSingleton();
+		const auto translator = manager && manager->loader ? manager->GetTranslator() : nullptr;
+		if (!translator) {
+			REX::WARN("Translations: the game's translator isn't up yet, MCM labels stay untranslated");
+			return;
+		}
+		const auto      language = Language();
+		std::error_code ec;
+		std::string     name = "4Stim_" + language + ".txt";
+		if (!std::filesystem::exists(std::string(FOLDER) + name, ec)) {
+			name = "4Stim_en.txt";
+		}
+		if (std::filesystem::exists(std::string(FOLDER) + name, ec)) {
+			const auto file = "Interface\\Translations\\" + name;
+			translator->AddTranslationsFile(file.c_str());
+			REX::INFO("Translations: {} handed to the game", name);
+		}
+		translator->Release();  // GetTranslator added a reference
+	}
+
 	std::string Language()
 	{
 		std::scoped_lock lock(g_lock);

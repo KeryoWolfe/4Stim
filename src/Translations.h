@@ -9,15 +9,20 @@
 // Translations of 4Stim's own text (docs/TRANSLATIONS.md): the picker, the
 // HUD, notifications, and the MCM page. One file per language, as Fallout 4
 // names them: Data\Interface\Translations\4Stim_<language>.txt (en, de, fr,
-// es, it, pl, ptbr, ru, ja, cn...), UTF-16 with "$key<tab>text" lines. The
-// game reads the file too (that's how MCM's "$4Stim_..." labels are
-// translated); 4Stim reads it itself for the text it builds (names and
-// numbers filled in), falling back to the English in the code.
+// es, it, pl, ptbr, ru, ja, cn...), UTF-16 with "$key<tab>text" lines.
+// 4Stim reads it for the text it builds (names and numbers filled in),
+// falling back to the English in the code, and hands it to the game
+// (AddToGame) for MCM's "$4Stim_..." labels.
 namespace Translations
 {
 	// Reads the file for the game's language (sLanguage), else the English
 	// one. Again on FourStim.ReloadScenes().
 	void Load();
+
+	// Adds the file(s) to the game's Scaleform translator, which reads such
+	// files only for a plugin named 4Stim (there's no 4Stim.esp). Once, after
+	// Load, before any menu shows the texts.
+	void AddToGame();
 
 	// The game's language code ("en"...).
 	std::string Language();
