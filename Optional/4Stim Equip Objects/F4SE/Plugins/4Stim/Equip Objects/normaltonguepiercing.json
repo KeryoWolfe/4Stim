@@ -1,0 +1,12 @@
+{
+	"type": "tongue",
+	"name": "Tongue, pierced",
+	"mod": "4Stim - Equip Objects.esp",
+	"formid": "0x814",
+	"variants": {
+		"cum": {
+			"mod": "4Stim - Equip Objects.esp",
+			"formid": "0x816"
+		}
+	}
+}

@@ -1,0 +1,12 @@
+{
+	"type": "tongue",
+	"name": "Long tongue, pierced",
+	"mod": "4Stim - Equip Objects.esp",
+	"formid": "0x81C",
+	"variants": {
+		"cum": {
+			"mod": "4Stim - Equip Objects.esp",
+			"formid": "0x81E"
+		}
+	}
+}

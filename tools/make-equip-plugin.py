@@ -12,12 +12,27 @@ import struct, sys
 
 PLUGIN = '4Stim - Equip Objects.esp'
 HUMAN_RACE = 0x00013746
-SLOT = 57  # biped slot (30-61): free on vanilla clothes, outside 4Stim's undress slots
+# Biped slots (30-61): free on vanilla clothes, outside 4Stim's undress slots.
+STRAPON_SLOT = 57
+TONGUE_SLOT = 58
 
-# (armor form ID, addon form ID, editor ID, name, female model under Meshes\)
+# (armor form ID, addon form ID, editor ID, name, female model, male model
+# (None: women only), slot); models under Meshes\.
 ARMORS = [
-    (0x801, 0x802, '4Stim_OStimStrapOn', 'Strap-on (OStim, Calyps)', r'4Stim\EquipObjects\OStimStrapOn.nif'),
+    (0x801, 0x802, '4Stim_OStimStrapOn', 'Strap-on (OStim, Calyps)', r'4Stim\EquipObjects\OStimStrapOn.nif', None, STRAPON_SLOT),
 ]
+# OStim's tongues (Egilvar's): each kind and its "cum" variant, women's and
+# men's models.
+TONGUES = [
+    ('NormalTongue', 'Tongue'), ('NormalTonguePiercing', 'Tongue, pierced'),
+    ('LongTongue', 'Long tongue'), ('LongTonguePiercing', 'Long tongue, pierced'), ('LongTongueDoublePiercing', 'Long tongue, double-pierced'),
+    ('SnakeTongue', 'Snake tongue'), ('SnakeTonguePiercing', 'Snake tongue, pierced'), ('SnakeTongueDoublePiercing', 'Snake tongue, double-pierced'),
+]
+for n, (mesh, name) in enumerate(TONGUES):
+    base = 0x810 + n * 4
+    path = '4Stim\\EquipObjects\\tongues\\'
+    ARMORS.append((base, base + 1, '4Stim_' + mesh, name, path + mesh + '.nif', path + mesh + '_m.nif', TONGUE_SLOT))
+    ARMORS.append((base + 2, base + 3, '4Stim_' + mesh + 'Cum', name + ' (cum)', path + mesh + 'Cum.nif', path + mesh + 'Cum_m.nif', TONGUE_SLOT))
 
 
 def sub(tag, data):
@@ -40,14 +55,15 @@ def group(label, records):
 def main(out):
     master_count = 1
     fid = lambda local: (master_count << 24) | local
-    bod2 = struct.pack('<I', 1 << (SLOT - 30))
     arma, armo = [], []
-    for armor, addon, edid, name, model in ARMORS:
+    for armor, addon, edid, name, model, male, slot in ARMORS:
+        bod2 = struct.pack('<I', 1 << (slot - 30))
         arma.append(record('ARMA', fid(addon), b''.join([
             sub('EDID', zstr(edid + '_AA')),
             sub('BOD2', bod2),
             sub('RNAM', struct.pack('<I', HUMAN_RACE)),
             sub('DNAM', bytes(12)),
+        ] + ([sub('MOD2', zstr(male))] if male else []) + [
             sub('MOD3', zstr(model)),
         ])))
         armo.append(record('ARMO', fid(armor), b''.join([
@@ -67,7 +83,7 @@ def main(out):
     header = record('TES4', 0, b''.join([
         sub('HEDR', struct.pack('<fII', 1.0, count, next_id)),
         sub('CNAM', zstr('4Stim')),
-        sub('SNAM', zstr("4Stim's equip objects (docs/ACTORS.md). OStim's strap-on by Calyps, refit to TWB.")),
+        sub('SNAM', zstr("4Stim's equip objects (docs/ACTORS.md): OStim's strap-on (Calyps, refit to TWB) and tongues (Egilvar).")),
         sub('MAST', zstr('Fallout4.esm')),
         sub('DATA', bytes(8)),
     ]), flags=0x200)  # light plugin (ESL)

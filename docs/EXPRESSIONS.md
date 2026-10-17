@@ -36,6 +36,8 @@ As in OStim, each actor's face is built from up to three layers. A higher layer 
 2. **Event:** `moan` while the actor moans (with sound, docs/SOUND.md), `climax` at a climax, for the file's `duration`. An animation's `4StimPlayExpression.<event>` annotation (OStim's `OStimPlayExpression`) plays one too (docs/EVENTS.md).
 3. **Override:** an action's `expressionOverride` (`openmouth` for oral, `tongue` for licking, in `Actions\Default.json`), while that action is in the scene.
 
+Whichever layer sets the mouth also brings its `phonemeObjects` (OStim's field): equip objects the actor wears while it does, such as `["tongue"]` in OStim's `tongue1` expression, from `phonemeObjectThreshold` excitement up (default -5: always). They come off when another layer takes the mouth over (docs/ACTORS.md, Equip objects; the tongues are in the optional 4Stim Equip Objects add-on).
+
 Faces move smoothly toward what the layers give, faster for events and overrides, as OStim's expression updater does. When the actor leaves the scene, their face goes back to normal.
 
 ## Fallout 4's face

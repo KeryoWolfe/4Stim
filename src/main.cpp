@@ -4181,6 +4181,7 @@ namespace
 	std::vector<Candidate>     g_candidates;      // eligible NPCs near the player
 	int                        g_placeChoice = -1;  // index into PickerFurniture(); -1 = right here
 	int                        g_playerRole = -1;   // the role the player chose (playerSelectRole...); -1 = none
+	std::uint32_t              g_leadActor = 0;     // a scene without the player: the NPC chosen for the first role; 0 = none
 	std::size_t                g_maxCast = 2;       // the most actors any scene has
 
 	// Where the player goes in a cast of two by OStim's PlayerAlways...
@@ -4220,6 +4221,16 @@ namespace
 		const auto player = RE::PlayerCharacter::GetSingleton()->GetFormID();
 		const auto at = std::ranges::find(ids, player);
 		if (at == ids.end()) {
+			// Without the player: the NPC chosen to lead goes first.
+			std::uint32_t lead;
+			{
+				std::scoped_lock lock(g_castLock);
+				lead = g_leadActor;
+			}
+			if (const auto it = std::ranges::find(ids, lead); lead && it != ids.end()) {
+				ids.erase(it);
+				ids.insert(ids.begin(), lead);
+			}
 			return ids;
 		}
 		const int want = chosen >= 0 ? chosen : PlayerAlwaysIndex(ids);
@@ -4236,8 +4247,17 @@ namespace
 	{
 		const auto player = RE::PlayerCharacter::GetSingleton()->GetFormID();
 		const auto at = std::ranges::find(a_cast, player);
-		if (at == a_cast.end() || g_pickerMode != PickerMode::kStart) {
+		if (g_pickerMode != PickerMode::kStart) {
 			return std::nullopt;
+		}
+		if (at == a_cast.end()) {
+			std::uint32_t lead;
+			{
+				std::scoped_lock lock(g_castLock);
+				lead = g_leadActor;
+			}
+			const auto it = std::ranges::find(a_cast, lead);
+			return lead && it != a_cast.end() ? std::optional<std::size_t>(static_cast<std::size_t>(it - a_cast.begin())) : std::nullopt;
 		}
 		int chosen;
 		{
@@ -4255,8 +4275,9 @@ namespace
 	// for two, by whether they look the same sex (Gay) or not (Straight).
 	bool PlayerChoosesRole(const std::vector<std::uint32_t>& a_cast)
 	{
-		const auto player = RE::PlayerCharacter::GetSingleton()->GetFormID();
-		if (a_cast.size() < 2 || std::ranges::find(a_cast, player) == a_cast.end()) {
+		// 4Stim: a scene without the player asks too, which NPC leads
+		// (OStim's NPC threads just sort them).
+		if (a_cast.size() < 2) {
 			return false;
 		}
 		if (a_cast.size() >= 3) {
@@ -4659,13 +4680,30 @@ namespace
 			} else if (g_startStep == StartStep::kRole) {
 				// OStim's role selection: the player picks their place in
 				// the cast's order (1 = first, usually the one giving).
-				for (std::size_t i = 0; i < cast.size(); ++i) {
-					const auto detail = i == 0 ? "first, usually the one giving" : i + 1 == cast.size() ? "last, usually the one receiving" : "";
-					rows.push_back({ std::format("@role:{}", i), std::format("Role {}", i + 1), detail });
+				const auto player = RE::PlayerCharacter::GetSingleton()->GetFormID();
+				if (std::ranges::find(cast, player) != cast.end()) {
+					for (std::size_t i = 0; i < cast.size(); ++i) {
+						const auto detail = i == 0 ? "first, usually the one giving" : i + 1 == cast.size() ? "last, usually the one receiving" : "";
+						rows.push_back({ std::format("@role:{}", i), std::format("Role {}", i + 1), detail });
+					}
+					rows.push_back({ "@role:any", "Any role", "whichever the scene gives you" });
+					title = "Your role?";
+				} else {
+					// Without the player: which NPC takes the first role.
+					std::vector<Candidate> candidates;
+					{
+						std::scoped_lock lock(g_castLock);
+						candidates = g_candidates;
+					}
+					for (const auto id : cast) {
+						const auto it = std::ranges::find_if(candidates, [&](const Candidate& c) { return c.id == id; });
+						rows.push_back({ std::format("@lead:{:X}", id), (it != candidates.end() ? withSex(*it) : std::format("{:08X}", id)) + " leads",
+							"takes the first role, usually the one giving" });
+					}
+					rows.push_back({ "@role:any", "Either", "whichever the scene gives them" });
+					title = "Who leads?";
 				}
-				rows.push_back({ "@role:any", "Any role", "whichever the scene gives you" });
 				rows.push_back({ "@back", "Back", "change who's in it" });
-				title = "Your role?";
 			} else {
 				// Where: right here, or a piece of furniture near, if any
 				// scene fits this cast there.
@@ -4724,8 +4762,16 @@ namespace
 				{
 					std::scoped_lock lock(g_castLock);
 					g_playerRole = -1;
+					g_leadActor = 0;
 				}
 				g_startStep = PlayerChoosesRole(CastIDs()) ? StartStep::kRole : StartStep::kPlace;
+			} else if (a_id.starts_with("@lead:")) {
+				{
+					std::scoped_lock lock(g_castLock);
+					g_leadActor = hex(a_id.substr(6));
+				}
+				REX::INFO("Picker: {} leads", a_id.substr(6));
+				g_startStep = StartStep::kPlace;
 			} else if (a_id.starts_with("@role:")) {
 				{
 					std::scoped_lock lock(g_castLock);
@@ -5007,6 +5053,7 @@ namespace
 				g_cast.clear();
 				g_placeChoice = -1;
 				g_playerRole = -1;
+				g_leadActor = 0;
 				// In a scene yourself, you can't be in another.
 				g_playerBusy = FindActiveScene(RE::PlayerCharacter::GetSingleton()->GetFormID()) != nullptr;
 				g_includePlayer = !a_npcsOnly && !g_playerBusy;

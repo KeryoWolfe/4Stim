@@ -1,0 +1,12 @@
+{
+	"type": "tongue",
+	"name": "Long tongue",
+	"mod": "4Stim - Equip Objects.esp",
+	"formid": "0x818",
+	"variants": {
+		"cum": {
+			"mod": "4Stim - Equip Objects.esp",
+			"formid": "0x81A"
+		}
+	}
+}

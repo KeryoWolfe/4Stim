@@ -1,0 +1,12 @@
+{
+	"type": "tongue",
+	"name": "Snake tongue, pierced",
+	"mod": "4Stim - Equip Objects.esp",
+	"formid": "0x828",
+	"variants": {
+		"cum": {
+			"mod": "4Stim - Equip Objects.esp",
+			"formid": "0x82A"
+		}
+	}
+}

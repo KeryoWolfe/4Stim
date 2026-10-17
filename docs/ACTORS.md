@@ -87,6 +87,8 @@ The player's place, in `[Roles]` (OStim's settings):
 
 With either, only scenes where you can have that place are offered.
 
+**Scenes without you** (4Stim's): with the same settings (two of the same sex: `playerSelectRoleGay`, on by default), the picker asks "Who leads?": the NPC picked takes the first role (usually the one giving), or either. To have a woman wear a strap-on with another woman, set `SetOnlyGayAnimsInGayScenes=0`: with it on (OStim's default too), two women only get scenes whose roles are for women or either sex, and those don't need a penis.
+
 ## Equip objects
 
 Armor items 4Stim puts on actors during scenes and takes away at the end (OStim's equip objects). One per file in `Data\F4SE\Plugins\4Stim\Equip Objects\`, the id being the file name, in OStim's format:
@@ -112,7 +114,7 @@ Armor items 4Stim puts on actors during scenes and takes away at the end (OStim'
 | `mod`, `formid` | The armor. Make it non-playable and use it for nothing else. |
 | `variants` | Other armors for it (`"cum"`...), switched to by scripts. |
 
-4Stim's optional **4Stim Equip Objects** add-on (`Optional\4Stim Equip Objects` in the repository) has OStim's own strap-on (Calyps', refit to True Wasteland Body): build "4Stim OStim Strap-On (TWB)" in BodySlide with your preset and enable `4Stim - Equip Objects.esp`. Its harness follows TWB's sliders and weights; its dildo is weighted to ZeX's penis bones, so it bends with the scene's penis bend (`ALIGNMENT.md`). Without the add-on there's none: fill the folder from a strap-on mod's armors. OStim's tongues aren't converted yet.
+4Stim's optional **4Stim Equip Objects** add-on (`Optional\4Stim Equip Objects` in the repository) has OStim's own strap-on (Calyps', refit to True Wasteland Body): build "4Stim OStim Strap-On (TWB)" in BodySlide with your preset and enable `4Stim - Equip Objects.esp`. Its harness follows TWB's sliders and weights; its dildo is weighted to ZeX's penis bones, so it bends with the scene's penis bend (`ALIGNMENT.md`). Without the add-on there's none: fill the folder from a strap-on mod's armors. It also has OStim's tongues (Egilvar's: normal, long and snake, plain, pierced and double-pierced, each with a "cum" variant), moved to Fallout 4's head: they come out with the facial expressions that show a tongue (`phonemeObjects`, `EXPRESSIONS.md`), as in OStim. The normal tongue is the default. They have no physics yet (OStim's SMP bones aren't kept).
 
 An actor wears one:
 

@@ -17,6 +17,7 @@
 #include "Actions.h"
 #include "Console.h"
 #include "ActorProperties.h"
+#include "EquipObjects.h"
 #include "Excitement.h"
 
 namespace Expressions
@@ -57,6 +58,10 @@ namespace Expressions
 			std::vector<Modifier>   lids;    // Skyrim modifiers 0, 1, 12, 13
 			std::vector<Modifier>   brows;   // Skyrim modifiers 2-7
 			std::vector<Modifier>   morphs;  // Fallout 4 morph indices
+			// OStim's phonemeObjects: equip objects worn while this sets the
+			// mouth ("tongue"), from phonemeObjectThreshold excitement up.
+			std::vector<std::string> phonemeObjects;
+			float                    phonemeObjectThreshold = -5.0F;
 		};
 
 		struct Expression
@@ -108,6 +113,7 @@ namespace Expressions
 			Values               applied{};       // last value sent to the game
 			bool                 anyApplied = false;
 			float                sendIn = 0.0F;   // morphs are sent at most every SEND_INTERVAL
+			std::vector<std::string> phonemeObjects;  // equip objects the mouth's layer has on (OStim's)
 		};
 		constexpr float SEND_INTERVAL = 0.05F;
 		std::unordered_map<std::uint32_t, State> g_states;
@@ -171,6 +177,14 @@ namespace Expressions
 				}
 				g.mask |= g.morphs.empty() ? 0 : 1 << kMorphs;
 			}
+			if (const auto it = a_value.find("phonemeObjects"); it != a_value.end() && it->is_array()) {
+				for (const auto& v : *it) {
+					if (v.is_string()) {
+						g.phonemeObjects.push_back(Lower(v.get<std::string>()));
+					}
+				}
+			}
+			g.phonemeObjectThreshold = a_value.value("phonemeObjectThreshold", -5.0F);
 			return g;
 		}
 
@@ -375,7 +389,7 @@ namespace Expressions
 		// Works out the face's target from the layers (override > event >
 		// underlying, per slot), and how fast each morph moves there. Main
 		// thread.
-		void Retarget(State& a_state)
+		void Retarget(std::uint32_t a_id, State& a_state)
 		{
 			a_state.dirty = false;
 			Values target{};
@@ -392,6 +406,25 @@ namespace Expressions
 					speed = 150.0F;
 				} else if (a_state.underlying && (a_state.underlying->expression->mask & bit)) {
 					layer = &*a_state.underlying;
+				}
+				if (slot == kMouth) {
+					// As OStim's phonemeObjects: the mouth's layer's objects
+					// (a tongue) on, the last one's off.
+					std::vector<std::string> wanted;
+					if (layer && Excitement::Get(a_id) >= layer->expression->phonemeObjectThreshold) {
+						wanted = layer->expression->phonemeObjects;
+					}
+					for (const auto& o : a_state.phonemeObjects) {
+						if (std::ranges::find(wanted, o) == wanted.end()) {
+							EquipObjects::Unequip(a_id, o);
+						}
+					}
+					for (const auto& o : wanted) {
+						if (std::ranges::find(a_state.phonemeObjects, o) == a_state.phonemeObjects.end()) {
+							EquipObjects::Equip(a_id, o);
+						}
+					}
+					a_state.phonemeObjects = std::move(wanted);
 				}
 				if (!layer) {
 					continue;
@@ -540,7 +573,7 @@ namespace Expressions
 				state.dirty = true;
 			}
 			if (state.dirty) {
-				Retarget(state);
+				Retarget(id, state);
 			}
 			Step(id, state, a_seconds);
 		}

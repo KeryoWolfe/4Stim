@@ -1,0 +1,13 @@
+{
+	"type": "tongue",
+	"name": "Tongue",
+	"default": true,
+	"mod": "4Stim - Equip Objects.esp",
+	"formid": "0x810",
+	"variants": {
+		"cum": {
+			"mod": "4Stim - Equip Objects.esp",
+			"formid": "0x812"
+		}
+	}
+}
