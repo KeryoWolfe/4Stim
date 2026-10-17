@@ -86,6 +86,12 @@ namespace Sounds
 	// Advances the moan timers. Main thread (the scene clock).
 	void Tick(float a_seconds);
 
+	// OStim's OActor.Mute / Unmute / IsMuted, for actors in a scene: no moans,
+	// climax or event sounds while muted (an actor property's mute counts as
+	// muted too). Main thread.
+	void SetMuted(std::uint32_t a_id, bool a_muted);
+	bool IsMuted(std::uint32_t a_id);
+
 	// The actors left their scene: stop their sounds.
 	void Leave(const std::vector<std::uint32_t>& a_ids);
 	void Clear();

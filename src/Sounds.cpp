@@ -59,6 +59,8 @@ namespace Sounds
 			bool                                  moan = false;
 			bool                                  muffled = false;
 			bool                                  muffledAlways = false;  // by an actor property, the whole scene
+			bool                                  mutedByHand = false;    // OStim's OActor.Mute (Papyrus, the HUD's options)
+			bool                                  mutedByProperty = false;  // an actor property's "mute" (a gag)
 			float                                 cooldown = 0.0F;
 			bool                                  playing = false;
 			Playing                               sound;
@@ -439,7 +441,8 @@ namespace Sounds
 		const auto actor = RE::TESForm::GetFormByID<RE::Actor>(a_id);
 		if (added) {
 			// Muted by an actor property (OStim's "mute", a gag...): no voice.
-			state.voice = ActorProperties::Muted(actor) ? nullptr : VoiceFor(actor);
+			state.mutedByProperty = ActorProperties::Muted(actor);
+			state.voice = state.mutedByProperty ? nullptr : VoiceFor(actor);
 			state.cooldown = RandomInterval();
 			state.muffledAlways = ActorProperties::Muffled(actor);  // OStim's actor property "muffle"
 		}
@@ -466,7 +469,7 @@ namespace Sounds
 		}
 		state.playing = false;
 		state.reaction = nullptr;
-		if (state.voice) {
+		if (state.voice && !state.mutedByHand) {
 			StartReaction(a_id, state, state.voice->climax, "climax");
 		} else {
 			Expressions::SetEvent(a_id, "climax", true);
@@ -481,6 +484,9 @@ namespace Sounds
 			if (state.reaction && (state.reactionIn -= a_seconds) <= 0.0F) {
 				const auto reaction = state.reaction;
 				state.reaction = nullptr;
+				if (state.mutedByHand) {
+					continue;
+				}
 				if (state.playing) {
 					state.sound.Stop();
 					state.playing = false;
@@ -499,13 +505,33 @@ namespace Sounds
 				}
 				continue;
 			}
-			if (!state.moan || !state.voice) {
+			if (!state.moan || !state.voice || state.mutedByHand) {
 				continue;
 			}
 			if ((state.cooldown -= a_seconds) <= 0.0F) {
 				StartReaction(id, state, state.voice->moan, nullptr);
 			}
 		}
+	}
+
+	void SetMuted(std::uint32_t a_id, bool a_muted)
+	{
+		const auto it = g_states.find(a_id);
+		if (it == g_states.end()) {
+			return;
+		}
+		it->second.mutedByHand = a_muted;
+		if (a_muted && it->second.playing) {
+			it->second.sound.Stop();
+			it->second.playing = false;
+		}
+		REX::INFO("Sound: {:08X} {}", a_id, a_muted ? "muted" : "unmuted");
+	}
+
+	bool IsMuted(std::uint32_t a_id)
+	{
+		const auto it = g_states.find(a_id);
+		return it != g_states.end() && (it->second.mutedByHand || it->second.mutedByProperty);
 	}
 
 	void Leave(const std::vector<std::uint32_t>& a_ids)

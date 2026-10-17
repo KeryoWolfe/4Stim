@@ -58,7 +58,7 @@ Actions play sounds of their own, as OStim's: the slaps and strokes of sex. In a
 
 - `type`: `peak` plays on each of the action's peaks (docs/EVENTS.md); `bonedistance` plays as the `actorBone` and `targetBone` move apart after being closest (`inverse`: after being furthest apart), once they've moved at least `minRange` units (4Stim, default 3), at least `minInterval` ms after the last (50 by default) and, with `maxInterval`, no more than that; `loop` plays one after another, `delay` ms apart.
 - `sound` (OStim's descriptor form) or `file` (4Stim: a sound file or folder under `Data\Sound\`).
-- `playerThreadOnly`: only in scenes with you. `muteWithActor` / `muteWithTarget` are read, but nothing mutes an actor yet.
+- `playerThreadOnly`: only in scenes with you. `muteWithActor` / `muteWithTarget`: none while the action's actor / target is muted.
 
 They play on the action's actor at `soundVolume` (0-1, OStim's setting). A scene's action with `"muted": true` plays none. 4Stim's default actions play `effects\thrust` (slaps) on the peaks of vaginal and anal sex, and `effects\HJ` (strokes) on handjobs, footjobs and male masturbation. OStim uses one sound for all but handjobs; 4Stim's slap files don't suit strokes.
 
@@ -78,4 +78,8 @@ A voice set can react to events (docs/EVENTS.md), as OStim's: `eventActorReactio
 
 ## Not in yet
 
-Dialogue (comments, climax comments, post-scene lines), `talk`, and muting actors (OStim's actor `muted` and its Papyrus mute).
+Dialogue (comments, climax comments, post-scene lines), `talk`.
+
+## Muting
+
+An actor can be muted for the rest of their scene: no moans, climax or event sounds (OStim's `OActor.Mute`). With Papyrus `FourStim.Mute` / `Unmute` / `IsMuted`, or the HUD's options (each actor's page, OPTIONS.md). An actor property's `mute` (a gag, ACTORS.md) mutes them too.

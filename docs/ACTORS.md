@@ -126,7 +126,7 @@ An actor wears one:
 
 Everything put on is taken off and away when the scene ends (also from a save loaded with the scene running). Undressing leaves equip objects on.
 
-Departures from OStim: lights are 4Stim's own (`LIGHTS.md`), not equip objects, since they'd need armors with lights in their meshes. There's no MCM to choose an equip object per actor, race or sex: it's the default one, or random.
+Departures from OStim: lights are 4Stim's own (`LIGHTS.md`), not equip objects, since they'd need armors with lights in their meshes. Which object of a type an actor wears can be chosen in the HUD's options (each actor's page, OPTIONS.md) or with `FourStim.SetEquipObjectID`, until a game is loaded; otherwise it's the default one, or random. There's no MCM setting for it per race or sex.
 
 ## Papyrus
 

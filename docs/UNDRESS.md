@@ -9,7 +9,7 @@ Scene actors take off their clothes and armor during a scene and put them back o
 - **Full** (`SetUndressIfNeed`): actions marked `fullStrip`, such as intercourse, oral sex or a handjob's receiver, take everything off.
 - **Never** in a scene marked `"noStrip": true` (`SCENES.md`).
 - **Redress** (`bRedress`): when the scene ends, each actor puts back on what they took off.
-- **By hand:** the HUD's Utility tab has **Undress _name_** / **Dress _name_** for each actor in the scene (shown while `bUndress` is on). Undressing by hand takes off everything in the undress slots, the player too even with `bUndressPlayer=0`; dressing puts back on everything 4Stim took off.
+- **By hand:** the HUD's Utility tab, Actors, _name_: **Undress** / **Dress** (OPTIONS.md). Undressing by hand takes off everything in the undress slots, the player too even with `bUndressPlayer=0`; dressing puts back on everything 4Stim took off.
 
 Weapons are always put away when a scene starts.
 

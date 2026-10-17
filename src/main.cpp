@@ -28,6 +28,9 @@
 #include "EquipObjects.h"
 #include "PenisBend.h"
 #include "EyeLook.h"
+#include "Translations.h"
+#include "MCM.h"
+#include "Options.h"
 #include "compat/Addresses.h"
 #include "compat/RequiredIDs.h"
 
@@ -278,20 +281,24 @@ namespace
 		{ "alignmentgroupbyheels", { "balignbyheels", OStimUnit::kSame } },
 	};
 
+	// 4Stim.ini, then the MCM's file over it (docs/MCM.md). Again whenever
+	// the MCM changes a setting (FourStim.ReloadSettings).
 	void LoadSettings()
 	{
-		std::ifstream in("Data/F4SE/Plugins/4Stim.ini");
-		if (!in) {
+		std::ifstream base("Data/F4SE/Plugins/4Stim.ini");
+		if (!base) {
 			REX::INFO("Settings: no 4Stim.ini, using defaults");
-			return;
 		}
+		std::ifstream mcm(MCM::SettingsPath());
 		auto trim = [](std::string s) {
 			const auto b = s.find_first_not_of(" \t\r");
 			const auto e = s.find_last_not_of(" \t\r");
 			return b == std::string::npos ? std::string{} : s.substr(b, e - b + 1);
 		};
 		std::string line;
-		while (std::getline(in, line)) {
+		for (int pass = 0; pass < 2; ++pass) {
+		auto& in = pass == 0 ? base : mcm;
+		while (in && std::getline(in, line)) {
 			line = trim(line);
 			if (line.empty() || line[0] == ';' || line[0] == '#' || line[0] == '[') {
 				continue;
@@ -306,6 +313,15 @@ namespace
 				value = trim(value.substr(0, c));
 			}
 			std::ranges::transform(key, key.begin(), [](unsigned char ch) { return static_cast<char>(std::tolower(ch)); });
+			// The MCM's names (b4S_SetEndOnOrgasm, a dropdown's index...) as 4Stim.ini's.
+			if (pass == 1) {
+				const auto ini = MCM::ToIni(key, value);
+				if (!ini) {
+					continue;
+				}
+				key = ini->first;
+				value = ini->second;
+			}
 			try {
 				// OStim's setting names (its MCM export keys, MCMTable.h) are read
 				// as the 4Stim names they match. OStim's durations are in ms,
@@ -499,6 +515,8 @@ namespace
 					Excitement::Settings().blur = std::clamp(std::stof(value), 0.0F, 1.0F);
 				} else if (key == "fclimaxflash") {
 					Excitement::Settings().flash = std::clamp(std::stof(value), 0.0F, 1.0F);
+				} else if (key == "fclimaxglowsize") {
+					Excitement::Settings().glowSize = std::clamp(std::stof(value), 0.01F, 0.5F);
 				} else if (key == "bblurorgasms") {
 					Excitement::Settings().blurOn = std::stoi(value) != 0;
 				} else if (key == "bslowmoorgasms") {
@@ -550,7 +568,9 @@ namespace
 						}
 					}
 					Undress::Settings().slots = std::move(slots);
-				} else if (key == "bautomodeplayer") {
+				}
+				// (A new chain, C1061 again.)
+				if (key == "bautomodeplayer") {
 					g_autoConfig.player = std::stoi(value) != 0;
 				} else if (key == "bautomodenpc") {
 					g_autoConfig.npc = std::stoi(value) != 0;
@@ -608,6 +628,7 @@ namespace
 			} catch (...) {
 				REX::WARN("Settings: couldn't read \"{}\" for {}", value, key);
 			}
+		}
 		}
 		REX::INFO("Settings: hotkey 0x{:X}, target mode {}, max distance {}, cone {}, radius {}, speed keys 0x{:X}/0x{:X}",
 			g_settings.hotkey, g_settings.targetMode == 1 ? "Proximity" : "Crosshair",
@@ -2152,7 +2173,7 @@ namespace
 		}
 		if (!scene) {
 			REX::WARN("Furniture change: no scene fits these {} actor(s) on {}", a_active.actors.size(), a_piece.type);
-			Notify("No scene fits them there");
+			Notify(TR("$4Stim_NoSceneThere", "No scene fits them there"));
 			return false;
 		}
 		REX::INFO("Furniture change: \"{}\" from {} ({:08X}) to {} ({:08X}) with \"{}\" ({})", a_active.sceneID,
@@ -2604,7 +2625,7 @@ namespace
 				RE::ImageSpaceModifierInstanceDOF::DepthOfFieldMode::kFrontBack, std::min(config.blur, 1.0F), 0.5F);
 		}
 		if (config.flash > 0.0F) {
-			HUD::PlayClimax(std::min(config.flash, 1.0F));
+			HUD::PlayClimax(std::min(config.flash, 1.0F), config.glowSize);
 		}
 		// The normal cameras' shake and the rumble go through Papyrus.
 		const bool papyrusShake = config.shake > 0.0F && !freeCamera;
@@ -3792,6 +3813,8 @@ namespace
 		Scaling::Reload();
 		ActorProperties::Reload();
 		EquipObjects::Reload();
+		Translations::Load();
+		Options::Reload();
 		HUD::LoadConfig();  // theme and Utility entries too, for HUD authors
 		return count;
 	}
@@ -3901,6 +3924,90 @@ namespace
 			}
 			RequestFurnitureChange(actorID, Furniture::Found{ type, Furniture::Name(type), refID, 0.0F, std::nullopt }, sceneID);
 		});
+	}
+
+	// ---- Muting and choosing equip objects (OStim's OActor.Mute; the HUD's options) ----
+
+	void Mute(std::monostate, RE::Actor* a_actor)
+	{
+		if (a_actor) {
+			F4SE::GetTaskInterface()->AddTask([id = a_actor->GetFormID()]() { Sounds::SetMuted(id, true); });
+		}
+	}
+
+	void Unmute(std::monostate, RE::Actor* a_actor)
+	{
+		if (a_actor) {
+			F4SE::GetTaskInterface()->AddTask([id = a_actor->GetFormID()]() { Sounds::SetMuted(id, false); });
+		}
+	}
+
+	bool IsMuted(std::monostate, RE::Actor* a_actor)
+	{
+		return a_actor && Sounds::IsMuted(a_actor->GetFormID());  // read from a Papyrus thread, as IsInScene
+	}
+
+	// Which object of a type a_actor wears (its file name), and choosing it.
+	bool SetEquipObjectID(std::monostate, RE::Actor* a_actor, std::string a_type, std::string a_id)
+	{
+		return a_actor && EquipObjects::SetChosen(a_actor->GetFormID(), std::move(a_type), std::move(a_id));
+	}
+
+	std::string GetEquipObjectID(std::monostate, RE::Actor* a_actor, std::string a_type)
+	{
+		return a_actor ? EquipObjects::Chosen(a_actor->GetFormID(), std::move(a_type)) : std::string{};
+	}
+
+	// ---- The MCM page (docs/MCM.md) ----
+
+	void RunKeyAction(std::string_view a_action);
+
+	// A setting changed in the MCM: 4Stim.ini and the MCM's file read again.
+	void ReloadSettings(std::monostate)
+	{
+		// A moment later, so the MCM has written its file first.
+		std::thread([]() {
+			std::this_thread::sleep_for(std::chrono::milliseconds(250));
+			F4SE::GetTaskInterface()->AddTask([]() {
+				LoadSettings();
+				HUD::LoadConfig();  // the theme and control scheme
+				REX::INFO("Settings: read again (the MCM changed one)");
+			});
+		}).detach();
+	}
+
+	// The MCM's buttons: export to / import from Documents\My Games\Fallout4\4Stim\mcmsettings.json
+	// (OStim's), and back to 4Stim.ini's values.
+	bool ExportSettings(std::monostate)
+	{
+		const bool ok = MCM::Export();
+		Notify(ok ? TR("$4Stim_SettingsExported", "4Stim: settings exported") : TR("$4Stim_SettingsNotExported", "4Stim: couldn't export the settings"));
+		return ok;
+	}
+
+	bool ImportSettings(std::monostate)
+	{
+		const bool ok = MCM::Import();
+		if (ok) {
+			ReloadSettings({});
+		}
+		Notify(ok ? TR("$4Stim_SettingsImported", "4Stim: settings imported") : TR("$4Stim_SettingsNotImported", "4Stim: no exported settings to import"));
+		return ok;
+	}
+
+	void UseIniSettings(std::monostate)
+	{
+		MCM::UseIni();
+		ReloadSettings({});
+		Notify(TR("$4Stim_SettingsFromIni", "4Stim: back to 4Stim.ini's settings"));
+	}
+
+	// A scene key's action by name (the MCM's hotkeys): hotkey, npcscene,
+	// speedup, speeddown, automode, pullout, end, search, align, freecam, hideui.
+	void PressKey(std::monostate, std::string a_action)
+	{
+		std::ranges::transform(a_action, a_action.begin(), [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+		F4SE::GetTaskInterface()->AddTask([action = std::move(a_action)]() { RunKeyAction(action); });
 	}
 
 	// The "Change furniture" list for the focused scene (the HUD's Utility
@@ -4583,7 +4690,7 @@ namespace
 			return;
 		}
 		if (PlayerInAScene()) {
-			Notify("4Stim: you're in a scene; end it to watch another");
+			Notify(TR("$4Stim_InSceneCantWatch", "4Stim: you're in a scene; end it to watch another"));
 			return;
 		}
 		auto focus = FocusFor(active->actors, active->sceneID);
@@ -4611,14 +4718,14 @@ namespace
 	{
 		const auto active = FindActiveScene(a_role0);
 		if (!active) {
-			Notify("4Stim: that scene has ended");
+			Notify(TR("$4Stim_SceneEnded", "4Stim: that scene has ended"));
 			return;
 		}
 		if (a_command == "@watch") {
 			WatchScene(a_role0);
 		} else if (a_command == "@auto") {
 			active->autoMode.on ? StopAutoMode(*active) : StartAutoMode(*active);
-			Notify(active->autoMode.on ? "Auto mode on" : "Auto mode off");
+			Notify(active->autoMode.on ? TR("$4Stim_AutoModeOn", "Auto mode on") : TR("$4Stim_AutoModeOff", "Auto mode off"));
 		} else if (a_command == "@endscene") {
 			EndActiveScene(*active, "ended from the picker");
 		}
@@ -5020,6 +5127,7 @@ namespace
 			if (!uiMovie || !menuObj.IsObject()) {
 				return;
 			}
+			SendStrings();
 			const auto mode = g_pickerMode.load();
 			if (mode == PickerMode::kNavigate) {
 				SendNavigation();
@@ -5045,7 +5153,7 @@ namespace
 			auto scenes = SceneRegistry::ListSequences(actorCount, filter);
 			for (auto& seq : scenes) {
 				seq.id = std::string(SEQUENCE_PREFIX) + seq.id;
-				seq.name = "Sequence: " + seq.name;
+				seq.name = TRF("$4Stim_SequenceName", "Sequence: {}", seq.name);
 				seq.tags = seq.tags.empty() ? "sequence" : "sequence, " + seq.tags;
 			}
 			std::ranges::move(SceneRegistry::List(actorCount, filter), std::back_inserter(scenes));
@@ -5121,38 +5229,38 @@ namespace
 					busy = g_playerBusy;
 					running = g_running.size();
 				}
-				std::string who = withMe ? "You" : "";
+				std::string who = withMe ? TR("$4Stim_You", "You") : std::string{};
 				for (const auto id : picked) {
 					const auto it = std::ranges::find_if(candidates, [&](const Candidate& c) { return c.id == id; });
 					who += (who.empty() ? "" : ", ") + (it != candidates.end() ? withSex(*it) : std::format("{:08X}", id));
 				}
 				const std::size_t castSize = picked.size() + (withMe ? 1 : 0);
 				if (castSize == 0) {
-					rows.push_back({ "@none", "Pick someone first", "a scene without you needs at least one NPC" });
+					rows.push_back({ "@none", TR("$4Stim_PickSomeone", "Pick someone first"), TR("$4Stim_PickSomeoneDetail", "a scene without you needs at least one NPC") });
 				} else {
-					rows.push_back({ "@go", castSize == 1 && withMe ? "Continue alone" : std::format("Continue with {}", castSize), who });
+					rows.push_back({ "@go", castSize == 1 && withMe ? TR("$4Stim_ContinueAlone", "Continue alone") : TRF("$4Stim_ContinueWith", "Continue with {}", castSize), who });
 				}
 				if (busy) {
-					rows.push_back({ "@none", "You: not in it (NPCs only)", "you're in a scene already" });
+					rows.push_back({ "@none", TR("$4Stim_YouNotIn", "You: not in it (NPCs only)"), TR("$4Stim_YouBusy", "you're in a scene already") });
 				} else {
-					rows.push_back({ "@me", withMe ? "You: in the scene" : "You: not in it (NPCs only)", "choose to switch" });
+					rows.push_back({ "@me", withMe ? TR("$4Stim_YouIn", "You: in the scene") : TR("$4Stim_YouNotIn", "You: not in it (NPCs only)"), TR("$4Stim_ChooseToSwitch", "choose to switch") });
 				}
 				for (const auto& c : candidates) {
 					if (std::ranges::find(picked, c.id) != picked.end()) {
-						rows.push_back({ std::format("@drop:{:X}", c.id), "[x] " + withSex(c), std::format("picked, {:.0f} m away: choose to remove", c.distance / 70.0F) });
+						rows.push_back({ std::format("@drop:{:X}", c.id), "[x] " + withSex(c), TRF("$4Stim_PickedAway", "picked, {:.0f} m away: choose to remove", c.distance / 70.0F) });
 					}
 				}
 				if (running > 0) {
-					rows.push_back({ "@running", std::format("Running scenes ({})...", running), "watch, end or auto-play a scene" });
+					rows.push_back({ "@running", TRF("$4Stim_RunningScenesCount", "Running scenes ({})...", running), TR("$4Stim_RunningScenesDetail", "watch, end or auto-play a scene") });
 				}
 				if (castSize < maxCast) {
 					for (const auto& c : candidates) {
 						if (std::ranges::find(picked, c.id) == picked.end()) {
-							rows.push_back({ std::format("@add:{:X}", c.id), withSex(c), std::format("{:.0f} m away", c.distance / 70.0F) });
+							rows.push_back({ std::format("@add:{:X}", c.id), withSex(c), TRF("$4Stim_MetersAway", "{:.0f} m away", c.distance / 70.0F) });
 						}
 					}
 				}
-				title = picked.empty() ? "Who's in the scene?" : "Add someone else?";
+				title = picked.empty() ? TR("$4Stim_WhosIn", "Who's in the scene?") : TR("$4Stim_AddSomeone", "Add someone else?");
 			} else if (g_startStep == StartStep::kRunning || g_startStep == StartStep::kScene) {
 				std::vector<RunningScene> running;
 				std::uint32_t             selected;
@@ -5166,19 +5274,19 @@ namespace
 				const auto it = std::ranges::find_if(running, [&](const RunningScene& r) { return !r.actors.empty() && r.actors.front() == selected; });
 				if (g_startStep == StartStep::kScene && it != running.end()) {
 					if (!it->withPlayer && !busy) {  // not while you're in a scene yourself
-						rows.push_back({ "@watch", "Watch", "follow it with the free camera and the HUD" });
+						rows.push_back({ "@watch", TR("$4Stim_Watch", "Watch"), TR("$4Stim_WatchDetail", "follow it with the free camera and the HUD") });
 					}
-					rows.push_back({ "@auto", it->autoMode ? "Auto mode: on" : "Auto mode: off", "choose to switch" });
-					rows.push_back({ "@endscene", "End scene", "" });
-					rows.push_back({ "@running", "Back", "all running scenes" });
+					rows.push_back({ "@auto", it->autoMode ? TR("$4Stim_AutoModeIsOn", "Auto mode: on") : TR("$4Stim_AutoModeIsOff", "Auto mode: off"), TR("$4Stim_ChooseToSwitch", "choose to switch") });
+					rows.push_back({ "@endscene", TR("$4Stim_EndScene", "End scene"), "" });
+					rows.push_back({ "@running", TR("$4Stim_Back", "Back"), TR("$4Stim_AllRunningScenes", "all running scenes") });
 					title = it->label;
 				} else {
 					for (const auto& r : running) {
 						rows.push_back({ std::format("@scene:{:X}", r.actors.front()), r.label,
-							std::string(r.withPlayer ? "you're in it" : "NPCs") + (r.autoMode ? ", auto mode" : "") });
+							(r.withPlayer ? TR("$4Stim_YoureInIt", "you're in it") : TR("$4Stim_NPCs", "NPCs")) + (r.autoMode ? TR("$4Stim_CommaAutoMode", ", auto mode") : std::string{}) });
 					}
-					rows.push_back({ "@back", "Back", "start a scene" });
-					title = "Running scenes";
+					rows.push_back({ "@back", TR("$4Stim_Back", "Back"), TR("$4Stim_StartAScene", "start a scene") });
+					title = TR("$4Stim_RunningScenes", "Running scenes");
 				}
 			} else if (g_startStep == StartStep::kRole) {
 				// OStim's role selection: the player picks their place in
@@ -5186,11 +5294,11 @@ namespace
 				const auto player = RE::PlayerCharacter::GetSingleton()->GetFormID();
 				if (std::ranges::find(cast, player) != cast.end()) {
 					for (std::size_t i = 0; i < cast.size(); ++i) {
-						const auto detail = i == 0 ? "first, usually the one giving" : i + 1 == cast.size() ? "last, usually the one receiving" : "";
-						rows.push_back({ std::format("@role:{}", i), std::format("Role {}", i + 1), detail });
+						const auto detail = i == 0 ? TR("$4Stim_RoleFirst", "first, usually the one giving") : i + 1 == cast.size() ? TR("$4Stim_RoleLast", "last, usually the one receiving") : std::string{};
+						rows.push_back({ std::format("@role:{}", i), TRF("$4Stim_RoleN", "Role {}", i + 1), detail });
 					}
-					rows.push_back({ "@role:any", "Any role", "whichever the scene gives you" });
-					title = "Your role?";
+					rows.push_back({ "@role:any", TR("$4Stim_AnyRole", "Any role"), TR("$4Stim_AnyRoleDetail", "whichever the scene gives you") });
+					title = TR("$4Stim_YourRole", "Your role?");
 				} else {
 					// Without the player: which NPC takes the first role.
 					std::vector<Candidate> candidates;
@@ -5200,32 +5308,32 @@ namespace
 					}
 					for (const auto id : cast) {
 						const auto it = std::ranges::find_if(candidates, [&](const Candidate& c) { return c.id == id; });
-						rows.push_back({ std::format("@lead:{:X}", id), (it != candidates.end() ? withSex(*it) : std::format("{:08X}", id)) + " leads",
-							"takes the first role, usually the one giving" });
+						rows.push_back({ std::format("@lead:{:X}", id), TRF("$4Stim_Leads", "{} leads", it != candidates.end() ? withSex(*it) : std::format("{:08X}", id)),
+							TR("$4Stim_LeadsDetail", "takes the first role, usually the one giving") });
 					}
-					rows.push_back({ "@role:any", "Either", "whichever the scene gives them" });
-					title = "Who leads?";
+					rows.push_back({ "@role:any", TR("$4Stim_Either", "Either"), TR("$4Stim_EitherDetail", "whichever the scene gives them") });
+					title = TR("$4Stim_WhoLeads", "Who leads?");
 				}
-				rows.push_back({ "@back", "Back", "change who's in it" });
+				rows.push_back({ "@back", TR("$4Stim_Back", "Back"), TR("$4Stim_ChangeWho", "change who's in it") });
 			} else {
 				// Where: right here, or a piece of furniture near, if any
 				// scene fits this cast there.
 				if (!ScenesForCast(cast, {}).empty()) {
 					const bool withMe = std::ranges::find(cast, RE::PlayerCharacter::GetSingleton()->GetFormID()) != cast.end();
-					rows.push_back({ "@here", withMe ? "Right here" : "Where they are", "no furniture" });
+					rows.push_back({ "@here", withMe ? TR("$4Stim_RightHere", "Right here") : TR("$4Stim_WhereTheyAre", "Where they are"), TR("$4Stim_NoFurniture", "no furniture") });
 				}
 				const auto found = PickerFurniture();
 				for (std::size_t i = 0; i < found.size(); ++i) {
 					if (!ScenesForCast(cast, found[i].type).empty()) {
-						rows.push_back({ std::format("@furn:{}", i), found[i].name, std::format("{:.0f} m away", found[i].distance / 70.0F) });
+						rows.push_back({ std::format("@furn:{}", i), found[i].name, TRF("$4Stim_MetersAway", "{:.0f} m away", found[i].distance / 70.0F) });
 					}
 				}
 				if (rows.empty()) {
-					rows.push_back({ "@back", "No scenes for this cast", "choose to go back" });
+					rows.push_back({ "@back", TR("$4Stim_NoScenesForCast", "No scenes for this cast"), TR("$4Stim_ChooseToGoBack", "choose to go back") });
 				}
-				rows.push_back({ "@browse", "Browse all scenes...", std::format("for {} actor(s)", cast.size()) });
-				rows.push_back({ "@back", "Back", "change who's in it" });
-				title = "Where?";
+				rows.push_back({ "@browse", TR("$4Stim_BrowseAll", "Browse all scenes..."), TRF("$4Stim_ForNActors", "for {} actor(s)", cast.size()) });
+				rows.push_back({ "@back", TR("$4Stim_Back", "Back"), TR("$4Stim_ChangeWho", "change who's in it") });
+				title = TR("$4Stim_Where", "Where?");
 			}
 
 			Scaleform::GFx::Value list;
@@ -5380,6 +5488,21 @@ namespace
 			StartPicked(scene->id);
 		}
 
+		// The translations, for the picker's own labels (its empty-list text
+		// and footer). Optional in the movie.
+		void SendStrings()
+		{
+			if (!uiMovie || !menuObj.IsObject() || !menuObj.HasMember("SetStrings")) {
+				return;
+			}
+			Scaleform::GFx::Value table;
+			uiMovie->CreateObject(&table);
+			for (const auto& [key, text] : Translations::Entries()) {
+				table.SetMember(key, Scaleform::GFx::Value(text.c_str()));
+			}
+			menuObj.Invoke("SetStrings", nullptr, &table, 1);
+		}
+
 		// kFurniture: as OStim's furniture selection, "None" (stay) first,
 		// then the furniture near, nearest first.
 		void SendFurnitureChoices()
@@ -5402,13 +5525,14 @@ namespace
 				entry.SetMember("tags"sv, tags);
 				list.PushBack(entry);
 			};
-			add("@stay", "None", "stay where you are");
+			add("@stay", TR("$4Stim_None", "None"), TR("$4Stim_StayHere", "stay where you are"));
 			for (std::size_t i = 0; i < found.size(); ++i) {
-				add(std::format("@cfurn:{}", i), found[i].name, std::format("{:.0f} m away", found[i].distance / 70.0F));
+				add(std::format("@cfurn:{}", i), found[i].name, TRF("$4Stim_MetersAway", "{:.0f} m away", found[i].distance / 70.0F));
 			}
 			Scaleform::GFx::Value args[2];
 			args[0] = list;
-			args[1] = "Change furniture";
+			const auto changeTitle = TR("$4Stim_ChangeFurnitureTitle", "Change furniture");
+			args[1] = changeTitle.c_str();
 			menuObj.Invoke("SetScenes", nullptr, args, 2);
 		}
 
@@ -5457,7 +5581,7 @@ namespace
 				entry.SetMember("tags"sv, tags);
 				list.PushBack(entry);
 			};
-			std::string title = "Scene";
+			std::string title = TR("$4Stim_Scene", "Scene");
 			if (scene) {
 				// During a transition, the options of where it's going.
 				const auto settled = SceneRegistry::Settled(scene);
@@ -5471,9 +5595,9 @@ namespace
 				title = scene->name + "   (speed " + std::to_string(current.speed + 1) + "/" + std::to_string(scene->speeds.size()) + ")";
 			}
 			if (g_settings.useFurniture) {
-				add(CHANGE_FURNITURE_ID, "Change furniture...", "move the scene onto furniture near");
+				add(CHANGE_FURNITURE_ID, TR("$4Stim_ChangeFurniture", "Change furniture..."), TR("$4Stim_ChangeFurnitureDetail", "move the scene onto furniture near"));
 			}
-			add(END_SCENE_ID, "End scene", "");
+			add(END_SCENE_ID, TR("$4Stim_EndScene", "End scene"), "");
 
 			Scaleform::GFx::Value args[2];
 			args[0] = list;
@@ -5777,82 +5901,96 @@ namespace
 			return;
 		}
 
-		// Speed keys, while the player is in a scene.
-		if (const auto code = static_cast<std::uint32_t>(a_event->idCode); code == g_settings.speedUpKey || code == g_settings.speedDownKey) {
-			if (GetPlayerScene().role0 != 0) {
-				ChangeSceneSpeedImpl(code == g_settings.speedUpKey ? 1 : -1);
-			}
+		const auto code = static_cast<std::uint32_t>(a_event->idCode);
+		if (code == 0) {
 			return;
 		}
-		// Auto mode key: on / off for the scene you're in or watching.
-		if (g_autoConfig.key != 0 && static_cast<std::uint32_t>(a_event->idCode) == g_autoConfig.key) {
-			const auto focused = GetPlayerScene();
+		// The NPC scene key (or Shift + the hotkey) before the hotkey itself.
+		const bool npcKey = g_settings.npcSceneKey != 0 ? code == g_settings.npcSceneKey : (code == g_settings.hotkey && g_shiftDown);
+		const std::string_view action = code == g_settings.speedUpKey ? "speedup"sv :
+		                                code == g_settings.speedDownKey ? "speeddown"sv :
+		                                (g_autoConfig.key != 0 && code == g_autoConfig.key) ? "automode"sv :
+		                                code == g_settings.pullOutKey ? "pullout"sv :
+		                                code == g_settings.endKey ? "end"sv :
+		                                code == g_settings.searchKey ? "search"sv :
+		                                code == g_settings.alignmentKey ? "align"sv :
+		                                code == g_settings.freeCamKey ? "freecam"sv :
+		                                code == g_settings.hideUIKey ? "hideui"sv :
+		                                npcKey ? "npcscene"sv :
+		                                code == g_settings.hotkey ? "hotkey"sv :
+		                                                            ""sv;
+		if (!action.empty()) {
+			RunKeyAction(action);
+		}
+	}
+
+	// What a scene key does (4Stim.ini's keys, and the MCM's hotkeys through
+	// FourStim.PressKey). Main thread.
+	void RunKeyAction(std::string_view a_action)
+	{
+		const auto focused = GetPlayerScene();
+		if (a_action == "speedup" || a_action == "speeddown") {
+			// Speed keys, while the player is in a scene.
+			if (focused.role0 != 0) {
+				ChangeSceneSpeedImpl(a_action == "speedup" ? 1 : -1);
+			}
+		} else if (a_action == "automode") {
+			// On / off for the scene you're in or watching.
 			if (const auto active = focused.Active() ? FindActiveScene(focused.role0) : nullptr) {
 				if (active->autoMode.on) {
 					StopAutoMode(*active);
 				} else {
 					StartAutoMode(*active);
 				}
-				Notify(active->autoMode.on ? "Auto mode on" : "Auto mode off");
+				Notify(active->autoMode.on ? TR("$4Stim_AutoModeOn", "Auto mode on") : TR("$4Stim_AutoModeOff", "Auto mode off"));
 			}
-			return;
-		}
-		// OStim's other scene keys, for the scene you're in or watching (all
-		// unbound by default): pull out, end, search, align, free camera, hide
-		// the HUD. As OStim's EventListener.
-		if (const auto code = static_cast<std::uint32_t>(a_event->idCode); GetPlayerScene().Active() &&
-			(code == g_settings.pullOutKey || code == g_settings.endKey || code == g_settings.searchKey ||
-				code == g_settings.alignmentKey || code == g_settings.freeCamKey || code == g_settings.hideUIKey) &&
-			code != 0) {
-			const auto focused = GetPlayerScene();
-			if (code == g_settings.pullOutKey) {
+		} else if (a_action == "pullout" || a_action == "end" || a_action == "search" || a_action == "align" || a_action == "freecam" || a_action == "hideui") {
+			// OStim's other scene keys, for the scene you're in or watching:
+			// as OStim's EventListener.
+			if (!focused.Active()) {
+				return;
+			}
+			if (a_action == "pullout") {
 				if (const auto active = FindActiveScene(focused.role0); active && !AutoPullOut(*active)) {
-					Notify("4Stim: nowhere to pull out to from here");
+					Notify(TR("$4Stim_NoPullout", "4Stim: nowhere to pull out to from here"));
 				}
-			} else if (code == g_settings.endKey) {
+			} else if (a_action == "end") {
 				if (g_vm) {
 					RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
 					g_vm->DispatchStaticCall("FourStimMenu"sv, "EndPlayerScene"sv, callback);
 				}
-			} else if (code == g_settings.searchKey) {
+			} else if (a_action == "search") {
 				ShowPicker(PickerMode::kSearch);
-			} else if (code == g_settings.alignmentKey) {
+			} else if (a_action == "align") {
 				HUD::ToggleTab("align");
-			} else if (code == g_settings.freeCamKey) {
+			} else if (a_action == "freecam") {
 				ToggleSceneFreeCamera();
-			} else if (code == g_settings.hideUIKey) {
+			} else {
 				HUD::ToggleHidden();
 			}
-			return;
-		}
-		// The NPC scene key (or Shift + the hotkey): the picker for a scene
-		// without you, whether or not you're in one.
-		{
-			const auto code = static_cast<std::uint32_t>(a_event->idCode);
-			const bool shift = g_shiftDown;
-			if (g_vm && (g_settings.npcSceneKey != 0 ? code == g_settings.npcSceneKey : (code == g_settings.hotkey && shift))) {
+		} else if (a_action == "npcscene") {
+			// The picker for a scene without you, whether or not you're in one.
+			if (g_vm) {
 				REX::INFO("NPC scene key pressed");
 				RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
 				g_vm->DispatchStaticCall("FourStimMenu"sv, "OnNPCSceneHotkey"sv, callback,
 					g_settings.targetMode, g_settings.maxDistance, g_settings.crosshairCone, g_settings.proximityRadius);
+			}
+		} else if (a_action == "hotkey") {
+			// In a scene with the HUD up, the hotkey switches the HUD's focus.
+			if (focused.Active() && HUD::IsOpen()) {
+				HUD::SetFocus(!HUD::IsFocused());
 				return;
 			}
+			if (g_vm) {
+				REX::INFO("Hotkey pressed");
+				RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
+				g_vm->DispatchStaticCall("FourStimMenu"sv, "OnHotkey"sv, callback,
+					g_settings.targetMode, g_settings.maxDistance, g_settings.crosshairCone, g_settings.proximityRadius);
+			}
+		} else {
+			REX::WARN("Keys: unknown action \"{}\"", a_action);
 		}
-		if (static_cast<std::uint32_t>(a_event->idCode) != g_settings.hotkey) {
-			return;
-		}
-		// In a scene with the HUD up, the hotkey switches the HUD's focus.
-		if (GetPlayerScene().Active() && HUD::IsOpen()) {
-			HUD::SetFocus(!HUD::IsFocused());
-			return;
-		}
-		if (!g_vm) {
-			return;
-		}
-		REX::INFO("Hotkey pressed");
-		RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
-		g_vm->DispatchStaticCall("FourStimMenu"sv, "OnHotkey"sv, callback,
-			g_settings.targetMode, g_settings.maxDistance, g_settings.crosshairCone, g_settings.proximityRadius);
 	}
 
 	struct InputHook
@@ -6167,6 +6305,16 @@ namespace
 		a_vm->BindNativeMethod(SCRIPT_NAME, "GetSceneFurniture"sv, GetSceneFurniture);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "GetSceneFurnitureType"sv, GetSceneFurnitureType);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "OpenFurnitureMenu"sv, OpenFurnitureMenu);
+		a_vm->BindNativeMethod(SCRIPT_NAME, "ReloadSettings"sv, ReloadSettings);
+		a_vm->BindNativeMethod(SCRIPT_NAME, "ExportSettings"sv, ExportSettings);
+		a_vm->BindNativeMethod(SCRIPT_NAME, "ImportSettings"sv, ImportSettings);
+		a_vm->BindNativeMethod(SCRIPT_NAME, "UseIniSettings"sv, UseIniSettings);
+		a_vm->BindNativeMethod(SCRIPT_NAME, "PressKey"sv, PressKey);
+		a_vm->BindNativeMethod(SCRIPT_NAME, "Mute"sv, Mute);
+		a_vm->BindNativeMethod(SCRIPT_NAME, "Unmute"sv, Unmute);
+		a_vm->BindNativeMethod(SCRIPT_NAME, "IsMuted"sv, IsMuted);
+		a_vm->BindNativeMethod(SCRIPT_NAME, "SetEquipObjectID"sv, SetEquipObjectID);
+		a_vm->BindNativeMethod(SCRIPT_NAME, "GetEquipObjectID"sv, GetEquipObjectID);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "RegisterForSceneEvents"sv, RegisterForSceneEvents);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "UnregisterForSceneEvents"sv, UnregisterForSceneEvents);
 		REX::INFO("Papyrus functions bound");
@@ -6577,6 +6725,11 @@ namespace
 						REX::INFO("Picker menu registered");
 					}
 				}
+				static bool translated = false;
+				if (!translated) {
+					Translations::Load();  // the game's language is known by now
+					translated = true;
+				}
 				HUD::LoadConfig();
 				// A loaded save starts with no scene running.
 				HUD::Reset();
@@ -6674,7 +6827,7 @@ namespace FourStim
 			});
 			if (found.empty()) {
 				REX::INFO("Furniture change: nothing near that any scene fits these actors on");
-				Notify("No furniture near for this scene");
+				Notify(TR("$4Stim_NoFurnitureNear", "No furniture near for this scene"));
 				return;
 			}
 			{
@@ -6806,6 +6959,7 @@ F4SE_PLUGIN_LOAD(const F4SE::LoadInterface* a_f4se)
 		REX::INFO("Addresses: all {} found", std::size(Compat::REQUIRED_IDS));
 	}
 
+	MCM::Sync();  // whichever of 4Stim.ini and the MCM's settings changed last wins
 	LoadSettings();
 	HUD::SetOptions(g_settings.hudTheme, g_settings.hudEnabled, g_settings.hudColumns);
 	InputHook::Install();

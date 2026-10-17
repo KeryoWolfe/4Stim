@@ -48,6 +48,13 @@ namespace EquipObjects
 	bool SetVariant(std::uint32_t a_id, std::string a_type, std::string a_variant, float a_seconds);
 	void UnsetVariant(std::uint32_t a_id, std::string a_type);
 
+	// The objects of a type (id, name), the one a_id wears of it, and
+	// choosing another (the HUD's options, OStim's options menu; worn now:
+	// swapped). Any thread.
+	std::vector<std::pair<std::string, std::string>> ObjectsOf(std::string a_type);
+	std::string                                      Chosen(std::uint32_t a_id, std::string a_type);
+	bool                                             SetChosen(std::uint32_t a_id, std::string a_type, std::string a_objectID);
+
 	// Times variants (SetVariant with a duration). Main thread.
 	void Tick(float a_seconds);
 

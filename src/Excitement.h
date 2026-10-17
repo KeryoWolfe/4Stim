@@ -36,6 +36,7 @@ namespace Excitement
 		bool  blurOn = true;          // a brief full-screen blur (OStim's SetBlurOrgasms)...
 		float blur = 0.5F;            // ...this strong (0 = off)
 		float flash = 1.0F;           // white glow at the screen's edges (0 = off), from the HUD
+		float glowSize = 0.07F;       // how far in it reaches: a share of the screen's smaller side (fClimaxGlowSize)
 		bool  rumble = true;          // controller rumble
 		bool  slowMo = true;          // the game slows to 0.3x for 2.5 s (OStim's SetSlowMoOrgasms)
 	};

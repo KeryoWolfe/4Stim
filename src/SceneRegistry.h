@@ -131,7 +131,7 @@ namespace SceneRegistry
 		std::string icon;   // HUD icon movie under Data\Interface\4Stim\Icons\; empty = the destination's
 		std::string border;  // OStim's icon border color (hex, "ffffff" = none given)
 		int         priority = 0;  // lower first, as OStim sorts them
-		bool        noWarnings = false;  // OStim's: kept, not used yet
+		bool        noWarnings = false;  // OStim's: no warning if the scene it links to isn't there
 	};
 
 	// One speed of a scene.

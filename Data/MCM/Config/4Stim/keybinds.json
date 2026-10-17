@@ -1,0 +1,137 @@
+{
+	"modName": "4Stim",
+	"keybinds": [
+		{
+			"id": "Hotkey",
+			"desc": "Start a scene / the HUD",
+			"action": {
+				"type": "CallGlobalFunction",
+				"script": "FourStimMCM",
+				"function": "PressKey",
+				"params": [
+					"hotkey"
+				]
+			}
+		},
+		{
+			"id": "NPCScene",
+			"desc": "Start a scene without you",
+			"action": {
+				"type": "CallGlobalFunction",
+				"script": "FourStimMCM",
+				"function": "PressKey",
+				"params": [
+					"npcscene"
+				]
+			}
+		},
+		{
+			"id": "SpeedUp",
+			"desc": "Faster",
+			"action": {
+				"type": "CallGlobalFunction",
+				"script": "FourStimMCM",
+				"function": "PressKey",
+				"params": [
+					"speedup"
+				]
+			}
+		},
+		{
+			"id": "SpeedDown",
+			"desc": "Slower",
+			"action": {
+				"type": "CallGlobalFunction",
+				"script": "FourStimMCM",
+				"function": "PressKey",
+				"params": [
+					"speeddown"
+				]
+			}
+		},
+		{
+			"id": "AutoMode",
+			"desc": "Auto mode on / off",
+			"action": {
+				"type": "CallGlobalFunction",
+				"script": "FourStimMCM",
+				"function": "PressKey",
+				"params": [
+					"automode"
+				]
+			}
+		},
+		{
+			"id": "PullOut",
+			"desc": "Pull out",
+			"action": {
+				"type": "CallGlobalFunction",
+				"script": "FourStimMCM",
+				"function": "PressKey",
+				"params": [
+					"pullout"
+				]
+			}
+		},
+		{
+			"id": "End",
+			"desc": "End the scene",
+			"action": {
+				"type": "CallGlobalFunction",
+				"script": "FourStimMCM",
+				"function": "PressKey",
+				"params": [
+					"end"
+				]
+			}
+		},
+		{
+			"id": "Search",
+			"desc": "Search scenes",
+			"action": {
+				"type": "CallGlobalFunction",
+				"script": "FourStimMCM",
+				"function": "PressKey",
+				"params": [
+					"search"
+				]
+			}
+		},
+		{
+			"id": "Align",
+			"desc": "Align tab",
+			"action": {
+				"type": "CallGlobalFunction",
+				"script": "FourStimMCM",
+				"function": "PressKey",
+				"params": [
+					"align"
+				]
+			}
+		},
+		{
+			"id": "FreeCam",
+			"desc": "Free camera on / off",
+			"action": {
+				"type": "CallGlobalFunction",
+				"script": "FourStimMCM",
+				"function": "PressKey",
+				"params": [
+					"freecam"
+				]
+			}
+		},
+		{
+			"id": "HideUI",
+			"desc": "Hide the HUD",
+			"action": {
+				"type": "CallGlobalFunction",
+				"script": "FourStimMCM",
+				"function": "PressKey",
+				"params": [
+					"hideui"
+				]
+			}
+		}
+	]
+}

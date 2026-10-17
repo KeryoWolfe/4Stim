@@ -242,6 +242,13 @@ package hud
 				tg.beginFill(_theme.color("iconTile"), _theme.alpha("iconTile"));
 				tg.drawRect(tileX, 0, TILE, ROW_H);
 				tg.endFill();
+				// OStim's icon border (navigations' and options' "border"): a
+				// ring in that color around the icon's tile.
+				if (entry.border != undefined && entry.border != null) {
+					tg.lineStyle(2, uint(entry.border), 1);
+					tg.drawRect(tileX + 1, 1, TILE - 2, ROW_H - 2);
+					tg.lineStyle();
+				}
 				row.icon.x = tileX + (TILE - ICON) / 2;
 				row.icon.y = (ROW_H - ICON) / 2;
 				row.icon.load(entry.icon != null ? String(entry.icon) : "");

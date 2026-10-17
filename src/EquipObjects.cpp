@@ -61,6 +61,9 @@ namespace EquipObjects
 		std::unordered_map<std::string, std::shared_ptr<const Object>>              g_defaults;
 		std::unordered_set<std::uint32_t>                                            g_items;
 		std::unordered_map<std::uint32_t, ActorState>                                g_actors;
+		// The object each actor wears of a type, chosen in the HUD's options
+		// (OStim's options menu): actor -> type -> object id. Until a game loads.
+		std::unordered_map<std::uint32_t, std::unordered_map<std::string, std::string>> g_chosen;
 
 		void LoadLocked()
 		{
@@ -120,11 +123,22 @@ namespace EquipObjects
 			}
 		}
 
-		// The object of a_type a_id wears (OStim's getEquipObject): the
-		// default one, else any. 4Stim has no MCM to choose one per actor.
-		std::shared_ptr<const Object> Choose(const std::string& a_type)
+		// The object of a_type a_id wears (OStim's getEquipObject): the one
+		// chosen for them (the HUD's options), else the default one, else any.
+		std::shared_ptr<const Object> Choose(std::uint32_t a_id, const std::string& a_type)
 		{
 			EnsureLoaded();
+			if (const auto actor = g_chosen.find(a_id); actor != g_chosen.end()) {
+				if (const auto chosen = actor->second.find(a_type); chosen != actor->second.end()) {
+					if (const auto list = g_byType.find(a_type); list != g_byType.end()) {
+						for (const auto& object : list->second) {
+							if (object->id == chosen->second) {
+								return object;
+							}
+						}
+					}
+				}
+			}
 			if (const auto it = g_defaults.find(a_type); it != g_defaults.end()) {
 				return it->second;
 			}
@@ -172,7 +186,7 @@ namespace EquipObjects
 				}
 				return true;
 			}
-			const auto object = Choose(a_type);
+			const auto object = Choose(a_id, a_type);
 			if (!object) {
 				return false;
 			}
@@ -302,6 +316,56 @@ namespace EquipObjects
 		}
 	}
 
+	std::vector<std::pair<std::string, std::string>> ObjectsOf(std::string a_type)
+	{
+		a_type = Lower(a_type);
+		std::scoped_lock lock(g_lock);
+		EnsureLoaded();
+		std::vector<std::pair<std::string, std::string>> out;
+		if (const auto it = g_byType.find(a_type); it != g_byType.end()) {
+			for (const auto& object : it->second) {
+				out.emplace_back(object->id, object->name.empty() ? object->id : object->name);
+			}
+		}
+		return out;
+	}
+
+	std::string Chosen(std::uint32_t a_id, std::string a_type)
+	{
+		a_type = Lower(a_type);
+		std::scoped_lock lock(g_lock);
+		const auto       object = Choose(a_id, a_type);
+		return object ? object->id : std::string{};
+	}
+
+	bool SetChosen(std::uint32_t a_id, std::string a_type, std::string a_objectID)
+	{
+		a_type = Lower(a_type);
+		a_objectID = Lower(a_objectID);
+		std::scoped_lock lock(g_lock);
+		EnsureLoaded();
+		const auto list = g_byType.find(a_type);
+		if (list == g_byType.end() || std::ranges::none_of(list->second, [&](const auto& o) { return Lower(o->id) == a_objectID; })) {
+			return false;
+		}
+		const auto object = *std::ranges::find_if(list->second, [&](const auto& o) { return Lower(o->id) == a_objectID; });
+		g_chosen[a_id][a_type] = object->id;
+		REX::INFO("Equip objects: {:08X} wears \"{}\" as their {}", a_id, object->id, a_type);
+		// Wearing another one of that type now: this one instead.
+		if (const auto state = Find(a_id)) {
+			if (const auto it = state->handlers.find(a_type); it != state->handlers.end() && it->second.object != object) {
+				const bool on = it->second.equipped != 0;
+				TakeOff(a_id, it->second);
+				it->second.object = object;
+				it->second.variant.clear();
+				if (on) {
+					PutOn(a_id, it->second);
+				}
+			}
+		}
+		return true;
+	}
+
 	bool Equip(std::uint32_t a_id, std::string a_type)
 	{
 		a_type = Lower(a_type);
@@ -342,7 +406,7 @@ namespace EquipObjects
 		}
 		auto it = state->handlers.find(a_type);
 		if (it == state->handlers.end()) {
-			const auto object = Choose(a_type);
+			const auto object = Choose(a_id, a_type);
 			if (!object) {
 				return false;
 			}
@@ -420,5 +484,6 @@ namespace EquipObjects
 	{
 		std::scoped_lock lock(g_lock);
 		g_actors.clear();
+		g_chosen.clear();
 	}
 }

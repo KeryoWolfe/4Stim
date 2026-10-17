@@ -31,9 +31,14 @@ namespace HUD
 	// Closes the HUD and drops focus, e.g. when a save is loaded. Main thread.
 	void Reset();
 
+	// The Utility tab's rows again (an option changed something). Any thread.
+	void RefreshUtility();
+
 	// A climax in the focused scene: the movie's flash (optional HUD API
-	// function PlayClimax, HUD_API.md). a_strength 0-1. Any thread.
-	void PlayClimax(float a_strength);
+	// function PlayClimax, HUD_API.md). a_strength 0-1; a_size: how far in
+	// from the screen's edges the glow reaches, as a share of the screen's
+	// smaller side. Any thread.
+	void PlayClimax(float a_strength, float a_size);
 
 	// OStim's keyAlignment / keySearch: shows that tab (optional HUD API
 	// function ShowTab) and gives the HUD the keys; pressed again, back to

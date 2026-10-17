@@ -57,7 +57,7 @@ package hud
 				label.width = SIZE;
 				label.height = 16;
 				label.y = SIZE - 18;
-				label.text = String(_tabs[i].label).toUpperCase();
+				label.text = Strings.t(String(_tabs[i].key), String(_tabs[i].label)).toUpperCase();
 				var tf:TextFormat = label.getTextFormat();
 				tf.align = TextFormatAlign.CENTER;
 				tf.letterSpacing = 0;

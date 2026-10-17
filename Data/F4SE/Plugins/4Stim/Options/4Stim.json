@@ -1,0 +1,118 @@
+{
+	"_comment": "4Stim's own HUD options, in OStim's options format (docs/OPTIONS.md): a page per actor with undressing, muting, and their strap-on and tongue (on / off, and which one). \"state\" (4Stim's) picks the state shown; \"english\" holds the English of the $4Stim_ texts (docs/TRANSLATIONS.md).",
+	"pages": [
+		{
+			"name": "4StimActors",
+			"description": "$4Stim_OptActors",
+			"icon": "4Stim/symbols/gender_mf",
+			"parent": null
+		},
+		{
+			"name": "4StimActor",
+			"description": "$4Stim_OptActor",
+			"icon": "4Stim/symbols/gender_f",
+			"parent": "4StimActors",
+			"repeat": "actor"
+		},
+		{
+			"name": "4StimStrapOn",
+			"description": "$4Stim_OptStrapOnPage",
+			"icon": "4Stim/sexual/strapon_insert_vert",
+			"parent": "4StimActor"
+		},
+		{
+			"name": "4StimTongue",
+			"description": "$4Stim_OptTonguePage",
+			"icon": "4Stim/sensual/kissing",
+			"parent": "4StimActor"
+		}
+	],
+	"options": [
+		{
+			"name": "Undress",
+			"page": "4StimActor",
+			"state": "stripped",
+			"states": {
+				"off": {
+					"description": "$4Stim_OptUndress",
+					"icon": "4Stim/clothes/bra",
+					"function": "FourStimOptions/ToggleUndress"
+				},
+				"on": {
+					"description": "$4Stim_OptDress",
+					"icon": "4Stim/clothes/top",
+					"function": "FourStimOptions/ToggleUndress"
+				}
+			}
+		},
+		{
+			"name": "Mute",
+			"page": "4StimActor",
+			"state": "muted",
+			"states": {
+				"off": {
+					"description": "$4Stim_OptMute",
+					"icon": "4Stim/symbols/x",
+					"function": "FourStimOptions/ToggleMute"
+				},
+				"on": {
+					"description": "$4Stim_OptUnmute",
+					"icon": "4Stim/sensual/kissing",
+					"border": "ff0000",
+					"function": "FourStimOptions/ToggleMute"
+				}
+			}
+		},
+		{
+			"name": "Strap-on",
+			"page": "4StimStrapOn",
+			"repeat": "equipObject",
+			"equipType": "strapon",
+			"states": {
+				"toggle": {
+					"description": "$4Stim_OptStrapOnToggle",
+					"icon": "4Stim/sexual/strapon_insert_hz",
+					"function": "FourStimOptions/ToggleStrapOn"
+				},
+				"object": {
+					"description": "$4Stim_OptWearObject",
+					"icon": "4Stim/sexual/strapon_insert_vert",
+					"border": "ffff00",
+					"function": "FourStimOptions/ChooseStrapOn"
+				}
+			}
+		},
+		{
+			"name": "Tongue",
+			"page": "4StimTongue",
+			"repeat": "equipObject",
+			"equipType": "tongue",
+			"states": {
+				"toggle": {
+					"description": "$4Stim_OptTongueToggle",
+					"icon": "4Stim/sensual/kissing",
+					"function": "FourStimOptions/ToggleTongue"
+				},
+				"object": {
+					"description": "$4Stim_OptWearObject",
+					"icon": "4Stim/sensual/kissing_end",
+					"border": "ffff00",
+					"function": "FourStimOptions/ChooseTongue"
+				}
+			}
+		}
+	],
+	"english": {
+		"$4Stim_OptActors": "Actors",
+		"$4Stim_OptActor": "{actor}",
+		"$4Stim_OptStrapOnPage": "Strap-on",
+		"$4Stim_OptTonguePage": "Tongue",
+		"$4Stim_OptUndress": "Undress {actor}",
+		"$4Stim_OptDress": "Dress {actor}",
+		"$4Stim_OptMute": "Mute {actor}",
+		"$4Stim_OptUnmute": "Unmute {actor}",
+		"$4Stim_OptStrapOnToggle": "Strap-on on / off for {actor}",
+		"$4Stim_OptTongueToggle": "Tongue on / off for {actor}",
+		"$4Stim_OptWearObject": "Wear {type}"
+	}
+}

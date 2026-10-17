@@ -85,10 +85,41 @@ Function UnsetObjectVariant(Actor akActor, String asType) Global Native
 ; Every equip object type there's a file for.
 String[] Function GetEquipObjectTypes() Global Native
 
+; Which object of asType akActor wears (the file name, without .json), and
+; choosing another (worn now: swapped). Until a game is loaded. The HUD's
+; options do this (docs\OPTIONS.md).
+String Function GetEquipObjectID(Actor akActor, String asType) Global Native
+bool Function SetEquipObjectID(Actor akActor, String asType, String asID) Global Native
+
+; OStim's OActor.Mute / Unmute / IsMuted, for actors in a scene: no moans,
+; climax or event sounds while muted (an actor property's "mute" counts as
+; muted).
+Function Mute(Actor akActor) Global Native
+Function Unmute(Actor akActor) Global Native
+bool Function IsMuted(Actor akActor) Global Native
+
 ; Tells the plugin aiActorID's clothes changed (4Stim's undressing calls it
 ; after taking things off or putting them on): heels are measured again and
 ; the High Heels System's height turned off or back on to match.
 Function HeelsChanged(int aiActorID) Global Native
+
+; ---- Settings (the MCM page, docs\MCM.md) ----
+
+; Reads 4Stim.ini and the MCM's settings again (the MCM calls it when a
+; setting changes).
+Function ReloadSettings() Global Native
+
+; The settings in effect to / from Documents\My Games\Fallout4\4Stim\mcmsettings.json
+; (OStim's export file), and back to 4Stim.ini's values (the MCM's changes
+; forgotten). With a notification.
+bool Function ExportSettings() Global Native
+bool Function ImportSettings() Global Native
+Function UseIniSettings() Global Native
+
+; What a scene key does, by name (the MCM's hotkeys use it): "hotkey",
+; "npcscene", "speedup", "speeddown", "automode", "pullout", "end",
+; "search", "align", "freecam", "hideui".
+Function PressKey(String asAction) Global Native
 
 ; ---- Furniture ----
 ; Furniture types and scenes on furniture (docs\FURNITURE.md), as OStim's

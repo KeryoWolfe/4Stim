@@ -760,8 +760,17 @@ namespace SceneRegistry
 			for (auto& raw : g_rawNavigations) {
 				const auto origin = g_scenes.find(Lower(raw.origin));
 				const auto dest = g_scenes.find(Lower(raw.nav.to));
-				if (origin == g_scenes.end() || dest == g_scenes.end() || dest->second.actors.size() != origin->second.actors.size()) {
-					REX::WARN("Scenes: {}: navigation \"{}\" -> \"{}\" dropped (no such scene, or a different number of actors)", raw.file, raw.origin, raw.nav.to);
+				if (origin == g_scenes.end() || dest == g_scenes.end()) {
+					// OStim's noWarnings: a link to a scene that may not be
+					// installed (another pack's) goes quietly.
+					if (!raw.nav.noWarnings) {
+						REX::WARN("Scenes: {}: navigation \"{}\" -> \"{}\" dropped (no such scene)", raw.file, raw.origin, raw.nav.to);
+					}
+					++dropped;
+					continue;
+				}
+				if (dest->second.actors.size() != origin->second.actors.size()) {
+					REX::WARN("Scenes: {}: navigation \"{}\" -> \"{}\" dropped (a different number of actors)", raw.file, raw.origin, raw.nav.to);
 					++dropped;
 					continue;
 				}

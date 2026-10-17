@@ -24,10 +24,10 @@ package hud
 		private static const METERS:Object = { x: 172, y: -104, w: 249 };
 
 		private static const TAB_LIST:Array = [
-			{ id: "search", label: "Search", icon: "Search" },
-			{ id: "align", label: "Align", icon: "Align" },
-			{ id: "utility", label: "Utility", icon: "Utility" },
-			{ id: "navigation", label: "Navigation", icon: "Navigation" }
+			{ id: "search", label: "Search", key: "$4Stim_TabSearch", icon: "Search" },
+			{ id: "align", label: "Align", key: "$4Stim_TabAlign", icon: "Align" },
+			{ id: "utility", label: "Utility", key: "$4Stim_TabUtility", icon: "Utility" },
+			{ id: "navigation", label: "Navigation", key: "$4Stim_TabNavigation", icon: "Navigation" }
 		];
 
 		private var _theme:Theme = new Theme(null);
@@ -92,10 +92,19 @@ package hud
 			position();
 		}
 
-		// Optional (HUD_API.md): a climax in the focused scene, a_strength 0-1.
-		public function PlayClimax(a_strength:Number):void
+		// Optional (HUD_API.md): a climax in the focused scene, a_strength 0-1;
+		// a_size, how far in the glow reaches (a share of the screen's
+		// smaller side, fClimaxGlowSize).
+		public function PlayClimax(a_strength:Number, a_size:Number = 0.07):void
 		{
-			_glow.play(a_strength, _screen);
+			_glow.play(a_strength, _screen, a_size);
+		}
+
+		// Optional (HUD_API.md): the plugin's translations, { "$4Stim_...": text }.
+		public function SetStrings(a_table:Object):void
+		{
+			Strings.set(a_table);
+			applyTheme();  // the tab labels, titles and meters again
 		}
 
 		public function SetTheme(a_theme:Object):void
@@ -417,19 +426,19 @@ package hud
 		{
 			switch (_tabs.selectedID) {
 				case "navigation":
-					_list.setTitle("Navigation");
+					_list.setTitle(Strings.t("$4Stim_TabNavigation", "Navigation"));
 					_list.setEntries(_navigation, "", a_keepSelection);
 					break;
 				case "utility":
-					_list.setTitle("Utility");
-					_list.setEntries(_utility, "No Utility options installed", a_keepSelection);
+					_list.setTitle(Strings.t("$4Stim_TabUtility", "Utility"));
+					_list.setEntries(_utility, Strings.t("$4Stim_NoUtility", "No Utility options installed"), a_keepSelection);
 					break;
 				case "search":
-					_list.setTitle("Search");
-					_list.setEntries([{ id: "search", label: "Browse all scenes", icon: "", kind: "search" }], "", false);
+					_list.setTitle(Strings.t("$4Stim_TabSearch", "Search"));
+					_list.setEntries([{ id: "search", label: Strings.t("$4Stim_BrowseAllScenes", "Browse all scenes"), icon: "", kind: "search" }], "", false);
 					break;
 				case "align":
-					_list.setTitle("Align");
+					_list.setTitle(Strings.t("$4Stim_TabAlign", "Align"));
 					_list.setEntries(alignEntries(), "", a_keepSelection);
 					break;
 			}
@@ -441,20 +450,20 @@ package hud
 		private function alignEntries():Array
 		{
 			if (_align == null || _align.available !== true) {
-				return [{ id: "align_none", label: "Nothing to align", icon: "", kind: "disabled" }];
+				return [{ id: "align_none", label: Strings.t("$4Stim_NothingToAlign", "Nothing to align"), icon: "", kind: "disabled" }];
 			}
 			var name:String = String(_align.name);
 			var count:int = int(_align.roleCount);
 			return [
 				{ id: "align_actor", label: "< " + name + (count > 1 ? " (" + (int(_align.role) + 1) + "/" + count + ")" : "") + " >", icon: "", kind: "alignActor" },
-				{ id: "align_x", label: "Left / right   " + signed(Number(_align.x), 1), icon: "", kind: "alignValue", field: "x" },
-				{ id: "align_y", label: "Back / forward   " + signed(Number(_align.y), 1), icon: "", kind: "alignValue", field: "y" },
-				{ id: "align_z", label: "Down / up   " + signed(Number(_align.z), 1), icon: "", kind: "alignValue", field: "z" },
-				{ id: "align_rot", label: "Turn   " + signed(Number(_align.rot), 1) + " deg", icon: "", kind: "alignValue", field: "rot" },
-				{ id: "align_scale", label: "Size   " + Number(_align.scale).toFixed(3), icon: "", kind: "alignValue", field: "scale" },
-				{ id: "align_bend", label: "Penis bend   " + signed(Number(_align.bend), 0), icon: "", kind: "alignValue", field: "bend" },
-				{ id: "align_step", label: "Step   < " + Number(_align.step) + " >", icon: "", kind: "alignStep" },
-				{ id: "align_reset", label: "Reset " + name, icon: "", kind: "alignReset" }
+				{ id: "align_x", label: Strings.t("$4Stim_AlignX", "Left / right") + "   " + signed(Number(_align.x), 1), icon: "", kind: "alignValue", field: "x" },
+				{ id: "align_y", label: Strings.t("$4Stim_AlignY", "Back / forward") + "   " + signed(Number(_align.y), 1), icon: "", kind: "alignValue", field: "y" },
+				{ id: "align_z", label: Strings.t("$4Stim_AlignZ", "Down / up") + "   " + signed(Number(_align.z), 1), icon: "", kind: "alignValue", field: "z" },
+				{ id: "align_rot", label: Strings.t("$4Stim_AlignTurn", "Turn") + "   " + signed(Number(_align.rot), 1) + " " + Strings.t("$4Stim_Degrees", "deg"), icon: "", kind: "alignValue", field: "rot" },
+				{ id: "align_scale", label: Strings.t("$4Stim_AlignSize", "Size") + "   " + Number(_align.scale).toFixed(3), icon: "", kind: "alignValue", field: "scale" },
+				{ id: "align_bend", label: Strings.t("$4Stim_AlignBend", "Penis bend") + "   " + signed(Number(_align.bend), 0), icon: "", kind: "alignValue", field: "bend" },
+				{ id: "align_step", label: Strings.t("$4Stim_AlignStep", "Step") + "   < " + Number(_align.step) + " >", icon: "", kind: "alignStep" },
+				{ id: "align_reset", label: Strings.t("$4Stim_AlignReset", "Reset") + " " + name, icon: "", kind: "alignReset" }
 			];
 		}
 

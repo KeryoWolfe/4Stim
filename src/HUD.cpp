@@ -8,6 +8,7 @@
 #include <optional>
 #include <array>
 #include <cmath>
+#include <cctype>
 #include <set>
 
 #include <nlohmann/json.hpp>
@@ -16,6 +17,8 @@
 #include "Undress.h"
 #include "Bridge.h"
 #include "HUD.h"
+#include "Options.h"
+#include "Translations.h"
 #include "SceneRegistry.h"
 
 namespace HUD
@@ -118,6 +121,22 @@ namespace HUD
 		// F4SE's MountImage by the movie) or a .swf; a name without an
 		// extension gets .dds:
 		// "4Stim/positional/standup_f" -> "4Stim/Icons/4Stim/positional/standup_f.dds".
+		// OStim's border color ("rrggbb", "#rrggbb" or "0xrrggbb") as a number;
+		// none for OStim's default white or anything unreadable.
+		std::optional<std::uint32_t> BorderColor(std::string a_text)
+		{
+			if (a_text.starts_with("#")) {
+				a_text.erase(0, 1);
+			} else if (a_text.starts_with("0x") || a_text.starts_with("0X")) {
+				a_text.erase(0, 2);
+			}
+			if (a_text.size() != 6 || !std::ranges::all_of(a_text, [](unsigned char c) { return std::isxdigit(c) != 0; })) {
+				return std::nullopt;
+			}
+			const auto value = static_cast<std::uint32_t>(std::stoul(a_text, nullptr, 16));
+			return value == 0xFFFFFF ? std::nullopt : std::optional<std::uint32_t>(value);
+		}
+
 		std::string IconPath(const std::string& a_icon)
 		{
 			if (a_icon.empty()) {
@@ -283,6 +302,17 @@ namespace HUD
 			const auto scene = FourStim::GetFocusedScene();
 			const auto vm = FourStim::GetVM();
 			if (!scene.Active() || !vm) {
+				return;
+			}
+			// OStim's options files: a page, Back, or an option.
+			if (a_id.starts_with(Options::OPTION_PREFIX)) {
+				Options::Pick(a_id, scene.ActorIDs());
+				RefreshUtility();
+				// Again once the option's script has done its part (Papyrus runs later).
+				std::thread([]() {
+					std::this_thread::sleep_for(std::chrono::milliseconds(400));
+					RefreshUtility();
+				}).detach();
 				return;
 			}
 			// Built in: other furniture (OStim's furniture selection mid-scene).
@@ -572,9 +602,22 @@ namespace HUD
 					return;
 				}
 				SendScreen();
+				SendStrings();
 				SendTheme();
 				SendControlScheme();
 				SendSceneData();
+			}
+
+			// The translations, for the labels the movie writes itself
+			// (optional API: SetStrings).
+			void SendStrings()
+			{
+				GValue table;
+				uiMovie->CreateObject(&table);
+				for (const auto& [key, text] : Translations::Entries()) {
+					table.SetMember(key, GValue(text.c_str()));
+				}
+				InvokeOptional("SetStrings", &table, 1);
 			}
 
 			// The scene's data, sent whenever the focused scene changes (start,
@@ -713,6 +756,14 @@ namespace HUD
 			}
 
 			bool WantsHorizontalRepeat() const { return _horizontalRepeat; }
+
+			// The Utility tab's rows again (HUD::RefreshUtility).
+			void SendUtilityNow()
+			{
+				if (Loaded()) {
+					SendUtility(FourStim::GetFocusedScene());
+				}
+			}
 
 			// Invoke fails when the movie has no such function; that's logged
 			// once per function rather than every frame.
@@ -910,7 +961,10 @@ namespace HUD
 				InvokeRequired("SetSpeed", args, 2);
 			}
 
-			void AddEntry(GValue& a_list, const std::string& a_id, const std::string& a_label, const std::string& a_icon, const char* a_kind)
+			// a_border: OStim's icon border color, "rrggbb" ("" or OStim's
+			// default "ffffff": none drawn, the theme's tile instead).
+			void AddEntry(GValue& a_list, const std::string& a_id, const std::string& a_label, const std::string& a_icon, const char* a_kind,
+				const std::string& a_border = {})
 			{
 				GValue entry;
 				uiMovie->CreateObject(&entry);
@@ -919,6 +973,9 @@ namespace HUD
 				entry.SetMember("icon"sv, GValue(a_icon.c_str()));
 				if (a_kind) {
 					entry.SetMember("kind"sv, GValue(a_kind));
+				}
+				if (const auto border = BorderColor(a_border)) {
+					entry.SetMember("border"sv, GValue(static_cast<double>(*border)));
 				}
 				a_list.PushBack(entry);
 			}
@@ -934,7 +991,7 @@ namespace HUD
 							continue;
 						}
 						const auto icon = IconPath(!nav.icon.empty() ? nav.icon : dest ? dest->icon : std::string{});
-						AddEntry(list, nav.to, FourStim::FormatLabel(nav.label, a_focused), icon, "scene");
+						AddEntry(list, nav.to, FourStim::FormatLabel(nav.label, a_focused), icon, "scene", nav.border);
 					}
 				}
 				if (a_focused.Active()) {
@@ -942,9 +999,9 @@ namespace HUD
 					const auto player = RE::PlayerCharacter::GetSingleton();
 					const auto ids = a_focused.ActorIDs();
 					if (player && std::ranges::find(ids, player->GetFormID()) == ids.end()) {
-						AddEntry(list, std::string(STOP_WATCHING_ID), "Stop watching", "", "end");
+						AddEntry(list, std::string(STOP_WATCHING_ID), TR("$4Stim_StopWatching", "Stop watching"), "", "end");
 					}
-					AddEntry(list, std::string(END_ID), "End scene", "", "end");
+					AddEntry(list, std::string(END_ID), TR("$4Stim_EndScene", "End scene"), "", "end");
 				}
 				InvokeRequired("SetNavigation", &list, 1);
 			}
@@ -960,30 +1017,30 @@ namespace HUD
 				const int  count = static_cast<int>(ids.size());
 				GValue     list;
 				uiMovie->CreateArray(&list);
+				// OStim's options files: in one of their pages, only its rows.
+				const auto optionRows = Options::Rows(ids);
+				if (Options::InPage(ids)) {
+					for (const auto& row : optionRows) {
+						AddEntry(list, row.id, row.label, IconPath(row.icon), nullptr, row.border);
+					}
+					InvokeRequired("SetUtility", &list, 1);
+					return;
+				}
 				// Built in: "Change furniture..." (OStim: the start key during a scene).
 				if (FourStim::UsesFurniture()) {
-					AddEntry(list, std::string(FURNITURE_ID), "Change furniture...", IconPath("4Stim/objects/barstool.swf"), nullptr);
+					AddEntry(list, std::string(FURNITURE_ID), TR("$4Stim_ChangeFurniture", "Change furniture..."), IconPath("4Stim/objects/barstool.swf"), nullptr);
 				}
-				// Built in: "Undress <name>" / "Dress <name>" for each actor.
-				if (Undress::Settings().enabled) {
-					for (const auto id : ids) {
-						const auto actor = RE::TESForm::GetFormByID<RE::Actor>(id);
-						if (!actor) {
-							continue;
-						}
-						const auto  player = RE::PlayerCharacter::GetSingleton();
-						const char* name = actor->GetDisplayFullName();
-						const std::string who = actor == player ? std::string("yourself") : std::string(name && *name ? name : "them");
-						const bool  stripped = Undress::IsStripped(id);
-						AddEntry(list, std::format("{}{:X}", stripped ? DRESS_PREFIX : STRIP_PREFIX, id), (stripped ? "Dress " : "Undress ") + who,
-							IconPath(stripped ? "4Stim/clothes/top.swf" : "4Stim/clothes/bra.swf"), nullptr);
-					}
-				}
+				// Undressing each actor by hand is in the options' actor pages
+				// (Options\4Stim.json); the old entries' ids still work.
 				for (const auto& entry : entries) {
 					if (!entry.actorCounts.empty() && std::ranges::find(entry.actorCounts, count) == entry.actorCounts.end()) {
 						continue;
 					}
 					AddEntry(list, entry.id, FourStim::FormatLabel(entry.label, a_focused), IconPath(entry.icon), nullptr);
+				}
+				// The options files' top pages.
+				for (const auto& row : optionRows) {
+					AddEntry(list, row.id, row.label, IconPath(row.icon), nullptr, row.border);
 				}
 				InvokeRequired("SetUtility", &list, 1);
 			}
@@ -1130,12 +1187,24 @@ namespace HUD
 		}
 	}
 
-	void PlayClimax(float a_strength)
+	void RefreshUtility()
 	{
-		F4SE::GetTaskInterface()->AddTask([a_strength]() {
+		F4SE::GetTaskInterface()->AddTask([]() {
 			if (g_menu && g_menu->Loaded()) {
-				GValue arg(static_cast<double>(a_strength));
-				g_menu->InvokeOptionalPublic("PlayClimax", &arg, 1);
+				g_menu->SendUtilityNow();
+			}
+		});
+	}
+
+	void PlayClimax(float a_strength, float a_size)
+	{
+		F4SE::GetTaskInterface()->AddTask([a_strength, a_size]() {
+			if (g_menu && g_menu->Loaded()) {
+				GValue args[2]{ GValue(static_cast<double>(a_strength)), GValue(static_cast<double>(a_size)) };
+				// A theme's own movie may take only the strength (API version 1).
+				if (!g_menu->InvokeOptionalPublic("PlayClimax", args, 2)) {
+					g_menu->InvokeOptionalPublic("PlayClimax", args, 1);
+				}
 			}
 		});
 	}

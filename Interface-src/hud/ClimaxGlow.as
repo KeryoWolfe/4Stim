@@ -24,26 +24,26 @@ package hud
 			visible = false;
 		}
 
-		public function play(a_strength:Number, a_screen:Object):void
+		public function play(a_strength:Number, a_screen:Object, a_size:Number = 0.07):void
 		{
 			_strength = Math.max(0, Math.min(1, a_strength));
 			if (_strength <= 0) {
 				return;
 			}
-			draw(a_screen);
+			draw(a_screen, Math.max(0.01, Math.min(0.5, isNaN(a_size) ? 0.07 : a_size)));
 			_start = getTimer();
 			alpha = 0;
 			visible = true;
 			addEventListener(Event.ENTER_FRAME, onFrame);
 		}
 
-		private function draw(a_screen:Object):void
+		private function draw(a_screen:Object, a_size:Number):void
 		{
 			var x:Number = a_screen.x1;
 			var y:Number = a_screen.y1;
 			var w:Number = a_screen.x2 - a_screen.x1;
 			var h:Number = a_screen.y2 - a_screen.y1;
-			var band:Number = Math.round(Math.min(w, h) * 0.07);  // how far in from each edge
+			var band:Number = Math.round(Math.min(w, h) * a_size);  // how far in from each edge
 			graphics.clear();
 			// A thin glow along each edge, gone well before the middle.
 			edge(x, y, w, band, Math.PI / 2, false);         // top: fades downward

@@ -106,6 +106,7 @@ namespace Peaks
 			std::size_t                 action = 0;
 			const Actions::ActionSound* sound = nullptr;  // kept alive by the scene's action type
 			std::uint32_t               actor = 0;        // plays on the action actor
+			std::uint32_t               target = 0;       // the action's target (muteWithTarget)
 			// bonedistance (OStim's BoneDistanceSoundPlayer)
 			Bones                       actorBones;
 			Bones                       targetBones;
@@ -148,6 +149,10 @@ namespace Peaks
 
 		void Play(const SoundPlayer& a_player, Sounds::Playing* a_out = nullptr)
 		{
+			// OStim's muteWithActor / muteWithTarget: silent while that actor is muted.
+			if ((a_player.sound->muteWithActor && Sounds::IsMuted(a_player.actor)) || (a_player.sound->muteWithTarget && Sounds::IsMuted(a_player.target))) {
+				return;
+			}
 			auto playing = Sounds::Play(a_player.sound->sound, RE::TESForm::GetFormByID<RE::Actor>(a_player.actor), Sounds::Settings().soundVolume);
 			if (a_out) {
 				*a_out = playing;
@@ -207,6 +212,7 @@ namespace Peaks
 					player.action = i;
 					player.sound = &sound;
 					player.actor = actorID;
+					player.target = targetID;
 					player.delay = sound.delay;
 					if (sound.kind == Actions::ActionSound::Kind::kBoneDistance) {
 						player.actorBones = FindBones(actorID, sound.actorBones);
