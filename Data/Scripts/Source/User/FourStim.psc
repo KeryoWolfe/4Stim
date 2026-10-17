@@ -90,6 +90,37 @@ String[] Function GetEquipObjectTypes() Global Native
 ; the High Heels System's height turned off or back on to match.
 Function HeelsChanged(int aiActorID) Global Native
 
+; ---- Furniture ----
+; Furniture types and scenes on furniture (docs\FURNITURE.md), as OStim's
+; OFurniture and OThread furniture functions.
+
+; akFurniture's furniture type ("bed", "chair"...; "" if none).
+String Function GetFurnitureType(ObjectReference akFurniture) Global Native
+
+; Whether furniture of asSubType takes scenes made for asSuperType (the same
+; type, or a kind of it: a bench is a kind of chair). OStim's IsChildOf.
+bool Function IsFurnitureChildOf(String asSuperType, String asSubType) Global Native
+
+; The furniture akActor's scene is on (None off furniture, or at a wall,
+; which is no object), and its type ("" = none).
+ObjectReference Function GetSceneFurniture(Actor akActor) Global Native
+String Function GetSceneFurnitureType(Actor akActor) Global Native
+
+; Moves akActor's scene onto akFurniture with asSceneID, or ("") a random
+; intro / idle scene that fits there. The old furniture is free again and
+; its clutter put back (SetResetClutter); with the player in it, behind a
+; fade (SetUseFades). FourStim_OnFurnitureChange follows. OStim's
+; OThread.ChangeFurniture.
+Function ChangeFurniture(Actor akActor, ObjectReference akFurniture, String asSceneID = "") Global Native
+
+; Opens the "Change furniture" list for the scene the HUD follows.
+Function OpenFurnitureMenu() Global Native
+
+; Internal: FourStimFurniture.Block blocked aiRefID; FourStimMenu's fade
+; before a furniture change.
+Function NoteFurnitureBlocked(int aiRefID) Global Native
+Function ApplyFurnitureChange() Global Native
+
 ; ---- Excitement ----
 ; Every actor in a scene has an excitement from 0 to 100 that rises with the
 ; scene's actions (their stimulation, docs\ACTIONS.md). At 100 they climax:

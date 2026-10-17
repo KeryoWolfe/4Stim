@@ -1,5 +1,5 @@
 {
-	"_comment": "Furniture types for Fallout 4's own objects, recognized by their model paths. See docs/FURNITURE.md. Spots follow the OStim animations: bed scenes start on the mattress at a long edge facing out; a mattress or sleeping bag on the floor takes the floor scenes (no bed-edge scenes), centered on it and lengthwise; bench scenes on the floor under the seat facing out, table scenes on the floor at a long edge facing the table. Heights and insets are first guesses to tune in game.",
+	"_comment": "Furniture types for Fallout 4's own objects, recognized by their model paths. See docs/FURNITURE.md. Spots follow the OStim animations: bed scenes start on the mattress at a long edge facing out; a mattress or sleeping bag on the floor takes the floor scenes (no bed-edge scenes), centered on it and lengthwise; bench scenes on the floor under the seat facing out, table scenes on the floor at a long edge facing the table; shelf scenes on the floor in front of a shelf with their backs to it; wall scenes at the nearest wall (found by ray casts, not an object) with their backs to it. Heights and insets are first guesses to tune in game.",
 	"types": [
 		{
 			"id": "bed",
@@ -151,6 +151,47 @@
 				"cookstation"
 			],
 			"anchor": "origin"
+		},
+		{
+			"id": "shelf",
+			"name": "Shelf",
+			"priority": 5,
+			"forms": [
+				"STAT",
+				"MSTT",
+				"FURN",
+				"CONT"
+			],
+			"models": [
+				"shelf",
+				"shelves",
+				"bookcase"
+			],
+			"excludeModels": [
+				"shelfitem",
+				"shelfclutter"
+			],
+			"anchor": "edge",
+			"edgeSide": "long",
+			"facing": "out",
+			"edgeInset": -15,
+			"offset": [
+				0,
+				0,
+				0
+			],
+			"onFloor": true
+		},
+		{
+			"id": "wall",
+			"name": "Wall",
+			"anchor": "wall",
+			"wallDistance": 300,
+			"offset": [
+				0,
+				15,
+				0
+			]
 		}
 	]
 }

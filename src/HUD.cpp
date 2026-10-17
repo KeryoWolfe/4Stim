@@ -33,6 +33,7 @@ namespace HUD
 		// Built-in Utility entries: undress / dress one of the scene's actors.
 		constexpr auto STRIP_PREFIX = "__strip:"sv;  // + the actor's form ID in hex
 		constexpr auto DRESS_PREFIX = "__dress:"sv;  // main.cpp handles it in NavigateFocused
+		constexpr auto FURNITURE_ID = "__furniture"sv;  // built in: move the scene onto other furniture
 
 		// The built-in "Color" theme. Every theme is laid over this, so a
 		// theme file only needs the fields it changes. Kept in step with
@@ -282,6 +283,12 @@ namespace HUD
 			const auto scene = FourStim::GetFocusedScene();
 			const auto vm = FourStim::GetVM();
 			if (!scene.Active() || !vm) {
+				return;
+			}
+			// Built in: other furniture (OStim's furniture selection mid-scene).
+			if (a_id == FURNITURE_ID) {
+				REX::INFO("HUD: change furniture");
+				FourStim::OpenFurnitureForFocused();
 				return;
 			}
 			// Built in: undress or dress someone in the scene by hand.
@@ -953,6 +960,10 @@ namespace HUD
 				const int  count = static_cast<int>(ids.size());
 				GValue     list;
 				uiMovie->CreateArray(&list);
+				// Built in: "Change furniture..." (OStim: the start key during a scene).
+				if (FourStim::UsesFurniture()) {
+					AddEntry(list, std::string(FURNITURE_ID), "Change furniture...", IconPath("4Stim/objects/barstool.swf"), nullptr);
+				}
 				// Built in: "Undress <name>" / "Dress <name>" for each actor.
 				if (Undress::Settings().enabled) {
 					for (const auto id : ids) {

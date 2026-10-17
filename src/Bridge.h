@@ -60,6 +60,13 @@ namespace FourStim
 	// actor count; picking one moves the focused scene there.
 	void OpenSearchForFocused();
 
+	// Opens the picker listing the furniture near the focused scene ("None"
+	// first); picking one moves the scene onto it (OStim's changeFurniture).
+	void OpenFurnitureForFocused();
+
+	// SetEnableFurniture.
+	bool UsesFurniture();
+
 	// Fills {n} in a label with the name of the actor in role n and
 	// capitalizes the first letter.
 	std::string FormatLabel(std::string a_label, const FocusedScene& a_scene);

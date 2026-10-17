@@ -111,6 +111,12 @@ namespace SceneEvents
 		Send("FourStim_OnSceneEnd"sv, FourStim::ResolveActors(a_actors), a_sceneID);
 	}
 
+	void FurnitureChanged(const std::vector<std::uint32_t>& a_actors, std::uint32_t a_furniture, const std::string& a_type, const std::string& a_sceneID)
+	{
+		const auto furniture = a_furniture ? RE::TESForm::GetFormByID<RE::TESObjectREFR>(a_furniture) : nullptr;
+		Send("FourStim_OnFurnitureChange"sv, FourStim::ResolveActors(a_actors), furniture, a_type, a_sceneID);
+	}
+
 	void Climaxed(std::uint32_t a_actor, const std::vector<std::uint32_t>& a_actors, const std::string& a_sceneID, int a_times)
 	{
 		const auto who = FourStim::ResolveActors({ a_actor });

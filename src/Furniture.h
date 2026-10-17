@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <optional>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -22,13 +23,25 @@ namespace Furniture
 		float        heading = 0.0F;  // radians, game convention (0 = north)
 	};
 
-	// A piece of furniture found near the player.
+	// A piece of furniture found near the player. A wall (a type anchored
+	// on "wall") is no object: ref is 0 and spot is where it was found, at
+	// the foot of the wall, facing out from it.
 	struct Found
 	{
-		std::string   type;  // furniture type id
-		std::string   name;  // its display name
+		std::string         type;  // furniture type id
+		std::string         name;  // its display name
+		std::uint32_t       ref = 0;
+		float               distance = 0.0F;
+		std::optional<Spot> spot;  // walls
+	};
+
+	// A loose item near a scene (OStim's clutter: misc items, weapons,
+	// books...), where it lay when the scene started.
+	struct ClutterItem
+	{
 		std::uint32_t ref = 0;
-		float         distance = 0.0F;
+		RE::NiPoint3  position;
+		RE::NiPoint3  angle;  // radians
 	};
 
 	// Re-reads the type files (they're small: cheap enough to do whenever
@@ -49,8 +62,24 @@ namespace Furniture
 	// The nearest piece of each type within a_radius of a_center (and within
 	// a_maxHeight up or down), nearest first. Main thread only (walks the
 	// loaded cells). With a_log, every candidate object is written to the
-	// log with its model, for writing type files.
-	std::vector<Found> FindNear(const RE::NiPoint3& a_center, float a_radius, float a_maxHeight, bool a_log);
+	// log with its model, for writing type files. With a_from (who stands
+	// at a_center: its cell is searched by ray casts), also the nearest wall
+	// for types anchored on "wall".
+	std::vector<Found> FindNear(const RE::NiPoint3& a_center, float a_radius, float a_maxHeight, bool a_log, RE::TESObjectREFR* a_from = nullptr);
+
+	// Where a scene goes on a found piece: SpotFor on its object, or for a
+	// wall its spot with the type's offset and rotation. a_near: who the
+	// edge side is chosen for (the player).
+	Spot SpotOf(const Found& a_found, const RE::NiPoint3& a_near, bool a_floorScene = false);
+
+	// Loose items within a_radius of a_center (OStim's SetResetClutter):
+	// where they lie now, to put back the ones a scene knocked about.
+	// Main thread.
+	std::vector<ClutterItem> SnapshotClutter(const RE::NiPoint3& a_center, float a_radius);
+
+	// The items of a_items that moved, back where they were (through
+	// Papyrus: FourStimFurniture.PutBack). Returns how many. Main thread.
+	std::size_t RestoreClutter(const std::vector<ClutterItem>& a_items);
 
 	// Whether a scene with no furniture of its own may play on furniture of
 	// a_type (one whose type chain reaches "none"): its "floorScenes" tag

@@ -12,6 +12,7 @@
 //   Function FourStim_OnSceneChange(Actor[] akActors, String asOldID, String asNewID)
 //   Function FourStim_OnSpeedChange(Actor[] akActors, String asSceneID, int aiLevel, int aiCount)
 //   Function FourStim_OnSceneEnd(Actor[] akActors, String asSceneID)
+//   Function FourStim_OnFurnitureChange(Actor[] akActors, ObjectReference akFurniture, String asType, String asSceneID)
 //   Function FourStim_OnClimax(Actor akActor, Actor[] akActors, String asSceneID, int aiTimes)
 //   Function FourStim_OnEvent(String asEvent, Actor akActor, Actor akTarget, Actor akPerformer, Actor[] akActors, String asSceneID)
 //
@@ -27,6 +28,9 @@ namespace SceneEvents
 	void SceneChanged(const std::vector<std::uint32_t>& a_actors, const std::string& a_oldID, const std::string& a_newID);
 	void SpeedChanged(const std::vector<std::uint32_t>& a_actors, const std::string& a_sceneID, int a_level, int a_count);
 	void SceneEnded(const std::vector<std::uint32_t>& a_actors, const std::string& a_sceneID);
+	// The scene moved to other furniture (OStim's ostim_thread_furniturechanged):
+	// a_furniture 0 (None) for a wall, which is no object; then a_type says.
+	void FurnitureChanged(const std::vector<std::uint32_t>& a_actors, std::uint32_t a_furniture, const std::string& a_type, const std::string& a_sceneID);
 	void Climaxed(std::uint32_t a_actor, const std::vector<std::uint32_t>& a_actors, const std::string& a_sceneID, int a_times);
 	// An event (docs/EVENTS.md) fired; 0 = no one in that part (None).
 	void EventFired(const std::string& a_event, std::uint32_t a_actor, std::uint32_t a_target, std::uint32_t a_performer,

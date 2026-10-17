@@ -42,6 +42,10 @@ Times given with OStim's names are in milliseconds, as in OStim. `SetFurnitureSe
 | `futaUseMaleRole` / `Excitement` / `Climax` | 1 / 0 / 1 | | Women with a penis take men's roles, the male excitement rate, a man's climax |
 | `unequipStrapOnIfNotNeeded` | 0 | | Strap-ons come off in any role that doesn't need one |
 | `SetFurnitureSearchDistance` | 15 (1600 units) | `fFurnitureRadius` (units) | How far to look for furniture |
+| `SetEnableFurniture` | 1 | | Use furniture at all (0: scenes start right here) |
+| `SetSelectFurniture` | 1 | | Ask where (the picker's "Where?" step); 0: the nearest furniture any scene fits, else right here |
+| `SetResetClutter` | 1 | | Put back loose items a furniture scene knocked about, when it leaves the furniture (OStim's is switched off in its code; 4Stim's works, FURNITURE.md) |
+| `SetResetClutterRadius` | 5 (500 units) | | How far around, in steps of 100 units |
 | `SetsexExcitementMult` / `SetFemaleSexExcitementMult` | 1 / 1 | `fMaleExcitementMult` / `fFemaleExcitementMult` | Excitement multipliers |
 | `excitementDecayRate` | 0.5 | `fExcitementDecayRate` | Excitement lost per second above the ceiling |
 | `excitementDecayGracePeriod` | 5000 ms | `fExcitementDecayGrace` (s) | Wait before it falls |
@@ -88,4 +92,4 @@ These have no OStim counterpart, and keep their names: `bResumeScenes` (0, as OS
 
 ## Not in yet
 
-OStim settings that come with features 4Stim doesn't have yet: clutter reset (`SetResetClutter`), the custom time scale (`SetCustomTimescale`), dialogue, strap-ons and other equip objects, and the rest of OStim's MCM. They'll take OStim's names when they come.
+OStim settings that come with features 4Stim doesn't have yet: the custom time scale (`SetCustomTimescale`), dialogue, and the rest of OStim's MCM (choosing equip objects per actor, `SetBedRealignment` / `bedOffset` for double beds). They'll take OStim's names when they come.

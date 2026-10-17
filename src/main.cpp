@@ -148,6 +148,14 @@ namespace
 		float         furnitureRadius = 1600.0F; // how far from the player to look for furniture (OStim's SetFurnitureSearchDistance 15)
 		float         furnitureHeight = 100.0F;  // and how far up or down
 		bool          logFurniture = false;      // log every candidate object when looking
+		// OStim's furniture settings: use furniture at all (SetEnableFurniture),
+		// ask where (SetSelectFurniture; off: the nearest piece, as OStim),
+		// and put back the clutter a furniture scene knocked about
+		// (SetResetClutter, within SetResetClutterRadius x 100 units).
+		bool          useFurniture = true;
+		bool          selectFurniture = true;
+		bool          resetClutter = true;
+		float         resetClutterRadius = 500.0F;
 		std::uint32_t npcSceneKey = 0;           // opens the picker for an NPC-only scene, even in a scene (0 = Shift + the hotkey)
 		bool          resumeScenes = false;      // scenes running in a save start again when it's loaded (OStim ends them)
 	};
@@ -408,6 +416,14 @@ namespace
 					g_settings.furnitureHeight = std::stof(value);
 				} else if (key == "blogfurniture") {
 					g_settings.logFurniture = std::stoi(value) != 0;
+				} else if (key == "setenablefurniture") {
+					g_settings.useFurniture = std::stoi(value) != 0;
+				} else if (key == "setselectfurniture") {
+					g_settings.selectFurniture = std::stoi(value) != 0;
+				} else if (key == "setresetclutter") {
+					g_settings.resetClutter = std::stoi(value) != 0;
+				} else if (key == "setresetclutterradius") {
+					g_settings.resetClutterRadius = std::stof(value) * 100.0F;  // OStim's steps of 100 units
 				} else if (key == "bmatchsex") {
 					g_settings.matchSex = std::stoi(value) != 0;
 				} else if (key == "playeralwaysdomstraight") {
@@ -598,7 +614,9 @@ namespace
 			g_settings.playerAlwaysDomStraight, g_settings.playerAlwaysSubStraight, g_settings.playerAlwaysDomGay, g_settings.playerAlwaysSubGay,
 			g_settings.playerSelectRoleStraight, g_settings.playerSelectRoleGay, g_settings.playerSelectRoleThreesome, SceneRegistry::Rules().unrestricted,
 			fu.futaUseMaleRole, fu.futaUseMaleExcitement, fu.futaUseMaleClimax, EquipObjects::Settings().unequipStrapOnIfNotNeeded);
-		REX::INFO("Settings: furniture within {} (height {}), log {}", g_settings.furnitureRadius, g_settings.furnitureHeight, g_settings.logFurniture ? "on" : "off");
+		REX::INFO("Settings: furniture {} within {} (height {}), {}, clutter reset {} ({}), log {}", g_settings.useFurniture ? "on" : "off",
+			g_settings.furnitureRadius, g_settings.furnitureHeight, g_settings.selectFurniture ? "asked" : "the nearest", g_settings.resetClutter ? "on" : "off",
+			g_settings.resetClutterRadius, g_settings.logFurniture ? "on" : "off");
 		const auto& ex = Excitement::Settings();
 		REX::INFO("Settings: excitement {}, x{} male / x{} female, decay {}/s after {}s, climax scenes {}, end on climax: player {} male {} female {} all {} NPC scenes {} (after {}s)",
 			ex.enabled ? "on" : "off", ex.maleMult, ex.femaleMult, ex.decayRate, ex.decayGrace, ex.climaxScenes,
@@ -743,6 +761,70 @@ namespace
 		return nullptr;
 	}
 
+	// Scenes a running scene's actors (in their roles) can move to on
+	// furniture of type a_furniture ("" = off furniture).
+	std::vector<std::shared_ptr<const SceneRegistry::Scene>> ScenesForRunning(const std::vector<std::uint32_t>& a_ids, const std::string& a_furniture)
+	{
+		std::vector<std::shared_ptr<const SceneRegistry::Scene>> out;
+		for (const auto& summary : SceneRegistry::List(a_ids.size(), SexFilter(a_ids, true))) {
+			const auto scene = SceneRegistry::Find(summary.id);
+			if (scene && SceneFitsFurniture(*scene, a_furniture)) {
+				out.push_back(scene);
+			}
+		}
+		return out;
+	}
+
+	// The scene a scene starts with on a_here ("" = off furniture), as
+	// OStim's thread starters and changeFurniture pick it: a random one of
+	// a_scenes (no transitions, nothing marked noRandomSelection), tagged
+	// "intro" (SetUseIntroScenes) or else "idle" when a_tagged; off furniture
+	// with someone standing, on a bed with no one standing. Departure from
+	// OStim, which gives up when nothing qualifies: 4Stim falls back step by
+	// step (intro -> idle -> any scene, then without the standing rule),
+	// since most converted packs have no intro scenes yet. a_why: which step.
+	std::shared_ptr<const SceneRegistry::Scene> PickStartScene(std::vector<std::shared_ptr<const SceneRegistry::Scene>> a_scenes, const std::string& a_here,
+		bool a_tagged, std::string& a_why)
+	{
+		std::erase_if(a_scenes, [](const auto& a_scene) { return a_scene->IsTransition() || a_scene->noRandomSelection; });
+		const bool onBed = !a_here.empty() && Furniture::IsA(a_here, "bed");
+		auto standingRule = [&](const SceneRegistry::Scene& a_scene) {
+			const bool standing = std::ranges::any_of(a_scene.actors, [](const SceneRegistry::SceneActor& a) { return a.HasTag("standing"); });
+			return a_here.empty() ? standing : onBed ? !standing : true;
+		};
+		auto tagged = [](const SceneRegistry::Scene& a_scene, const std::string& a_tag) {
+			return std::ranges::any_of(a_scene.tags, [&](const std::string& t) { return _stricmp(t.c_str(), a_tag.c_str()) == 0; });
+		};
+		std::vector<std::string> tags;
+		if (a_tagged) {
+			if (g_settings.useIntroScenes) {
+				tags.emplace_back("intro");
+			}
+			tags.emplace_back("idle");
+		}
+		tags.emplace_back("");  // any scene
+		std::vector<std::shared_ptr<const SceneRegistry::Scene>> pool;
+		for (const bool rule : { true, false }) {
+			for (const auto& tag : tags) {
+				pool.clear();
+				std::ranges::copy_if(a_scenes, std::back_inserter(pool), [&](const auto& a_scene) {
+					return (tag.empty() || tagged(*a_scene, tag)) && (!rule || standingRule(*a_scene));
+				});
+				if (!pool.empty()) {
+					a_why = std::format("{}{}: {} {} scene(s)", tag.empty() ? std::string("any") : tag, rule ? "" : ", without the standing rule", pool.size(),
+						a_here.empty() ? "floor" : a_here);
+					static std::mt19937 rng{ std::random_device{}() };
+					return pool[std::uniform_int_distribution<std::size_t>(0, pool.size() - 1)(rng)];
+				}
+			}
+		}
+		return nullptr;
+	}
+
+	// Furniture near a_center (FindNear, walls by ray casts from a_from's
+	// cell), less what running scenes are on.
+	std::vector<Furniture::Found> FurnitureNear(const RE::NiPoint3& a_center, RE::TESObjectREFR* a_from);
+
 	// The furniture the next scene started for these actors goes on (set
 	// when the picker starts a furniture scene).
 	struct PendingFurniture
@@ -752,7 +834,77 @@ namespace
 		std::vector<std::uint32_t> actors;  // sorted
 		std::array<float, 4>       offset{};  // the scene's own offset from the spot
 		bool                       floorScene = false;  // the starting scene has no furniture of its own
+		std::optional<Furniture::Spot> fixedSpot;  // a wall: no object, where it was found
 	};
+
+	// The clutter around furniture a scene is about to go on, noted before
+	// its actors are moved there (SetResetClutter); the scene takes it when
+	// it starts.
+	struct PendingClutter
+	{
+		std::vector<std::uint32_t>          actors;  // sorted
+		std::vector<Furniture::ClutterItem> items;
+		bool                                fromSave = false;  // noted before the save: not noted again
+	};
+	std::mutex                    g_pendingClutterLock;
+	std::optional<PendingClutter> g_pendingClutter;
+
+	// Furniture whose activation 4Stim blocked (FourStimFurniture.Block, which
+	// leaves furniture blocked by someone else alone): only these are
+	// unblocked again.
+	std::mutex                        g_blockedFurnitureLock;
+	std::unordered_set<std::uint32_t> g_blockedFurniture;
+
+	// OStim's disableUse: no one else can use the furniture a scene is on.
+	void BlockFurniture(std::uint32_t a_ref)
+	{
+		if (!a_ref || !g_vm) {
+			return;
+		}
+		RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
+		g_vm->DispatchStaticCall("FourStimFurniture"sv, "Block"sv, callback, static_cast<std::int32_t>(a_ref));
+	}
+
+	// OStim's enableUse, for furniture 4Stim blocked.
+	void UnblockFurniture(std::uint32_t a_ref)
+	{
+		{
+			std::scoped_lock lock(g_blockedFurnitureLock);
+			if (!a_ref || g_blockedFurniture.erase(a_ref) == 0) {
+				return;
+			}
+		}
+		if (g_vm) {
+			REX::INFO("Furniture: {:08X} free to use again", a_ref);
+			RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
+			g_vm->DispatchStaticCall("FourStimFurniture"sv, "Unblock"sv, callback, static_cast<std::int32_t>(a_ref));
+		}
+	}
+
+	bool FurnitureBlocked(std::uint32_t a_ref)
+	{
+		std::scoped_lock lock(g_blockedFurnitureLock);
+		return a_ref && g_blockedFurniture.contains(a_ref);
+	}
+
+	// Notes the clutter around a_spot for the scene a_actors are about to
+	// start (main thread, before they're moved there).
+	void NoteClutterFor(std::vector<std::uint32_t> a_actors, const RE::NiPoint3& a_spot)
+	{
+		if (!g_settings.resetClutter) {
+			return;
+		}
+		std::ranges::sort(a_actors);
+		{
+			std::scoped_lock lock(g_pendingClutterLock);
+			if (g_pendingClutter && g_pendingClutter->fromSave && g_pendingClutter->actors == a_actors) {
+				return;  // a scene from a save: its clutter was noted before the save
+			}
+		}
+		auto items = Furniture::SnapshotClutter(a_spot, g_settings.resetClutterRadius);
+		std::scoped_lock lock(g_pendingClutterLock);
+		g_pendingClutter = PendingClutter{ std::move(a_actors), std::move(items), false };
+	}
 
 	// Edge furniture (beds): the spot for scenes made for it and the spot
 	// for floor scenes played on it (see Furniture::SpotFor), worked out
@@ -795,14 +947,15 @@ namespace
 		if (!pending) {
 			return false;
 		}
-		const auto ref = RE::TESForm::GetFormByID<RE::TESObjectREFR>(pending->ref);
-		if (!ref) {
+		const auto ref = pending->ref ? RE::TESForm::GetFormByID<RE::TESObjectREFR>(pending->ref) : nullptr;
+		if (!ref && !pending->fixedSpot) {
 			REX::WARN("Furniture: {:08X} is gone, the scene is played where the actors are", pending->ref);
 			return false;
 		}
 		const auto player = RE::PlayerCharacter::GetSingleton();
-		const auto near = player ? player->GetPosition() : ref->GetPosition();
-		auto       spot = Furniture::SpotFor(ref, pending->type, near, pending->floorScene);
+		const auto near = player ? player->GetPosition() : ref ? ref->GetPosition() : pending->fixedSpot->position;
+		const Furniture::Found piece{ pending->type, {}, pending->ref, 0.0F, pending->fixedSpot };
+		auto       spot = Furniture::SpotOf(piece, near, pending->floorScene);
 		if (const auto& o = pending->offset; o[0] != 0.0F || o[1] != 0.0F || o[2] != 0.0F || o[3] != 0.0F) {
 			// In the spot's frame: x to its right, y forward.
 			const float c = std::cos(spot.heading), s = std::sin(spot.heading);
@@ -815,12 +968,14 @@ namespace
 		// On a bed, the scene can later move between bed scenes and floor
 		// scenes: keep both spots.
 		g_furnitureSpots.reset();
-		if (Furniture::IsEdgeAnchored(pending->type)) {
+		if (ref && Furniture::IsEdgeAnchored(pending->type)) {
 			const auto other = Furniture::SpotFor(ref, pending->type, near, !pending->floorScene);
 			auto       sorted = ids;
 			std::ranges::sort(sorted);
 			g_furnitureSpots = FurnitureSpots{ sorted, pending->floorScene ? other : spot, pending->floorScene ? spot : other };
 		}
+		// The clutter there, before anyone is moved onto it (tasks run in order).
+		F4SE::GetTaskInterface()->AddTask([ids, at = spot.position]() { NoteClutterFor(ids, at); });
 		for (const auto actor : a_actors) {
 			PlaceActorAt(actor, spot);
 		}
@@ -852,9 +1007,14 @@ namespace
 		// transition ends, instead of its destination.
 		std::string queuedScene;
 
-		// The furniture it's played on (0 / "" = none).
-		std::uint32_t furnitureRef = 0;
-		std::string   furnitureType;
+		// The furniture it's played on (0 / "" = none); for a wall, no object
+		// but the spot where it was found.
+		std::uint32_t                  furnitureRef = 0;
+		std::string                    furnitureType;
+		std::optional<Furniture::Spot> furnitureFixedSpot;
+		// Loose items around the furniture when the scene went on it, put back
+		// when it leaves (SetResetClutter).
+		std::vector<Furniture::ClutterItem> clutter;
 
 		// Game time left before it ends after a climax (< 0 = not ending).
 		float endIn = -1.0F;
@@ -963,6 +1123,33 @@ namespace
 	void WatchAnimEvents(const std::vector<std::uint32_t>& a_actors, const std::string& a_sceneID);
 	bool PlayOnActiveScene(ActiveScene& a_active, const std::string& a_sceneID, int a_speed);
 
+	// A scene leaves its furniture (it ends, or moves to other furniture):
+	// the furniture free to use again and, with SetResetClutter, the loose
+	// items around it back where they lay (as OStim's changeFurniture and
+	// thread end). Main thread.
+	void FreeFurniture(ActiveScene& a_scene)
+	{
+		UnblockFurniture(a_scene.furnitureRef);
+		if (!a_scene.clutter.empty()) {
+			if (g_settings.resetClutter) {
+				Furniture::RestoreClutter(a_scene.clutter);
+			}
+			a_scene.clutter.clear();
+		}
+	}
+
+	std::vector<Furniture::Found> FurnitureNear(const RE::NiPoint3& a_center, RE::TESObjectREFR* a_from)
+	{
+		auto found = Furniture::FindNear(a_center, g_settings.furnitureRadius, g_settings.furnitureHeight, g_settings.logFurniture, a_from);
+		std::erase_if(found, [](const Furniture::Found& f) {
+			return f.ref && std::ranges::any_of(g_activeScenes, [&](const ActiveScene& a_scene) { return a_scene.furnitureRef == f.ref; });
+		});
+		for (const auto& f : found) {
+			REX::INFO("Furniture: nearest {}: {:08X}, {:.0f} away", f.type, f.ref, f.distance);
+		}
+		return found;
+	}
+
 	ActiveScene* FindActiveScene(std::uint32_t a_actorID)
 	{
 		const auto it = std::ranges::find_if(g_activeScenes, [&](const ActiveScene& a_scene) {
@@ -973,7 +1160,13 @@ namespace
 
 	void TrackSceneStart(std::vector<std::uint32_t> a_actors, const std::string& a_sceneID)
 	{
-		// An actor can only be in one scene: a new scene replaces an old one.
+		// An actor can only be in one scene: a new scene replaces an old one
+		// (which leaves its furniture first).
+		for (auto& old : g_activeScenes) {
+			if (std::ranges::any_of(old.actors, [&](std::uint32_t id) { return std::ranges::find(a_actors, id) != a_actors.end(); })) {
+				FreeFurniture(old);
+			}
+		}
 		std::erase_if(g_activeScenes, [&](const ActiveScene& a_scene) {
 			const bool replaced = std::ranges::any_of(a_scene.actors, [&](std::uint32_t id) { return std::ranges::find(a_actors, id) != a_actors.end(); });
 			if (replaced) {
@@ -998,6 +1191,17 @@ namespace
 		if (const auto furniture = PendingFurnitureFor(a_actors, true)) {
 			scene.furnitureRef = furniture->ref;
 			scene.furnitureType = furniture->type;
+			scene.furnitureFixedSpot = furniture->fixedSpot;
+			{
+				auto sorted = a_actors;
+				std::ranges::sort(sorted);
+				std::scoped_lock lock(g_pendingClutterLock);
+				if (g_pendingClutter && g_pendingClutter->actors == sorted) {
+					scene.clutter = std::move(g_pendingClutter->items);
+				}
+				g_pendingClutter.reset();
+			}
+			BlockFurniture(furniture->ref);
 			auto sorted = a_actors;
 			std::ranges::sort(sorted);
 			if (g_furnitureSpots && g_furnitureSpots->actors == sorted) {
@@ -1114,8 +1318,9 @@ namespace
 		if (it == g_activeScenes.end()) {
 			return;
 		}
-		const auto ended = std::move(*it);
+		auto ended = std::move(*it);
 		g_activeScenes.erase(it);
+		FreeFurniture(ended);
 		UnlockActors(ended.actors);
 		MoveApart(ended);
 		RestoreScales(ended);
@@ -1861,6 +2066,154 @@ namespace
 					CallActorMethod(actor, "ObjectReference"sv, "SetScale"sv, a_active.baseScale[role]);
 				}
 			}
+		}
+	}
+
+	void RecenterFreeCamera();
+
+	// ---- Changing furniture mid-scene (OStim's changeFurniture) ----
+	// The scene leaves its furniture (free again, clutter put back) and goes
+	// on a_piece with a_sceneID, or a random intro / idle scene that fits
+	// there (OStim's: on a bed one with no one standing). Main thread.
+	bool MoveSceneToFurniture(ActiveScene& a_active, const Furniture::Found& a_piece, const std::string& a_sceneID)
+	{
+		if (a_piece.ref && a_piece.ref == a_active.furnitureRef) {
+			return false;  // as OStim: already on it
+		}
+		const auto ref = a_piece.ref ? RE::TESForm::GetFormByID<RE::TESObjectREFR>(a_piece.ref) : nullptr;
+		if (!ref && !a_piece.spot) {
+			REX::WARN("Furniture change: {:08X} is gone", a_piece.ref);
+			return false;
+		}
+		std::shared_ptr<const SceneRegistry::Scene> scene;
+		std::string                                 why = "asked for";
+		if (!a_sceneID.empty()) {
+			scene = SceneRegistry::Find(a_sceneID);
+			if (scene && (scene->actors.size() != a_active.actors.size() || !SexesFit(*scene, a_active.actors) || !SceneFitsFurniture(*scene, a_piece.type))) {
+				REX::WARN("Furniture change: \"{}\" doesn't fit these actors on {}, picking one", a_sceneID, a_piece.type);
+				scene.reset();
+			}
+		}
+		if (!scene) {
+			scene = PickStartScene(ScenesForRunning(a_active.actors, a_piece.type), a_piece.type, true, why);
+		}
+		if (!scene) {
+			REX::WARN("Furniture change: no scene fits these {} actor(s) on {}", a_active.actors.size(), a_piece.type);
+			Notify("No scene fits them there");
+			return false;
+		}
+		REX::INFO("Furniture change: \"{}\" from {} ({:08X}) to {} ({:08X}) with \"{}\" ({})", a_active.sceneID,
+			a_active.furnitureType.empty() ? std::string("the floor") : a_active.furnitureType, a_active.furnitureRef, a_piece.type, a_piece.ref, scene->id, why);
+		FreeFurniture(a_active);
+
+		// The new spot, as for a scene started there (PlaceOnPendingFurniture).
+		const auto  player = RE::PlayerCharacter::GetSingleton();
+		const auto  near = player ? player->GetPosition() : a_active.center;
+		const bool  floorScene = scene->furniture.empty();
+		auto        spot = Furniture::SpotOf(a_piece, near, floorScene);
+		const auto& o = scene->furnitureOffset;
+		{
+			const float c = std::cos(spot.heading), s = std::sin(spot.heading);
+			spot.position.x += o[0] * c + o[1] * s;
+			spot.position.y += -o[0] * s + o[1] * c;
+			spot.position.z += o[2];
+			spot.heading += o[3] * PI_F / 180.0F;
+		}
+		a_active.furnitureSpots.reset();
+		if (ref && Furniture::IsEdgeAnchored(a_piece.type)) {
+			const auto other = Furniture::SpotFor(ref, a_piece.type, near, !floorScene);
+			auto       sorted = a_active.actors;
+			std::ranges::sort(sorted);
+			a_active.furnitureSpots = FurnitureSpots{ sorted, floorScene ? other : spot, floorScene ? spot : other };
+		}
+		if (g_settings.resetClutter) {
+			a_active.clutter = Furniture::SnapshotClutter(spot.position, g_settings.resetClutterRadius);  // before anyone is moved there
+		}
+		a_active.furnitureRef = a_piece.ref;
+		a_active.furnitureType = a_piece.type;
+		a_active.furnitureFixedSpot = a_piece.spot;
+		a_active.center = spot.position;
+		a_active.heading = spot.heading;
+		BlockFurniture(a_piece.ref);
+
+		auto focused = GetPlayerScene();
+		if (focused.Active() && focused.role0 == a_active.actors.front()) {
+			focused.furniture = a_piece.type;
+			SetPlayerScene(focused);
+		}
+		// A sequence or a picked transition destination doesn't carry over.
+		if (a_active.sequence) {
+			REX::INFO("Sequence \"{}\": stopped, the scene changed furniture", a_active.sequence->id);
+			a_active.sequence.reset();
+		}
+		a_active.queuedScene.clear();
+		PlayOnActiveScene(a_active, scene->id, 0);
+		// Everyone over there now (the scene lock follows; without it, they stay).
+		for (std::size_t role = 0; role < a_active.actors.size(); ++role) {
+			if (const auto actor = RE::TESForm::GetFormByID<RE::Actor>(a_active.actors[role])) {
+				const auto at = SpotOf(a_active, role);
+				actor->SetPosition(at.position, true);
+				FaceHeading(actor, at.heading);
+			}
+		}
+		LockScene(a_active);
+		// As OStim (endSceneMode / startSceneMode): the free camera starts
+		// again where the player now is.
+		if (std::ranges::any_of(a_active.actors, [](std::uint32_t id) { return IsPlayer(RE::TESForm::GetFormByID<RE::Actor>(id)); })) {
+			RecenterFreeCamera();
+		}
+		ArmAutoplay(a_active);
+		if (a_active.autoMode.on) {
+			a_active.autoMode.cooldown = std::max(a_active.autoMode.cooldown, g_autoConfig.sceneMin);
+		}
+		SceneEvents::FurnitureChanged(a_active.actors, a_piece.ref, a_piece.type, a_active.sceneID);
+		return true;
+	}
+
+	// A furniture change asked for (the HUD, the picker, Papyrus): done on
+	// the main thread, behind a fade for a scene with the player
+	// (SetUseFades, as OStim's changeFurniture).
+	struct FurnitureChange
+	{
+		std::uint32_t    role0 = 0;  // the scene's
+		Furniture::Found piece;
+		std::string      sceneID;
+	};
+	std::mutex                     g_furnitureChangeLock;
+	std::optional<FurnitureChange> g_furnitureChange;
+
+	void ApplyFurnitureChange()
+	{
+		std::optional<FurnitureChange> change;
+		{
+			std::scoped_lock lock(g_furnitureChangeLock);
+			change = std::exchange(g_furnitureChange, std::nullopt);
+		}
+		if (!change) {
+			return;
+		}
+		if (const auto active = FindActiveScene(change->role0)) {
+			MoveSceneToFurniture(*active, change->piece, change->sceneID);
+		}
+	}
+
+	// Main thread.
+	void RequestFurnitureChange(std::uint32_t a_role0, Furniture::Found a_piece, std::string a_sceneID)
+	{
+		const auto active = FindActiveScene(a_role0);
+		if (!active) {
+			return;
+		}
+		const bool withPlayer = std::ranges::any_of(active->actors, [](std::uint32_t id) { return IsPlayer(RE::TESForm::GetFormByID<RE::Actor>(id)); });
+		{
+			std::scoped_lock lock(g_furnitureChangeLock);
+			g_furnitureChange = FurnitureChange{ active->actors.front(), std::move(a_piece), std::move(a_sceneID) };
+		}
+		if (withPlayer && g_settings.useFades && g_vm) {
+			RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
+			g_vm->DispatchStaticCall("FourStimMenu"sv, "ChangeFurnitureFaded"sv, callback);  // FadeToBlack, ApplyFurnitureChange, FadeFromBlack
+		} else {
+			ApplyFurnitureChange();
 		}
 	}
 
@@ -3460,6 +3813,77 @@ namespace
 		return a_actor ? ActorProperties::Type(a_actor) : std::string{};
 	}
 
+	// ---- Furniture (OStim's OFurniture and OThread furniture functions) ----
+
+	// FourStimFurniture.Block blocked it (it wasn't already): 4Stim unblocks it.
+	void NoteFurnitureBlocked(std::monostate, std::int32_t a_refID)
+	{
+		std::scoped_lock lock(g_blockedFurnitureLock);
+		g_blockedFurniture.insert(static_cast<std::uint32_t>(a_refID));
+	}
+
+	// After the fade (FourStimMenu.ChangeFurnitureFaded).
+	void ApplyFurnitureChangeNative(std::monostate)
+	{
+		F4SE::GetTaskInterface()->AddTask([]() { ApplyFurnitureChange(); });
+	}
+
+	// OStim's OThread.ChangeFurniture: a_actor's scene onto a_furniture, with
+	// a_sceneID or ("") a random intro / idle scene that fits there.
+	void ChangeFurnitureNative(std::monostate, RE::Actor* a_actor, RE::TESObjectREFR* a_furniture, std::string a_sceneID)
+	{
+		if (!a_actor || !a_furniture) {
+			return;
+		}
+		const auto actorID = a_actor->GetFormID();
+		const auto refID = a_furniture->GetFormID();
+		F4SE::GetTaskInterface()->AddTask([actorID, refID, sceneID = std::move(a_sceneID)]() {
+			const auto ref = RE::TESForm::GetFormByID<RE::TESObjectREFR>(refID);
+			const auto type = ref ? Furniture::Classify(ref) : std::string{};
+			if (type.empty()) {
+				REX::WARN("ChangeFurniture: {:08X} isn't furniture of any type", refID);
+				return;
+			}
+			RequestFurnitureChange(actorID, Furniture::Found{ type, Furniture::Name(type), refID, 0.0F, std::nullopt }, sceneID);
+		});
+	}
+
+	// The "Change furniture" list for the focused scene (the HUD's Utility
+	// entry does the same).
+	void OpenFurnitureMenu(std::monostate)
+	{
+		FourStim::OpenFurnitureForFocused();
+	}
+
+	// OStim's OFurniture.GetFurnitureType ("" = none).
+	std::string GetFurnitureType(std::monostate, RE::TESObjectREFR* a_furniture)
+	{
+		return a_furniture ? Furniture::Classify(a_furniture) : std::string{};
+	}
+
+	// OStim's OFurniture.IsChildOf: furniture of a_subType takes scenes for a_superType.
+	bool IsFurnitureChildOf(std::monostate, std::string a_superType, std::string a_subType)
+	{
+		return !a_superType.empty() && !a_subType.empty() && Furniture::IsA(a_subType, a_superType);
+	}
+
+	// OStim's OThread.GetFurniture: the furniture a_actor's scene is on (None
+	// off furniture, or at a wall, which is no object).
+	RE::TESObjectREFR* GetSceneFurniture(std::monostate, RE::Actor* a_actor)
+	{
+		// Read from a Papyrus thread, as IsInScene.
+		const auto active = a_actor ? FindActiveScene(a_actor->GetFormID()) : nullptr;
+		const auto ref = active ? active->furnitureRef : 0;
+		return ref ? RE::TESForm::GetFormByID<RE::TESObjectREFR>(ref) : nullptr;
+	}
+
+	// The type of the furniture a_actor's scene is on ("" = none).
+	std::string GetSceneFurnitureType(std::monostate, RE::Actor* a_actor)
+	{
+		const auto active = a_actor ? FindActiveScene(a_actor->GetFormID()) : nullptr;
+		return active ? active->furnitureType : std::string{};
+	}
+
 	bool RegisterForSceneEvents(std::monostate, RE::TESForm* a_receiver)
 	{
 		return SceneEvents::Register(a_receiver);
@@ -3925,6 +4349,18 @@ namespace
 		}
 	}
 
+	// The scene moved (a furniture change): out of the free camera and back
+	// in, so it starts at the player again. Main thread.
+	void RecenterFreeCamera()
+	{
+		const auto camera = RE::PlayerCamera::GetSingleton();
+		if (!camera || !g_sceneCameraActive || !camera->QCameraEquals(RE::CameraState::kFree)) {
+			return;
+		}
+		camera->ToggleFreeCameraMode(false);
+		F4SE::GetTaskInterface()->AddTask([]() { EnterFreeCamera(0); });
+	}
+
 	// ---- Speed and navigation (the player's current scene) ----
 	// Both replay idles on the actors already in place: same spot, same
 	// collision setup, both roles started on the same frame. Navigation keeps
@@ -4070,6 +4506,7 @@ namespace
 
 	constexpr auto PICKER_MENU = "FourStimPickerMenu";
 	constexpr auto END_SCENE_ID = "__end__";
+	constexpr auto CHANGE_FURNITURE_ID = "__furniture__";
 	constexpr auto STOP_WATCHING_ID = "__stopwatching__";
 
 	// ---- Concurrent scenes: watching one ----
@@ -4136,9 +4573,16 @@ namespace
 	{
 		kStart,     // start a new scene: who, where, then an idle (see StartStep)
 		kNavigate,  // the focused scene's navigation links, plus "End scene" (used when the HUD isn't available)
-		kSearch     // every scene with the focused scene's actor count; picking one moves the scene there
+		kSearch,    // every scene with the focused scene's actor count; picking one moves the scene there
+		kFurniture  // furniture near the focused scene; picking one moves the scene onto it (OStim's changeFurniture)
 	};
 	std::atomic<PickerMode>    g_pickerMode = PickerMode::kStart;
+
+	// kFurniture: the focused scene's role 0 and the furniture near it that
+	// any scene fits its actors on (found when the list opened).
+	std::mutex                    g_changeFurnitureLock;
+	std::uint32_t                 g_changeFurnitureScene = 0;
+	std::vector<Furniture::Found> g_changeFurniture;
 
 	// ---- Starting a scene: who, where, then an idle (like OStim) ----
 	// kStart walks through steps in the same picker list: the actors (the
@@ -4492,7 +4936,7 @@ namespace
 			case 1:
 				if (a_params.argCount > 0 && a_params.args[0].IsString()) {
 					const std::string id = a_params.args[0].GetString();
-					if (!HandleStartPick(id)) {
+					if (!HandleFurniturePick(id) && !HandleStartPick(id)) {
 						StartPicked(id);
 					}
 				}
@@ -4524,6 +4968,10 @@ namespace
 			const auto mode = g_pickerMode.load();
 			if (mode == PickerMode::kNavigate) {
 				SendNavigation();
+				return;
+			}
+			if (mode == PickerMode::kFurniture) {
+				SendFurnitureChoices();
 				return;
 			}
 			if (mode == PickerMode::kStart && g_startStep != StartStep::kBrowse) {
@@ -4765,6 +5213,9 @@ namespace
 					g_leadActor = 0;
 				}
 				g_startStep = PlayerChoosesRole(CastIDs()) ? StartStep::kRole : StartStep::kPlace;
+				if (g_startStep == StartStep::kPlace && SkipPlaceStep()) {
+					return true;
+				}
 			} else if (a_id.starts_with("@lead:")) {
 				{
 					std::scoped_lock lock(g_castLock);
@@ -4772,6 +5223,9 @@ namespace
 				}
 				REX::INFO("Picker: {} leads", a_id.substr(6));
 				g_startStep = StartStep::kPlace;
+				if (SkipPlaceStep()) {
+					return true;
+				}
 			} else if (a_id.starts_with("@role:")) {
 				{
 					std::scoped_lock lock(g_castLock);
@@ -4779,6 +5233,9 @@ namespace
 				}
 				REX::INFO("Picker: the player takes {}", a_id == "@role:any" ? std::string("any role") : "role " + a_id.substr(6));
 				g_startStep = StartStep::kPlace;
+				if (SkipPlaceStep()) {
+					return true;
+				}
 			} else if (a_id == "@none") {
 				// nothing to do yet
 			} else if (a_id == "@me") {
@@ -4817,65 +5274,113 @@ namespace
 			return true;
 		}
 
-		// The scene a new scene starts with, as OStim's thread starters pick
-		// it: a random scene that fits the cast and the place (no transitions,
-		// nothing marked noRandomSelection). With the player in it, one tagged
-		// "intro" (SetUseIntroScenes) or else "idle"; without the player, any
-		// (OStim's NPC threads). Off furniture it must have someone standing,
-		// on a bed no one standing. Departure from OStim, which gives up when
-		// nothing qualifies: 4Stim falls back step by step (intro -> idle ->
-		// any scene, then without the standing rule), since most converted
-		// packs have no intro scenes yet.
+		// OStim without SetSelectFurniture (or SetEnableFurniture): no "Where?",
+		// the nearest piece of furniture any scene fits this cast on (OStim's
+		// findFurniture: the nearest of any type with scenes), else right
+		// here; and the scene starts. False (the step is shown) when asking.
+		static bool SkipPlaceStep()
+		{
+			if (g_settings.useFurniture && g_settings.selectFurniture) {
+				return false;
+			}
+			const auto cast = CastIDs();
+			const auto found = PickerFurniture();
+			int        choice = -1;
+			for (std::size_t i = 0; i < found.size() && g_settings.useFurniture; ++i) {  // nearest first
+				if (!ScenesForCast(cast, found[i].type).empty()) {
+					choice = static_cast<int>(i);
+					break;
+				}
+			}
+			{
+				std::scoped_lock lock(g_castLock);
+				g_placeChoice = choice;
+			}
+			REX::INFO("Picker: {}", choice >= 0 ? std::format("on the nearest furniture, {} ({:08X})", found[choice].type, found[choice].ref) :
+			                                       std::string("right here (no furniture, or SetEnableFurniture=0)"));
+			StartIdleScene();
+			return true;
+		}
+
+		// The scene a new scene starts with: PickStartScene for the cast and
+		// the place; tagged "intro" / "idle" with the player in it, any
+		// without (OStim's NPC threads).
 		static void StartIdleScene()
 		{
 			const auto cast = CastIDs();
 			const auto here = ChosenFurnitureType();
-			auto       scenes = ScenesForCast(cast, here);
-			std::erase_if(scenes, [](const auto& a_scene) { return a_scene->IsTransition() || a_scene->noRandomSelection; });
-			bool withPlayer;
+			bool       withPlayer;
 			{
 				std::scoped_lock lock(g_castLock);
 				withPlayer = g_includePlayer;
 			}
-			const bool onBed = !here.empty() && Furniture::IsA(here, "bed");
-			auto standingRule = [&](const SceneRegistry::Scene& a_scene) {
-				const bool standing = std::ranges::any_of(a_scene.actors, [](const SceneRegistry::SceneActor& a) { return a.HasTag("standing"); });
-				return here.empty() ? standing : onBed ? !standing : true;
-			};
-			std::vector<std::string> tags;
-			if (withPlayer) {
-				if (g_settings.useIntroScenes) {
-					tags.emplace_back("intro");
-				}
-				tags.emplace_back("idle");
-			}
-			tags.emplace_back("");  // any scene
-			std::vector<std::shared_ptr<const SceneRegistry::Scene>> pool;
-			std::string                                              picked;
-			for (const bool rule : { true, false }) {
-				for (const auto& tag : tags) {
-					pool.clear();
-					std::ranges::copy_if(scenes, std::back_inserter(pool), [&](const auto& a_scene) {
-						return (tag.empty() || HasTag(*a_scene, tag)) && (!rule || standingRule(*a_scene));
-					});
-					if (!pool.empty()) {
-						picked = (tag.empty() ? std::string("any") : tag) + (rule ? "" : ", without the standing rule");
-						break;
-					}
-				}
-				if (!pool.empty()) {
-					break;
-				}
-			}
-			if (pool.empty()) {
+			std::string why;
+			const auto  scene = PickStartScene(ScenesForCast(cast, here), here, withPlayer, why);
+			if (!scene) {
 				REX::WARN("Picker: no scene fits {} actor(s) {}", cast.size(), here.empty() ? "here" : "on " + here);
 				Close();
 				return;
 			}
-			static std::mt19937 rng{ std::random_device{}() };
-			const auto& scene = pool[std::uniform_int_distribution<std::size_t>(0, pool.size() - 1)(rng)];
-			REX::INFO("Picker: starting \"{}\" ({}: {} {} scene(s))", scene->id, picked, pool.size(), here.empty() ? "floor" : here);
+			REX::INFO("Picker: starting \"{}\" ({})", scene->id, why);
 			StartPicked(scene->id);
+		}
+
+		// kFurniture: as OStim's furniture selection, "None" (stay) first,
+		// then the furniture near, nearest first.
+		void SendFurnitureChoices()
+		{
+			std::vector<Furniture::Found> found;
+			{
+				std::scoped_lock lock(g_changeFurnitureLock);
+				found = g_changeFurniture;
+			}
+			Scaleform::GFx::Value list;
+			uiMovie->CreateArray(&list);
+			auto add = [&](const std::string& a_id, const std::string& a_name, const std::string& a_detail) {
+				Scaleform::GFx::Value entry, id, name, tags;
+				uiMovie->CreateObject(&entry);
+				id = a_id.c_str();
+				name = a_name.c_str();
+				tags = a_detail.c_str();
+				entry.SetMember("id"sv, id);
+				entry.SetMember("name"sv, name);
+				entry.SetMember("tags"sv, tags);
+				list.PushBack(entry);
+			};
+			add("@stay", "None", "stay where you are");
+			for (std::size_t i = 0; i < found.size(); ++i) {
+				add(std::format("@cfurn:{}", i), found[i].name, std::format("{:.0f} m away", found[i].distance / 70.0F));
+			}
+			Scaleform::GFx::Value args[2];
+			args[0] = list;
+			args[1] = "Change furniture";
+			menuObj.Invoke("SetScenes", nullptr, args, 2);
+		}
+
+		// A pick in the kFurniture list. True if it was one.
+		static bool HandleFurniturePick(const std::string& a_id)
+		{
+			if (g_pickerMode != PickerMode::kFurniture) {
+				return false;
+			}
+			Close();
+			if (!a_id.starts_with("@cfurn:")) {
+				return true;  // "None"
+			}
+			std::optional<Furniture::Found> piece;
+			std::uint32_t                   role0;
+			{
+				std::scoped_lock lock(g_changeFurnitureLock);
+				role0 = g_changeFurnitureScene;
+				const auto index = static_cast<std::size_t>(std::stoul(a_id.substr(7)));
+				if (index < g_changeFurniture.size()) {
+					piece = g_changeFurniture[index];
+				}
+			}
+			if (piece) {
+				F4SE::GetTaskInterface()->AddTask([role0, piece = *piece]() { RequestFurnitureChange(role0, piece, {}); });
+			}
+			return true;
 		}
 
 		// Navigation mode: the current scene's links, then "End scene".
@@ -4909,6 +5414,9 @@ namespace
 					add(nav.to, FormatNavLabel(nav.label, current), dest ? dest->name : nav.to);
 				}
 				title = scene->name + "   (speed " + std::to_string(current.speed + 1) + "/" + std::to_string(scene->speeds.size()) + ")";
+			}
+			if (g_settings.useFurniture) {
+				add(CHANGE_FURNITURE_ID, "Change furniture...", "move the scene onto furniture near");
 			}
 			add(END_SCENE_ID, "End scene", "");
 
@@ -4947,7 +5455,9 @@ namespace
 				return;
 			}
 			if (g_pickerMode == PickerMode::kNavigate) {
-				if (a_sceneID == END_SCENE_ID) {
+				if (a_sceneID == CHANGE_FURNITURE_ID) {
+					FourStim::OpenFurnitureForFocused();
+				} else if (a_sceneID == END_SCENE_ID) {
 					if (g_vm) {
 						RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
 						g_vm->DispatchStaticCall("FourStimMenu"sv, "EndPlayerScene"sv, callback);
@@ -4980,6 +5490,7 @@ namespace
 					PendingFurniture pending{ piece.ref, piece.type, cast };
 					pending.offset = scene->furnitureOffset;
 					pending.floorScene = scene->furniture.empty();
+					pending.fixedSpot = piece.spot;
 					std::ranges::sort(pending.actors);
 					REX::INFO("Picker: \"{}\" goes on {:08X} ({}, {:.0f} away)", a_sceneID, piece.ref, piece.type, piece.distance);
 					g_pendingFurniture = std::move(pending);
@@ -5077,12 +5588,10 @@ namespace
 				REX::INFO("Picker: {} actor(s) near, {} picked, scenes for up to {}", g_candidates.size(), g_cast.size(), g_maxCast);
 			}
 			std::vector<Furniture::Found> found;
-			if (const auto player = RE::PlayerCharacter::GetSingleton()) {
+			const auto                    player = RE::PlayerCharacter::GetSingleton();
+			if (player && g_settings.useFurniture) {
 				Furniture::Reload();
-				found = Furniture::FindNear(player->GetPosition(), g_settings.furnitureRadius, g_settings.furnitureHeight, g_settings.logFurniture);
-				for (const auto& f : found) {
-					REX::INFO("Furniture: nearest {}: {:08X}, {:.0f} away", f.type, f.ref, f.distance);
-				}
+				found = FurnitureNear(player->GetPosition(), player);
 			}
 			{
 				std::scoped_lock lock(g_pickerFurnitureLock);
@@ -5595,6 +6104,14 @@ namespace
 		a_vm->BindNativeMethod(SCRIPT_NAME, "HasPenis"sv, HasPenis);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "HeelsChanged"sv, HeelsChanged);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "GetActorType"sv, GetActorType);
+		a_vm->BindNativeMethod(SCRIPT_NAME, "NoteFurnitureBlocked"sv, NoteFurnitureBlocked);
+		a_vm->BindNativeMethod(SCRIPT_NAME, "ApplyFurnitureChange"sv, ApplyFurnitureChangeNative);
+		a_vm->BindNativeMethod(SCRIPT_NAME, "ChangeFurniture"sv, ChangeFurnitureNative);
+		a_vm->BindNativeMethod(SCRIPT_NAME, "GetFurnitureType"sv, GetFurnitureType);
+		a_vm->BindNativeMethod(SCRIPT_NAME, "IsFurnitureChildOf"sv, IsFurnitureChildOf);
+		a_vm->BindNativeMethod(SCRIPT_NAME, "GetSceneFurniture"sv, GetSceneFurniture);
+		a_vm->BindNativeMethod(SCRIPT_NAME, "GetSceneFurnitureType"sv, GetSceneFurnitureType);
+		a_vm->BindNativeMethod(SCRIPT_NAME, "OpenFurnitureMenu"sv, OpenFurnitureMenu);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "RegisterForSceneEvents"sv, RegisterForSceneEvents);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "UnregisterForSceneEvents"sv, UnregisterForSceneEvents);
 		REX::INFO("Papyrus functions bound");
@@ -5610,7 +6127,7 @@ namespace
 
 	constexpr std::uint32_t SAVE_UID = 'FSTM';
 	constexpr std::uint32_t SCENES_RECORD = 'SCNS';
-	constexpr std::uint32_t SCENES_VERSION = 3;  // 2: each actor's own scale (alignment scales them); 3: equip objects given
+	constexpr std::uint32_t SCENES_VERSION = 4;  // 2: each actor's own scale (alignment scales them); 3: equip objects given; 4: wall spot, furniture blocked, clutter
 
 	struct SavedScene
 	{
@@ -5624,6 +6141,9 @@ namespace
 		std::vector<std::vector<std::uint32_t>> stripped;    // per actor
 		std::vector<float>                      baseScale;   // per actor: their own scale (0 = unknown, version 1)
 		std::vector<std::vector<std::uint32_t>> given;       // per actor: equip objects 4Stim gave them (version 3)
+		std::optional<Furniture::Spot>          furnitureFixedSpot;  // a wall (version 4)
+		bool                                    furnitureBlocked = false;  // 4Stim blocked the furniture (version 4)
+		std::vector<Furniture::ClutterItem>     clutter;             // version 4
 	};
 	std::mutex              g_savedLock;
 	std::vector<SavedScene> g_loadedScenes;  // read from the save being loaded
@@ -5676,6 +6196,26 @@ namespace
 			a_intfc->WriteRecordData(active.furnitureRef);
 			WriteString(a_intfc, active.furnitureType);
 			a_intfc->WriteRecordData(static_cast<std::uint8_t>(active.autoMode.on ? 1 : 0));
+			// Version 4.
+			a_intfc->WriteRecordData(static_cast<std::uint8_t>(active.furnitureFixedSpot ? 1 : 0));
+			if (active.furnitureFixedSpot) {
+				const auto& spot = *active.furnitureFixedSpot;
+				a_intfc->WriteRecordData(spot.position.x);
+				a_intfc->WriteRecordData(spot.position.y);
+				a_intfc->WriteRecordData(spot.position.z);
+				a_intfc->WriteRecordData(spot.heading);
+			}
+			a_intfc->WriteRecordData(static_cast<std::uint8_t>(FurnitureBlocked(active.furnitureRef) ? 1 : 0));
+			a_intfc->WriteRecordData(static_cast<std::uint32_t>(active.clutter.size()));
+			for (const auto& item : active.clutter) {
+				a_intfc->WriteRecordData(item.ref);
+				a_intfc->WriteRecordData(item.position.x);
+				a_intfc->WriteRecordData(item.position.y);
+				a_intfc->WriteRecordData(item.position.z);
+				a_intfc->WriteRecordData(item.angle.x);
+				a_intfc->WriteRecordData(item.angle.y);
+				a_intfc->WriteRecordData(item.angle.z);
+			}
 		}
 		if (count > 0) {
 			REX::INFO("Save data: {} running scene(s) saved", count);
@@ -5741,6 +6281,36 @@ namespace
 				a_intfc->ReadRecordData(furniture);
 				ok = ok && ReadString(a_intfc, saved.furnitureType);
 				a_intfc->ReadRecordData(autoMode);
+				if (ok && version >= 4) {
+					std::uint8_t fixed = 0, blocked = 0;
+					a_intfc->ReadRecordData(fixed);
+					if (fixed) {
+						Furniture::Spot spot;
+						a_intfc->ReadRecordData(spot.position.x);
+						a_intfc->ReadRecordData(spot.position.y);
+						a_intfc->ReadRecordData(spot.position.z);
+						a_intfc->ReadRecordData(spot.heading);
+						saved.furnitureFixedSpot = spot;
+					}
+					a_intfc->ReadRecordData(blocked);
+					saved.furnitureBlocked = blocked != 0;
+					std::uint32_t items = 0;
+					a_intfc->ReadRecordData(items);
+					ok = items <= 4096;
+					for (std::uint32_t n = 0; ok && n < items; ++n) {
+						Furniture::ClutterItem item;
+						a_intfc->ReadRecordData(item.ref);
+						a_intfc->ReadRecordData(item.position.x);
+						a_intfc->ReadRecordData(item.position.y);
+						a_intfc->ReadRecordData(item.position.z);
+						a_intfc->ReadRecordData(item.angle.x);
+						a_intfc->ReadRecordData(item.angle.y);
+						a_intfc->ReadRecordData(item.angle.z);
+						if ((item.ref = resolve(item.ref)) != 0) {
+							saved.clutter.push_back(item);
+						}
+					}
+				}
 				if (!ok) {
 					REX::WARN("Save data: the scenes record is damaged, scenes from it skipped");
 					break;
@@ -5769,6 +6339,17 @@ namespace
 	void ReleaseSavedScene(const SavedScene& a_saved, const char* a_why)
 	{
 		REX::INFO("Save data: \"{}\" not started again ({}): letting its actors go", a_saved.sceneID, a_why);
+		// Its furniture free again, its clutter back.
+		if (a_saved.furnitureBlocked && a_saved.furnitureRef) {
+			{
+				std::scoped_lock lock(g_blockedFurnitureLock);
+				g_blockedFurniture.insert(a_saved.furnitureRef);
+			}
+			UnblockFurniture(a_saved.furnitureRef);
+		}
+		if (g_settings.resetClutter && !a_saved.clutter.empty()) {
+			Furniture::RestoreClutter(a_saved.clutter);
+		}
 		for (std::size_t i = 0; i < a_saved.actors.size(); ++i) {
 			const auto id = a_saved.actors[i];
 			const auto actor = id ? RE::TESForm::GetFormByID<RE::Actor>(id) : nullptr;
@@ -5827,12 +6408,24 @@ namespace
 			}
 			g_pendingResume = std::move(resume);
 		}
-		if (a_saved.furnitureRef) {
+		if (a_saved.furnitureRef || a_saved.furnitureFixedSpot) {
 			std::scoped_lock lock(g_pendingFurnitureLock);
 			PendingFurniture pending{ a_saved.furnitureRef, a_saved.furnitureType, sorted };
 			pending.offset = scene->furnitureOffset;
 			pending.floorScene = scene->furniture.empty();
+			pending.fixedSpot = a_saved.furnitureFixedSpot;
 			g_pendingFurniture = std::move(pending);
+		}
+		// Still blocked from before the save: 4Stim's to unblock when the
+		// scene leaves it (FourStimFurniture.Block leaves blocked furniture be).
+		if (a_saved.furnitureBlocked && a_saved.furnitureRef) {
+			std::scoped_lock lock(g_blockedFurnitureLock);
+			g_blockedFurniture.insert(a_saved.furnitureRef);
+		}
+		// The clutter as it lay before the scene, not as the scene left it.
+		if (!a_saved.clutter.empty()) {
+			std::scoped_lock lock(g_pendingClutterLock);
+			g_pendingClutter = PendingClutter{ sorted, a_saved.clutter, true };
 		}
 		const bool   withPlayer = std::ranges::any_of(a_saved.actors, [](std::uint32_t id) { return IsPlayer(RE::TESForm::GetFormByID<RE::Actor>(id)); });
 		std::vector<std::int32_t> ids(a_saved.actors.begin(), a_saved.actors.end());
@@ -5885,6 +6478,14 @@ namespace
 			// Running scenes and their timers end with the old game.
 			F4SE::GetTaskInterface()->AddTask([]() {
 				g_activeScenes.clear();
+				{
+					std::scoped_lock lock(g_blockedFurnitureLock);
+					g_blockedFurniture.clear();  // the world comes from the save (version 4 says what was blocked)
+				}
+				{
+					std::scoped_lock lock(g_pendingClutterLock);
+					g_pendingClutter.reset();
+				}
 				Excitement::Clear();
 				Expressions::Clear();
 				Sounds::Clear();
@@ -5994,6 +6595,38 @@ namespace FourStim
 		if (GetPlayerScene().Active()) {
 			ShowPicker(PickerMode::kSearch);
 		}
+	}
+
+	bool UsesFurniture()
+	{
+		return g_settings.useFurniture;
+	}
+
+	void OpenFurnitureForFocused()
+	{
+		F4SE::GetTaskInterface()->AddTask([]() {
+			const auto focused = GetPlayerScene();
+			const auto active = focused.Active() ? FindActiveScene(focused.role0) : nullptr;
+			if (!active || !g_settings.useFurniture) {
+				return;
+			}
+			Furniture::Reload();
+			auto found = FurnitureNear(active->center, RE::TESForm::GetFormByID<RE::Actor>(active->actors.front()));
+			std::erase_if(found, [&](const Furniture::Found& f) {
+				return (f.ref && f.ref == active->furnitureRef) || ScenesForRunning(active->actors, f.type).empty();
+			});
+			if (found.empty()) {
+				REX::INFO("Furniture change: nothing near that any scene fits these actors on");
+				Notify("No furniture near for this scene");
+				return;
+			}
+			{
+				std::scoped_lock lock(g_changeFurnitureLock);
+				g_changeFurnitureScene = active->actors.front();
+				g_changeFurniture = std::move(found);
+			}
+			ShowPicker(PickerMode::kFurniture);
+		});
 	}
 
 	std::string FormatLabel(std::string a_label, const FocusedScene& a_scene)

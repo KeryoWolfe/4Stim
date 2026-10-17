@@ -12,6 +12,8 @@
 
 #include <nlohmann/json.hpp>
 
+#include "Bridge.h"
+
 namespace Furniture
 {
 	namespace
@@ -42,6 +44,11 @@ namespace Furniture
 			// "center": in the middle of its bounding box, turned along its
 			// long axis (for lying on a mattress or a sleeping bag).
 			bool                           center = false;
+			// "wall": no object, the nearest wall found by ray casts around
+			// the search center (OStim's wall type is Skyrim's wall-lean
+			// markers, which Fallout 4 hardly has), within wallDistance.
+			bool                           wall = false;
+			float                          wallDistance = 300.0F;
 			// Scenes without furniture of their own played on this one (its
 			// type chain reaches "none"): at least one actor must have one of
 			// needTags, and none of excludeTags (scene actor tags).
@@ -187,9 +194,12 @@ namespace Furniture
 				type.center = true;
 			} else if (anchor == "origin") {
 				type.useMarker = false;
+			} else if (anchor == "wall") {
+				type.wall = true;
 			} else if (anchor != "marker") {
-				REX::WARN("Furniture: {}: type \"{}\": unknown \"anchor\" \"{}\" (marker, origin, edge or center)", file, type.id, anchor);
+				REX::WARN("Furniture: {}: type \"{}\": unknown \"anchor\" \"{}\" (marker, origin, edge, center or wall)", file, type.id, anchor);
 			}
+			type.wallDistance = entry.value("wallDistance", type.wallDistance);
 			if (const auto floor = entry.find("floorScenes"); floor != entry.end() && floor->is_object()) {
 				type.floorNeedTags = Strings(*floor, "needTags", true);
 				type.floorExcludeTags = Strings(*floor, "excludeTags", true);
@@ -217,7 +227,7 @@ namespace Furniture
 			type.rotation = entry.value("rotation", 0.0F) * DEG;
 			type.listIndividually = entry.value("listIndividually", false);
 			type.multiplyScale = entry.value("multiplyScale", 1.0F);
-			if (type.models.empty() && type.keywords.empty()) {
+			if (type.models.empty() && type.keywords.empty() && !type.wall) {
 				REX::INFO("Furniture: {}: type \"{}\" has no \"models\" or \"keywords\": only a supertype for others", file, type.id);
 			}
 			return type;
@@ -391,6 +401,105 @@ namespace Furniture
 			return out;
 		}
 
+		// A line-of-sight ray from a_from to a_to in a_cell: how far along it
+		// (0-1) it hit something other than an actor, or nothing (1).
+		struct RayHit
+		{
+			bool               hit = false;
+			float              fraction = 1.0F;
+			RE::TESObjectREFR* ref = nullptr;  // what it hit, if an object
+		};
+
+		RayHit CastRay(RE::TESObjectCELL* a_cell, const RE::NiPoint3& a_from, const RE::NiPoint3& a_to)
+		{
+			RayHit out;
+			if (!a_cell) {
+				return out;
+			}
+			RE::bhkPickData pick;
+			pick.SetStartEnd(a_from, a_to);
+			pick.castQuery.m_filterData.m_collisionFilterInfo = static_cast<std::uint32_t>(RE::COL_LAYER::kLOS);
+			const auto object = a_cell->Pick(pick);
+			if (!pick.HasHit()) {
+				return out;
+			}
+			out.ref = object ? RE::TESObjectREFR::FindReferenceFor3D(object) : nullptr;
+			if (out.ref && out.ref->As<RE::Actor>()) {
+				out.ref = nullptr;
+				return out;  // an actor in the way: not a wall
+			}
+			out.hit = true;
+			out.fraction = std::clamp(pick.GetHitFraction(), 0.0F, 1.0F);
+			return out;
+		}
+
+		// The nearest wall around a_center (feet height), within a_distance:
+		// rays out in 24 directions at two heights must both hit the same
+		// upright surface (not a door, not an actor). Where it is (on the
+		// floor, at the foot of the wall) and which way is out from it.
+		struct WallHit
+		{
+			RE::NiPoint3 point;
+			RE::NiPoint3 normal;  // horizontal, out from the wall toward a_center
+			float        distance = 0.0F;
+		};
+
+		std::optional<WallHit> FindWall(RE::TESObjectCELL* a_cell, const RE::NiPoint3& a_center, float a_distance)
+		{
+			constexpr float LOW = 50.0F, HIGH = 110.0F, MID = 80.0F;  // above the floor
+			constexpr float SAME_SURFACE = 12.0F;                    // the two heights' hits may differ by this much
+			constexpr float MIN_DISTANCE = 15.0F;
+			auto dirOf = [](float a_angle) { return RE::NiPoint3{ std::sin(a_angle), std::cos(a_angle), 0.0F }; };
+			auto distanceAt = [&](float a_angle, float a_height) -> std::optional<float> {
+				const RE::NiPoint3 from{ a_center.x, a_center.y, a_center.z + a_height };
+				const auto         hit = CastRay(a_cell, from, from + dirOf(a_angle) * a_distance);
+				if (!hit.hit || (hit.ref && hit.ref->GetObjectReference() && hit.ref->GetObjectReference()->GetFormType() == RE::ENUM_FORM_ID::kDOOR)) {
+					return std::nullopt;
+				}
+				return hit.fraction * a_distance;
+			};
+			std::optional<WallHit> best;
+			float                  bestAngle = 0.0F;
+			for (int i = 0; i < 24; ++i) {
+				const float angle = static_cast<float>(i) * 15.0F * DEG;
+				const auto  low = distanceAt(angle, LOW);
+				const auto  high = low ? distanceAt(angle, HIGH) : std::nullopt;
+				if (!low || !high || std::fabs(*low - *high) > SAME_SURFACE) {
+					continue;
+				}
+				const float d = (*low + *high) * 0.5F;
+				if (d < MIN_DISTANCE || (best && d >= best->distance)) {
+					continue;
+				}
+				const auto dir = dirOf(angle);
+				best = WallHit{ a_center + dir * d, dir * -1.0F, d };
+				bestAngle = angle;
+			}
+			if (!best) {
+				return std::nullopt;
+			}
+			// The wall's own direction from two rays either side: out from it
+			// is square to it, toward the center (else straight back).
+			const auto left = distanceAt(bestAngle - 6.0F * DEG, MID);
+			const auto right = distanceAt(bestAngle + 6.0F * DEG, MID);
+			if (left && right && std::fabs(*left - *right) < 60.0F) {
+				const auto   a = a_center + dirOf(bestAngle - 6.0F * DEG) * *left;
+				const auto   b = a_center + dirOf(bestAngle + 6.0F * DEG) * *right;
+				RE::NiPoint3 normal{ b.y - a.y, -(b.x - a.x), 0.0F };
+				const float  length = std::sqrt(normal.x * normal.x + normal.y * normal.y);
+				if (length > 0.01F) {
+					normal = normal * (1.0F / length);
+					const auto toCenter = a_center - best->point;
+					if (normal.x * toCenter.x + normal.y * toCenter.y < 0.0F) {
+						normal = normal * -1.0F;
+					}
+					best->normal = normal;
+				}
+			}
+			best->point.z = a_center.z;
+			return best;
+		}
+
 		// g_lock held.
 		std::string ClassifyLocked(RE::TESObjectREFR* a_ref)
 		{
@@ -457,7 +566,7 @@ namespace Furniture
 		return it != g_types.end() ? it->second.name : std::string(a_type);
 	}
 
-	std::vector<Found> FindNear(const RE::NiPoint3& a_center, float a_radius, float a_maxHeight, bool a_log)
+	std::vector<Found> FindNear(const RE::NiPoint3& a_center, float a_radius, float a_maxHeight, bool a_log, RE::TESObjectREFR* a_from)
 	{
 		std::scoped_lock lock(g_lock);
 		EnsureLoaded();
@@ -473,7 +582,8 @@ namespace Furniture
 			}
 			const auto formType = base->GetFormType();
 			const bool candidate = formType == RE::ENUM_FORM_ID::kFURN || formType == RE::ENUM_FORM_ID::kSTAT ||
-			                       formType == RE::ENUM_FORM_ID::kMSTT || formType == RE::ENUM_FORM_ID::kACTI;
+			                       formType == RE::ENUM_FORM_ID::kMSTT || formType == RE::ENUM_FORM_ID::kACTI ||
+			                       formType == RE::ENUM_FORM_ID::kCONT;
 			if (!candidate) {
 				return RE::BSContainer::ForEachResult::kContinue;
 			}
@@ -486,6 +596,7 @@ namespace Furniture
 			if (a_log && (formType == RE::ENUM_FORM_ID::kFURN || !type.empty())) {
 				const char* code = formType == RE::ENUM_FORM_ID::kFURN ? "FURN" : formType == RE::ENUM_FORM_ID::kSTAT ? "STAT" :
 				                   formType == RE::ENUM_FORM_ID::kMSTT ? "MSTT" :
+				                   formType == RE::ENUM_FORM_ID::kCONT ? "CONT" :
 				                                                         "ACTI";
 				REX::INFO("Furniture: {:08X} {} \"{}\", {} marker(s), {:.0f} away -> {}", a_ref->GetFormID(), code,
 					ModelOf(base), MarkerCount(base), distance, type.empty() ? "(none)" : type);
@@ -505,6 +616,25 @@ namespace Furniture
 			}
 			return RE::BSContainer::ForEachResult::kContinue;
 		});
+		// Walls: the nearest one, for each type anchored on a wall.
+		if (const auto cell = a_from ? a_from->GetParentCell() : nullptr) {
+			for (const auto& [key, type] : g_types) {
+				if (!type.wall) {
+					continue;
+				}
+				const auto wall = FindWall(cell, a_center, std::min(type.wallDistance, a_radius));
+				if (a_log) {
+					REX::INFO("Furniture: wall for \"{}\": {}", type.id,
+						wall ? std::format("{:.0f} away at ({:.1f}, {:.1f}, {:.1f}), out ({:.2f}, {:.2f})", wall->distance, wall->point.x, wall->point.y,
+								   wall->point.z, wall->normal.x, wall->normal.y) :
+							   std::string("none"));
+				}
+				if (wall) {
+					// Facing out from the wall: forward (sin h, cos h) is its normal.
+					found.push_back({ type.id, type.name, 0, wall->distance, Spot{ wall->point, std::atan2(wall->normal.x, wall->normal.y) } });
+				}
+			}
+		}
 		std::ranges::sort(found, [](const Found& a, const Found& b) { return a.distance < b.distance; });
 		return found;
 	}
@@ -757,5 +887,104 @@ namespace Furniture
 	float ClearFraction(RE::TESObjectREFR* a_ignore, const RE::NiPoint3& a_from, const RE::NiPoint3& a_to)
 	{
 		return a_ignore ? FreeFraction(a_ignore, a_from, a_to) : 1.0F;
+	}
+
+	Spot SpotOf(const Found& a_found, const RE::NiPoint3& a_near, bool a_floorScene)
+	{
+		if (!a_found.spot) {
+			return SpotFor(RE::TESForm::GetFormByID<RE::TESObjectREFR>(a_found.ref), a_found.type, a_near, a_floorScene);
+		}
+		// A wall: the type's offset in the spot's frame (x right, y forward
+		// out from the wall, z up) and its rotation.
+		RE::NiPoint3 offset;
+		float        rotation = 0.0F;
+		{
+			std::scoped_lock lock(g_lock);
+			EnsureLoaded();
+			if (const auto it = g_types.find(Lower(a_found.type)); it != g_types.end()) {
+				offset = it->second.offset;
+				rotation = it->second.rotation;
+			}
+		}
+		Spot        spot = *a_found.spot;
+		const float c = std::cos(spot.heading), s = std::sin(spot.heading);
+		spot.position = { spot.position.x + offset.x * c + offset.y * s, spot.position.y - offset.x * s + offset.y * c, spot.position.z + offset.z };
+		spot.heading += rotation;
+		REX::INFO("Furniture: spot at the wall ({}): ({:.1f}, {:.1f}, {:.1f}), heading {:.1f} deg", a_found.type, spot.position.x, spot.position.y,
+			spot.position.z, spot.heading / DEG);
+		return spot;
+	}
+
+	namespace
+	{
+		// OStim's clutter forms (FurnitureTable::clutterForms), as Fallout 4 has them.
+		bool IsClutter(RE::ENUM_FORM_ID a_type)
+		{
+			switch (a_type) {
+			case RE::ENUM_FORM_ID::kAMMO:
+			case RE::ENUM_FORM_ID::kARMO:
+			case RE::ENUM_FORM_ID::kBOOK:
+			case RE::ENUM_FORM_ID::kINGR:
+			case RE::ENUM_FORM_ID::kKEYM:
+			case RE::ENUM_FORM_ID::kMISC:
+			case RE::ENUM_FORM_ID::kMSTT:
+			case RE::ENUM_FORM_ID::kALCH:
+			case RE::ENUM_FORM_ID::kWEAP:
+			case RE::ENUM_FORM_ID::kNOTE:
+				return true;
+			default:
+				return false;
+			}
+		}
+
+		constexpr std::size_t MAX_CLUTTER = 512;
+	}
+
+	std::vector<ClutterItem> SnapshotClutter(const RE::NiPoint3& a_center, float a_radius)
+	{
+		std::vector<ClutterItem> items;
+		const auto               tes = RE::TES::GetSingleton();
+		if (!tes || a_radius <= 0.0F) {
+			return items;
+		}
+		tes->ForEachReferenceInRange(a_center, a_radius, [&](RE::TESObjectREFR* a_ref) {
+			const auto base = a_ref ? a_ref->GetObjectReference() : nullptr;
+			if (!base || !IsClutter(base->GetFormType()) || a_ref->IsDisabled() || a_ref->IsDeleted() || !a_ref->Get3D()) {
+				return RE::BSContainer::ForEachResult::kContinue;
+			}
+			items.push_back({ a_ref->GetFormID(), a_ref->data.location, a_ref->data.angle });
+			return items.size() < MAX_CLUTTER ? RE::BSContainer::ForEachResult::kContinue : RE::BSContainer::ForEachResult::kStop;
+		});
+		REX::INFO("Clutter: {} loose item(s) within {:.0f} noted", items.size(), a_radius);
+		return items;
+	}
+
+	std::size_t RestoreClutter(const std::vector<ClutterItem>& a_items)
+	{
+		const auto vm = FourStim::GetVM();
+		if (!vm) {
+			return 0;
+		}
+		constexpr float MOVED = 2.0F;              // units
+		constexpr float TURNED = 3.0F * DEG;
+		std::size_t     count = 0;
+		for (const auto& item : a_items) {
+			const auto ref = RE::TESForm::GetFormByID<RE::TESObjectREFR>(item.ref);
+			if (!ref || ref->IsDisabled() || ref->IsDeleted() || !ref->GetParentCell()) {
+				continue;  // picked up or gone
+			}
+			const auto& at = ref->data.location;
+			const auto& angle = ref->data.angle;
+			auto        turned = [](float a, float b) { return std::fabs(std::remainder(a - b, 2.0F * 3.14159265F)) > TURNED; };
+			if (at.GetDistance(item.position) < MOVED && !turned(angle.x, item.angle.x) && !turned(angle.y, item.angle.y) && !turned(angle.z, item.angle.z)) {
+				continue;
+			}
+			RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
+			vm->DispatchStaticCall("FourStimFurniture"sv, "PutBack"sv, callback, static_cast<std::int32_t>(item.ref), item.position.x, item.position.y,
+				item.position.z, item.angle.x / DEG, item.angle.y / DEG, item.angle.z / DEG);
+			++count;
+		}
+		REX::INFO("Clutter: {} of {} item(s) put back", count, a_items.size());
+		return count;
 	}
 }

@@ -99,6 +99,14 @@ Function FadeFromBlackLater(float afDelay) Global
 	Utility.CallGlobalFunctionNoWait("FourStimMenu", "FadeFromBlack", args)
 EndFunction
 
+; A furniture change for a scene with the player (SetUseFades): as OStim's
+; changeFurniture, the change 0.7 s into the fade to black, back 0.55 s later.
+Function ChangeFurnitureFaded() Global
+	FadeToBlack()
+	FourStim.ApplyFurnitureChange()
+	FadeFromBlackLater(0.55)
+EndFunction
+
 ; Ends the scene the player is in or watching. Called by the plugin when
 ; "End scene" is picked, by the end key, and when the scene ends by itself.
 ; With the player in it, fades to black first (SetUseFades).
