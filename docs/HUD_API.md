@@ -250,7 +250,7 @@ Every function is on `Menu_mc`. All of them are required except where marked.
 | `SetPaused(paused:Boolean):void` | A game menu opened or closed over the HUD. |
 | `ProcessUserEvent(name:String, down:Boolean):Boolean` | Input while focused: `down` is `true` on press and `false` on release. Return `true` if you used it. Holding `Up` or `Down` repeats the press, so you don't need your own repeat timer. The names and their keys are below. |
 | `SetMeters(values:Array):void` | *Optional.* Faster update of just the actor meters, one `Number` per role, without resending names. Sent up to ten times a second while excitement changes; a HUD without it only gets the values with `SetActors`. |
-| `SetAlign(data:Object):void` | *Optional.* The Align tab's data (ALIGNMENT.md): `{ available, role, roleCount, name, x, y, z, rot, scale, step }`: the role being adjusted (0-based) and its name ("You" for the player), its offset in this scene, and the step size. Sent with the scene data and after every alignment call. |
+| `SetAlign(data:Object):void` | *Optional.* The Align tab's data (ALIGNMENT.md): `{ available, role, roleCount, name, x, y, z, rot, scale, bend, step }`: the role being adjusted (0-based) and its name ("You" for the player), its offset in this scene, its penis bend (SoS steps, -9 to +9; `bend` was added later, so treat it as optional), and the step size. Sent with the scene data and after every alignment call. |
 | `PlayClimax(strength:Number):void` | *Optional.* An actor in the focused scene climaxed: play a flash. `strength` is `0.0`–`1.0` (`fClimaxFlash`). The default HUD fades a faint white glow in along the screen's edges only and out over about 1.5 s, behind its panels. |
 | `ShowTab(id:String):void` | *Optional.* Show tab `id` (`"navigation"`, `"utility"`, `"align"`, `"search"`), for OStim's alignment key (`keyAlignment`): pressed once it shows the Align tab and focuses the HUD, pressed again it shows Navigation. A HUD without tabs can ignore it. |
 | `SetControlScheme(scheme:String):void` | *Optional.* `"tabs"` (Left / Right change tabs, the default) or `"columns"` (OStim's scheme, `sHUDControls=Columns`: Up / Down move in the list, Left / Right move between the list and the tab buttons, and Up / Down then pick a tab). On the Align tab, Left / Right still change the value of a value, actor or step row; the tab buttons are reached from any other row, or with LB / RB. Sent when the movie opens. |
@@ -278,10 +278,10 @@ Input names while the HUD is focused:
 | `OpenSearch()` | Open the scene picker, filtered to this scene's actors. |
 | `ReleaseFocus()` | Give input back to the game (the plugin answers with `SetFocus(false)`). |
 | `Log(message:String)` | Write a line to `4Stim.log`, tagged with your movie. |
-| `AlignAdjust(field:String, direction:int)` | One step of the role being adjusted: `field` is `"x"`, `"y"`, `"z"`, `"rot"` or `"scale"`, `direction` `+1` / `-1`. Saved and applied at once; answered with `SetAlign`. |
+| `AlignAdjust(field:String, direction:int)` | One step of the role being adjusted: `field` is `"x"`, `"y"`, `"z"`, `"rot"`, `"scale"` or `"bend"` (one SoS step at a time, whatever the step size), `direction` `+1` / `-1`. Saved and applied at once; answered with `SetAlign`. |
 | `AlignActor(direction:int)` | The next (`+1`) or previous (`-1`) role to adjust. |
 | `AlignStep(direction:int)` | The next or previous step size (0.5, 1, 2, 5, 10). |
-| `AlignReset()` | The role being adjusted back to no offset. |
+| `AlignReset()` | The role being adjusted back to no offset (and the scene's own penis bend). |
 | `SetHorizontalRepeat(on:Boolean)` | While `true`, holding `Left` / `Right` repeats them like `Up` / `Down` (the default HUD turns it on while an Align value is selected). |
 
 The Align tab, the actor meters and OStim's alignment and hide-UI keys were added to version 1 as optional functions (`SetAlign`, `SetMeters`, `ShowTab`, `SetHidden`): a HUD without them still works, it just doesn't show them.

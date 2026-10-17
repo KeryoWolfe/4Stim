@@ -281,6 +281,48 @@ namespace Alignment
 		return role != scene->second.end() ? role->second : Offset{};
 	}
 
+	std::optional<Offset> Find(std::string_view a_key, std::string_view a_sceneID, std::size_t a_role)
+	{
+		std::scoped_lock lock(g_lock);
+		if (!g_loaded) {
+			LoadLocked();
+		}
+		const auto set = g_offsets.find(std::string(a_key));
+		if (set == g_offsets.end()) {
+			return std::nullopt;
+		}
+		const auto scene = set->second.find(Lower(a_sceneID));
+		if (scene == set->second.end()) {
+			return std::nullopt;
+		}
+		const auto role = scene->second.find(a_role);
+		return role != scene->second.end() ? std::optional<Offset>(role->second) : std::nullopt;
+	}
+
+	void Remove(std::string_view a_key, std::string_view a_sceneID, std::size_t a_role)
+	{
+		std::scoped_lock lock(g_lock);
+		if (!g_loaded) {
+			LoadLocked();
+		}
+		const auto set = g_offsets.find(std::string(a_key));
+		if (set == g_offsets.end()) {
+			return;
+		}
+		const auto scene = set->second.find(Lower(a_sceneID));
+		if (scene == set->second.end()) {
+			return;
+		}
+		scene->second.erase(a_role);
+		if (scene->second.empty()) {
+			set->second.erase(scene);
+		}
+		if (set->second.empty()) {
+			g_offsets.erase(set);
+		}
+		SaveLocked();
+	}
+
 	void Set(std::string_view a_key, std::string_view a_sceneID, std::size_t a_role, const Offset& a_offset)
 	{
 		std::scoped_lock lock(g_lock);

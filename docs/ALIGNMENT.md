@@ -26,8 +26,9 @@ In a scene, give the HUD the keys (the hotkey), then go to the **Align** tab (Le
 | **Down / up** | moves them up (+) or down | |
 | **Turn** | turns them (degrees, clockwise +) | |
 | **Size** | scales them, by the step / 100 (0.5 to 2) | |
+| **Penis bend** | bends their penis up (+) or down, one step at a time (-9 to +9; below) | |
 | **Step < 1 >** | the step: 0.5, 1, 2, 5 or 10 units (or degrees) | the next step |
-| **Reset _name_** | | back to no offset |
+| **Reset _name_** | | back to no offset, and the scene's own penis bend |
 
 Hold Left / Right on a value to keep changing it. Every change moves the actor at once and is saved.
 
@@ -50,11 +51,26 @@ As in OStim, alignments are saved per **set of actors**, scene and role, to `Doc
 - **The actor set** is OStim's key: one `<sex><height>x<heels>` per role, joined by `&`. By default actors are grouped by sex only, as OStim's defaults (`alignmentGroupBySex=1`, `alignmentGroupByHeight=0`, `alignmentGroupByHeels=1` in `4Stim.ini`), so a man and a woman in missionary share one alignment, and two women in the same scene have their own. With `alignmentGroupByHeight=1`, actors of different scales get their own too (height = scale x 100). Heels are read from the High Heels System's files and mesh extra data (`SCALING.md`), and count only while an actor's heels are on (feet on the ground).
 - **A transition** uses the alignment of the scene it goes to, so no one jumps when it arrives.
 - **Size** is on top of the actor's own scale, and is undone when they leave the scene (also when a save made mid-scene is loaded).
-- **`sosBend`** (penis bend) is kept, for when bendable bodies are supported.
+- **`sosBend`** is the penis bend (below). With no alignment saved for a role, the scene's own `penisBend` is used, as OStim's default alignment.
 - A scene file's own `offset` (OStim's, `SCENES.md`) is added on top, as in OStim.
 - **From older 4Stim builds:** the first time this build runs with no `alignment.json` yet, it converts `Data\F4SE\Plugins\4Stim\Alignment.json` (one value for everyone): each value goes to every actor set its scene's roles can have. The old file isn't read again.
 
+## Penis bend
+
+As OStim's schlong bending: each role can have the penis bent up or down, in Schlongs of Skyrim's steps from -9 to +9, so it lines up with the partner. The bend comes from the Align tab (saved as `sosBend`), else the scene file (`penisBend`, or OStim's `sosBend` / `tngBend`), and an animation can add to it for a moment with the `4StimBendSoS.<steps>` annotation (OStim's `OStimBendSoS`; `4StimResetSoS` ends it, and so does the next scene).
+
+OStim plays SoS's bend animations; Fallout 4 has none, so 4Stim turns a node of the skeleton: by default ZeX's `Penis_01_Offset`, which bends the shaft from its base. ZeX's `_Offset` nodes aren't animated, so the animation doesn't undo the bend, and A-Body's SMP genitals follow the skeleton's penis bones (rigidly with `MaleBodyHard.xml`, springing with the others). In `4Stim.ini`, `[Alignment]`:
+
+| Setting | Default | Meaning |
+|---|---|---|
+| `SetSchlongBending` | 0 | 1 = no bending (OStim's setting, the same way round). |
+| `fPenisBendStep` | 5 | Degrees per step. Negative if + bends it down. |
+| `sPenisBendNode` | `Penis_01_Offset` | The skeleton node turned (another skeleton's, or ZeX's `Penis_Offset` to turn the whole package). |
+| `iPenisBendAxis` | 2 | The node's own axis it turns around: 0 x, 1 y, 2 z (ZeX's shaft runs along x and bends around z). |
+
+The bend goes back to none when the scene ends. Actors without the node (women, other skeletons) are left alone.
+
 ## Still to come
 
-- **Penis bend** in game, once bendable bodies are supported.
+- **Penis offset** (moving it rather than bending it), and bends per segment.
 - Scaling and heels: see `SCALING.md`.

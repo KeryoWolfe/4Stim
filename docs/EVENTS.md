@@ -63,6 +63,7 @@ Events are in `Data\F4SE\Plugins\4Stim\Events\`, one per file, the id being the 
 | `4StimEvent.<event>,...` | `OStimEvent` | Fires an event (above). |
 | `4StimPeak.<action>` | `OStimPeak` | A peak of the scene's action number `<action>` (0 = the first), for actions with `peaksAnnotated`. |
 | `4StimPlayExpression.<event>` | `OStimPlayExpression` | The actor makes that event expression (`moan`, `climax`...), with no sound (docs/EXPRESSIONS.md). |
+| `4StimBendSoS.<steps>` / `4StimResetSoS` | `OStimBendSoS` / `OStimResetSoS` | The actor's penis bends that many SoS steps more, until reset or the next scene (docs/ALIGNMENT.md). |
 | `4StimEquipObject.<type>` / `4StimUnequipObject.<type>` | `OStimEquipObject` / `OStimUnequipObject` | The actor puts on / takes off an equip object of that type (docs/ACTORS.md). |
 
 Annotations count for as long as the actor is in a scene.

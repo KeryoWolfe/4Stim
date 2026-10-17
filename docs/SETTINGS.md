@@ -33,6 +33,7 @@ Times given with OStim's names are in milliseconds, as in OStim. `SetFurnitureSe
 | `NPCSceneDuration` | 300000 ms | | Scenes without you end after this long |
 | `SetResetPosition` | 1 | `bResetPosition` | NPCs go back to where they stood |
 | `SetScaling` | 0 | | 1 = don't scale actors to the animation (`SCALING.md`) |
+| `SetSchlongBending` | 0 | | 1 = no penis bend (`ALIGNMENT.md`) |
 | `SetOnlyGayAnimsInGayScenes` | 1 | `bMatchSex` | A role goes only to the sex it's meant for (type and requirements always count; `ACTORS.md`) |
 | `unrestrictedNavigation` | 0 | | Only the actor type counts for roles |
 | `PlayerAlwaysDomStraight` / `SubStraight` | 0 / 0 | | You take the first / second role with a man and a woman |

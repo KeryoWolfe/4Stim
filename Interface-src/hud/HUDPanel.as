@@ -151,7 +151,7 @@ package hud
 		}
 
 		// Optional (HUD_API.md): the Align tab's data. { available, role,
-		// roleCount, name, x, y, z, rot, scale, step }.
+		// roleCount, name, x, y, z, rot, scale, bend, step }.
 		public function SetAlign(a_data:Object):void
 		{
 			_align = a_data;
@@ -452,6 +452,7 @@ package hud
 				{ id: "align_z", label: "Down / up   " + signed(Number(_align.z), 1), icon: "", kind: "alignValue", field: "z" },
 				{ id: "align_rot", label: "Turn   " + signed(Number(_align.rot), 1) + " deg", icon: "", kind: "alignValue", field: "rot" },
 				{ id: "align_scale", label: "Size   " + Number(_align.scale).toFixed(3), icon: "", kind: "alignValue", field: "scale" },
+				{ id: "align_bend", label: "Penis bend   " + signed(Number(_align.bend), 0), icon: "", kind: "alignValue", field: "bend" },
 				{ id: "align_step", label: "Step   < " + Number(_align.step) + " >", icon: "", kind: "alignStep" },
 				{ id: "align_reset", label: "Reset " + name, icon: "", kind: "alignReset" }
 			];

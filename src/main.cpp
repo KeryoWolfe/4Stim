@@ -24,6 +24,7 @@
 #include "SceneRegistry.h"
 #include "ActorProperties.h"
 #include "EquipObjects.h"
+#include "PenisBend.h"
 #include "compat/Addresses.h"
 #include "compat/RequiredIDs.h"
 
@@ -211,6 +212,7 @@ namespace
 		{ "setusefades", { "busefades", OStimUnit::kSame } },
 		{ "setuseintroscenes", { "buseintroscenes", OStimUnit::kSame } },
 		{ "setscaling", { "bdisablescaling", OStimUnit::kSame } },
+		{ "setschlongbending", { "bdisablepenisbend", OStimUnit::kSame } },
 		{ "nofacialexpressions", { "bnofacialexpressions", OStimUnit::kSame } },
 		{ "setexpressiondurationmin", { "fexpressiondurationmin", OStimUnit::kMilliseconds } },
 		{ "setexpressiondurationmax", { "fexpressiondurationmax", OStimUnit::kMilliseconds } },
@@ -428,6 +430,14 @@ namespace
 					ActorProperties::Settings().futaUseMaleExcitement = std::stoi(value) != 0;
 				} else if (key == "futausemaleclimax") {
 					ActorProperties::Settings().futaUseMaleClimax = std::stoi(value) != 0;
+				} else if (key == "bdisablepenisbend") {
+					PenisBend::Settings().disabled = std::stoi(value) != 0;
+				} else if (key == "fpenisbendstep") {
+					PenisBend::Settings().stepDegrees = std::clamp(std::stof(value), -45.0F, 45.0F);
+				} else if (key == "spenisbendnode") {
+					PenisBend::Settings().node = value;
+				} else if (key == "ipenisbendaxis") {
+					PenisBend::Settings().axis = std::clamp(std::stoi(value), 0, 2);
 				} else if (key == "unequipstraponifnotneeded") {
 					EquipObjects::Settings().unequipStrapOnIfNotNeeded = std::stoi(value) != 0;
 				} else if (key == "bloganimevents") {
@@ -579,6 +589,8 @@ namespace
 		}
 		REX::INFO("Settings: HUD {}, theme \"{}\", transition lead {}s, match sex {}", g_settings.hudEnabled ? "on" : "off", g_settings.hudTheme, g_settings.transitionLead, g_settings.matchSex ? "on" : "off");
 		SceneRegistry::Rules().intendedSexOnly = g_settings.matchSex;
+		const auto& pb = PenisBend::Settings();
+		REX::INFO("Settings: penis bend {}, {} degree(s) per step around {} axis {}", pb.disabled ? "off" : "on", pb.stepDegrees, pb.node, "xyz"[pb.axis]);
 		const auto& fu = ActorProperties::Settings();
 		REX::INFO("Settings: roles: player dom/sub straight {}/{}, gay {}/{}, choose straight {} gay {} threesome {}, unrestricted {}; futa male role {} excitement {} climax {}; strap-on off when not needed {}",
 			g_settings.playerAlwaysDomStraight, g_settings.playerAlwaysSubStraight, g_settings.playerAlwaysDomGay, g_settings.playerAlwaysSubGay,
@@ -969,6 +981,7 @@ namespace
 				Peaks::Leave(left);
 				Lights::Leave(left);
 				EquipObjects::Leave(left);
+				PenisBend::Leave(left);
 				UnlockActors(left);
 				RestoreScales(a_scene);
 				for (const auto id : left) {
@@ -1108,6 +1121,7 @@ namespace
 		Peaks::Leave(ended.actors);
 		Lights::Leave(ended.actors);
 		EquipObjects::Leave(ended.actors);
+		PenisBend::Leave(ended.actors);
 		for (const auto id : ended.actors) {
 			Undress::Redress(id, false, true);
 		}
@@ -1135,6 +1149,9 @@ namespace
 		if (const auto entered = moved ? SceneRegistry::Find(a_sceneID) : nullptr) {
 			Undress::SceneEntered(scene->actors, *entered, false);
 			EquipObjects::SceneEntered(scene->actors, *entered, false);
+			for (const auto id : scene->actors) {
+				PenisBend::Offset(id, 0);  // OStim's changeNode: the annotation's bend ends with the scene
+			}
 			LockScene(*scene);  // this scene's alignment
 		}
 		if (moved) {
@@ -1217,6 +1234,9 @@ namespace
 		if (_stricmp(previous.c_str(), scene->id.c_str()) != 0) {
 			Undress::SceneEntered(a_active.actors, *scene, false);
 			EquipObjects::SceneEntered(a_active.actors, *scene, false);
+			for (const auto id : a_active.actors) {
+				PenisBend::Offset(id, 0);  // OStim's changeNode: the annotation's bend ends with the scene
+			}
 			LockScene(a_active);  // this scene's alignment
 		}
 
@@ -1726,6 +1746,11 @@ namespace
 				continue;
 			}
 			const auto spot = SpotOf(a_active, role);
+			// The penis bend (OStim's setSoSBend): the alignment's, else the scene's.
+			{
+				const auto found = settled ? Alignment::Find(a_active.alignKey, settled->id, role) : std::nullopt;
+				PenisBend::Set(id, found ? found->bend : settled && role < settled->actors.size() ? settled->actors[role].penisBend : 0.0F);
+			}
 			// The actor's scale, only when it changes. As OStim's
 			// ThreadActor::scale: the role's scale times the alignment's,
 			// over their own NPC height, and with heels on, times
@@ -2379,6 +2404,7 @@ namespace
 			}
 		}
 		Lights::Tick();  // lights follow their bones, paused or not
+		PenisBend::Tick();
 		const bool waiting = !g_activeScenes.empty();  // faces and voices run as long as any scene does
 		if (!waiting && !g_climaxShake.active) {
 			g_autoplayTicking = false;
@@ -5287,6 +5313,15 @@ namespace
 						Expressions::SetEvent(id, event, true);
 					}
 				});
+			} else if (_stricmp(a_event.tag.c_str(), "4StimBendSoS") == 0) {
+				// OStim's OStimBendSoS: "<steps>" on top of the scene's bend.
+				try {
+					PenisBend::Offset(id, std::stoi(a_event.payload.c_str()));
+				} catch (const std::exception&) {
+					REX::WARN("Penis bend: 4StimBendSoS.{} on {:08X}: the bend must be a number", a_event.payload.c_str(), id);
+				}
+			} else if (_stricmp(a_event.tag.c_str(), "4StimResetSoS") == 0) {
+				PenisBend::Offset(id, 0);  // OStim's OStimResetSoS
 			} else if (_stricmp(a_event.tag.c_str(), "4StimEquipObject") == 0 || _stricmp(a_event.tag.c_str(), "4StimUnequipObject") == 0) {
 				// OStim's OStimEquipObject / OStimUnequipObject: "<type>".
 				const bool  equip = _stricmp(a_event.tag.c_str(), "4StimEquipObject") == 0;
@@ -5713,6 +5748,7 @@ namespace
 				Lights::Clear();
 				Undress::Clear();
 				EquipObjects::Clear();
+				PenisBend::Clear();
 			});
 			{
 				std::scoped_lock lock(g_pendingSequenceLock);
@@ -5751,6 +5787,7 @@ namespace
 				Lights::Clear();
 				Undress::Clear();
 				EquipObjects::Clear();
+				PenisBend::Clear();
 				g_focusNextScene = false;
 				SetPlayerScene({});
 				g_sceneCameraActive = false;
@@ -5835,7 +5872,13 @@ namespace FourStim
 		}
 		const auto scene = SceneRegistry::Find(active->sceneID);
 		a_sceneID = scene ? SceneRegistry::Settled(scene)->id : active->sceneID;
-		a_offset = Alignment::Get(active->alignKey, a_sceneID, a_role);
+		// None set: OStim's default alignment, the scene's penis bend.
+		const auto found = Alignment::Find(active->alignKey, a_sceneID, a_role);
+		a_offset = found.value_or(Alignment::Offset{});
+		if (!found && scene) {
+			const auto settled = SceneRegistry::Settled(scene);
+			a_offset.bend = a_role < settled->actors.size() ? settled->actors[a_role].penisBend : 0.0F;
+		}
 		return true;
 	}
 
@@ -5851,9 +5894,23 @@ namespace FourStim
 			return;
 		}
 		Alignment::Set(active->alignKey, sceneID, a_role, a_offset);
-		REX::INFO("Alignment: \"{}\" ({}) role {}: x {:.1f} y {:.1f} z {:.1f} rot {:.1f} scale {:.2f}", sceneID, active->alignKey, a_role, a_offset.x, a_offset.y,
-			a_offset.z, a_offset.rot, a_offset.scale);
+		REX::INFO("Alignment: \"{}\" ({}) role {}: x {:.1f} y {:.1f} z {:.1f} rot {:.1f} scale {:.2f} bend {}", sceneID, active->alignKey, a_role, a_offset.x, a_offset.y,
+			a_offset.z, a_offset.rot, a_offset.scale, a_offset.bend);
 		LockScene(*active);
+	}
+
+	void ResetFocusedAlignment(std::size_t a_role)
+	{
+		Alignment::Offset old;
+		std::string       sceneID;
+		if (!GetFocusedAlignment(a_role, old, sceneID)) {
+			return;
+		}
+		if (const auto active = FindActiveScene(GetPlayerScene().role0)) {
+			Alignment::Remove(active->alignKey, sceneID, a_role);
+			REX::INFO("Alignment: \"{}\" ({}) role {}: back to the scene's", sceneID, active->alignKey, a_role);
+			LockScene(*active);
+		}
 	}
 
 	std::vector<RE::Actor*> ResolveActors(const std::vector<std::uint32_t>& a_ids)

@@ -76,6 +76,9 @@ namespace FourStim
 	// Sets it, saves it, and moves the actor there now. Main thread.
 	void SetFocusedAlignment(std::size_t a_role, const Alignment::Offset& a_offset);
 
+	// Forgets it: back to the scene's own (its penis bend). Main thread.
+	void ResetFocusedAlignment(std::size_t a_role);
+
 	// Form IDs to actors, keeping role order. An actor that can't be found
 	// stays in its slot as nullptr (None in Papyrus).
 	std::vector<RE::Actor*> ResolveActors(const std::vector<std::uint32_t>& a_ids);

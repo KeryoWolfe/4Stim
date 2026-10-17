@@ -546,7 +546,7 @@ namespace HUD
 					}
 					break;
 				case 11:  // AlignReset()
-					FourStim::SetFocusedAlignment(g_alignRole, {});
+					FourStim::ResetFocusedAlignment(g_alignRole);
 					SendAlign();
 					break;
 				case 12:  // SetHorizontalRepeat(on)
@@ -655,6 +655,7 @@ namespace HUD
 				data.SetMember("z"sv, GValue(static_cast<double>(offset.z)));
 				data.SetMember("rot"sv, GValue(static_cast<double>(offset.rot)));
 				data.SetMember("scale"sv, GValue(static_cast<double>(offset.scale)));
+				data.SetMember("bend"sv, GValue(static_cast<double>(offset.bend)));
 				data.SetMember("step"sv, GValue(static_cast<double>(ALIGN_STEPS[g_alignStep])));
 				InvokeOptional("SetAlign", &data, 1);
 			}
@@ -679,6 +680,8 @@ namespace HUD
 					offset.rot = std::fmod(snap(offset.rot + step, 0.1F) + 540.0F, 360.0F) - 180.0F;
 				} else if (a_field == "scale") {
 					offset.scale = std::clamp(snap(offset.scale + step / 100.0F, 0.005F), 0.5F, 2.0F);
+				} else if (a_field == "bend") {
+					offset.bend = std::clamp(std::round(offset.bend) + a_dir, -9.0F, 9.0F);  // as OStim: one SoS step a press
 				} else {
 					return;
 				}
