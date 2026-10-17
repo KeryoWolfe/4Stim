@@ -262,9 +262,11 @@ Input names while the HUD is focused:
 
 | Name | Keyboard | Controller |
 |---|---|---|
-| `Up`, `Down`, `Left`, `Right` | Arrow keys | D-pad |
-| `Accept` | Enter | A |
-| `Cancel` | Esc, Backspace | B |
+| `Up`, `Down`, `Left`, `Right` | Arrow keys, OStim's navigation keys (numpad 8, 5, 4, 6) | D-pad |
+| `Accept` | Enter, numpad 7 (OStim's Yes) | A |
+| `Cancel` | Esc, Backspace | |
+| `Back` | | B: from the list to the tab buttons; from the tab buttons, call `Hide` (the plugin shows the HUD again on A) |
+| `Toggle` | Numpad 9 (OStim's Toggle): between the list and the tab buttons | |
 | `PrevTab`, `NextTab` | (use `Left`/`Right`) | LB, RB |
 | `SpeedUp`, `SpeedDown` | (the speed keys work directly) | Y, X |
 
@@ -279,6 +281,7 @@ Input names while the HUD is focused:
 | `RunUtility(id:String)` | Run a Utility entry. |
 | `OpenSearch()` | Open the scene picker, filtered to this scene's actors. |
 | `ReleaseFocus()` | Give input back to the game (the plugin answers with `SetFocus(false)`). |
+| `Hide()` | Hide the HUD and give input back to the game, the scene going on (the plugin answers with `SetHidden(true)` and `SetFocus(false)`; the controller's A shows it again). |
 | `Log(message:String)` | Write a line to `4Stim.log`, tagged with your movie. |
 | `AlignAdjust(field:String, direction:int)` | One step of the role being adjusted: `field` is `"x"`, `"y"`, `"z"`, `"rot"`, `"scale"` or `"bend"` (one SoS step at a time, whatever the step size), `direction` `+1` / `-1`. Saved and applied at once; answered with `SetAlign`. |
 | `AlignActor(direction:int)` | The next (`+1`) or previous (`-1`) role to adjust. |
@@ -293,7 +296,9 @@ The Align tab, the actor meters and OStim's alignment and hide-UI keys were adde
 - **Never pause and never steal input while not focused.** The player has to be
   able to use the free camera.
 - **Always offer a way to end the scene** while focused (`EndScene`), and make
-  `Cancel` call `ReleaseFocus`. Otherwise players can get stuck.
+  `Cancel` call `ReleaseFocus`. Otherwise players can get stuck. Controllers have no
+  `Cancel`: their B arrives as `Back`, and must lead to `Hide` (directly or, as
+  the default HUD, after the tab buttons), or controller players get stuck.
 - Don't keep scene data between scenes. The plugin sends everything again for
   each new scene.
 

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <string>
 
 // The in-scene HUD: Data\Interface\FourStimHUDMenu.swf, a non-pausing menu
@@ -49,12 +50,24 @@ namespace HUD
 	// function SetHidden). Any thread.
 	void ToggleHidden();
 
+	// OStim's navigation keys (SetOsaUpKey, Down, Left, Right, Yes, Tog):
+	// Up, Down, Left, Right, Accept and Toggle for the HUD, besides the arrow
+	// keys, Enter and Esc. Main thread.
+	void SetNavigationKeys(const std::array<std::uint32_t, 6>& a_keys);
+	[[nodiscard]] bool IsNavigationKey(std::uint32_t a_code);
+
+	// The controller's A while the HUD is hidden or doesn't have the keys:
+	// shows it and gives it the keys. Any thread.
+	void               Show();
+	[[nodiscard]] bool IsHidden();
+
 	[[nodiscard]] bool IsOpen();
 	[[nodiscard]] bool IsFocused();
 	void               SetFocus(bool a_focused);  // any thread
 
 	// Input while the HUD is focused: arrow keys / d-pad, Enter / A, Esc /
-	// Backspace / B, LB / RB, and the controller's speed buttons. Returns
+	// Backspace, B ("Back": the tab buttons, then hide), LB / RB, and the
+	// controller's speed buttons. Returns
 	// true if a_event was one of them. Called from the input hook (main thread).
 	bool HandleInput(const RE::ButtonEvent* a_event);
 }

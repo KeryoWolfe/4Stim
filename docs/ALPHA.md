@@ -32,17 +32,20 @@ If you're updating from an earlier test build, replace both mods (don't merge th
 
 | Key | What it does |
 |---|---|
-| `N` | Out of a scene: start one. Aimed at someone in a scene: that scene's options (watch, auto mode, end). In a scene: give the HUD the arrow keys, or hand them back. |
-| Arrow keys / d-pad | Move through the picker and the HUD. |
-| Enter / A | Choose. |
-| Esc, Backspace / B | Back, or hand the keys back to the game. |
-| `=` / `-` (gamepad Y / X) | Faster / slower. |
-| `U` | Auto mode on or off for your scene. |
-| `Shift` + `N` | Start a scene between NPCs, even while you're in one yourself. |
+| Up arrow | Out of a scene: start one. Aimed at someone in a scene: that scene's options (watch, auto mode, end). In a scene: give the HUD the arrow keys, or hand them back. |
+| Arrow keys / numpad 8 5 4 6 / d-pad | Move through the picker and the HUD. |
+| Enter / numpad 7 / A | Choose. |
+| Numpad 9 | The HUD: between the list and the tab buttons. |
+| Esc, Backspace | Back, or hand the keys back to the game. |
+| Controller B | The HUD: from the list to the tab buttons (Up / Down pick a tab, A back to the list); again, hide the HUD (the scene goes on). A shows it again. |
+| Numpad + / - (gamepad Y / X) | Faster / slower. |
+| Numpad 0 | Auto mode on or off for your scene. |
+| Numpad 1, numpad ., K, L, numpad /, numpad * | Pull out, end the scene, search, Align tab, free camera, hide the HUD (OStim's keys). |
+| `Shift` + Up arrow | Start a scene between NPCs, even while you're in one yourself. |
 
-Starting a scene: press `N` near someone. Add more people if the scene allows, pick where (right here, or a bed, chair, table or mattress nearby), and an idle scene starts. Choose **You: not in it** to start a scene between NPCs and watch it; **Running scenes** lists every scene going on, where you can watch one, switch its auto mode or end it.
+Starting a scene: press the Up arrow near someone. Add more people if the scene allows, pick where (right here, or a bed, chair, table or mattress nearby), and an idle scene starts. Choose **You: not in it** to start a scene between NPCs and watch it; **Running scenes** lists every scene going on, where you can watch one, switch its auto mode or end it.
 
-Every key and option is in `F4SE\Plugins\4Stim.ini`, with a comment on each. Edit it with the game closed. Settings OStim also has use OStim's names and defaults (`docs/SETTINGS.md`), and OStim's other scene keys (pull out, end scene, search, align, free camera, hide HUD) are there, unbound.
+Every key and option is in `F4SE\Plugins\4Stim.ini`, with a comment on each. Edit it with the game closed. Settings OStim also has use OStim's names and defaults (`docs/SETTINGS.md`), with OStim's keys as defaults.
 
 ## Testing on 1.10.163
 
@@ -75,11 +78,11 @@ From 0.1.0, still worth checking:
 - **Undressing.** Do clothes come off as the scene needs them, and go back on when it ends?
 - **Excitement and climax.** Do the meters rise, does climax happen, and does the scene end the way the ini says it should?
 - **Auto mode.** Does it move through positions sensibly and end on its own?
-- **Several scenes at once,** with and without you in them, including starting one with `Shift` + `N` while you're in your own.
+- **Several scenes at once,** with and without you in them, including starting one with `Shift` + Up arrow while you're in your own.
 - **Saving and loading mid-scene.** As in OStim, scenes running when you save end when the save loads, and everyone in them is let go and dressed again. With `bResumeScenes=1` they start again a few seconds after the save loads instead.
 - **Undressing by hand:** Undress / Dress for each actor in the HUD's Utility tab.
 - **The Align tab** in the HUD: move, turn and resize each actor in a scene (docs/ALIGNMENT.md). Does it stay fixed the next time that scene plays? Does anyone get pushed off their spot during a scene?
-- **Animated undressing:** from Standing apart (MF), the "take off her top / bottoms / gloves / hat / boots" options. And after a scene, NPCs dressing a body part at a time with redress animations.
+- **Animated undressing:** from Standing apart (MF), the "take off her chest armor / outfit / gloves / hat / boots" options. And after a scene, NPCs dressing a body part at a time with redress animations.
 - **OStim's scene feel:** the fade to black as a scene with you starts and ends, slow motion at a climax, the camera's field of view in scenes, and NPC scenes ending on their own after 5 minutes.
 - **Your body and outfit mods.** Anything that doesn't line up, clips badly or doesn't undress.
 

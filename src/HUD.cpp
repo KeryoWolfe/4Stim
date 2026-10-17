@@ -519,6 +519,7 @@ namespace HUD
 				MapCodeMethodToASFunction("AlignStep", 10);    // (direction)
 				MapCodeMethodToASFunction("AlignReset", 11);
 				MapCodeMethodToASFunction("SetHorizontalRepeat", 12);  // (on)
+				MapCodeMethodToASFunction("Hide", 13);  // hide the HUD; the scene goes on
 			}
 
 			void Call(const Params& a_params) override
@@ -588,6 +589,11 @@ namespace HUD
 					break;
 				case 12:  // SetHorizontalRepeat(on)
 					_horizontalRepeat = a_params.argCount > 0 && a_params.args[0].IsBoolean() && a_params.args[0].GetBoolean();
+					break;
+				case 13:  // Hide()
+					if (!g_hidden) {
+						ToggleHidden();
+					}
 					break;
 				default:
 					break;
@@ -1077,6 +1083,10 @@ namespace HUD
 			}
 		}
 
+		// OStim's navigation keys (4Stim.ini's SetOsaUpKey...): up, down, left,
+		// right, yes, toggle. Set from the main thread with the settings.
+		std::array<std::uint32_t, 6> g_navKeys{};
+
 		// Maps a button to the HUD's input names (HUD_API.md). Keyboard codes
 		// are Windows virtual-key codes.
 		const char* InputName(const RE::ButtonEvent* a_event)
@@ -1084,6 +1094,14 @@ namespace HUD
 			const auto code = static_cast<std::uint32_t>(a_event->idCode);
 			switch (a_event->device.get()) {
 			case RE::INPUT_DEVICE::kKeyboard:
+				if (code != 0) {
+					constexpr std::array<const char*, 6> NAMES{ "Up", "Down", "Left", "Right", "Accept", "Toggle" };
+					for (std::size_t i = 0; i < g_navKeys.size(); ++i) {
+						if (code == g_navKeys[i]) {
+							return NAMES[i];
+						}
+					}
+				}
 				switch (code) {
 				case 0x26: return "Up";
 				case 0x28: return "Down";
@@ -1101,7 +1119,7 @@ namespace HUD
 				case 0x0004: return "Left";
 				case 0x0008: return "Right";
 				case 0x1000: return "Accept";  // A
-				case 0x2000: return "Cancel";  // B
+				case 0x2000: return "Back";    // B: the tab buttons, then hide (4Stim's controller scheme)
 				case 0x0100: return "PrevTab"; // LB
 				case 0x0200: return "NextTab"; // RB
 				case 0x8000: return "SpeedUp";    // Y
@@ -1274,6 +1292,40 @@ namespace HUD
 			}
 			g_menu->SendHidden();
 			REX::INFO("HUD: {}", g_hidden ? "hidden" : "shown");
+		});
+	}
+
+	void SetNavigationKeys(const std::array<std::uint32_t, 6>& a_keys)
+	{
+		g_navKeys = a_keys;
+	}
+
+	bool IsNavigationKey(std::uint32_t a_code)
+	{
+		return a_code != 0 && std::ranges::find(g_navKeys, a_code) != g_navKeys.end();
+	}
+
+	bool IsHidden()
+	{
+		return g_hidden;
+	}
+
+	void Show()
+	{
+		F4SE::GetTaskInterface()->AddTask([]() {
+			if (!g_menu || !g_menu->Loaded()) {
+				return;
+			}
+			if (g_hidden) {
+				g_hidden = false;
+				g_menu->SendHidden();
+			}
+			if (!g_focused) {
+				g_focused = true;
+				SetFocusLayer(true);
+				g_menu->SendFocus();
+			}
+			REX::INFO("HUD: shown");
 		});
 	}
 

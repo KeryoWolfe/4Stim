@@ -13,5 +13,8 @@ namespace Physics
 {
 	// a_actors in role order.
 	void SceneStarted(const std::vector<std::uint32_t>& a_actors, const std::string& a_sceneID);
+	// The scene moved on: an actor whose swap has a "toReceiving" switches
+	// between it and "to" when they go from giving to receiving or back.
+	void SceneChanged(const std::vector<std::uint32_t>& a_actors, const std::string& a_sceneID);
 	void SceneEnded(const std::vector<std::uint32_t>& a_actors);
 }

@@ -96,6 +96,7 @@ namespace SceneEvents
 
 	void SceneChanged(const std::vector<std::uint32_t>& a_actors, const std::string& a_oldID, const std::string& a_newID)
 	{
+		Physics::SceneChanged(a_actors, a_newID);
 		Send("FourStim_OnSceneChange"sv, FourStim::ResolveActors(a_actors), a_oldID, a_newID);
 	}
 

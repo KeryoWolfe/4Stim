@@ -24,7 +24,7 @@ Swaps are defined in JSON files in `Data\F4SE\Plugins\4Stim\Physics\`. 4Stim shi
 | `sex` | no | Whose body: `"male"`, `"female"` or `"any"` (default). |
 | `from` | yes | The physics file the body normally uses, as its mesh names it. |
 | `to` | yes | The file to use during a scene. |
-| `toReceiving` | no | The file for an actor in any role but the first (in OStim's scenes the first role is the giving one). Defaults to `to`. |
+| `toReceiving` | no | The file for an actor on the receiving end: the target of someone's action that needs their anus or vagina (anal or vaginal sex, pegging, fingering, rimming...). In a scene without such an action, every role but the first (OStim's scenes put the giving one first). Defaults to `to`. |
 | `sceneTags` | no | Only swap in scenes with one of these tags, e.g. `["sexual"]`. Default: every scene. |
 
-Each actor gets at most one swap (the first that matches), when their scene starts. It stays for the whole scene, including scene changes, and is swapped back when it ends.
+Each actor gets at most one swap (the first that matches), when their scene starts, and it's swapped back when the scene ends. On a scene change, an actor whose swap has a `toReceiving` switches between it and `to` if they went from giving to receiving or back (a man who was on top, now bottoming).

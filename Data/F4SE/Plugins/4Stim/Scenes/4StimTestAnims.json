@@ -1495,12 +1495,12 @@
 				},
 				{
 					"to": "4StimTest_OStim2PUndressTop1MF",
-					"label": "take off {1}'s top",
+					"label": "take off {1}'s chest armor",
 					"icon": "4Stim/clothes/top"
 				},
 				{
 					"to": "4StimTest_OStim2PUndressBottom1MF",
-					"label": "take off {1}'s bottoms",
+					"label": "take off {1}'s outfit",
 					"icon": "4Stim/clothes/skirt"
 				},
 				{
@@ -1520,7 +1520,7 @@
 				},
 				{
 					"to": "4StimTest_OStim2PUndressBottom0MF",
-					"label": "{1} takes off {0}'s bottoms",
+					"label": "{1} takes off {0}'s outfit",
 					"icon": "4Stim/clothes/trousers"
 				}
 			]
@@ -11466,7 +11466,7 @@
 		},
 		{
 			"id": "4StimTest_OStim2PUndressBottom0MF",
-			"name": "Undress Bottom 0 (MF)",
+			"name": "Undress Outfit 0 (MF)",
 			"length": 7.167,
 			"actors": [
 				{
@@ -11497,21 +11497,14 @@
 			"undress": [
 				{
 					"actor": 0,
-					"slots": [
-						33,
-						36,
-						39,
-						40,
-						44,
-						45
-					],
+					"slots": [33, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45],
 					"at": 4.667
 				}
 			]
 		},
 		{
 			"id": "4StimTest_OStim2PUndressBottom1MF",
-			"name": "Undress Bottom 1 (MF)",
+			"name": "Undress Outfit 1 (MF)",
 			"length": 6.0,
 			"actors": [
 				{
@@ -11542,14 +11535,7 @@
 			"undress": [
 				{
 					"actor": 1,
-					"slots": [
-						33,
-						36,
-						39,
-						40,
-						44,
-						45
-					],
+					"slots": [33, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45],
 					"at": 1.5
 				}
 			]
@@ -11638,7 +11624,7 @@
 		},
 		{
 			"id": "4StimTest_OStim2PUndressTop1MF",
-			"name": "Undress Top 1 (MF)",
+			"name": "Undress Chest Armor 1 (MF)",
 			"length": 4.333,
 			"actors": [
 				{
@@ -11669,16 +11655,7 @@
 			"undress": [
 				{
 					"actor": 1,
-					"slots": [
-						33,
-						36,
-						37,
-						38,
-						41,
-						42,
-						43,
-						50
-					],
+					"slots": [41],
 					"at": 2.0
 				}
 			]

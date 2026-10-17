@@ -9,6 +9,7 @@
 
 #include <nlohmann/json.hpp>
 
+#include "Actions.h"
 #include "Bridge.h"
 #include "SceneRegistry.h"
 
@@ -28,15 +29,42 @@ namespace Physics
 			SceneRegistry::Sex    sex = SceneRegistry::Sex::kAny;  // whose body it is
 			std::string           from;          // the physics file the body normally uses
 			std::string           to;            // during a scene
-			std::string           toReceiving;   // during a scene, in a role other than the first ("" = to)
+			std::string           toReceiving;   // during a scene, for an actor on the receiving end ("" = to)
 			std::vector<std::string> sceneTags;  // only scenes with one of these tags ("" = every scene)
 		};
 
 		struct Applied
 		{
 			std::string from;
-			std::string to;
+			std::string to;           // swapped in now
+			std::string giving;       // the swap's "to"
+			std::string receiving;    // its "toReceiving" ("" = giving)
 		};
+
+		// Whether role a_role is on the receiving end in a_scene: the target
+		// of someone else's action that needs their anus or vagina (anal or
+		// vaginal sex, pegging, fingering, rimming...). A scene with no such
+		// action falls back to OStim's role order, where the first role
+		// gives and the others receive.
+		bool Receiving(const SceneRegistry::Scene* a_scene, std::size_t a_role)
+		{
+			if (!a_scene) {
+				return a_role > 0;
+			}
+			bool penetration = false;
+			for (const auto& action : a_scene->actions) {
+				const auto& needs = action.type->target.requirements;
+				const bool opening = std::ranges::find(needs, "anus") != needs.end() || std::ranges::find(needs, "vagina") != needs.end();
+				if (!opening || action.actor == action.target) {
+					continue;
+				}
+				penetration = true;
+				if (action.target == a_role) {
+					return true;
+				}
+			}
+			return penetration ? false : a_role > 0;
+		}
 
 		std::mutex                                g_lock;
 		std::vector<Swap>                         g_swaps;
@@ -202,11 +230,31 @@ namespace Physics
 						continue;
 					}
 				}
-				const auto& to = role > 0 && !swap.toReceiving.empty() ? swap.toReceiving : swap.to;
+				const auto& to = Receiving(scene.get(), role) && !swap.toReceiving.empty() ? swap.toReceiving : swap.to;
 				if (CallSwap(actor, swap.from, to)) {
-					g_applied[id] = { swap.from, to };
+					g_applied[id] = { swap.from, to, swap.to, swap.toReceiving };
 				}
 				break;  // one swap per actor
+			}
+		}
+	}
+
+	void SceneChanged(const std::vector<std::uint32_t>& a_actors, const std::string& a_sceneID)
+	{
+		std::scoped_lock lock(g_lock);
+		const auto scene = SceneRegistry::Find(a_sceneID);
+		for (std::size_t role = 0; role < a_actors.size(); ++role) {
+			const auto it = g_applied.find(a_actors[role]);
+			if (it == g_applied.end() || it->second.receiving.empty()) {
+				continue;
+			}
+			auto& applied = it->second;
+			const auto& want = Receiving(scene.get(), role) ? applied.receiving : applied.giving;
+			if (want == applied.to) {
+				continue;
+			}
+			if (const auto actor = RE::TESForm::GetFormByID<RE::Actor>(a_actors[role]); actor && CallSwap(actor, applied.to, want)) {
+				applied.to = want;
 			}
 		}
 	}

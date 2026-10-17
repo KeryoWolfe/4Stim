@@ -103,7 +103,7 @@ namespace
 
 	struct Settings
 	{
-		std::uint32_t hotkey = 0x4E;           // Windows virtual-key code; 0x4E = N
+		std::uint32_t hotkey = 0x26;           // Windows virtual-key code; OStim's: the Up arrow
 		std::int32_t  targetMode = 0;          // 0 = Crosshair, 1 = Proximity
 		float         maxDistance = 300.0f;    // crosshair: how far to look
 		float         crosshairCone = 10.0f;   // crosshair: degrees either side of your facing
@@ -121,16 +121,24 @@ namespace
 		bool          useAutoFades = false;      // SetUseAutoFades: and as auto mode jumps to another scene
 		bool          useIntroScenes = true;     // SetUseIntroScenes: scenes with the player start with one tagged "intro"
 		float         npcSceneDuration = 300.0F; // NPCSceneDuration (OStim: ms): scenes without the player end after this many seconds (0 = never)
-		std::uint32_t speedUpKey = 0xBB;       // virtual-key code; 0xBB = the =/+ key
-		std::uint32_t speedDownKey = 0xBD;     // 0xBD = the -/_ key
-		// OStim's other scene keys, unbound (0) by default: pull out, end the
-		// scene, the search, the Align tab, the free camera, hide the HUD.
-		std::uint32_t pullOutKey = 0;
-		std::uint32_t endKey = 0;
-		std::uint32_t searchKey = 0;
-		std::uint32_t alignmentKey = 0;
-		std::uint32_t freeCamKey = 0;
-		std::uint32_t hideUIKey = 0;
+		// OStim's scene keys, with OStim's defaults (as virtual-key codes):
+		std::uint32_t speedUpKey = 0x6B;       // numpad +
+		std::uint32_t speedDownKey = 0x6D;     // numpad -
+		std::uint32_t pullOutKey = 0x61;       // numpad 1
+		std::uint32_t endKey = 0x6E;           // numpad . (OStim's navigation "End")
+		std::uint32_t searchKey = 0x4B;        // K
+		std::uint32_t alignmentKey = 0x4C;     // L
+		std::uint32_t freeCamKey = 0x6F;       // numpad /
+		std::uint32_t hideUIKey = 0x6A;        // numpad *
+		// OStim's navigation keys (its "OSA keys"): the HUD's Up / Down / Left /
+		// Right, Yes (choose) and Toggle (the tab buttons), besides the arrow
+		// keys, Enter and Esc. 0 = none.
+		std::uint32_t navUpKey = 0x68;         // numpad 8
+		std::uint32_t navDownKey = 0x65;       // numpad 5
+		std::uint32_t navLeftKey = 0x64;       // numpad 4
+		std::uint32_t navRightKey = 0x66;      // numpad 6
+		std::uint32_t navYesKey = 0x67;        // numpad 7
+		std::uint32_t navToggleKey = 0x69;     // numpad 9
 		std::string   hudTheme = "Color";     // file name in Data\Interface\4Stim\Themes\, without .json
 		bool          hudEnabled = true;
 		bool          hudColumns = false;     // sHUDControls=Columns: OStim's control scheme (Left / Right between the list and the tab buttons)
@@ -170,7 +178,7 @@ namespace
 	{
 		bool          player = false;        // scenes with the player start in auto mode
 		bool          npc = true;            // scenes without the player do
-		std::uint32_t key = 0;               // toggles it for the scene you're in / watching (0 = no key)
+		std::uint32_t key = 0x60;            // toggles it for the scene you're in / watching (0 = no key); OStim's: numpad 0
 		float         sceneMin = 7.5F;       // seconds in each scene
 		float         sceneMax = 15.0F;
 		int           foreplayChance = 35;   // % of scenes that start with foreplay
@@ -215,6 +223,12 @@ namespace
 		{ "keyalignment", { "ialignmentkey", OStimUnit::kSame } },
 		{ "setfreecamtogglekey", { "ifreecamkey", OStimUnit::kSame } },
 		{ "keyhideui", { "ihideuikey", OStimUnit::kSame } },
+		{ "setosaupkey", { "inavupkey", OStimUnit::kSame } },
+		{ "setosadownkey", { "inavdownkey", OStimUnit::kSame } },
+		{ "setosaleftkey", { "inavleftkey", OStimUnit::kSame } },
+		{ "setosarightkey", { "inavrightkey", OStimUnit::kSame } },
+		{ "setosayeskey", { "inavyeskey", OStimUnit::kSame } },
+		{ "setosatogkey", { "inavtogglekey", OStimUnit::kSame } },
 		// General, camera, furniture.
 		{ "setresetposition", { "bresetposition", OStimUnit::kSame } },
 		{ "setonlygayanimsingayscenes", { "bmatchsex", OStimUnit::kSame } },
@@ -419,6 +433,20 @@ namespace
 					g_settings.speedDownKey = static_cast<std::uint32_t>(std::stoul(value, nullptr, 0));
 				} else if (key == "stheme") {
 					g_settings.hudTheme = value;
+				}
+				// OStim's navigation keys (a chain of their own, C1061).
+				if (key == "inavupkey") {
+					g_settings.navUpKey = static_cast<std::uint32_t>(std::stoul(value, nullptr, 0));
+				} else if (key == "inavdownkey") {
+					g_settings.navDownKey = static_cast<std::uint32_t>(std::stoul(value, nullptr, 0));
+				} else if (key == "inavleftkey") {
+					g_settings.navLeftKey = static_cast<std::uint32_t>(std::stoul(value, nullptr, 0));
+				} else if (key == "inavrightkey") {
+					g_settings.navRightKey = static_cast<std::uint32_t>(std::stoul(value, nullptr, 0));
+				} else if (key == "inavyeskey") {
+					g_settings.navYesKey = static_cast<std::uint32_t>(std::stoul(value, nullptr, 0));
+				} else if (key == "inavtogglekey") {
+					g_settings.navToggleKey = static_cast<std::uint32_t>(std::stoul(value, nullptr, 0));
 				}
 				// (A new chain: MSVC allows only so many else-ifs in one, C1061.)
 				if (key == "shudcontrols") {
@@ -647,6 +675,11 @@ namespace
 		}
 		REX::INFO("Settings: HUD {}, theme \"{}\", transition lead {}s, match sex {}", g_settings.hudEnabled ? "on" : "off", g_settings.hudTheme, g_settings.transitionLead, g_settings.matchSex ? "on" : "off");
 		SceneRegistry::Rules().intendedSexOnly = g_settings.matchSex;
+		// The HUD's theme, on / off and layout, here so a reload (the MCM's
+		// changes) applies them too; HUD::LoadConfig then reads the theme.
+		HUD::SetOptions(g_settings.hudTheme, g_settings.hudEnabled, g_settings.hudColumns);
+		HUD::SetNavigationKeys({ g_settings.navUpKey, g_settings.navDownKey, g_settings.navLeftKey, g_settings.navRightKey,
+			g_settings.navYesKey, g_settings.navToggleKey });
 		const auto& pb = PenisBend::Settings();
 		REX::INFO("Settings: penis bend {}, {} degree(s) per step around {} axis {}", pb.disabled ? "off" : "on", pb.stepDegrees, pb.node, "xyz"[pb.axis]);
 		const auto& eyes = EyeLook::Settings();
@@ -5896,6 +5929,17 @@ namespace
 			return;
 		}
 
+		// The controller's A in a scene you're in or watching, while the HUD is
+		// hidden or doesn't have the keys: shows it and gives it the keys (B
+		// hid it: 4Stim's controller scheme, docs/HUD.md).
+		if (a_event->device.get() == RE::INPUT_DEVICE::kGamepad) {
+			if (static_cast<std::uint32_t>(a_event->idCode) == 0x1000 && HUD::IsOpen() && (HUD::IsHidden() || !HUD::IsFocused()) &&
+				GetPlayerScene().Active()) {
+				HUD::Show();
+			}
+			return;
+		}
+
 		// Keyboard codes are Windows virtual-key codes (N = 0x4E).
 		if (a_event->device.get() != RE::INPUT_DEVICE::kKeyboard) {
 			return;
@@ -5903,6 +5947,13 @@ namespace
 
 		const auto code = static_cast<std::uint32_t>(a_event->idCode);
 		if (code == 0) {
+			return;
+		}
+		// OStim's navigation keys, while the HUD doesn't have the keys: as
+		// OStim shows its bars on any of them, show the HUD and give it the
+		// keys (it has them from then on, so the next press moves).
+		if (HUD::IsNavigationKey(code) && HUD::IsOpen() && GetPlayerScene().Active()) {
+			HUD::Show();
 			return;
 		}
 		// The NPC scene key (or Shift + the hotkey) before the hotkey itself.
@@ -6962,7 +7013,6 @@ F4SE_PLUGIN_LOAD(const F4SE::LoadInterface* a_f4se)
 
 	MCM::Sync();  // whichever of 4Stim.ini and the MCM's settings changed last wins
 	LoadSettings();
-	HUD::SetOptions(g_settings.hudTheme, g_settings.hudEnabled, g_settings.hudColumns);
 	InputHook::Install();
 	F4SE::GetMessagingInterface()->RegisterListener(OnMessage);
 	F4SE::GetPapyrusInterface()->Register(RegisterPapyrusFunctions);

@@ -6,23 +6,25 @@ All of 4Stim's settings are in `Data\F4SE\Plugins\4Stim.ini`, with a comment on 
 
 Where OStim NG has the same setting, 4Stim uses OStim's name for it (the names in OStim's MCM settings export, `MCMTable.h`), with the same default and the same meaning, so anyone coming from Skyrim can look a setting up in OStim's docs. The names 4Stim used before still work. Two things differ from OStim:
 
-- **Keys** are Windows virtual-key codes (N = `0x4E`), not Skyrim's DirectX scan codes. `SetKeyUp=78` in OStim is numpad +; in 4Stim, 78 is N.
+- **Keys** are Windows virtual-key codes (N = `0x4E`), not Skyrim's DirectX scan codes. `SetKeyUp=78` in OStim is numpad +; in 4Stim, 78 is N. The defaults are OStim's keys, as virtual-key codes (numpad keys need Num Lock on).
 - **The defaults of the keys** are 4Stim's: N for scenes, Shift + N for NPC scenes, `=` / `-` for speed, U for auto mode. OStim's other keys are there, unbound.
 
 Times given with OStim's names are in milliseconds, as in OStim. `SetFurnitureSearchDistance` is in OStim's steps: (value + 1) x 100 units.
 
 | OStim name | Default | Older 4Stim name | What it does |
 |---|---|---|---|
-| `SetKeyMap` | `0x4E` (N) | `iHotkey` | Start a scene; in one, give the HUD the keys |
+| `SetKeyMap` | `0x26` (Up arrow) | `iHotkey` | Start a scene; in one, give the HUD the keys |
 | `keyNpcSceneStart` | 0 (Shift + `SetKeyMap`) | `iNPCSceneKey` | Start a scene between NPCs |
-| `SetKeyUp` / `SetKeyDown` | `0xBB` / `0xBD` | `iSpeedUpKey` / `iSpeedDownKey` | Faster / slower |
-| `SetControlToggle` | `0x55` (U) | `iAutoModeKey` | Auto mode on / off |
-| `SetPullOut` | 0 | | Pull out |
-| `SetOsaEndKey` | 0 | | End the scene |
-| `keySearch` | 0 | | Search every scene for this many actors |
-| `keyAlignment` | 0 | | The HUD's Align tab |
-| `SetFreeCamToggleKey` | 0 | | Free camera on / off |
-| `keyHideUI` | 0 | | Hide / show the HUD |
+| `SetKeyUp` / `SetKeyDown` | `0x6B` / `0x6D` (numpad + / -) | `iSpeedUpKey` / `iSpeedDownKey` | Faster / slower |
+| `SetControlToggle` | `0x60` (numpad 0) | `iAutoModeKey` | Auto mode on / off |
+| `SetPullOut` | `0x61` (numpad 1) | | Pull out |
+| `SetOsaEndKey` | `0x6E` (numpad .) | | End the scene |
+| `keySearch` | `0x4B` (K) | | Search every scene for this many actors |
+| `keyAlignment` | `0x4C` (L) | | The HUD's Align tab |
+| `SetFreeCamToggleKey` | `0x6F` (numpad /) | | Free camera on / off |
+| `keyHideUI` | `0x6A` (numpad *) | | Hide / show the HUD |
+| `SetOsaUpKey` / `SetOsaDownKey` / `SetOsaLeftKey` / `SetOsaRightKey` | `0x68` / `0x65` / `0x64` / `0x66` (numpad 8 / 5 / 4 / 6) | | The HUD's up, down, left, right (the arrow keys work too) |
+| `SetOsaYesKey` / `SetOsaTogKey` | `0x67` / `0x69` (numpad 7 / 9) | | The HUD's choose (Enter works too) / between the list and the tab buttons |
 | `SetUseFreeCam` | 1 | | Free camera in scenes with you |
 | `SetCameraSpeed` | 3 | `fFreeCameraSpeed` (a multiplier) | Free camera speed (the game's `fFreeCameraTranslationSpeed`) |
 | `SetFreeCamFOV` | 45 | | Field of view during the scene |

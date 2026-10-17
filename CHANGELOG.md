@@ -2,6 +2,11 @@
 
 ## Next
 
+- **OStim's keys by default:** Up arrow starts a scene, numpad + / - speed, numpad 1 pull out, numpad 0 auto mode, numpad / free camera, numpad * hide the HUD, numpad . end, K search, L Align; and OStim's navigation keys for the HUD (numpad 8 / 5 / 4 / 6, 7 to choose, 9 between the list and the tab buttons; `SetOsaUpKey`...), besides the arrows and Enter.
+- **Controller:** B goes from the HUD's list to its tab buttons (Up / Down pick a tab), B again hides the HUD while the scene goes on, and A shows it again.
+- **Physics:** a man on the receiving end (anal sex, pegging, fingering...) gets `MaleBodyHardBottom.xml`, decided by the scene's actions instead of the role's place, and switches as the scene changes.
+- **Undressing scenes:** "take off her top / bottoms" are now "chest armor" (slot 41) and "outfit" (the whole outfit and its armor), as Fallout 4's clothes are one piece.
+- **Fixed:** the MCM's theme (and HUD on / off, control scheme) didn't apply until the game restarted.
 - **Actors and roles** (OStim's, docs/ACTORS.md): actor properties decide who can be in scenes and take which roles (an actor type, what they have for roles' requirements), with conditions written in the file instead of OStim's perks. Defaults for people, women, ghouls and super mutants (who only take roles made for them).
 - **Equip objects and strap-ons** (OStim's): items put on during scenes by actions, actor properties, `4StimEquipObject` annotations or Papyrus, and taken away at the end; a strap-on for a woman in a role that needs a penis (with a strap-on mod's armor in `Equip Objects\`).
 - **OStim's strap-on for Fallout 4** (optional add-on, 4Stim Equip Objects): Calyps' strap-on refit to True Wasteland Body as a BodySlide project, its dildo bending with the penis bend.

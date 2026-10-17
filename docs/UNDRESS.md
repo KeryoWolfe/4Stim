@@ -19,7 +19,7 @@ Clothes come off and go back on all at once, as in OStim, or one item at a time 
 
 ## Animated undressing and redressing
 
-- **Undressing scenes:** a scene can take clothes off at a set moment of its animation with an `undress` list (`SCENES.md`): a partner pulling someone's top off takes the top off as the hands get there. The test pack has OStim's: from **Standing apart** (MF), "take off _her_ top / bottoms / gloves / hat / boots" and "_she_ takes off _his_ bottoms", each playing once and going back to standing apart.
+- **Undressing scenes:** a scene can take clothes off at a set moment of its animation with an `undress` list (`SCENES.md`): a partner pulling someone's top off takes the top off as the hands get there. The test pack has OStim's: from **Standing apart** (MF), "take off _her_ chest armor / outfit / gloves / hat / boots" and "_she_ takes off _his_ outfit", each playing once and going back to standing apart. OStim's are a top and bottoms; Fallout 4's clothes are mostly one-piece outfits, so its top animation takes off the chest armor (slot 41) and its bottoms animation the whole outfit with any armor on it (33, 36-45).
 - **Redress animations** (`SetAnimateRedress`, off by default, as OStim): when a scene ends, NPCs get dressed a body part at a time, torso, feet, hands, then head, each with its own animation, and that part's clothes go on partway through it, like OStim. The animations are one-actor scenes tagged `redress` plus the part (`torso`, `feet`, `hands`, `head`) for the actor's sex, with `length` and `dressAt` (`SCENES.md`); the test pack has OStim's. Anything that isn't in one of those parts goes on afterwards. The player dresses without them.
 
 The slots each part covers:

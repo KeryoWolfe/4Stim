@@ -239,7 +239,31 @@ package hud
 				return false;
 			}
 			if (!a_down) {
-				return a_name == "Up" || a_name == "Down" || a_name == "Left" || a_name == "Right" || a_name == "Accept" || a_name == "Cancel";
+				return a_name == "Up" || a_name == "Down" || a_name == "Left" || a_name == "Right" || a_name == "Accept" || a_name == "Cancel" || a_name == "Back" || a_name == "Toggle";
+			}
+			// OStim's Toggle key (numpad 9): between the list and the tab buttons.
+			if (a_name == "Toggle") {
+				_tabFocus = !_tabFocus;
+				updateFocus();
+				if (_tabFocus) {
+					code("SetHorizontalRepeat", false);
+				} else {
+					updateRepeat();
+				}
+				return true;
+			}
+			if (_tabFocus && handleTabFocus(a_name)) {
+				return true;
+			}
+			// The controller's B (4Stim's controller scheme): from the list to
+			// the tab buttons (Up / Down pick a tab, A goes back to the list);
+			// from the tab buttons it hides the HUD, the scene going on (A shows
+			// it again).
+			if (a_name == "Back") {
+				_tabFocus = true;
+				updateFocus();
+				code("SetHorizontalRepeat", false);
+				return true;
 			}
 			if (_columns && handleColumns(a_name)) {
 				return true;
@@ -297,38 +321,54 @@ package hud
 
 		// ---- Internals ----
 
-		// OStim's control scheme. Returns true if it handled a_name. In the
-		// list, Left / Right still change a value on the Align tab's value,
+		// The tab buttons have the keys (OStim's control scheme, or the
+		// controller's B). Returns true if it handled a_name.
+		private function handleTabFocus(a_name:String):Boolean
+		{
+			var toList:String = _mirror ? "Left" : "Right";
+			switch (a_name) {
+				case "Up":
+				case "PrevTab":
+					_tabs.select(_tabs.selected - 1);
+					showTab(false);
+					return true;
+				case "Down":
+				case "NextTab":
+					_tabs.select(_tabs.selected + 1);
+					showTab(false);
+					return true;
+				case "Left":
+				case "Right":
+					if (_columns && a_name != toList) {
+						return true;  // already at the tabs
+					}
+					if (!_columns) {
+						// The tabs scheme: Left / Right change tabs here too.
+						_tabs.select(_tabs.selected + (a_name == "Left" ? -1 : 1));
+						showTab(false);
+						return true;
+					}
+					// Columns: toList goes back to the list, as Accept.
+				case "Accept":
+					_tabFocus = false;
+					updateFocus();
+					updateRepeat();
+					return true;
+				case "Back":
+					code("Hide");
+					return true;
+			}
+			return false;  // Cancel, speed keys: as usual
+		}
+
+		// OStim's control scheme, in the list. Returns true if it handled
+		// a_name. Left / Right still change a value on the Align tab's value,
 		// actor and step rows (the safeguard): the tab buttons are reached
 		// from any other row, or with LB / RB.
 		private function handleColumns(a_name:String):Boolean
 		{
 			var toTabs:String = _mirror ? "Right" : "Left";
 			var toList:String = _mirror ? "Left" : "Right";
-			if (_tabFocus) {
-				switch (a_name) {
-					case "Up":
-					case "PrevTab":
-						_tabs.select(_tabs.selected - 1);
-						showTab(false);
-						return true;
-					case "Down":
-					case "NextTab":
-						_tabs.select(_tabs.selected + 1);
-						showTab(false);
-						return true;
-					case "Accept":
-					case "Left":
-					case "Right":
-						if (a_name == "Accept" || a_name == toList) {
-							_tabFocus = false;
-							updateFocus();
-							updateRepeat();
-						}
-						return true;
-				}
-				return false;  // Cancel, speed keys: as usual
-			}
 			if (a_name == toTabs) {
 				var row:Object = _list.selectedEntry;
 				var kind:String = row != null ? String(row.kind) : "";
