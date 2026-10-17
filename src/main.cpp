@@ -402,7 +402,9 @@ namespace
 					g_settings.speedDownKey = static_cast<std::uint32_t>(std::stoul(value, nullptr, 0));
 				} else if (key == "stheme") {
 					g_settings.hudTheme = value;
-				} else if (key == "shudcontrols") {
+				}
+				// (A new chain: MSVC allows only so many else-ifs in one, C1061.)
+				if (key == "shudcontrols") {
 					auto v = value;
 					std::ranges::transform(v, v.begin(), [](unsigned char ch) { return static_cast<char>(std::tolower(ch)); });
 					g_settings.hudColumns = v == "columns";
@@ -484,7 +486,9 @@ namespace
 					Excitement::Settings().endOnFemale = std::stoi(value) != 0;
 				} else if (key == "bendonallclimax") {
 					Excitement::Settings().endOnAll = std::stoi(value) != 0;
-				} else if (key == "bendnpcscenesonclimax") {
+				}
+				// (A new chain: MSVC allows only so many else-ifs in one, C1061.)
+				if (key == "bendnpcscenesonclimax") {
 					Excitement::Settings().endNPCScenes = std::stoi(value) != 0;
 				} else if (key == "fclimaxenddelay") {
 					Excitement::Settings().endDelay = std::clamp(std::stof(value), 0.0F, 60.0F);
@@ -579,7 +583,9 @@ namespace
 					g_autoConfig.speedIntervalMin = std::max(std::stof(value), 0.5F);
 				} else if (key == "fautospeedintervalmax") {
 					g_autoConfig.speedIntervalMax = std::max(std::stof(value), 0.5F);
-				} else if (key == "fautospeedexcitementmin") {
+				}
+				// (A new chain: MSVC allows only so many else-ifs in one, C1061.)
+				if (key == "fautospeedexcitementmin") {
 					g_autoConfig.speedExcitementMin = std::clamp(std::stof(value), 0.0F, 100.0F);
 				} else if (key == "fautospeedexcitementmax") {
 					g_autoConfig.speedExcitementMax = std::clamp(std::stof(value), 0.0F, 100.0F);
