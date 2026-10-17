@@ -98,7 +98,7 @@ The OStim animations in the test pack share one origin per kind of furniture, wo
 - **Mattress:** mattresses and sleeping bags lie on the ground, so bed scenes (sitting on the edge, standing beside it) don't work on them. `mattress` is its own type with supertype `none`: it takes every scene made without furniture (lying, kneeling, standing...), centered on the mattress, lengthwise, 2 up. Like OStim's bedrolls in Skyrim: floor scenes, not the scenes for sitting on a bed's edge. (To limit a type to some of those scenes, see `floorScenes`.)
 - **Bench:** on the floor under the seat, facing out: the pelvis is 38 above the origin. So `bench` is anchored 18 in from the long edge nearer the player, on the floor.
 - **Table:** on the floor at the table's edge, facing the table: one actor bends over it in front of the origin, the other stands 50 behind. So `table` is anchored 5 outside the long edge nearer the player, facing in.
-- **Shelf:** models with "shelf", "shelves" or "bookcase" (statics, containers...): on the floor 15 in front of the long side nearer you, backs to the shelf. A first guess: tune in game.
+- **Shelf:** models with "shelf", "shelves" or "bookcase" (statics, containers...): like tables, on the floor 5 outside the long side nearer you (the one away from a wall), facing the shelf: the animations bend over toward the origin with the other actor behind, so facing out put both through the shelf into the wall behind it.
 - **Wall:** the nearest wall within 300, the spot 15 out from it, backs to it. A first guess too.
 
 A scene whose own animation starts somewhere else can shift itself with `furnitureOffset` (see `SCENES.md`).
