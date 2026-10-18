@@ -11,9 +11,16 @@
 //    reads it instead when it's there.
 // 2. offset() fails on an ID that isn't in the table, instead of returning
 //    the next ID's address.
+// 3. Any version but AE's (1.11.x with its Address Library): CommonLibF4RD's
+//    Runtime Database (Data\F4SE\Plugins\f4rd-runtime.bin), through
+//    CommonLibF4RD's own resolver (compat/rd/): the addresses it knows for
+//    the running version, and the rest found by searching the game's code,
+//    as every CommonLibF4RD plugin does. 4Stim's own table fills in what
+//    the database can't (1.10.163).
 #include "REL/IDDB.h"
 
 #include "Addresses.h"
+#include "rd/RuntimeDatabase.h"
 
 #include "REL/Version.h"
 
@@ -23,7 +30,10 @@
 #include "REX/W32/KERNEL32.h"
 
 #include <algorithm>
+#include <cstring>
 #include <fstream>
+#include <memory>
+#include <optional>
 #include <sstream>
 #include <vector>
 
@@ -144,6 +154,46 @@ namespace REL
 
 namespace
 {
+	// 4Stim: CommonLibF4RD's Runtime Database, when it's the source.
+	std::unique_ptr<RD::RuntimeDatabase> gRuntime;
+	std::filesystem::path                gRuntimePath;
+
+	std::optional<std::uint64_t> FromRuntime(std::uint64_t a_id, RD::RuntimeDatabase::ResolveFailure* a_failure = nullptr)
+	{
+		if (!gRuntime)
+			return std::nullopt;
+		const auto& module = RD::Module::get();
+		const auto  result = gRuntime->resolve_detailed(a_id, module.version(), module, RD::RuntimeDatabase::ResolveMode::kNormal);
+		if (a_failure)
+			*a_failure = result.failure;
+		return result ? std::optional<std::uint64_t>{ static_cast<std::uint64_t>(*result.rva) } : std::nullopt;
+	}
+
+	std::optional<std::uint64_t> FromTable(std::uint64_t a_id);
+
+	const char* FailureName(RD::RuntimeDatabase::ResolveFailure a_failure)
+	{
+		using F = RD::RuntimeDatabase::ResolveFailure;
+		switch (a_failure) {
+		case F::kUnknownID:
+			return "not in the database";
+		case F::kNoCompatiblePattern:
+			return "no search pattern for this version";
+		case F::kPatternNotFound:
+			return "its pattern isn't in the game's code";
+		case F::kPatternAmbiguous:
+			return "its pattern matches more than one place";
+		case F::kInvalidPattern:
+			return "invalid pattern";
+		case F::kRuntimeUnavailable:
+			return "not in this game version";
+		case F::kSemanticValidationFailed:
+			return "found, but failed validation";
+		default:
+			return "unresolved";
+		}
+	}
+
 	// 4Stim: the address table for this game version, sorted by ID.
 	std::vector<REL::IDDB::MAPPING> g4StimTable;
 	std::filesystem::path           g4StimTablePath;
@@ -173,6 +223,13 @@ namespace
 		}
 		std::sort(g4StimTable.begin(), g4StimTable.end(), [](auto&& a_lhs, auto&& a_rhs) { return a_lhs.id < a_rhs.id; });
 		return !g4StimTable.empty();
+	}
+
+	std::optional<std::uint64_t> FromTable(std::uint64_t a_id)
+	{
+		const auto it = std::lower_bound(g4StimTable.begin(), g4StimTable.end(), REL::IDDB::MAPPING{ a_id, 0 },
+			[](auto&& a_lhs, auto&& a_rhs) { return a_lhs.id < a_rhs.id; });
+		return it != g4StimTable.end() && it->id == a_id ? std::optional<std::uint64_t>{ it->offset } : std::nullopt;
 	}
 }
 
@@ -217,6 +274,29 @@ namespace REL
 
 		const auto mod = REX::FModule::GetExecutingModule();
 		const auto version = mod.GetFileVersion().wstring(L"-");
+
+		// 4Stim: AE (1.11.x) with its Address Library: as CommonLibF4 does
+		// (below). Any other version, or AE without it: the Runtime
+		// Database, with our own table (if any) behind it.
+		const bool ae = mod.GetFileVersion() >= REL::Version{ 1, 11, 0, 0 };
+		const auto addressLibrary = plugin.parent_path() / std::format(L"version-{}.bin", version);
+		const auto runtime = plugin.parent_path() / L"f4rd-runtime.bin";
+		if (!(ae && std::filesystem::exists(addressLibrary)) && std::filesystem::exists(runtime)) {
+			try {
+				gRuntime = RD::RuntimeDatabase::load(runtime);
+			} catch (const std::exception& e) {
+				REX::FAIL(L"{}\n\nFailed to read the Runtime Database (f4rd-runtime.bin): {}\nReinstall Runtime Database.", plugin.filename().wstring(),
+					std::wstring(e.what(), e.what() + std::strlen(e.what())));
+			}
+			if (gRuntime) {
+				gRuntimePath = runtime;
+				m_path = runtime;
+				const auto table = plugin.parent_path() / L"4Stim" / L"Addresses" / std::format(L"version-{}.txt", version);
+				if (std::filesystem::exists(table) && Load4StimTable(table))
+					g4StimTablePath = table;
+				return;
+			}
+		}
 
 		// 4Stim: our own table for this game version, if we have one.
 		{
@@ -494,6 +574,21 @@ namespace REL
 	std::uint64_t IDDB::offset(std::uint64_t a_id) const
 	{
 		const auto mod = REX::FModule::GetExecutingModule();
+		// 4Stim: the Runtime Database, then our own table.
+		if (gRuntime) {
+			RD::RuntimeDatabase::ResolveFailure failure{};
+			if (const auto rva = FromRuntime(a_id, &failure))
+				return *rva;
+			if (const auto rva = FromTable(a_id))
+				return *rva;
+			REX::FAIL(
+				"{}\n\n"
+				"The Runtime Database has no address for an ID 4Stim needs ({}).\n"
+				"Update Runtime Database, or this game version isn't supported yet.\n"
+				"ID: {}\n"
+				"Game Version: {}",
+				m_name, FailureName(failure), a_id, mod.GetFileVersion().string());
+		}
 		if (std::to_underlying(m_format) < 5) {
 			if (m_v0.empty())
 				REX::FAIL("No Address Library has been loaded!"sv);
@@ -544,19 +639,33 @@ namespace Compat
 	bool UsingAddressTable()
 	{
 		(void)REL::IDDB::GetSingleton();
-		return !g4StimTable.empty();
+		return gRuntime != nullptr || !g4StimTable.empty();
+	}
+
+	bool UsingRuntimeDatabase()
+	{
+		(void)REL::IDDB::GetSingleton();
+		return gRuntime != nullptr;
 	}
 
 	std::filesystem::path AddressTablePath()
 	{
-		return g4StimTablePath;
+		return gRuntime ? gRuntimePath : g4StimTablePath;
+	}
+
+	std::string WhyMissing(std::uint64_t a_id)
+	{
+		if (!gRuntime)
+			return "not in the table";
+		RD::RuntimeDatabase::ResolveFailure failure{};
+		(void)FromRuntime(a_id, &failure);
+		return FailureName(failure);
 	}
 
 	bool HasAddress(std::uint64_t a_id)
 	{
 		if (!UsingAddressTable())
 			return true;
-		return std::binary_search(g4StimTable.begin(), g4StimTable.end(), REL::IDDB::MAPPING{ a_id, 0 },
-			[](auto&& a_lhs, auto&& a_rhs) { return a_lhs.id < a_rhs.id; });
+		return FromRuntime(a_id).has_value() || FromTable(a_id).has_value();
 	}
 }

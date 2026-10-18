@@ -2,12 +2,13 @@
 
 #include <cstdint>
 #include <filesystem>
+#include <string>
 
 // 4Stim: what compat/IDDB.cpp loaded, for the check at load (main.cpp).
 namespace Compat
 {
-	// 4Stim's own address table is in use (an older game version), not the
-	// Address Library.
+	// 4Stim's own address table or the Runtime Database is in use (a game
+	// version other than AE with its Address Library).
 	bool UsingAddressTable();
 
 	// The table's path, when it's in use.
@@ -15,4 +16,11 @@ namespace Compat
 
 	// The table has this ID (always true with the Address Library).
 	bool HasAddress(std::uint64_t a_id);
+
+	// The addresses come from CommonLibF4RD's Runtime Database
+	// (f4rd-runtime.bin), with 4Stim's own table (if any) behind it.
+	bool UsingRuntimeDatabase();
+
+	// Why HasAddress is false for a_id.
+	std::string WhyMissing(std::uint64_t a_id);
 }

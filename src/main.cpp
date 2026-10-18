@@ -8818,15 +8818,17 @@ F4SE_PLUGIN_LOAD(const F4SE::LoadInterface* a_f4se)
 
 	REX::INFO("Game version {}, F4SE {}", a_f4se->RuntimeVersion().string(), a_f4se->F4SEVersion().string());
 
-	// On an older game version 4Stim finds the game's code through its own
-	// address table (compat/IDDB.cpp). Every address it uses must be in it, or
-	// it doesn't load at all (instead of crashing later).
+	// On a game version other than AE with its Address Library, 4Stim finds
+	// the game's code through CommonLibF4RD's Runtime Database (and its own
+	// table for 1.10.163; compat/IDDB.cpp). Every address it uses must be
+	// found, or it doesn't load at all (instead of crashing later).
 	if (Compat::UsingAddressTable()) {
-		REX::INFO("Addresses: 4Stim's own table, {}", Compat::AddressTablePath().string());
+		REX::INFO("Addresses: {}, {}", Compat::UsingRuntimeDatabase() ? "CommonLibF4RD's Runtime Database" : "4Stim's own table",
+			Compat::AddressTablePath().string());
 		int missing = 0;
 		for (const auto& required : Compat::REQUIRED_IDS) {
 			if (!Compat::HasAddress(required.id)) {
-				REX::ERROR("Addresses: {} ({}) isn't in the table", required.name, required.id);
+				REX::ERROR("Addresses: {} ({}) not found: {}", required.name, required.id, Compat::WhyMissing(required.id));
 				++missing;
 			}
 		}

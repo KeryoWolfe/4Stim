@@ -6,7 +6,8 @@ Thanks for testing. 4Stim is an OStim-style scene framework for Fallout 4: you p
 
 ## What you need
 
-- Fallout 4 **1.11.240** (the "Anniversary Edition" update), with [F4SE](https://f4se.silverlock.org/) and Address Library for F4SE Plugins for 1.11.240. Other game versions won't load the plugin (1.10.163 is still missing addresses: see "Older game versions").
+- Fallout 4 **1.11.240** (the "Anniversary Edition" update), with [F4SE](https://f4se.silverlock.org/) and Address Library for F4SE Plugins for 1.11.240.
+- Or, experimental: **1.10.163** (before the next-gen update, F4SE 0.6.23), **1.10.984** (next-gen) or another 1.11 version, with [Runtime Database](https://www.nexusmods.com/fallout4/mods/108394) installed instead of the Address Library. See "Other game versions".
 - A mod manager (Mod Organizer 2 or Vortex).
 - [Mod Configuration Menu](https://www.nexusmods.com/fallout4/mods/21497), for the settings pages (optional: everything is also in `4Stim.ini`).
 - Optional: A-Body (male) with FO4 Faster HDT-SMP. 4Stim swaps to the erect physics during scenes (and the receiving one for a man on the bottom).
@@ -71,9 +72,13 @@ Still worth checking from before: NPCs who were busy (sitting, working) dropping
 - Toys only follow scenes with you in them (as OStim's), and only actions with a toy slot.
 - Lights are game lights moved with the actor every frame; if one lags or flickers, send the log (`Lights:` lines).
 
-## Older game versions
+## Other game versions
 
-1.10.163 (before the next-gen update) **doesn't load** in this build: 4Stim's own address table for it still lacks 34 of the game addresses 4Stim needs, and the Runtime Database mapping we tried doesn't contain them (`docs/OLDGEN.md`). `4Stim.log` lists what's missing. No need to send more mapping files. 1.10.984 (next-gen) is untested.
+The same 4Stim works on 1.10.163, 1.10.984 and other 1.11 versions through [Runtime Database](https://www.nexusmods.com/fallout4/mods/108394) (install it like any mod; it puts `f4rd-runtime.bin` in `F4SE\Plugins`). 4Stim finds the game's code with it when the game starts; that first start can take a little longer. This is **experimental**: no one has played a scene on those versions yet, so we'd like to know:
+
+- Does 4Stim load? `4Stim.log` starts with `Addresses: CommonLibF4RD's Runtime Database`, then `Addresses: all ... found`, or lists what it couldn't find (send that).
+- Do scenes start, with actors in place and animating, and does the HUD show?
+- Anything that works on 1.11.240 but not there.
 
 ## Reporting a problem
 

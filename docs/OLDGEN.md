@@ -1,26 +1,29 @@
-# Older Fallout 4 versions (1.10.163)
+# Other Fallout 4 versions (1.10.163, 1.10.984, other 1.11.x)
 
-4Stim is built for Fallout 4 1.11.240 (AE). It can also run on 1.10.163, the version before the next-gen update, with an **address table**: a file that tells it where each game function it uses is in that version. OStim has no such thing (Skyrim SE / AE builds use the Address Library); Fallout 4's Address Library for 1.10.163 numbers things differently from AE's, so 4Stim carries its own table instead.
+4Stim is built for Fallout 4 1.11.240 (AE), where it finds the game's code through the Address Library, as OStim does on Skyrim. On every other version it uses **CommonLibF4RD's Runtime Database** ([Runtime Database](https://www.nexusmods.com/fallout4/mods/108394), `Data\F4SE\Plugins\f4rd-runtime.bin`): 4Stim has CommonLibF4RD's own resolver built in (`src/compat/rd/`, MIT), which takes the addresses the database knows for the running version and finds the rest by searching the game's code at startup, exactly as CommonLibF4RD plugins do. So one 4Stim.dll covers:
 
-**Status: experimental.** The table isn't complete yet (below), and no one has played a scene on 1.10.163.
+| Version | F4SE | Addresses from |
+|---|---|---|
+| 1.11.240 (AE) | 0.7.x | the Address Library (as before); Runtime Database not needed |
+| other 1.11.x (AE) | 0.7.x | Runtime Database (or the Address Library for that version, if installed) |
+| 1.10.984 (NG) | 0.7.x | Runtime Database |
+| 1.10.163 (OG) | 0.6.23 | Runtime Database, with 4Stim's own table (`Addresses\version-1-10-163-0.txt`) behind it |
 
-## What's needed on 1.10.163
+**Status: experimental** on everything but 1.11.240: no one has played a scene there yet.
 
-- F4SE 0.6.23 (the 1.10.163 one).
-- 4Stim as usual, with `Data\F4SE\Plugins\4Stim\Addresses\version-1-10-163-0.txt`.
-- The Address Library isn't needed for 4Stim.
+## How it loads
 
-When the game starts, 4Stim looks for `Addresses\version-<game version>.txt`. If it's there, it uses it instead of the Address Library and checks that every address it needs is in it. If any are missing, 4Stim doesn't load, and `4Stim.log` lists them:
+At startup (`src/compat/IDDB.cpp`): AE with its Address Library uses the Address Library. Otherwise, with `f4rd-runtime.bin` installed, every address goes through the Runtime Database (cached, and shared with other CommonLibF4RD plugins in the game), and 4Stim's own table for that version (if it has one) fills in anything the database can't. 4Stim then checks every address it needs (`src/compat/RequiredIDs.h`); if any can't be found, it doesn't load, and `4Stim.log` says which and why (not in the database, pattern not found...).
 
-```
-Address table F4SE\Plugins\4Stim\Addresses\version-1-10-163-0.txt: missing ID::PlayerCharacter::Singleton (4798212)
-...
-4Stim needs 31 address(es) the table doesn't have; not loading
-```
+The F4SE version data says 4Stim is address-independent (signatures) and uses the 1.10.980 and 1.11.137 struct layouts (`src/PluginVersion.cpp`), as CommonLibF4RD plugins do, so F4SE on NG and AE versions loads it; old F4SE (1.10.163) asks `F4SEPlugin_Query` instead.
 
-On AE there's no table for the version, so nothing changes.
+## Struct layouts
 
-## Making the table
+The Runtime Database finds functions and objects, not class layouts: 4Stim reads the game's classes as AE lays them out. NG uses the same layouts as AE (F4SE's 1.10.980 layout). OG (1.10.163) is older; the fields 4Stim reads matched AE's in the Runtime Database's layout notes, but that's the part a 1.10.163 tester has to confirm (scenes start, actors are placed and animated, the HUD works).
+
+## The old table
+
+Before the Runtime Database was built in, 1.10.163 depended on 4Stim's own table alone, made by:
 
 `tools/make-address-table.py` makes it from two sources:
 
