@@ -18,7 +18,7 @@ In the MCM's file, 4Stim's own setting names stay as they are (`bLockScenes`, `f
 
 ## Hotkeys
 
-The Hotkeys page has the MCM's own hotkeys for every scene key: start a scene / the HUD, a scene without you, faster, slower, auto mode, pull out, end, search, Align tab, free camera, hide the HUD. They do what the keys in `4Stim.ini` do (`FourStim.PressKey`), and those keys keep working: bind each action in one place only. The MCM's hotkeys can have Shift, Ctrl or Alt with them.
+The Hotkeys page sets `4Stim.ini`'s keys, laid out as OStim's Controls page: the scene keys (start a scene / the HUD, a scene without you, faster, slower, pull out, free camera, search, Align tab, hide the HUD, auto mode) and the navigation keys (up, down, left, right, toggle, yes, end), with OStim's defaults. They're MCM key inputs, so they show the key that's set (no Shift / Ctrl / Alt). The Controller page picks a controller button for each scene key (LB, RB, LT, RT, X, Y, either stick pressed in, or Back; none by default); the d-pad, A and B are the HUD's. Earlier versions had MCM hotkeys here; they're gone, so a key set there no longer does anything.
 
 ## Export and import
 

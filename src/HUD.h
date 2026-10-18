@@ -66,8 +66,8 @@ namespace HUD
 	void               SetFocus(bool a_focused);  // any thread
 
 	// Input while the HUD is focused: arrow keys / d-pad, Enter / A, Esc /
-	// Backspace, B ("Back": the tab buttons, then hide), LB / RB, and the
-	// controller's speed buttons. Returns
+	// Backspace, B ("Back": the tab buttons, then hide). The controller's
+	// other buttons are [Controller]'s, in main.cpp. Returns
 	// true if a_event was one of them. Called from the input hook (main thread).
 	bool HandleInput(const RE::ButtonEvent* a_event);
 }

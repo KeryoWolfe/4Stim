@@ -3,7 +3,7 @@ Writes 4Stim's MCM page (docs/MCM.md) from 4Stim.ini:
 
   Data/MCM/Config/4Stim/config.json    the pages
   Data/MCM/Config/4Stim/settings.ini   MCM's defaults: 4Stim.ini's values
-  Data/MCM/Config/4Stim/keybinds.json  the hotkeys
+  Data/MCM/Config/4Stim/keybinds.json  empty (the Hotkeys page sets 4Stim.ini's keys)
   tools/mcm-texts.json                 the English of every "$4Stim_MCM..."
                                        label (make-translations.py adds them
                                        to 4Stim_en.txt)
@@ -33,6 +33,11 @@ CHOICES = {
     'sMaleLight': ['nolight', 'facelight', 'facelightdim', 'crotchlight', 'crotchlightdim', 'asslight', 'asslightdim'],
     'sFemaleLight': ['nolight', 'facelight', 'facelightdim', 'crotchlight', 'crotchlightdim', 'asslight', 'asslightdim'],
 }
+PAD_KEYS = ['sPadHotkey', 'sPadNPCScene', 'sPadSpeedUp', 'sPadSpeedDown', 'sPadAutoMode', 'sPadPullOut', 'sPadEnd', 'sPadSearch', 'sPadAlign', 'sPadFreeCam', 'sPadHideUI']
+PAD_BUTTONS = ['None', 'LB', 'RB', 'LT', 'RT', 'X', 'Y', 'LS', 'RS', 'Back']
+PAD_LABELS = ['None', 'LB', 'RB', 'LT', 'RT', 'X', 'Y', 'Left stick (press)', 'Right stick (press)', 'Back / View']
+for _k in PAD_KEYS:
+    CHOICES[_k] = PAD_BUTTONS
 CHOICE_LABELS = {
     'sTargetMode': ['Crosshair', 'Nearest'],
     'sHUDControls': ['Tabs', 'Columns (OStim)'],
@@ -40,11 +45,43 @@ CHOICE_LABELS = {
     'sMaleLight': ['None', 'Face', 'Face, dim', 'Crotch', 'Crotch, dim', 'Rear', 'Rear, dim'],
     'sFemaleLight': ['None', 'Face', 'Face, dim', 'Crotch', 'Crotch, dim', 'Rear', 'Rear, dim'],
 }
+for _k in PAD_KEYS:
+    CHOICE_LABELS[_k] = PAD_LABELS
 
 # key: (label, kind, options). kind: bool; int / float (min, max, step);
-# choice. Keys not listed (hotkeys, bone names, slot lists) aren't on the
-# pages: hotkeys are MCM's own (HOTKEYS), the rest stay in 4Stim.ini.
+# choice; key (an MCM key input: the key's code, decimal). Keys not listed
+# (bone names, slot lists) aren't on the pages and stay in 4Stim.ini.
 SETTINGS = {
+    # Hotkeys (keyboard, as OStim's): MCM key inputs over 4Stim.ini's keys.
+    'SetKeyMap': ('Start a scene / the HUD', 'key'),
+    'keyNpcSceneStart': ('Start a scene without you', 'key'),
+    'SetKeyUp': ('Faster', 'key'),
+    'SetKeyDown': ('Slower', 'key'),
+    'SetPullOut': ('Pull out', 'key'),
+    'SetControlToggle': ('Auto mode on / off', 'key'),
+    'SetFreeCamToggleKey': ('Free camera on / off', 'key'),
+    'keySearch': ('Search scenes', 'key'),
+    'keyAlignment': ('Align tab', 'key'),
+    'keyHideUI': ('Hide the HUD', 'key'),
+    'SetOsaUpKey': ('Up', 'key'),
+    'SetOsaDownKey': ('Down', 'key'),
+    'SetOsaLeftKey': ('Left', 'key'),
+    'SetOsaRightKey': ('Right', 'key'),
+    'SetOsaTogKey': ('Toggle (list / tabs)', 'key'),
+    'SetOsaYesKey': ('Yes (choose)', 'key'),
+    'SetOsaEndKey': ('End the scene', 'key'),
+    # Controller
+    'sPadHotkey': ('Start a scene / the HUD', 'choice'),
+    'sPadNPCScene': ('Start a scene without you', 'choice'),
+    'sPadSpeedUp': ('Faster', 'choice'),
+    'sPadSpeedDown': ('Slower', 'choice'),
+    'sPadAutoMode': ('Auto mode on / off', 'choice'),
+    'sPadPullOut': ('Pull out', 'choice'),
+    'sPadEnd': ('End the scene', 'choice'),
+    'sPadSearch': ('Search scenes', 'choice'),
+    'sPadAlign': ('Align tab', 'choice'),
+    'sPadFreeCam': ('Free camera on / off', 'choice'),
+    'sPadHideUI': ('Hide the HUD', 'choice'),
     # General
     'bResumeScenes': ('Resume scenes after loading', 'bool'),
     'sTargetMode': ('Find the partner by', 'choice'),
@@ -201,23 +238,14 @@ PAGES = [
     ('Faces and sound', [('Expressions', ['noFacialExpressions', 'SetExpressionDurationMin', 'SetExpressionDurationMax']),
                          ('Sound', ['bSounds', 'moanIntervalMin', 'moanIntervalMax', 'moanVolume', 'soundVolume', 'iSoundPriority'])]),
     ('Lights', [('Lights', ['sMaleLight', 'sFemaleLight', 'SetOnlyLightInDark', 'fLightLevelDark'])]),
+    # As OStim's Controls page: its scene keys, then its navigation keys.
+    ('Hotkeys', [('General', ['SetKeyMap', 'keyNpcSceneStart', 'SetKeyUp', 'SetKeyDown', 'SetPullOut',
+                              'SetFreeCamToggleKey', 'keySearch', 'keyAlignment', 'keyHideUI'], 'Scene keys'),
+                 ('AutoMode', ['SetControlToggle'], None),
+                 ('General', ['SetOsaUpKey', 'SetOsaDownKey', 'SetOsaLeftKey', 'SetOsaRightKey', 'SetOsaTogKey', 'SetOsaYesKey',
+                              'SetOsaEndKey'], 'Navigation keys')]),
+    ('Controller', [('Controller', PAD_KEYS, None)]),
 ]
-
-# MCM's hotkeys: (id, label, FourStim.PressKey action, help).
-HOTKEYS = [
-    ('Hotkey', 'Start a scene / the HUD', 'hotkey', 'Starts a scene with whoever you look at, or in a scene focuses the HUD (4Stim.ini: SetKeyMap).'),
-    ('NPCScene', 'Start a scene without you', 'npcscene', 'The picker for a scene without you (4Stim.ini: keyNpcSceneStart, or Shift + the hotkey).'),
-    ('SpeedUp', 'Faster', 'speedup', 'The scene you\'re in one speed faster (4Stim.ini: SetKeyUp).'),
-    ('SpeedDown', 'Slower', 'speeddown', 'The scene you\'re in one speed slower (4Stim.ini: SetKeyDown).'),
-    ('AutoMode', 'Auto mode on / off', 'automode', 'Auto mode for the scene you\'re in or watching (4Stim.ini: SetControlToggle).'),
-    ('PullOut', 'Pull out', 'pullout', 'OStim\'s pull-out key (4Stim.ini: SetPullOut).'),
-    ('End', 'End the scene', 'end', 'Ends the scene you\'re in or watching (4Stim.ini: SetOsaEndKey).'),
-    ('Search', 'Search scenes', 'search', 'Every scene for these actors (4Stim.ini: keySearch).'),
-    ('Align', 'Align tab', 'align', 'Opens the HUD\'s Align tab (4Stim.ini: keyAlignment).'),
-    ('FreeCam', 'Free camera on / off', 'freecam', 'In and out of the free camera in a scene (4Stim.ini: SetFreeCamToggleKey).'),
-    ('HideUI', 'Hide the HUD', 'hideui', 'Hides or shows the HUD (4Stim.ini: keyHideUI).'),
-]
-
 
 def read_ini():
     """Each key: (section, value, comment above it)."""
@@ -239,6 +267,8 @@ def read_ini():
 
 
 def mcm_key(key, kind):
+    if kind in ('choice', 'key') and not re.match(r'^[bifs][A-Z]', key):
+        return 'i4S_' + key
     if kind == 'choice':
         return 'i4S_' + key
     if re.match(r'^[bifs][A-Z]', key):
@@ -252,6 +282,8 @@ def mcm_value(key, kind, value):
         return str(options.index(value.lower())) if value.lower() in options else '0'
     if kind == 'bool':
         return '0' if value.strip() in ('0', 'false') else '1'
+    if kind == 'key':
+        return str(int(value, 0))
     return value
 
 
@@ -268,7 +300,10 @@ def main():
     for title, groups in PAGES:
         slug = re.sub(r'[^A-Za-z]', '', title)
         content = []
-        for section, keys in groups:
+        for group in groups:
+            section, keys = group[0], group[1]
+            if len(group) > 2 and group[2]:
+                content.append({'type': 'section', 'text': text(f'$4Stim_MCM_Section{re.sub(r"[^A-Za-z]", "", group[2])}', group[2])})
             for key in keys:
                 if key not in ini:
                     raise SystemExit(f'{key} is not in 4Stim.ini')
@@ -286,7 +321,10 @@ def main():
                     'help': text(f'$4Stim_MCM_{key}_Help', comment or label),
                     'action': {'type': 'CallGlobalFunction', 'script': 'FourStimMCM', 'function': 'SettingChanged', 'params': []},
                 }
-                if kind == 'bool':
+                if kind == 'key':
+                    control['type'] = 'keyinput'
+                    control['valueOptions'] = {'sourceType': 'ModSettingInt'}
+                elif kind == 'bool':
                     control['type'] = 'switcher'
                     control['valueOptions'] = {'sourceType': 'ModSettingBool'}
                 elif kind == 'choice':
@@ -303,14 +341,6 @@ def main():
                 content.append(control)
                 defaults.setdefault(section, []).append((name, mcm_value(key, kind, value)))
         pages.append({'pageDisplayName': text(f'$4Stim_MCM_Page{slug}', title), 'content': content})
-
-    # Hotkeys: the MCM's own (keybinds.json); 4Stim.ini's keys work as well.
-    hot = [{'text': text('$4Stim_MCM_HotkeysNote', 'These are the MCM\'s own hotkeys. The keys in 4Stim.ini work too: bind each action in one place only.'), 'type': 'text'},
-           {'type': 'spacer'}]
-    for hid, label, action, help_text in HOTKEYS:
-        hot.append({'id': hid, 'text': text(f'$4Stim_MCM_Key{hid}', label), 'type': 'hotkey', 'help': text(f'$4Stim_MCM_Key{hid}_Help', help_text),
-                    'valueOptions': {'allowModifierKeys': True}})
-    pages.append({'pageDisplayName': text('$4Stim_MCM_PageHotkeys', 'Hotkeys'), 'content': hot})
 
     # Export / import / 4Stim.ini.
     pages.append({'pageDisplayName': text('$4Stim_MCM_PageSettings', 'Save and load'), 'content': [
@@ -341,9 +371,9 @@ def main():
         ],
         'pages': pages,
     }
-    keybinds = {'modName': '4Stim', 'keybinds': [
-        {'id': hid, 'desc': label, 'action': {'type': 'CallGlobalFunction', 'script': 'FourStimMCM', 'function': 'PressKey', 'params': [action]}}
-        for hid, label, action, _ in HOTKEYS]}
+    # No MCM hotkeys any more: the Hotkeys page sets 4Stim.ini's keys
+    # (an empty list, so an older install's file doesn't keep them).
+    keybinds = {'modName': '4Stim', 'keybinds': []}
 
     os.makedirs(OUT, exist_ok=True)
     with open(os.path.join(OUT, 'config.json'), 'w', encoding='utf-8', newline='\n') as f:
@@ -361,7 +391,7 @@ def main():
     with open(TEXTS, 'w', encoding='utf-8', newline='\n') as f:
         json.dump(texts, f, indent='\t', ensure_ascii=False)
         f.write('\n')
-    print(len(pages), 'page(s),', sum(len(e) for e in defaults.values()), 'setting(s),', len(HOTKEYS), 'hotkey(s),', len(texts), 'text(s)')
+    print(len(pages), 'page(s),', sum(len(e) for e in defaults.values()), 'setting(s),', len(texts), 'text(s)')
 
 
 if __name__ == '__main__':

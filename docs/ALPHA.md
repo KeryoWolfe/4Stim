@@ -37,8 +37,9 @@ If you're updating from an earlier test build, replace both mods (don't merge th
 | Enter / numpad 7 / A | Choose. |
 | Numpad 9 | The HUD: between the list and the tab buttons. |
 | Esc, Backspace | Back, or hand the keys back to the game. |
+| Controller buttons | The Controller page in the MCM (or `[Controller]` in `4Stim.ini`) gives scene keys to LB, RB, LT, RT, X, Y, the sticks or Back; none by default. |
 | Controller B | The HUD: from the list to the tab buttons (Up / Down pick a tab, A back to the list); again, hide the HUD (the scene goes on). A shows it again. |
-| Numpad + / - (gamepad Y / X) | Faster / slower. |
+| Numpad + / - | Faster / slower. |
 | Numpad 0 | Auto mode on or off for your scene. |
 | Numpad 1, numpad ., K, L, numpad /, numpad * | Pull out, end the scene, search, Align tab, free camera, hide the HUD (OStim's keys). |
 | `Shift` + Up arrow | Start a scene between NPCs, even while you're in one yourself. |

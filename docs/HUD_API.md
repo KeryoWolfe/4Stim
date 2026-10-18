@@ -255,7 +255,7 @@ Every function is on `Menu_mc`. All of them are required except where marked.
 | `SetStrings(table:Object):void` | *Optional.* The plugin's translations, `{ "$4Stim_...": text }` (TRANSLATIONS.md), before the theme: for the labels the movie writes itself (tab names, titles, Align rows). |
 | entry `border` | *Optional to draw.* In `SetNavigation` and `SetUtility` entries: OStim's icon border color as a number (`0xRRGGBB`), only when one other than white is given. The default HUD draws a ring of it around the icon's tile. |
 | `ShowTab(id:String):void` | *Optional.* Show tab `id` (`"navigation"`, `"utility"`, `"align"`, `"search"`), for OStim's alignment key (`keyAlignment`): pressed once it shows the Align tab and focuses the HUD, pressed again it shows Navigation. A HUD without tabs can ignore it. |
-| `SetControlScheme(scheme:String):void` | *Optional.* `"tabs"` (Left / Right change tabs, the default) or `"columns"` (OStim's scheme, `sHUDControls=Columns`: Up / Down move in the list, Left / Right move between the list and the tab buttons, and Up / Down then pick a tab). On the Align tab, Left / Right still change the value of a value, actor or step row; the tab buttons are reached from any other row, or with LB / RB. Sent when the movie opens. |
+| `SetControlScheme(scheme:String):void` | *Optional.* `"tabs"` (Left / Right change tabs, the default) or `"columns"` (OStim's scheme, `sHUDControls=Columns`: Up / Down move in the list, Left / Right move between the list and the tab buttons, and Up / Down then pick a tab). On the Align tab, Left / Right still change the value of a value, actor or step row; the tab buttons are reached from any other row. Sent when the movie opens. |
 | `SetHidden(hidden:Boolean):void` | *Optional.* Hide the HUD, or show it again, for OStim's hide-UI key (`keyHideUI`). Sent with the scene data too. The HUD is unfocused while hidden. The default HUD still plays the climax glow. |
 
 Input names while the HUD is focused:
@@ -267,8 +267,7 @@ Input names while the HUD is focused:
 | `Cancel` | Esc, Backspace | |
 | `Back` | | B: from the list to the tab buttons; from the tab buttons, call `Hide` (the plugin shows the HUD again on A) |
 | `Toggle` | Numpad 9 (OStim's Toggle): between the list and the tab buttons | |
-| `PrevTab`, `NextTab` | (use `Left`/`Right`) | LB, RB |
-| `SpeedUp`, `SpeedDown` | (the speed keys work directly) | Y, X |
+| `PrevTab`, `NextTab`, `SpeedUp`, `SpeedDown` | not sent any more (the controller's other buttons are `[Controller]`'s scene keys); a HUD may still handle them | |
 
 ### Movie → plugin (`BGSCodeObj`)
 

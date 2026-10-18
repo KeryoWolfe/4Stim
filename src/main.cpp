@@ -1,3 +1,4 @@
+#include <array>
 #include <atomic>
 #include <functional>
 #include <chrono>
@@ -139,6 +140,11 @@ namespace
 		std::uint32_t navRightKey = 0x66;      // numpad 6
 		std::uint32_t navYesKey = 0x67;        // numpad 7
 		std::uint32_t navToggleKey = 0x69;     // numpad 9
+		// Controller buttons for the scene keys ([Controller], 4Stim's: OStim
+		// takes its keys from the keyboard map). Gamepad codes as the game's
+		// (0x100 LB...); 0 = none, the default.
+		std::uint32_t padHotkey = 0, padNpcScene = 0, padSpeedUp = 0, padSpeedDown = 0, padAutoMode = 0, padPullOut = 0;
+		std::uint32_t padEnd = 0, padSearch = 0, padAlign = 0, padFreeCam = 0, padHideUI = 0;
 		std::string   hudTheme = "Color";     // file name in Data\Interface\4Stim\Themes\, without .json
 		bool          hudEnabled = true;
 		bool          hudColumns = false;     // sHUDControls=Columns: OStim's control scheme (Left / Right between the list and the tab buttons)
@@ -297,6 +303,25 @@ namespace
 
 	// 4Stim.ini, then the MCM's file over it (docs/MCM.md). Again whenever
 	// the MCM changes a setting (FourStim.ReloadSettings).
+	// A controller button by its name in 4Stim.ini's [Controller] (the MCM's
+	// choices): the game's gamepad code, 0 for none. The HUD keeps the d-pad,
+	// A and B.
+	std::uint32_t PadButton(std::string_view a_name)
+	{
+		std::string name(a_name);
+		std::ranges::transform(name, name.begin(), [](unsigned char ch) { return static_cast<char>(std::tolower(ch)); });
+		constexpr std::array<std::pair<std::string_view, std::uint32_t>, 9> BUTTONS{ {
+			{ "lb", 0x100 }, { "rb", 0x200 }, { "lt", 0x9 }, { "rt", 0xA }, { "x", 0x4000 }, { "y", 0x8000 },
+			{ "ls", 0x40 }, { "rs", 0x80 }, { "back", 0x20 },
+		} };
+		for (const auto& [n, code] : BUTTONS) {
+			if (name == n) {
+				return code;
+			}
+		}
+		return 0;
+	}
+
 	void LoadSettings()
 	{
 		std::ifstream base("Data/F4SE/Plugins/4Stim.ini");
@@ -433,6 +458,33 @@ namespace
 					g_settings.speedDownKey = static_cast<std::uint32_t>(std::stoul(value, nullptr, 0));
 				} else if (key == "stheme") {
 					g_settings.hudTheme = value;
+				}
+				// Controller buttons (a chain of their own, C1061).
+				if (key.starts_with("spad")) {
+					const auto button = PadButton(value);
+					if (key == "spadhotkey") {
+						g_settings.padHotkey = button;
+					} else if (key == "spadnpcscene") {
+						g_settings.padNpcScene = button;
+					} else if (key == "spadspeedup") {
+						g_settings.padSpeedUp = button;
+					} else if (key == "spadspeeddown") {
+						g_settings.padSpeedDown = button;
+					} else if (key == "spadautomode") {
+						g_settings.padAutoMode = button;
+					} else if (key == "spadpullout") {
+						g_settings.padPullOut = button;
+					} else if (key == "spadend") {
+						g_settings.padEnd = button;
+					} else if (key == "spadsearch") {
+						g_settings.padSearch = button;
+					} else if (key == "spadalign") {
+						g_settings.padAlign = button;
+					} else if (key == "spadfreecam") {
+						g_settings.padFreeCam = button;
+					} else if (key == "spadhideui") {
+						g_settings.padHideUI = button;
+					}
 				}
 				// OStim's navigation keys (a chain of their own, C1061).
 				if (key == "inavupkey") {
@@ -5933,9 +5985,30 @@ namespace
 		// hidden or doesn't have the keys: shows it and gives it the keys (B
 		// hid it: 4Stim's controller scheme, docs/HUD.md).
 		if (a_event->device.get() == RE::INPUT_DEVICE::kGamepad) {
-			if (static_cast<std::uint32_t>(a_event->idCode) == 0x1000 && HUD::IsOpen() && (HUD::IsHidden() || !HUD::IsFocused()) &&
-				GetPlayerScene().Active()) {
+			const auto button = static_cast<std::uint32_t>(a_event->idCode);
+			if (button == 0x1000 && HUD::IsOpen() && (HUD::IsHidden() || !HUD::IsFocused()) && GetPlayerScene().Active()) {
 				HUD::Show();
+				return;
+			}
+			// The controller buttons set in [Controller] (none by default).
+			if (button == 0) {
+				return;
+			}
+			const auto& st = g_settings;
+			const std::string_view padAction = button == st.padSpeedUp ? "speedup"sv :
+			                                   button == st.padSpeedDown ? "speeddown"sv :
+			                                   button == st.padAutoMode ? "automode"sv :
+			                                   button == st.padPullOut ? "pullout"sv :
+			                                   button == st.padEnd ? "end"sv :
+			                                   button == st.padSearch ? "search"sv :
+			                                   button == st.padAlign ? "align"sv :
+			                                   button == st.padFreeCam ? "freecam"sv :
+			                                   button == st.padHideUI ? "hideui"sv :
+			                                   button == st.padNpcScene ? "npcscene"sv :
+			                                   button == st.padHotkey ? "hotkey"sv :
+			                                                            ""sv;
+			if (!padAction.empty()) {
+				RunKeyAction(padAction);
 			}
 			return;
 		}

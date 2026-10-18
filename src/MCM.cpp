@@ -42,12 +42,24 @@ namespace MCM
 			std::string_view              key;  // 4Stim.ini's, lowercase
 			std::vector<std::string_view> options;
 		};
-		const std::array<Choice, 5> CHOICES{ {
+		const std::array<Choice, 16> CHOICES{ {
 			{ "stargetmode", { "Crosshair", "Proximity" } },
 			{ "shudcontrols", { "Tabs", "Columns" } },
 			{ "stheme", { "Color", "PipBoy" } },
 			{ "smalelight", { "nolight", "facelight", "facelightdim", "crotchlight", "crotchlightdim", "asslight", "asslightdim" } },
 			{ "sfemalelight", { "nolight", "facelight", "facelightdim", "crotchlight", "crotchlightdim", "asslight", "asslightdim" } },
+			// Controller buttons ([Controller]).
+			{ "spadhotkey", { "None", "LB", "RB", "LT", "RT", "X", "Y", "LS", "RS", "Back" } },
+			{ "spadnpcscene", { "None", "LB", "RB", "LT", "RT", "X", "Y", "LS", "RS", "Back" } },
+			{ "spadspeedup", { "None", "LB", "RB", "LT", "RT", "X", "Y", "LS", "RS", "Back" } },
+			{ "spadspeeddown", { "None", "LB", "RB", "LT", "RT", "X", "Y", "LS", "RS", "Back" } },
+			{ "spadautomode", { "None", "LB", "RB", "LT", "RT", "X", "Y", "LS", "RS", "Back" } },
+			{ "spadpullout", { "None", "LB", "RB", "LT", "RT", "X", "Y", "LS", "RS", "Back" } },
+			{ "spadend", { "None", "LB", "RB", "LT", "RT", "X", "Y", "LS", "RS", "Back" } },
+			{ "spadsearch", { "None", "LB", "RB", "LT", "RT", "X", "Y", "LS", "RS", "Back" } },
+			{ "spadalign", { "None", "LB", "RB", "LT", "RT", "X", "Y", "LS", "RS", "Back" } },
+			{ "spadfreecam", { "None", "LB", "RB", "LT", "RT", "X", "Y", "LS", "RS", "Back" } },
+			{ "spadhideui", { "None", "LB", "RB", "LT", "RT", "X", "Y", "LS", "RS", "Back" } },
 		} };
 
 		const Choice* FindChoice(std::string_view a_iniKey)
@@ -206,6 +218,14 @@ namespace MCM
 			// Booleans as MCM writes them.
 			if (a_mcmKey.starts_with("b")) {
 				return SameValue(a_iniValue, "0") || Lower(a_iniValue) == "false" ? "0" : "1";
+			}
+			// Whole numbers in decimal: 4Stim.ini's keys are hex (0x26), MCM's
+			// key inputs read decimal (38).
+			if (a_mcmKey.starts_with("i") && (a_iniValue.starts_with("0x") || a_iniValue.starts_with("0X"))) {
+				try {
+					return std::to_string(std::stoll(a_iniValue, nullptr, 16));
+				} catch (...) {
+				}
 			}
 			return a_iniValue;
 		}

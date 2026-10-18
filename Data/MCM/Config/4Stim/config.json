@@ -1931,109 +1931,568 @@
 			"pageDisplayName": "$4Stim_MCM_PageHotkeys",
 			"content": [
 				{
-					"text": "$4Stim_MCM_HotkeysNote",
-					"type": "text"
+					"type": "section",
+					"text": "$4Stim_MCM_SectionScenekeys"
 				},
 				{
-					"type": "spacer"
-				},
-				{
-					"id": "Hotkey",
-					"text": "$4Stim_MCM_KeyHotkey",
-					"type": "hotkey",
-					"help": "$4Stim_MCM_KeyHotkey_Help",
+					"id": "i4S_SetKeyMap:General",
+					"text": "$4Stim_MCM_SetKeyMap",
+					"help": "$4Stim_MCM_SetKeyMap_Help",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "keyinput",
 					"valueOptions": {
-						"allowModifierKeys": true
+						"sourceType": "ModSettingInt"
 					}
 				},
 				{
-					"id": "NPCScene",
-					"text": "$4Stim_MCM_KeyNPCScene",
-					"type": "hotkey",
-					"help": "$4Stim_MCM_KeyNPCScene_Help",
+					"id": "i4S_keyNpcSceneStart:General",
+					"text": "$4Stim_MCM_keyNpcSceneStart",
+					"help": "$4Stim_MCM_keyNpcSceneStart_Help",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "keyinput",
 					"valueOptions": {
-						"allowModifierKeys": true
+						"sourceType": "ModSettingInt"
 					}
 				},
 				{
-					"id": "SpeedUp",
-					"text": "$4Stim_MCM_KeySpeedUp",
-					"type": "hotkey",
-					"help": "$4Stim_MCM_KeySpeedUp_Help",
+					"id": "i4S_SetKeyUp:General",
+					"text": "$4Stim_MCM_SetKeyUp",
+					"help": "$4Stim_MCM_SetKeyUp_Help",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "keyinput",
 					"valueOptions": {
-						"allowModifierKeys": true
+						"sourceType": "ModSettingInt"
 					}
 				},
 				{
-					"id": "SpeedDown",
-					"text": "$4Stim_MCM_KeySpeedDown",
-					"type": "hotkey",
-					"help": "$4Stim_MCM_KeySpeedDown_Help",
+					"id": "i4S_SetKeyDown:General",
+					"text": "$4Stim_MCM_SetKeyDown",
+					"help": "$4Stim_MCM_SetKeyDown_Help",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "keyinput",
 					"valueOptions": {
-						"allowModifierKeys": true
+						"sourceType": "ModSettingInt"
 					}
 				},
 				{
-					"id": "AutoMode",
-					"text": "$4Stim_MCM_KeyAutoMode",
-					"type": "hotkey",
-					"help": "$4Stim_MCM_KeyAutoMode_Help",
+					"id": "i4S_SetPullOut:General",
+					"text": "$4Stim_MCM_SetPullOut",
+					"help": "$4Stim_MCM_SetPullOut_Help",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "keyinput",
 					"valueOptions": {
-						"allowModifierKeys": true
+						"sourceType": "ModSettingInt"
 					}
 				},
 				{
-					"id": "PullOut",
-					"text": "$4Stim_MCM_KeyPullOut",
-					"type": "hotkey",
-					"help": "$4Stim_MCM_KeyPullOut_Help",
+					"id": "i4S_SetFreeCamToggleKey:General",
+					"text": "$4Stim_MCM_SetFreeCamToggleKey",
+					"help": "$4Stim_MCM_SetFreeCamToggleKey_Help",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "keyinput",
 					"valueOptions": {
-						"allowModifierKeys": true
+						"sourceType": "ModSettingInt"
 					}
 				},
 				{
-					"id": "End",
-					"text": "$4Stim_MCM_KeyEnd",
-					"type": "hotkey",
-					"help": "$4Stim_MCM_KeyEnd_Help",
+					"id": "i4S_keySearch:General",
+					"text": "$4Stim_MCM_keySearch",
+					"help": "$4Stim_MCM_keySearch_Help",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "keyinput",
 					"valueOptions": {
-						"allowModifierKeys": true
+						"sourceType": "ModSettingInt"
 					}
 				},
 				{
-					"id": "Search",
-					"text": "$4Stim_MCM_KeySearch",
-					"type": "hotkey",
-					"help": "$4Stim_MCM_KeySearch_Help",
+					"id": "i4S_keyAlignment:General",
+					"text": "$4Stim_MCM_keyAlignment",
+					"help": "$4Stim_MCM_keyAlignment_Help",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "keyinput",
 					"valueOptions": {
-						"allowModifierKeys": true
+						"sourceType": "ModSettingInt"
 					}
 				},
 				{
-					"id": "Align",
-					"text": "$4Stim_MCM_KeyAlign",
-					"type": "hotkey",
-					"help": "$4Stim_MCM_KeyAlign_Help",
+					"id": "i4S_keyHideUI:General",
+					"text": "$4Stim_MCM_keyHideUI",
+					"help": "$4Stim_MCM_keyHideUI_Help",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "keyinput",
 					"valueOptions": {
-						"allowModifierKeys": true
+						"sourceType": "ModSettingInt"
 					}
 				},
 				{
-					"id": "FreeCam",
-					"text": "$4Stim_MCM_KeyFreeCam",
-					"type": "hotkey",
-					"help": "$4Stim_MCM_KeyFreeCam_Help",
+					"id": "i4S_SetControlToggle:AutoMode",
+					"text": "$4Stim_MCM_SetControlToggle",
+					"help": "$4Stim_MCM_SetControlToggle_Help",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "keyinput",
 					"valueOptions": {
-						"allowModifierKeys": true
+						"sourceType": "ModSettingInt"
 					}
 				},
 				{
-					"id": "HideUI",
-					"text": "$4Stim_MCM_KeyHideUI",
-					"type": "hotkey",
-					"help": "$4Stim_MCM_KeyHideUI_Help",
+					"type": "section",
+					"text": "$4Stim_MCM_SectionNavigationkeys"
+				},
+				{
+					"id": "i4S_SetOsaUpKey:General",
+					"text": "$4Stim_MCM_SetOsaUpKey",
+					"help": "$4Stim_MCM_SetOsaUpKey_Help",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "keyinput",
 					"valueOptions": {
-						"allowModifierKeys": true
+						"sourceType": "ModSettingInt"
+					}
+				},
+				{
+					"id": "i4S_SetOsaDownKey:General",
+					"text": "$4Stim_MCM_SetOsaDownKey",
+					"help": "$4Stim_MCM_SetOsaDownKey_Help",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "keyinput",
+					"valueOptions": {
+						"sourceType": "ModSettingInt"
+					}
+				},
+				{
+					"id": "i4S_SetOsaLeftKey:General",
+					"text": "$4Stim_MCM_SetOsaLeftKey",
+					"help": "$4Stim_MCM_SetOsaLeftKey_Help",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "keyinput",
+					"valueOptions": {
+						"sourceType": "ModSettingInt"
+					}
+				},
+				{
+					"id": "i4S_SetOsaRightKey:General",
+					"text": "$4Stim_MCM_SetOsaRightKey",
+					"help": "$4Stim_MCM_SetOsaRightKey_Help",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "keyinput",
+					"valueOptions": {
+						"sourceType": "ModSettingInt"
+					}
+				},
+				{
+					"id": "i4S_SetOsaTogKey:General",
+					"text": "$4Stim_MCM_SetOsaTogKey",
+					"help": "$4Stim_MCM_SetOsaTogKey_Help",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "keyinput",
+					"valueOptions": {
+						"sourceType": "ModSettingInt"
+					}
+				},
+				{
+					"id": "i4S_SetOsaYesKey:General",
+					"text": "$4Stim_MCM_SetOsaYesKey",
+					"help": "$4Stim_MCM_SetOsaYesKey_Help",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "keyinput",
+					"valueOptions": {
+						"sourceType": "ModSettingInt"
+					}
+				},
+				{
+					"id": "i4S_SetOsaEndKey:General",
+					"text": "$4Stim_MCM_SetOsaEndKey",
+					"help": "$4Stim_MCM_SetOsaEndKey_Help",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "keyinput",
+					"valueOptions": {
+						"sourceType": "ModSettingInt"
+					}
+				}
+			]
+		},
+		{
+			"pageDisplayName": "$4Stim_MCM_PageController",
+			"content": [
+				{
+					"id": "i4S_sPadHotkey:Controller",
+					"text": "$4Stim_MCM_sPadHotkey",
+					"help": "$4Stim_MCM_sPadHotkey_Help",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "dropdown",
+					"valueOptions": {
+						"sourceType": "ModSettingInt",
+						"options": [
+							"$4Stim_MCM_sPadHotkey_0",
+							"$4Stim_MCM_sPadHotkey_1",
+							"$4Stim_MCM_sPadHotkey_2",
+							"$4Stim_MCM_sPadHotkey_3",
+							"$4Stim_MCM_sPadHotkey_4",
+							"$4Stim_MCM_sPadHotkey_5",
+							"$4Stim_MCM_sPadHotkey_6",
+							"$4Stim_MCM_sPadHotkey_7",
+							"$4Stim_MCM_sPadHotkey_8",
+							"$4Stim_MCM_sPadHotkey_9"
+						]
+					}
+				},
+				{
+					"id": "i4S_sPadNPCScene:Controller",
+					"text": "$4Stim_MCM_sPadNPCScene",
+					"help": "$4Stim_MCM_sPadNPCScene_Help",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "dropdown",
+					"valueOptions": {
+						"sourceType": "ModSettingInt",
+						"options": [
+							"$4Stim_MCM_sPadNPCScene_0",
+							"$4Stim_MCM_sPadNPCScene_1",
+							"$4Stim_MCM_sPadNPCScene_2",
+							"$4Stim_MCM_sPadNPCScene_3",
+							"$4Stim_MCM_sPadNPCScene_4",
+							"$4Stim_MCM_sPadNPCScene_5",
+							"$4Stim_MCM_sPadNPCScene_6",
+							"$4Stim_MCM_sPadNPCScene_7",
+							"$4Stim_MCM_sPadNPCScene_8",
+							"$4Stim_MCM_sPadNPCScene_9"
+						]
+					}
+				},
+				{
+					"id": "i4S_sPadSpeedUp:Controller",
+					"text": "$4Stim_MCM_sPadSpeedUp",
+					"help": "$4Stim_MCM_sPadSpeedUp_Help",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "dropdown",
+					"valueOptions": {
+						"sourceType": "ModSettingInt",
+						"options": [
+							"$4Stim_MCM_sPadSpeedUp_0",
+							"$4Stim_MCM_sPadSpeedUp_1",
+							"$4Stim_MCM_sPadSpeedUp_2",
+							"$4Stim_MCM_sPadSpeedUp_3",
+							"$4Stim_MCM_sPadSpeedUp_4",
+							"$4Stim_MCM_sPadSpeedUp_5",
+							"$4Stim_MCM_sPadSpeedUp_6",
+							"$4Stim_MCM_sPadSpeedUp_7",
+							"$4Stim_MCM_sPadSpeedUp_8",
+							"$4Stim_MCM_sPadSpeedUp_9"
+						]
+					}
+				},
+				{
+					"id": "i4S_sPadSpeedDown:Controller",
+					"text": "$4Stim_MCM_sPadSpeedDown",
+					"help": "$4Stim_MCM_sPadSpeedDown_Help",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "dropdown",
+					"valueOptions": {
+						"sourceType": "ModSettingInt",
+						"options": [
+							"$4Stim_MCM_sPadSpeedDown_0",
+							"$4Stim_MCM_sPadSpeedDown_1",
+							"$4Stim_MCM_sPadSpeedDown_2",
+							"$4Stim_MCM_sPadSpeedDown_3",
+							"$4Stim_MCM_sPadSpeedDown_4",
+							"$4Stim_MCM_sPadSpeedDown_5",
+							"$4Stim_MCM_sPadSpeedDown_6",
+							"$4Stim_MCM_sPadSpeedDown_7",
+							"$4Stim_MCM_sPadSpeedDown_8",
+							"$4Stim_MCM_sPadSpeedDown_9"
+						]
+					}
+				},
+				{
+					"id": "i4S_sPadAutoMode:Controller",
+					"text": "$4Stim_MCM_sPadAutoMode",
+					"help": "$4Stim_MCM_sPadAutoMode_Help",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "dropdown",
+					"valueOptions": {
+						"sourceType": "ModSettingInt",
+						"options": [
+							"$4Stim_MCM_sPadAutoMode_0",
+							"$4Stim_MCM_sPadAutoMode_1",
+							"$4Stim_MCM_sPadAutoMode_2",
+							"$4Stim_MCM_sPadAutoMode_3",
+							"$4Stim_MCM_sPadAutoMode_4",
+							"$4Stim_MCM_sPadAutoMode_5",
+							"$4Stim_MCM_sPadAutoMode_6",
+							"$4Stim_MCM_sPadAutoMode_7",
+							"$4Stim_MCM_sPadAutoMode_8",
+							"$4Stim_MCM_sPadAutoMode_9"
+						]
+					}
+				},
+				{
+					"id": "i4S_sPadPullOut:Controller",
+					"text": "$4Stim_MCM_sPadPullOut",
+					"help": "$4Stim_MCM_sPadPullOut_Help",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "dropdown",
+					"valueOptions": {
+						"sourceType": "ModSettingInt",
+						"options": [
+							"$4Stim_MCM_sPadPullOut_0",
+							"$4Stim_MCM_sPadPullOut_1",
+							"$4Stim_MCM_sPadPullOut_2",
+							"$4Stim_MCM_sPadPullOut_3",
+							"$4Stim_MCM_sPadPullOut_4",
+							"$4Stim_MCM_sPadPullOut_5",
+							"$4Stim_MCM_sPadPullOut_6",
+							"$4Stim_MCM_sPadPullOut_7",
+							"$4Stim_MCM_sPadPullOut_8",
+							"$4Stim_MCM_sPadPullOut_9"
+						]
+					}
+				},
+				{
+					"id": "i4S_sPadEnd:Controller",
+					"text": "$4Stim_MCM_sPadEnd",
+					"help": "$4Stim_MCM_sPadEnd_Help",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "dropdown",
+					"valueOptions": {
+						"sourceType": "ModSettingInt",
+						"options": [
+							"$4Stim_MCM_sPadEnd_0",
+							"$4Stim_MCM_sPadEnd_1",
+							"$4Stim_MCM_sPadEnd_2",
+							"$4Stim_MCM_sPadEnd_3",
+							"$4Stim_MCM_sPadEnd_4",
+							"$4Stim_MCM_sPadEnd_5",
+							"$4Stim_MCM_sPadEnd_6",
+							"$4Stim_MCM_sPadEnd_7",
+							"$4Stim_MCM_sPadEnd_8",
+							"$4Stim_MCM_sPadEnd_9"
+						]
+					}
+				},
+				{
+					"id": "i4S_sPadSearch:Controller",
+					"text": "$4Stim_MCM_sPadSearch",
+					"help": "$4Stim_MCM_sPadSearch_Help",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "dropdown",
+					"valueOptions": {
+						"sourceType": "ModSettingInt",
+						"options": [
+							"$4Stim_MCM_sPadSearch_0",
+							"$4Stim_MCM_sPadSearch_1",
+							"$4Stim_MCM_sPadSearch_2",
+							"$4Stim_MCM_sPadSearch_3",
+							"$4Stim_MCM_sPadSearch_4",
+							"$4Stim_MCM_sPadSearch_5",
+							"$4Stim_MCM_sPadSearch_6",
+							"$4Stim_MCM_sPadSearch_7",
+							"$4Stim_MCM_sPadSearch_8",
+							"$4Stim_MCM_sPadSearch_9"
+						]
+					}
+				},
+				{
+					"id": "i4S_sPadAlign:Controller",
+					"text": "$4Stim_MCM_sPadAlign",
+					"help": "$4Stim_MCM_sPadAlign_Help",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "dropdown",
+					"valueOptions": {
+						"sourceType": "ModSettingInt",
+						"options": [
+							"$4Stim_MCM_sPadAlign_0",
+							"$4Stim_MCM_sPadAlign_1",
+							"$4Stim_MCM_sPadAlign_2",
+							"$4Stim_MCM_sPadAlign_3",
+							"$4Stim_MCM_sPadAlign_4",
+							"$4Stim_MCM_sPadAlign_5",
+							"$4Stim_MCM_sPadAlign_6",
+							"$4Stim_MCM_sPadAlign_7",
+							"$4Stim_MCM_sPadAlign_8",
+							"$4Stim_MCM_sPadAlign_9"
+						]
+					}
+				},
+				{
+					"id": "i4S_sPadFreeCam:Controller",
+					"text": "$4Stim_MCM_sPadFreeCam",
+					"help": "$4Stim_MCM_sPadFreeCam_Help",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "dropdown",
+					"valueOptions": {
+						"sourceType": "ModSettingInt",
+						"options": [
+							"$4Stim_MCM_sPadFreeCam_0",
+							"$4Stim_MCM_sPadFreeCam_1",
+							"$4Stim_MCM_sPadFreeCam_2",
+							"$4Stim_MCM_sPadFreeCam_3",
+							"$4Stim_MCM_sPadFreeCam_4",
+							"$4Stim_MCM_sPadFreeCam_5",
+							"$4Stim_MCM_sPadFreeCam_6",
+							"$4Stim_MCM_sPadFreeCam_7",
+							"$4Stim_MCM_sPadFreeCam_8",
+							"$4Stim_MCM_sPadFreeCam_9"
+						]
+					}
+				},
+				{
+					"id": "i4S_sPadHideUI:Controller",
+					"text": "$4Stim_MCM_sPadHideUI",
+					"help": "$4Stim_MCM_sPadHideUI_Help",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "dropdown",
+					"valueOptions": {
+						"sourceType": "ModSettingInt",
+						"options": [
+							"$4Stim_MCM_sPadHideUI_0",
+							"$4Stim_MCM_sPadHideUI_1",
+							"$4Stim_MCM_sPadHideUI_2",
+							"$4Stim_MCM_sPadHideUI_3",
+							"$4Stim_MCM_sPadHideUI_4",
+							"$4Stim_MCM_sPadHideUI_5",
+							"$4Stim_MCM_sPadHideUI_6",
+							"$4Stim_MCM_sPadHideUI_7",
+							"$4Stim_MCM_sPadHideUI_8",
+							"$4Stim_MCM_sPadHideUI_9"
+						]
 					}
 				}
 			]

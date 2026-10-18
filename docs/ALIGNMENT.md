@@ -16,7 +16,7 @@ When the scene ends, as with OStim's "Reset position" (`SetResetPosition`, on by
 
 ## The Align tab
 
-In a scene, give the HUD the keys (the hotkey), then go to the **Align** tab (Left / Right on the tab rows, or LB / RB):
+In a scene, give the HUD the keys (the hotkey), then go to the **Align** tab (Left / Right on the tab rows; on a controller, B for the tab buttons):
 
 | Row | Left / Right | Enter / A |
 |---|---|---|

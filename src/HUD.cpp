@@ -1120,11 +1120,7 @@ namespace HUD
 				case 0x0008: return "Right";
 				case 0x1000: return "Accept";  // A
 				case 0x2000: return "Back";    // B: the tab buttons, then hide (4Stim's controller scheme)
-				case 0x0100: return "PrevTab"; // LB
-				case 0x0200: return "NextTab"; // RB
-				case 0x8000: return "SpeedUp";    // Y
-				case 0x4000: return "SpeedDown";  // X
-				default: return nullptr;
+				default: return nullptr;       // the other buttons: [Controller] in 4Stim.ini
 				}
 			default:
 				return nullptr;
