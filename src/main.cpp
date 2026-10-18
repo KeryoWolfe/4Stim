@@ -4027,6 +4027,49 @@ namespace
 		}
 	}
 
+	// ---- The weapon an actor held before their scene ----
+	// FourStimScene.HolsterForScene notes it as it takes it off, and
+	// ReleaseFromScene puts it back on (OStim doesn't take weapons off; a
+	// drawn weapon's arm pose shows over Fallout 4's scene animations). Kept
+	// in the save with the scene.
+	std::mutex                                   g_sceneWeaponsLock;
+	std::unordered_map<std::uint32_t, std::uint32_t> g_sceneWeapons;  // actor -> weapon form
+
+	void NoteSceneWeapon(std::uint32_t a_actor, std::uint32_t a_weapon)
+	{
+		std::scoped_lock lock(g_sceneWeaponsLock);
+		if (a_weapon) {
+			g_sceneWeapons[a_actor] = a_weapon;
+		} else {
+			g_sceneWeapons.erase(a_actor);
+		}
+	}
+
+	std::uint32_t SceneWeaponOf(std::uint32_t a_actor)
+	{
+		std::scoped_lock lock(g_sceneWeaponsLock);
+		const auto it = g_sceneWeapons.find(a_actor);
+		return it != g_sceneWeapons.end() ? it->second : 0;
+	}
+
+	void RememberSceneWeapon(std::monostate, RE::Actor* a_actor, RE::TESForm* a_weapon)
+	{
+		if (a_actor && a_weapon) {
+			NoteSceneWeapon(a_actor->GetFormID(), a_weapon->GetFormID());
+		}
+	}
+
+	// The weapon to put back on, forgotten (None: nothing was taken off).
+	RE::TESForm* TakeSceneWeapon(std::monostate, RE::Actor* a_actor)
+	{
+		if (!a_actor) {
+			return nullptr;
+		}
+		const auto id = SceneWeaponOf(a_actor->GetFormID());
+		NoteSceneWeapon(a_actor->GetFormID(), 0);
+		return id ? RE::TESForm::GetFormByID(id) : nullptr;
+	}
+
 	bool IsMuted(std::monostate, RE::Actor* a_actor)
 	{
 		return a_actor && Sounds::IsMuted(a_actor->GetFormID());  // read from a Papyrus thread, as IsInScene
@@ -6437,6 +6480,8 @@ namespace
 		a_vm->BindNativeMethod(SCRIPT_NAME, "Mute"sv, Mute);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "Unmute"sv, Unmute);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "IsMuted"sv, IsMuted);
+		a_vm->BindNativeMethod(SCRIPT_NAME, "RememberSceneWeapon"sv, RememberSceneWeapon);
+		a_vm->BindNativeMethod(SCRIPT_NAME, "TakeSceneWeapon"sv, TakeSceneWeapon);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "SetEquipObjectID"sv, SetEquipObjectID);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "GetEquipObjectID"sv, GetEquipObjectID);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "RegisterForSceneEvents"sv, RegisterForSceneEvents);
@@ -6454,7 +6499,7 @@ namespace
 
 	constexpr std::uint32_t SAVE_UID = 'FSTM';
 	constexpr std::uint32_t SCENES_RECORD = 'SCNS';
-	constexpr std::uint32_t SCENES_VERSION = 4;  // 2: each actor's own scale (alignment scales them); 3: equip objects given; 4: wall spot, furniture blocked, clutter
+	constexpr std::uint32_t SCENES_VERSION = 5;  // 2: each actor's own scale (alignment scales them); 3: equip objects given; 4: wall spot, furniture blocked, clutter; 5: weapon taken off
 
 	struct SavedScene
 	{
@@ -6471,6 +6516,7 @@ namespace
 		std::optional<Furniture::Spot>          furnitureFixedSpot;  // a wall (version 4)
 		bool                                    furnitureBlocked = false;  // 4Stim blocked the furniture (version 4)
 		std::vector<Furniture::ClutterItem>     clutter;             // version 4
+		std::vector<std::uint32_t>              weapons;             // per actor: the weapon taken off, 0 = none (version 5)
 	};
 	std::mutex              g_savedLock;
 	std::vector<SavedScene> g_loadedScenes;  // read from the save being loaded
@@ -6517,6 +6563,7 @@ namespace
 				for (const auto item : given) {
 					a_intfc->WriteRecordData(item);
 				}
+				a_intfc->WriteRecordData(SceneWeaponOf(id));  // version 5
 			}
 			WriteString(a_intfc, active.sceneID);
 			a_intfc->WriteRecordData(static_cast<std::int32_t>(active.speed));
@@ -6594,6 +6641,12 @@ namespace
 							}
 						}
 					}
+					std::uint32_t weapon = 0;
+					if (version >= 5) {
+						a_intfc->ReadRecordData(weapon);
+						weapon = weapon ? resolve(weapon) : 0;
+					}
+					saved.weapons.push_back(weapon);
 					saved.given.push_back(std::move(given));
 					saved.actors.push_back(resolve(id));  // 0 if its plugin is gone
 					saved.excitement.push_back(excitement);
@@ -6691,6 +6744,11 @@ namespace
 				Undress::NoteStripped(id, a_saved.stripped[i]);
 				Undress::Redress(id, true);
 			}
+			if (i < a_saved.weapons.size() && a_saved.weapons[i] && g_vm) {
+				NoteSceneWeapon(id, a_saved.weapons[i]);
+				RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
+				g_vm->DispatchStaticCall("FourStimScene"sv, "RearmByID"sv, callback, static_cast<std::int32_t>(id));
+			}
 			if (!IsPlayer(actor) && g_vm) {
 				RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
 				g_vm->DispatchStaticCall("FourStimScene"sv, "ReleaseAfterLoad"sv, callback, static_cast<std::int32_t>(id));
@@ -6719,6 +6777,9 @@ namespace
 		for (std::size_t i = 0; i < a_saved.actors.size(); ++i) {
 			if (!a_saved.stripped[i].empty()) {
 				Undress::NoteStripped(a_saved.actors[i], a_saved.stripped[i]);
+			}
+			if (i < a_saved.weapons.size() && a_saved.weapons[i]) {
+				NoteSceneWeapon(a_saved.actors[i], a_saved.weapons[i]);  // back on when the scene ends
 			}
 			EquipObjects::TakeBack(a_saved.actors[i], a_saved.given[i]);  // the scene puts them on again
 			// Their own size back first: the scene measures it again when it starts.
@@ -6820,6 +6881,10 @@ namespace
 				Lights::Clear();
 				Undress::Clear();
 				EquipObjects::Clear();
+				{
+					std::scoped_lock weaponsLock(g_sceneWeaponsLock);
+					g_sceneWeapons.clear();
+				}
 				PenisBend::Clear();
 				EyeLook::Clear();
 			});
@@ -6866,6 +6931,10 @@ namespace
 				Lights::Clear();
 				Undress::Clear();
 				EquipObjects::Clear();
+				{
+					std::scoped_lock weaponsLock(g_sceneWeaponsLock);
+					g_sceneWeapons.clear();
+				}
 				PenisBend::Clear();
 				EyeLook::Clear();
 				g_focusNextScene = false;

@@ -60,12 +60,32 @@ bool Function CanUseActor(Actor akActor, bool abQuiet = false) Global
 	return true
 EndFunction
 
-; Unequips the actor's weapon, if any. abPreventEquip is left false so
-; NPCs re-arm on their own once released.
+; Unequips the actor's weapon, if any, and has the plugin remember it, so
+; RearmAfterScene puts it back on when the scene ends (NPCs didn't always
+; re-arm on their own, and the player never did).
 Function HolsterForScene(Actor akActor) Global
 	Weapon akWeapon = akActor.GetEquippedWeapon()
 	if akWeapon
+		FourStim.RememberSceneWeapon(akActor, akWeapon)
 		akActor.UnequipItem(akWeapon, false, true)
+	endif
+EndFunction
+
+; The weapon HolsterForScene took off, back on (if they still have it and
+; aren't holding another).
+Function RearmAfterScene(Actor akActor) Global
+	Weapon akWeapon = FourStim.TakeSceneWeapon(akActor) as Weapon
+	if akWeapon && akActor.GetItemCount(akWeapon) > 0 && akActor.GetEquippedWeapon() == None
+		akActor.EquipItem(akWeapon, false, true)
+	endif
+EndFunction
+
+; RearmAfterScene for an actor of a scene from a save that isn't started
+; again. Called by the plugin.
+Function RearmByID(int aiActorID) Global
+	Actor akActor = Game.GetForm(aiActorID) as Actor
+	if akActor
+		RearmAfterScene(akActor)
 	endif
 EndFunction
 
@@ -94,6 +114,7 @@ Function ReleaseFromScene(Actor akActor) Global
 		akActor.SetRestrained(false)
 		akActor.EvaluatePackage()  ; walk back into their routine
 	endif
+	RearmAfterScene(akActor)
 EndFunction
 
 ; Forces the game's full third-person view at scene start -- the proper

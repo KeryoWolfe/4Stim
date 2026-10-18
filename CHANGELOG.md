@@ -2,6 +2,7 @@
 
 ## Next
 
+- **Weapons back on after a scene:** the weapon taken off as a scene starts goes back on when it ends (the player and NPCs), also after loading a save mid-scene.
 - **OStim's keys by default:** Up arrow starts a scene, numpad + / - speed, numpad 1 pull out, numpad 0 auto mode, numpad / free camera, numpad * hide the HUD, numpad . end, K search, L Align; and OStim's navigation keys for the HUD (numpad 8 / 5 / 4 / 6, 7 to choose, 9 between the list and the tab buttons; `SetOsaUpKey`...), besides the arrows and Enter.
 - **Controller:** B goes from the HUD's list to its tab buttons (Up / Down pick a tab), B again hides the HUD while the scene goes on, and A shows it again. The old LB / RB (tabs) and Y / X (speed) are gone, and the d-pad's Left / Right only change an Align value (no more moving between the list and the tabs); the MCM's new Controller page (`[Controller]`) gives any scene key a button, none by default.
 - **MCM Hotkeys page:** now sets `4Stim.ini`'s keys, showing them (OStim's defaults) in OStim's layout with its navigation keys; the MCM's own hotkeys are gone. Millisecond settings show in seconds in the MCM.

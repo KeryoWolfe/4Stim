@@ -70,3 +70,7 @@ Any slot outside `sUndressSlots` is skipped anyway.
 What's been taken off is kept in the save with the scene: a scene that starts again on load still dresses everyone at the end, and one that doesn't dresses them on load (`bResumeScenes`, `4Stim.ini`).
 
 The plugin finds what each actor wears in which slots; `FourStimUndress.psc` (vanilla Papyrus) takes it off and puts it back on.
+
+## Weapons
+
+Everyone's weapon comes off as their scene starts (a drawn weapon's arm pose would show over the animation; OStim leaves weapons alone, Skyrim's animations hide them). 4Stim remembers which weapon it was and puts it back on when the scene ends, for the player and NPCs alike, as long as they still have it and aren't holding another. A scene saved and loaded keeps it too. The weapon goes back on by its base item, so with several of the same weapon (different mods on each), the game may pick another of them.

@@ -98,6 +98,12 @@ Function Mute(Actor akActor) Global Native
 Function Unmute(Actor akActor) Global Native
 bool Function IsMuted(Actor akActor) Global Native
 
+; The weapon an actor held before their scene, which FourStimScene takes off
+; and puts back on when the scene ends: noted, and taken back (None if none;
+; forgotten once taken). Kept in the save with the scene.
+Function RememberSceneWeapon(Actor akActor, Form akWeapon) Global Native
+Form Function TakeSceneWeapon(Actor akActor) Global Native
+
 ; Tells the plugin aiActorID's clothes changed (4Stim's undressing calls it
 ; after taking things off or putting them on): heels are measured again and
 ; the High Heels System's height turned off or back on to match.
