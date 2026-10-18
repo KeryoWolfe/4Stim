@@ -1,4 +1,5 @@
 #include "Undress.h"
+#include "compat/ScrapFunction.h"
 
 #include <algorithm>
 #include <array>
@@ -178,7 +179,7 @@ namespace Undress
 				if (const auto vm = FourStim::GetVM()) {
 					std::vector<std::int32_t> ids(items.begin(), items.end());
 					RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
-					vm->DispatchStaticCall("FourStimUndress"sv, "Strip"sv, callback, static_cast<std::int32_t>(a_id), ids, g_config.itemDelay);
+					Compat::DispatchStaticCall(vm, "FourStimUndress"sv, "Strip"sv, callback, static_cast<std::int32_t>(a_id), ids, g_config.itemDelay);
 				}
 				HUD::OnFocusedSceneChanged();  // the HUD's "Undress / Dress" entries
 			});
@@ -339,7 +340,7 @@ namespace Undress
 		if (const auto vm = FourStim::GetVM()) {
 			REX::INFO("Undress: dressing {:08X} again ({} item(s), {} redress animation(s))", a_id, items.size(), idles.size());
 			RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
-			vm->DispatchStaticCall("FourStimUndress"sv, "Redress"sv, callback, static_cast<std::int32_t>(a_id), items, g_config.itemDelay, groups, idles,
+			Compat::DispatchStaticCall(vm, "FourStimUndress"sv, "Redress"sv, callback, static_cast<std::int32_t>(a_id), items, g_config.itemDelay, groups, idles,
 				lengths, dressAts);
 		}
 		HUD::OnFocusedSceneChanged();

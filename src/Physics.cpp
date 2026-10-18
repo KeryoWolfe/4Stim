@@ -1,4 +1,5 @@
 #include "Physics.h"
+#include "compat/ScrapFunction.h"
 
 #include <algorithm>
 #include <cctype>
@@ -329,9 +330,9 @@ namespace Physics
 			};
 			const auto fromBare = bare(a_from), toBare = bare(a_to);
 			const bool ok = a_afterScene ?
-			                    vm->DispatchStaticCall("FourStimPhysics"sv, "SwapAfterScene"sv, callback, static_cast<std::int32_t>(a_actor->GetFormID()),
+			                    Compat::DispatchStaticCall(vm, "FourStimPhysics"sv, "SwapAfterScene"sv, callback, static_cast<std::int32_t>(a_actor->GetFormID()),
 									a_from, a_to, "Meshes\\" + fromBare, "Meshes\\" + toBare, fromBare, toBare, AFTER_SCENE_DELAY) :
-			                    vm->DispatchStaticCall("FourStimPhysics"sv, "Swap"sv, callback, static_cast<std::int32_t>(a_actor->GetFormID()),
+			                    Compat::DispatchStaticCall(vm, "FourStimPhysics"sv, "Swap"sv, callback, static_cast<std::int32_t>(a_actor->GetFormID()),
 									a_from, a_to, "Meshes\\" + fromBare, "Meshes\\" + toBare, fromBare, toBare);
 			REX::INFO("Physics: {:08X} \"{}\" -> \"{}\" (dispatch={})", a_actor->GetFormID(), a_from, a_to, ok);
 			if (!ok) {
@@ -439,7 +440,7 @@ namespace Physics
 		if (const auto vm = FourStim::GetVM()) {
 			for (const auto id : unswapped) {
 				RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
-				vm->DispatchStaticCall("FourStimPhysics"sv, "ResetAfterScene"sv, callback, static_cast<std::int32_t>(id), AFTER_SCENE_DELAY);
+				Compat::DispatchStaticCall(vm, "FourStimPhysics"sv, "ResetAfterScene"sv, callback, static_cast<std::int32_t>(id), AFTER_SCENE_DELAY);
 			}
 		}
 	}

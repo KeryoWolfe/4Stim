@@ -14,6 +14,7 @@
 #include <nlohmann/json.hpp>
 
 #include "Excitement.h"
+#include "compat/ScrapFunction.h"
 #include "compat/Fallbacks.h"
 #include "Undress.h"
 #include "Bridge.h"
@@ -352,7 +353,7 @@ namespace HUD
 			}
 			REX::INFO("HUD: Utility \"{}\" -> {}.{}", entry.id, entry.script, entry.function);
 			const RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
-			vm->DispatchStaticCall(entry.script, entry.function, callback, FourStim::ResolveActors(scene.ActorIDs()), scene.sceneID);
+			Compat::DispatchStaticCall(vm, entry.script, entry.function, callback, FourStim::ResolveActors(scene.ActorIDs()), scene.sceneID);
 		}
 
 		class HUDMenu;

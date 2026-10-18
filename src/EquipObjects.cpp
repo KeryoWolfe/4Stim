@@ -1,4 +1,5 @@
 #include "EquipObjects.h"
+#include "compat/ScrapFunction.h"
 
 #include <algorithm>
 #include <cctype>
@@ -155,7 +156,7 @@ namespace EquipObjects
 		{
 			if (const auto vm = FourStim::GetVM()) {
 				RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
-				vm->DispatchStaticCall("FourStimUndress"sv, a_function, callback, static_cast<std::int32_t>(a_id), std::move(a_items));
+				Compat::DispatchStaticCall(vm, "FourStimUndress"sv, a_function, callback, static_cast<std::int32_t>(a_id), std::move(a_items));
 			}
 		}
 

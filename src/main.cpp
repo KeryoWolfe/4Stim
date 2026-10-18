@@ -12,6 +12,7 @@
 #include <unordered_set>
 
 #include "Actions.h"
+#include "compat/ScrapFunction.h"
 #include "compat/Fallbacks.h"
 #include "Excitement.h"
 #include "Undress.h"
@@ -1073,7 +1074,7 @@ namespace
 			return;
 		}
 		RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
-		g_vm->DispatchStaticCall("FourStimFurniture"sv, "Block"sv, callback, static_cast<std::int32_t>(a_ref));
+		Compat::DispatchStaticCall(g_vm, "FourStimFurniture"sv, "Block"sv, callback, static_cast<std::int32_t>(a_ref));
 	}
 
 	// OStim's enableUse, for furniture 4Stim blocked.
@@ -1088,7 +1089,7 @@ namespace
 		if (g_vm) {
 			REX::INFO("Furniture: {:08X} free to use again", a_ref);
 			RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
-			g_vm->DispatchStaticCall("FourStimFurniture"sv, "Unblock"sv, callback, static_cast<std::int32_t>(a_ref));
+			Compat::DispatchStaticCall(g_vm, "FourStimFurniture"sv, "Unblock"sv, callback, static_cast<std::int32_t>(a_ref));
 		}
 	}
 
@@ -1822,7 +1823,7 @@ namespace
 	{
 		if (g_vm) {
 			RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
-			g_vm->DispatchStaticCall("Debug"sv, "Notification"sv, callback, a_text);
+			Compat::DispatchStaticCall(g_vm, "Debug"sv, "Notification"sv, callback, a_text);
 		}
 	}
 
@@ -1929,7 +1930,7 @@ namespace
 		}
 		REX::INFO("Auto mode: fading to \"{}\"", a_target->id);
 		RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
-		g_vm->DispatchStaticCall("FourStimMenu"sv, "FadeToBlack"sv, callback);
+		Compat::DispatchStaticCall(g_vm, "FourStimMenu"sv, "FadeToBlack"sv, callback);
 		std::thread([role0 = a_active.actors[0], target = a_target, route = a_route]() {
 			std::this_thread::sleep_for(std::chrono::milliseconds(700));
 			F4SE::GetTaskInterface()->AddTask([role0, target, route]() {
@@ -1940,7 +1941,7 @@ namespace
 			std::this_thread::sleep_for(std::chrono::milliseconds(550));
 			if (g_vm) {
 				RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> after;
-				g_vm->DispatchStaticCall("FourStimMenu"sv, "FadeFromBlack"sv, after, 0.0F);
+				Compat::DispatchStaticCall(g_vm, "FourStimMenu"sv, "FadeFromBlack"sv, after, 0.0F);
 			}
 		}).detach();
 		return 1.25F;
@@ -2202,7 +2203,7 @@ namespace
 		}
 		REX::INFO("Heels: {:08X} back on ({})", a_id, a_why);
 		RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
-		g_vm->DispatchStaticCall("FourStimScene"sv, "SetHeels"sv, callback, static_cast<std::int32_t>(a_id), true);
+		Compat::DispatchStaticCall(g_vm, "FourStimScene"sv, "SetHeels"sv, callback, static_cast<std::int32_t>(a_id), true);
 	}
 
 	// Whether the High Heels System's plugin is there (its Papyrus API turns
@@ -2223,7 +2224,7 @@ namespace
 		a_active.heelsOff[a_role] = a_off;
 		REX::INFO("Heels: {:08X} {} (High Heels System)", a_active.actors[a_role], a_off ? "off: feet not on the ground" : "back on");
 		RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
-		g_vm->DispatchStaticCall("FourStimScene"sv, "SetHeels"sv, callback, static_cast<std::int32_t>(a_active.actors[a_role]), !a_off);
+		Compat::DispatchStaticCall(g_vm, "FourStimScene"sv, "SetHeels"sv, callback, static_cast<std::int32_t>(a_active.actors[a_role]), !a_off);
 	}
 
 	ActorSpot SpotOf(const ActiveScene& a_active, std::size_t a_role)
@@ -2358,7 +2359,7 @@ namespace
 			}
 			FaceHeading(actor, spot.heading);  // face the right way first; the translation then holds it
 			RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
-			g_vm->DispatchStaticCall("FourStimScene"sv, "LockInPlace"sv, callback, static_cast<std::int32_t>(id), spot.position.x, spot.position.y,
+			Compat::DispatchStaticCall(g_vm, "FourStimScene"sv, "LockInPlace"sv, callback, static_cast<std::int32_t>(id), spot.position.x, spot.position.y,
 				spot.position.z, spot.heading * 180.0F / PI_F);
 		}
 	}
@@ -2532,7 +2533,7 @@ namespace
 		}
 		if (withPlayer && g_settings.useFades && g_vm) {
 			RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
-			g_vm->DispatchStaticCall("FourStimMenu"sv, "ChangeFurnitureFaded"sv, callback);  // FadeToBlack, ApplyFurnitureChange, FadeFromBlack
+			Compat::DispatchStaticCall(g_vm, "FourStimMenu"sv, "ChangeFurnitureFaded"sv, callback);  // FadeToBlack, ApplyFurnitureChange, FadeFromBlack
 		} else {
 			ApplyFurnitureChange();
 		}
@@ -2545,7 +2546,7 @@ namespace
 		}
 		for (const auto id : a_ids) {
 			RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
-			g_vm->DispatchStaticCall("FourStimScene"sv, "Unlock"sv, callback, static_cast<std::int32_t>(id));
+			Compat::DispatchStaticCall(g_vm, "FourStimScene"sv, "Unlock"sv, callback, static_cast<std::int32_t>(id));
 			// Back to their routine right away: end the do-nothing package the
 			// scene gave them (LeaveFurniture) and the scene guard's hold on
 			// their idles (packageIdleTimer, renewed to 30 s every check),
@@ -2587,7 +2588,7 @@ namespace
 					const auto& b = before->second;
 					REX::INFO("Scene end: {:08X} back to where they stood before the scene", id);
 					RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
-					g_vm->DispatchStaticCall("FourStimScene"sv, "ResetPosition"sv, callback, static_cast<std::int32_t>(id), b.position.x, b.position.y,
+					Compat::DispatchStaticCall(g_vm, "FourStimScene"sv, "ResetPosition"sv, callback, static_cast<std::int32_t>(id), b.position.x, b.position.y,
 						b.position.z, b.heading * 180.0F / PI_F);
 				} else {
 					unplaced.push_back(id);
@@ -2624,7 +2625,7 @@ namespace
 				}
 				REX::INFO("Scene end: {:08X} steps off the spot, {:.0f} units away", actor->GetFormID(), DISTANCE);
 				RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
-				g_vm->DispatchStaticCall("FourStimScene"sv, "MoveApart"sv, callback, static_cast<std::int32_t>(actor->GetFormID()), to.x, to.y, to.z);
+				Compat::DispatchStaticCall(g_vm, "FourStimScene"sv, "MoveApart"sv, callback, static_cast<std::int32_t>(actor->GetFormID()), to.x, to.y, to.z);
 				next = (next + tries + 1) % directions.size();
 				moved = true;
 			}
@@ -2879,7 +2880,7 @@ namespace
 		const bool papyrusShake = config.shake > 0.0F && !freeCamera;
 		if ((papyrusShake || config.rumble) && g_vm) {
 			RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
-			g_vm->DispatchStaticCall("FourStimMenu"sv, "ClimaxEffects"sv, callback, papyrusShake ? config.shake : 0.0F, config.rumble);
+			Compat::DispatchStaticCall(g_vm, "FourStimMenu"sv, "ClimaxEffects"sv, callback, papyrusShake ? config.shake : 0.0F, config.rumble);
 		}
 	}
 
@@ -2919,7 +2920,7 @@ namespace
 			const float papyrusShake = freeCamera ? 0.0F : shake;
 			if ((papyrusShake > 0.0F || rumble > 0.0F) && g_vm) {
 				RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
-				g_vm->DispatchStaticCall("FourStimMenu"sv, "EventEffects"sv, callback, papyrusShake, effects.shakeDuration, rumble, effects.rumbleDuration);
+				Compat::DispatchStaticCall(g_vm, "FourStimMenu"sv, "EventEffects"sv, callback, papyrusShake, effects.shakeDuration, rumble, effects.rumbleDuration);
 			}
 		}
 		auto role = [&](int a_index) {
@@ -2976,13 +2977,13 @@ namespace
 		RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
 		const auto focused = GetPlayerScene();
 		if (focused.Active() && focused.role0 == a_scene.actors[0]) {
-			g_vm->DispatchStaticCall("FourStimMenu"sv, "EndPlayerScene"sv, callback);
+			Compat::DispatchStaticCall(g_vm, "FourStimMenu"sv, "EndPlayerScene"sv, callback);
 		} else {
 			std::vector<std::int32_t> ids;
 			for (const auto id : a_scene.actors) {
 				ids.push_back(static_cast<std::int32_t>(id));
 			}
-			g_vm->DispatchStaticCall("FourStimMenu"sv, "EndSceneOf"sv, callback, ids);
+			Compat::DispatchStaticCall(g_vm, "FourStimMenu"sv, "EndSceneOf"sv, callback, ids);
 		}
 	}
 
@@ -3254,7 +3255,7 @@ namespace
 		}
 
 		RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;  // null: fire-and-forget
-		return g_vm->DispatchMethodCall(
+		return Compat::DispatchMethodCall(g_vm,
 			static_cast<std::uint64_t>(handle),
 			a_scriptName,
 			a_funcName,
@@ -5954,7 +5955,7 @@ namespace
 				} else if (a_sceneID == END_SCENE_ID) {
 					if (g_vm) {
 						RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
-						g_vm->DispatchStaticCall("FourStimMenu"sv, "EndPlayerScene"sv, callback);
+						Compat::DispatchStaticCall(g_vm, "FourStimMenu"sv, "EndPlayerScene"sv, callback);
 					}
 				} else {
 					NavigateSceneImpl(a_sceneID);
@@ -6015,7 +6016,7 @@ namespace
 						anchor = static_cast<std::int32_t>(g_cast.front());
 					}
 				}
-				g_vm->DispatchStaticCall("FourStimMenu"sv, "StartPickedCast"sv, callback, std::move(a_sceneID), ordered, anchor);
+				Compat::DispatchStaticCall(g_vm, "FourStimMenu"sv, "StartPickedCast"sv, callback, std::move(a_sceneID), ordered, anchor);
 			}
 		}
 	};
@@ -6318,7 +6319,7 @@ namespace
 			} else if (a_action == "end") {
 				if (g_vm) {
 					RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
-					g_vm->DispatchStaticCall("FourStimMenu"sv, "EndPlayerScene"sv, callback);
+					Compat::DispatchStaticCall(g_vm, "FourStimMenu"sv, "EndPlayerScene"sv, callback);
 				}
 			} else if (a_action == "search") {
 				ShowPicker(PickerMode::kSearch);
@@ -6334,7 +6335,7 @@ namespace
 			if (g_vm) {
 				REX::INFO("NPC scene key pressed");
 				RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
-				g_vm->DispatchStaticCall("FourStimMenu"sv, "OnNPCSceneHotkey"sv, callback,
+				Compat::DispatchStaticCall(g_vm, "FourStimMenu"sv, "OnNPCSceneHotkey"sv, callback,
 					g_settings.targetMode, g_settings.maxDistance, g_settings.crosshairCone, g_settings.proximityRadius);
 			}
 		} else if (a_action == "hotkey") {
@@ -6346,7 +6347,7 @@ namespace
 			if (g_vm) {
 				REX::INFO("Hotkey pressed");
 				RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
-				g_vm->DispatchStaticCall("FourStimMenu"sv, "OnHotkey"sv, callback,
+				Compat::DispatchStaticCall(g_vm, "FourStimMenu"sv, "OnHotkey"sv, callback,
 					g_settings.targetMode, g_settings.maxDistance, g_settings.crosshairCone, g_settings.proximityRadius);
 			}
 		} else {
@@ -6844,7 +6845,7 @@ namespace
 			if (g_vm) {
 				RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
 				const std::int32_t anchor = withPlayer ? 0 : static_cast<std::int32_t>(cast.front());
-				g_vm->DispatchStaticCall("FourStimMenu"sv, "StartPickedCast"sv, callback, scene->id, ordered, anchor);
+				Compat::DispatchStaticCall(g_vm, "FourStimMenu"sv, "StartPickedCast"sv, callback, scene->id, ordered, anchor);
 			}
 		});
 		return threadID;
@@ -7543,7 +7544,7 @@ namespace
 			{
 				if (g_vm) {
 					RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
-					g_vm->DispatchStaticCall("FourStimScene"sv, a_function, callback, static_cast<std::int32_t>(id));  // a form ID: Actors don't arrive
+					Compat::DispatchStaticCall(g_vm, "FourStimScene"sv, a_function, callback, static_cast<std::int32_t>(id));  // a form ID: Actors don't arrive
 				}
 			}
 		};
@@ -8426,11 +8427,11 @@ namespace
 			if (i < a_saved.weapons.size() && a_saved.weapons[i] && g_vm) {
 				NoteSceneWeapon(id, a_saved.weapons[i]);
 				RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
-				g_vm->DispatchStaticCall("FourStimScene"sv, "RearmByID"sv, callback, static_cast<std::int32_t>(id));
+				Compat::DispatchStaticCall(g_vm, "FourStimScene"sv, "RearmByID"sv, callback, static_cast<std::int32_t>(id));
 			}
 			if (!IsPlayer(actor) && g_vm) {
 				RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
-				g_vm->DispatchStaticCall("FourStimScene"sv, "ReleaseAfterLoad"sv, callback, static_cast<std::int32_t>(id));
+				Compat::DispatchStaticCall(g_vm, "FourStimScene"sv, "ReleaseAfterLoad"sv, callback, static_cast<std::int32_t>(id));
 			}
 		}
 	}
@@ -8499,7 +8500,7 @@ namespace
 		const auto   anchor = withPlayer ? 0 : ids.front();
 		REX::INFO("Save data: starting \"{}\" again ({} actor(s))", a_saved.sceneID, ids.size());
 		RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
-		g_vm->DispatchStaticCall("FourStimMenu"sv, "StartPickedCast"sv, callback, a_saved.sceneID, ids, anchor);
+		Compat::DispatchStaticCall(g_vm, "FourStimMenu"sv, "StartPickedCast"sv, callback, a_saved.sceneID, ids, anchor);
 	}
 
 	// After a save is loaded: once the loading screen and fade are gone, the
@@ -8682,7 +8683,7 @@ namespace FourStim
 	{
 		if (g_vm) {
 			RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
-			g_vm->DispatchStaticCall("FourStimMenu"sv, "EndPlayerScene"sv, callback);
+			Compat::DispatchStaticCall(g_vm, "FourStimMenu"sv, "EndPlayerScene"sv, callback);
 		}
 	}
 

@@ -2,6 +2,7 @@
 #include <mutex>
 
 #include "Bridge.h"
+#include "compat/ScrapFunction.h"
 #include "Physics.h"
 #include "SceneEvents.h"
 
@@ -53,14 +54,7 @@ namespace SceneEvents
 			const RE::BSFixedString                                  name{ a_function };
 			const RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
 			for (const auto handle : receivers) {
-				vm->SendEvent(
-					handle, name,
-					[&](RE::BSScrapArray<RE::BSScript::Variable>& a_out) {
-						a_out = RE::BSScript::detail::PackVariables(a_args...);
-						return true;
-					},
-					[](const RE::BSTSmartPointer<RE::BSScript::Object>&) { return true; },
-					callback);
+				Compat::SendEvent(vm, handle, name, callback, a_args...);
 			}
 		}
 	}

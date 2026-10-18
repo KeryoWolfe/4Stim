@@ -1,4 +1,5 @@
 #include "Options.h"
+#include "compat/ScrapFunction.h"
 
 #include <algorithm>
 #include <cctype>
@@ -468,7 +469,7 @@ namespace Options
 		// from here never reached the option's function (nothing ran, no
 		// Papyrus error).
 		const std::int32_t argCount = actor ? (parts[3].empty() ? 2 : 3) : 1;
-		const bool ok = vm->DispatchStaticCall("FourStimOptions"sv, "Run"sv, callback, std::string(state->script), std::string(state->function),
+		const bool ok = Compat::DispatchStaticCall(vm, "FourStimOptions"sv, "Run"sv, callback, std::string(state->script), std::string(state->function),
 			std::string(state->name), static_cast<std::int32_t>(actor ? actor->GetFormID() : 0), std::string(parts[3]), argCount);
 		if (!ok) {
 			REX::WARN("Options: couldn't call FourStimOptions.Run (is FourStimOptions.pex installed?)");

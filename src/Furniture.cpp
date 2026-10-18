@@ -1,4 +1,5 @@
 #include "Furniture.h"
+#include "compat/ScrapFunction.h"
 
 #include <algorithm>
 #include <cctype>
@@ -1089,7 +1090,7 @@ namespace Furniture
 				continue;
 			}
 			RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
-			vm->DispatchStaticCall("FourStimFurniture"sv, "PutBack"sv, callback, static_cast<std::int32_t>(item.ref), item.position.x, item.position.y,
+			Compat::DispatchStaticCall(vm, "FourStimFurniture"sv, "PutBack"sv, callback, static_cast<std::int32_t>(item.ref), item.position.x, item.position.y,
 				item.position.z, item.angle.x / DEG, item.angle.y / DEG, item.angle.z / DEG);
 			++count;
 		}

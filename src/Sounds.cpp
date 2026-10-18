@@ -1,4 +1,5 @@
 #include "Sounds.h"
+#include "compat/ScrapFunction.h"
 #include "compat/Fallbacks.h"
 
 #include <algorithm>
@@ -461,7 +462,7 @@ namespace Sounds
 				return playing;
 			}
 			RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
-			vm->DispatchStaticCall("FourStimScene"sv, "PlaySoundForm"sv, callback, static_cast<std::int32_t>(a_sound.descriptor),
+			Compat::DispatchStaticCall(vm, "FourStimScene"sv, "PlaySoundForm"sv, callback, static_cast<std::int32_t>(a_sound.descriptor),
 				static_cast<std::int32_t>(a_actor->GetFormID()));
 			playing.until = std::chrono::steady_clock::now() + std::chrono::seconds(2);
 		}

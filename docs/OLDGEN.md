@@ -32,6 +32,8 @@ A 1.10.163 tester's log (October 2026) had the Runtime Database finding 87 of th
 | `BSSoundHandle::SetPosition` | sounds just follow the actor (`SetObjectToFollow`), without a start position |
 | `Actor::StopInteractingQuick` | **lost:** an NPC using furniture or an idle marker isn't taken out of it before a scene |
 
+**Calling Papyrus.** The VM's `DispatchStaticCall`, `DispatchMethodCall` and `SendEvent` take their arguments as the game's copy of MSVC's `std::function`. 1.10.163 was built with an older MSVC whose `std::function` is laid out differently (0x20 bytes, CommonLibF4RD's `msvc::function`) from today's (0x40, NG and AE), so the first call 4Stim made into Papyrus crashed there (the scene key, in a tester's crash log). On 1.10.163, `src/compat/ScrapFunction.h` passes the old layout.
+
 That covers all 20 from that log; a log from 1.10.163 with 0.3.0 says whether anything else is missing.
 
 The F4SE version data says 4Stim is address-independent (signatures) and uses the 1.10.980 and 1.11.137 struct layouts (`src/PluginVersion.cpp`), as CommonLibF4RD plugins do, so F4SE on NG and AE versions loads it; old F4SE (1.10.163) asks `F4SEPlugin_Query` instead.
