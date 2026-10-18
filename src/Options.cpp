@@ -52,7 +52,19 @@ namespace Options
 			std::string border;
 			std::string parent;  // "" = the top
 			bool        perActor = false;
+			// 4Stim's "sex": shown only for an actor of this sex (the page's
+			// own actor, or the one of the page above): "female" / "male".
+			SceneRegistry::Sex sex = SceneRegistry::Sex::kAny;
 		};
+
+		bool SexFits(const Page& a_page, std::uint32_t a_actor)
+		{
+			if (a_page.sex == SceneRegistry::Sex::kAny) {
+				return true;
+			}
+			const auto actor = RE::TESForm::GetFormByID<RE::Actor>(a_actor);
+			return actor && SceneRegistry::SexOf(actor) == a_page.sex;
+		}
 
 		std::mutex                         g_lock;
 		bool                               g_loaded = false;
@@ -168,6 +180,8 @@ namespace Options
 					page.border = String(p, "border");
 					page.parent = String(p, "parent");  // null or missing: the top
 					page.perActor = Lower(String(p, "repeat")) == "actor";
+					const auto sex = Lower(String(p, "sex"));
+					page.sex = sex == "female" ? SceneRegistry::Sex::kFemale : sex == "male" ? SceneRegistry::Sex::kMale : SceneRegistry::Sex::kAny;
 					g_pages.push_back(std::move(page));
 				}
 				for (const auto& o : root.value("options", nlohmann::json::array())) {
@@ -318,6 +332,9 @@ namespace Options
 			}
 			if (page.perActor) {
 				for (std::size_t i = 0; i < a_actors.size(); ++i) {
+					if (!SexFits(page, a_actors[i])) {
+						continue;
+					}
 					auto label = Text(page.description);
 					Replace(label, "{actor}", ActorName(a_actors[i], false));
 					// 4Stim's: "{sex}" in a per-actor page's icon is the actor's
@@ -331,6 +348,9 @@ namespace Options
 					rows.push_back({ std::format("{}page:{}|{}", OPTION_PREFIX, page.name, i), label, icon, page.border });
 				}
 			} else {
+				if (pageActor >= 0 && static_cast<std::size_t>(pageActor) < a_actors.size() && !SexFits(page, a_actors[pageActor])) {
+					continue;
+				}
 				auto label = Text(page.description);
 				if (pageActor >= 0 && static_cast<std::size_t>(pageActor) < a_actors.size()) {
 					Replace(label, "{actor}", ActorName(a_actors[pageActor]));

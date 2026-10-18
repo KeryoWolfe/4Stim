@@ -18,7 +18,8 @@
 			"name": "4StimStrapOn",
 			"description": "$4Stim_OptStrapOnPage",
 			"icon": "4Stim/sexual/strapon_insert_vert",
-			"parent": "4StimActor"
+			"parent": "4StimActor",
+			"sex": "female"
 		},
 		{
 			"name": "4StimTongue",
