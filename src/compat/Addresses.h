@@ -21,6 +21,9 @@ namespace Compat
 	// (f4rd-runtime.bin), with 4Stim's own table (if any) behind it.
 	bool UsingRuntimeDatabase();
 
+	// Where the Runtime Database was looked for (when it wasn't found).
+	std::filesystem::path RuntimeDatabasePathLooked();
+
 	// Why HasAddress is false for a_id.
 	std::string WhyMissing(std::uint64_t a_id);
 }

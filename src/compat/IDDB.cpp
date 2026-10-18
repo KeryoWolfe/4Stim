@@ -157,6 +157,7 @@ namespace
 	// 4Stim: CommonLibF4RD's Runtime Database, when it's the source.
 	std::unique_ptr<RD::RuntimeDatabase> gRuntime;
 	std::filesystem::path                gRuntimePath;
+	std::filesystem::path                gRuntimeLooked;  // where it was looked for (the log)
 
 	std::optional<std::uint64_t> FromRuntime(std::uint64_t a_id, RD::RuntimeDatabase::ResolveFailure* a_failure = nullptr)
 	{
@@ -280,8 +281,19 @@ namespace REL
 		// Database, with our own table (if any) behind it.
 		const bool ae = mod.GetFileVersion() >= REL::Version{ 1, 11, 0, 0 };
 		const auto addressLibrary = plugin.parent_path() / std::format(L"version-{}.bin", version);
-		const auto runtime = plugin.parent_path() / L"f4rd-runtime.bin";
-		if (!(ae && std::filesystem::exists(addressLibrary)) && std::filesystem::exists(runtime)) {
+		// The same places CommonLibF4RD looks: f4rd-runtime.bin, or
+		// f4rd-runtime-<version>.bin, beside the plugin or in
+		// Data\F4SE\Plugins under the game's folder.
+		std::filesystem::path runtime;
+		for (const auto& dir : { plugin.parent_path(), std::filesystem::path(L"Data") / L"F4SE" / L"Plugins" }) {
+			for (const auto& name : { std::wstring(L"f4rd-runtime.bin"), std::format(L"f4rd-runtime-{}.bin", version) }) {
+				std::error_code ec;
+				if (runtime.empty() && std::filesystem::exists(dir / name, ec))
+					runtime = dir / name;
+			}
+		}
+		gRuntimeLooked = plugin.parent_path() / L"f4rd-runtime.bin";
+		if (!(ae && std::filesystem::exists(addressLibrary)) && !runtime.empty()) {
 			try {
 				gRuntime = RD::RuntimeDatabase::load(runtime);
 			} catch (const std::exception& e) {
@@ -651,6 +663,11 @@ namespace Compat
 	std::filesystem::path AddressTablePath()
 	{
 		return gRuntime ? gRuntimePath : g4StimTablePath;
+	}
+
+	std::filesystem::path RuntimeDatabasePathLooked()
+	{
+		return gRuntimeLooked;
 	}
 
 	std::string WhyMissing(std::uint64_t a_id)
