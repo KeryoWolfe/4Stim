@@ -464,12 +464,14 @@ namespace Options
 		const auto actor = actorIndex >= 0 && static_cast<std::size_t>(actorIndex) < a_actors.size() ? RE::TESForm::GetFormByID<RE::Actor>(a_actors[actorIndex]) : nullptr;
 		REX::INFO("Options: \"{}\" ({}) -> {}.{} for {:08X}{}", option.name, state->name, state->script, state->function, actor ? actor->GetFormID() : 0,
 			parts[3].empty() ? std::string{} : " (\"" + parts[3] + "\")");
-		if (actor && !parts[3].empty()) {
-			vm->DispatchStaticCall(state->script, state->function, callback, std::string(state->name), actor, std::string(parts[3]));
-		} else if (actor) {
-			vm->DispatchStaticCall(state->script, state->function, callback, std::string(state->name), actor);
-		} else {
-			vm->DispatchStaticCall(state->script, state->function, callback, std::string(state->name));
+		// Through FourStimOptions.Run with the actor's form ID: an Actor passed
+		// from here never reached the option's function (nothing ran, no
+		// Papyrus error).
+		const std::int32_t argCount = actor ? (parts[3].empty() ? 2 : 3) : 1;
+		const bool ok = vm->DispatchStaticCall("FourStimOptions"sv, "Run"sv, callback, std::string(state->script), std::string(state->function),
+			std::string(state->name), static_cast<std::int32_t>(actor ? actor->GetFormID() : 0), std::string(parts[3]), argCount);
+		if (!ok) {
+			REX::WARN("Options: couldn't call FourStimOptions.Run (is FourStimOptions.pex installed?)");
 		}
 	}
 }

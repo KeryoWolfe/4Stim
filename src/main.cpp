@@ -7518,8 +7518,8 @@ namespace
 				const auto i = id;
 				F4SE::GetTaskInterface()->AddTask([i]() { Undress::Redress(i, true); });
 			}
-			void removeWeapons() override { Weapons("HolsterForScene"sv); }
-			void addWeapons() override { Weapons("RearmAfterScene"sv); }
+			void removeWeapons() override { Weapons("HolsterByID"sv); }
+			void addWeapons() override { Weapons("RearmByID"sv); }
 			float getExcitement() override { return Excitement::Get(id); }
 			void  setExcitement(float a_excitement) override { Excitement::Set(id, a_excitement); }
 			void  climax() override
@@ -7533,10 +7533,9 @@ namespace
 		private:
 			void Weapons(std::string_view a_function) const
 			{
-				const auto actor = RE::TESForm::GetFormByID<RE::Actor>(id);
-				if (g_vm && actor) {
+				if (g_vm) {
 					RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
-					g_vm->DispatchStaticCall("FourStimScene"sv, a_function, callback, actor);
+					g_vm->DispatchStaticCall("FourStimScene"sv, a_function, callback, static_cast<std::int32_t>(id));  // a form ID: Actors don't arrive
 				}
 			}
 		};
@@ -8808,7 +8807,7 @@ extern "C" __declspec(dllexport) bool F4SEPlugin_Query(const F4SE::QueryInterfac
 	if (a_info) {
 		a_info->infoVersion = F4SE::PluginInfo::kVersion;
 		a_info->name = "4Stim";
-		a_info->version = 1;
+		a_info->version = 3;  // 0.3.0
 	}
 	return a_f4se && !a_f4se->IsEditor();
 }

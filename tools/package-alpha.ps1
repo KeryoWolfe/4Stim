@@ -40,7 +40,10 @@ if (-not $Out) { $Out = Join-Path $Repo "release" }
 
 $version = (Select-String -Path (Join-Path $Repo "xmake.lua") -Pattern 'set_version\("([^"]+)"\)').Matches[0].Groups[1].Value
 $tag = "$version-alpha"
-$Scripts = @("FourStim", "FourStimScene", "FourStimMenu", "FourStimUndress", "FourStimPhysics")
+$Scripts = @("FourStim", "FourStimScene", "FourStimMenu", "FourStimUndress", "FourStimPhysics", "FourStimFurniture",
+    "FourStimMCM", "FourStimOptions",
+    # OStim's API scripts (docs\API.md)
+    "FourThread", "FourThreadBuilder", "FourLibrary", "FourMetadata", "FourActor", "FourFurniture")
 $problems = @()
 $warnings = @()
 
@@ -110,6 +113,11 @@ foreach ($f in Get-ChildItem -LiteralPath $dataRoot -File) {
     Add-File $core $f.FullName "F4SE/Plugins/4Stim/$($f.Name)"
 }
 Add-Tree $core (Join-Path $Repo "Data\Interface\4Stim\Themes") "Interface/4Stim/Themes"
+Add-Tree $core (Join-Path $Repo "Data\Interface\Translations") "Interface/Translations"
+# The MCM page (docs\MCM.md): its config from here, its logo movie (built by
+# Interface-src\build.bat) from the Core mod.
+Add-Tree $core (Join-Path $Repo "Data\MCM\Config\4Stim") "MCM/Config/4Stim"
+Add-File $core (Need (Join-Path $CoreMod "MCM\Config\4Stim\lib.swf") "the MCM logo movie lib.swf") "MCM/Config/4Stim/lib.swf"
 
 foreach ($movie in "FourStimHUDMenu.swf", "FourStimPickerMenu.swf") {
     Add-File $core (Need (Join-Path $CoreMod "Interface\$movie") "the HUD movie $movie") "Interface/$movie"

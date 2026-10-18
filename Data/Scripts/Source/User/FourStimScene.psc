@@ -80,6 +80,15 @@ Function RearmAfterScene(Actor akActor) Global
 	endif
 EndFunction
 
+; HolsterForScene by form ID (the plugin's C++ interface: an Actor passed
+; from the plugin doesn't arrive in Papyrus).
+Function HolsterByID(int aiActorID) Global
+	Actor akActor = Game.GetForm(aiActorID) as Actor
+	if akActor
+		HolsterForScene(akActor)
+	endif
+EndFunction
+
 ; RearmAfterScene for an actor of a scene from a save that isn't started
 ; again. Called by the plugin.
 Function RearmByID(int aiActorID) Global

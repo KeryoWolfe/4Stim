@@ -4,6 +4,22 @@ Scriptname FourStimOptions Hidden
 ; Options\4Stim.json, docs\OPTIONS.md). As OStim's options call theirs:
 ; (state), (state, actor) or (state, actor, object id).
 
+; How the plugin calls an option's function, 4Stim's or another mod's: an
+; Actor passed from the plugin doesn't arrive in Papyrus on this build, so it
+; passes the form ID, and this calls asScript.asFunction with OStim's
+; arguments: the state, then the actor (aiArgCount 2), then the object id (3).
+Function Run(String asScript, String asFunction, String asState, int aiActorID, String asObject, int aiArgCount) Global
+	Var[] args = new Var[0]
+	args.Add(asState)
+	if aiArgCount > 1
+		args.Add(Game.GetForm(aiActorID) as Actor)
+	endif
+	if aiArgCount > 2
+		args.Add(asObject)
+	endif
+	Utility.CallGlobalFunction(asScript, asFunction, args)
+EndFunction
+
 ; Mute / unmute ("on" = muted now: unmute).
 Function ToggleMute(String asState, Actor akActor) Global
 	if asState == "on"

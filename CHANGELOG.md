@@ -1,6 +1,12 @@
 # Changelog
 
-## Next
+## 0.3.0 alpha (October 2026)
+
+OStim parity: everything on the roadmap's "OStim parity" list is in.
+
+- **Fixed:** the HUD's options (strap-on, tongue, undress, mute, and other mods' options files) did nothing: the actor never reached the option's script. Options now go through `FourStimOptions.Run` with the actor's form ID.
+- **Toy slots:** the actions have OStim's `toySlot`s (genital, anus, nipples, scrotum), so sex toys get used in scenes; the log says when a scene has none.
+- **1.10.163:** a tester's Runtime Database mapping turned out not to hold the 34 missing addresses (docs/OLDGEN.md); 1.10.163 still doesn't load.
 
 - **For other mods** (docs/API.md): OStim NG's Papyrus API scripts as `FourThread`, `FourThreadBuilder`, `FourLibrary`, `FourMetadata`, `FourActor` and `FourFurniture` (OStim's function names: start scenes with options, follow them by thread ID, random scenes by tags and actions, scene data, per-actor and per-thread metadata, find furniture); new scene events `FourStim_OnNPCSceneStart` / `End` and `FourStim_OnSequenceEnd`.
 - **C++ plugin interface** (`include/4Stim/PluginInterface.h`): OStim's interface map for F4SE plugins, with threads (listeners, builder), alignment and sex toys.
