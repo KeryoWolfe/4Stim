@@ -5,6 +5,10 @@
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
 #include <windows.h>
+// windows.h's macros would rename RDSupport.h's functions (CreateMutex ->
+// CreateMutexW): as CommonLibF4RD's WinAPI.cpp, use the W calls by name.
+#undef CreateFileMapping
+#undef CreateMutex
 
 #include <sstream>
 
