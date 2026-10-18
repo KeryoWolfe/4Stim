@@ -121,6 +121,12 @@ OStim's sex toys: a device plugin (for buttplug.io, say) registers toys through 
 
 The strength comes from `sToyScaling`: none (always the strongest, OStim's default), the excitement rate, the excitement (0-1), or the scene speed (0-1), between `fToyMinScale` and `fToyMaxScale`. Toys are registered again on every save load and each time the player's scene starts (OStim's reload).
 
+### Intiface Central, built in
+
+With `bIntiface=1` (MCM: Sex toys, "Use Intiface Central"), 4Stim connects to [Intiface Central](https://intiface.com/central/) itself and registers every device it has as a toy, so no other mod is needed: start Intiface Central, connect the devices there, start its server, and turn the setting on (in game or before). 4Stim speaks the Buttplug protocol (version 3) to `sIntifaceAddress` (`ws://127.0.0.1:12345`, Intiface Central's default), asks it to scan for devices on connecting (`bIntifaceScan`), picks up devices that connect or drop later, and tries again every few seconds while the server isn't running. 4Stim.log says what it found.
+
+Each device's vibrate-type motors (Buttplug's `ScalarCmd`: vibrate, oscillate, constrict...) all run at the toy's strength: the baseline, a pulse on each peak (about a third of the time between peaks), and the climax pulse. Strokers (`LinearCmd`) and rotating devices aren't driven yet. Departure from OStim: OStim has no device support of its own, only the interface for device plugins; 4Stim has both.
+
 Departure from OStim: OStim's toy settings are per toy and per slot, saved with the game and edited in its own toy menu; 4Stim has OStim's global settings only, in `4Stim.ini` `[SexToys]` and the MCM's Sex toys page.
 
 ## playbackSpeed

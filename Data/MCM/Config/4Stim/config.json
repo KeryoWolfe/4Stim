@@ -1979,6 +1979,36 @@
 					}
 				},
 				{
+					"id": "bIntiface:SexToys",
+					"text": "$4Stim_MCM_bIntiface",
+					"help": "$4Stim_MCM_bIntiface_Help",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "switcher",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "bIntifaceScan:SexToys",
+					"text": "$4Stim_MCM_bIntifaceScan",
+					"help": "$4Stim_MCM_bIntifaceScan_Help",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "switcher",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
 					"id": "i4S_sToySynchronization:SexToys",
 					"text": "$4Stim_MCM_sToySynchronization",
 					"help": "$4Stim_MCM_sToySynchronization_Help",

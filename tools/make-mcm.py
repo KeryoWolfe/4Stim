@@ -218,6 +218,8 @@ SETTINGS = {
     'bUsePlaybackSpeed': ("Scenes' playback speeds", 'bool'),
     # Sex toys
     'bToysEnabled': ('Sex toys', 'bool'),
+    'bIntiface': ('Use Intiface Central', 'bool'),
+    'bIntifaceScan': ('Look for new devices on connecting', 'bool'),
     'sToySynchronization': ('Toys follow', 'choice'),
     'sToyScaling': ('Strength follows', 'choice'),
     'fToyMinScale': ('Weakest at or below', 'float', (0, 10, 0.05)),
@@ -262,7 +264,7 @@ PAGES = [
     ('Faces and sound', [('Expressions', ['noFacialExpressions', 'SetExpressionDurationMin', 'SetExpressionDurationMax']),
                          ('Sound', ['bSounds', 'moanIntervalMin', 'moanIntervalMax', 'moanVolume', 'soundVolume', 'iSoundPriority'])]),
     ('Lights', [('Lights', ['sMaleLight', 'sFemaleLight', 'SetOnlyLightInDark', 'fLightLevelDark'])]),
-    ('Sex toys', [('SexToys', ['bToysEnabled', 'sToySynchronization', 'sToyScaling', 'fToyMinScale', 'fToyMaxScale', 'fToyMinMagnitude',
+    ('Sex toys', [('SexToys', ['bToysEnabled', 'bIntiface', 'bIntifaceScan', 'sToySynchronization', 'sToyScaling', 'fToyMinScale', 'fToyMaxScale', 'fToyMinMagnitude',
                                'fToyMaxMagnitude', 'bToyPeaks', 'fToyMinPeak', 'fToyMaxPeak', 'bToyClimax', 'fToyClimaxMagnitude'])]),
     # As OStim's Controls page: its scene keys, then its navigation keys.
     ('Hotkeys', [('General', ['SetKeyMap', 'keyNpcSceneStart', 'SetKeyUp', 'SetKeyDown', 'SetPullOut',

@@ -24,6 +24,7 @@ target("4Stim")
     })
 
     add_packages("nlohmann_json")
+    add_syslinks("winhttp")  -- Intiface Central's WebSocket (src/Intiface.cpp)
 
     -- add src files
     add_files("src/**.cpp")

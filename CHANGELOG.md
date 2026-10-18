@@ -4,7 +4,7 @@
 
 - **For other mods** (docs/API.md): OStim NG's Papyrus API scripts as `FourStimThread`, `FourStimThreadBuilder`, `FourStimLibrary`, `FourStimMetadata`, `FourStimActor` and `FourStimFurniture` (OStim's function names: start scenes with options, follow them by thread ID, random scenes by tags and actions, scene data, per-actor and per-thread metadata, find furniture); new scene events `FourStim_OnNPCSceneStart` / `End` and `FourStim_OnSequenceEnd`.
 - **C++ plugin interface** (`include/4Stim/PluginInterface.h`): OStim's interface map for F4SE plugins, with threads (listeners, builder), alignment and sex toys.
-- **Sex toys** (OStim's): device plugins register toys through the plugin interface; 4Stim drives them from the player's scene, on actions' `toySlot`s, with OStim's settings (`[SexToys]`, MCM Sex toys page).
+- **Sex toys** (OStim's): device plugins register toys through the plugin interface; 4Stim drives them from the player's scene, on actions' `toySlot`s, with OStim's settings (`[SexToys]`, MCM Sex toys page). **Intiface Central** built in (`bIntiface`): 4Stim connects to it and uses its vibrate-type devices with no other mod.
 - **`playbackSpeed`** (OStim's): a scene speed can play its animation faster or slower (`bUsePlaybackSpeed`).
 - **Saved:** the equip objects chosen for actors (strap-on, tongue...) are kept in the save.
 - **Fixed:** scene sounds (moans, climaxes, slaps) followed the player instead of staying where the scene is: sound files now play through one of the game's positional sound output models.

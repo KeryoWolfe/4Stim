@@ -34,6 +34,7 @@
 #include "MCM.h"
 #include "Options.h"
 #include "SexToys.h"
+#include "Intiface.h"
 #include "4Stim/PluginInterface.h"
 #include "compat/Addresses.h"
 #include "compat/RequiredIDs.h"
@@ -769,7 +770,7 @@ namespace
 					g_settings.transitionLead = std::clamp(std::stof(value), -2.0F, 5.0F);
 				}
 				// Sex toys (SexToys.h) and playbackSpeed.
-				if (SexToys::ReadSetting(key, value)) {
+				if (SexToys::ReadSetting(key, value) || Intiface::ReadSetting(key, value)) {
 				} else if (key == "buseplaybackspeed") {
 					g_settings.usePlaybackSpeed = std::stoi(value) != 0;
 				}
@@ -8530,6 +8531,7 @@ namespace
 			// interface (a nullptr sender: messages from all of them).
 			F4SE::GetMessagingInterface()->RegisterListener(API::OnPluginMessage, std::string_view{});
 			SceneEvents::SetNativeListener(API::OnSceneEvent);
+			Intiface::Start();  // 4Stim's own toy plugin (connects while bIntiface=1)
 			break;
 		case F4SE::MessagingInterface::kPreLoadGame:
 		case F4SE::MessagingInterface::kNewGame:

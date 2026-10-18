@@ -64,7 +64,7 @@ The audit compared every finished feature with OStim's source; it's being carrie
 - ~~**Options in the HUD.**~~ Done (docs/OPTIONS.md): OStim's options files in the Utility tab (pages, per actor, equip object toggles and choices, Papyrus functions), with 4Stim's per-actor undress, mute, strap-on and tongue; OStim's `Mute` / `Unmute` / `IsMuted`, action sounds' `muteWithActor` / `muteWithTarget`.
 - ~~**Translations.**~~ Done (docs/TRANSLATIONS.md): `Interface\Translations\4Stim_<language>.txt` for the picker, HUD, notifications, MCM and options (tools/make-translations.py).
 - ~~**Navigation `border` / `noWarnings`.**~~ Done (docs/SCENES.md).
-- ~~**Sex toys**~~ Done (docs/API.md): OStim's "SexToys" plugin interface for device plugins, toys on actions' `toySlot`s in the player's scene, updates on peaks, climax pulses, OStim's global toy settings (`[SexToys]`, MCM page). Still to do: per-toy and per-slot settings (OStim's toy menu); test with a device plugin.
+- ~~**Sex toys**~~ Done (docs/API.md): OStim's "SexToys" plugin interface for device plugins, toys on actions' `toySlot`s in the player's scene, updates on peaks, climax pulses, OStim's global toy settings (`[SexToys]`, MCM page). 4Stim also connects to Intiface Central itself (`bIntiface`), so devices work without another mod. Still to do: per-toy and per-slot settings (OStim's toy menu); strokers and rotating devices through Intiface; test with real devices.
 - ~~**`playbackSpeed`.**~~ Done (docs/API.md): the scene actors' animation updates scaled by the speed's `playbackSpeed` (`bUsePlaybackSpeed`). Needs checking in game with a scene that sets one (the hook is on the actors' `UpdateAnimation`).
 
 ## Later
