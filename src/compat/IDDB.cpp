@@ -160,11 +160,31 @@ namespace
 	std::filesystem::path                gRuntimeLooked;  // where it was looked for (the log)
 	std::vector<std::string>             gRuntimeProbes;  // each place, and what was there
 
+	// 4Stim: Runtime Database entries known to be wrong, with the right
+	// address. TESDataHandler::Singleton on 1.10.163: the database gives
+	// 0x6B2A0, which is code (a tester's crash: the "data handler" read was
+	// instructions); F4SE 0.6.23's g_dataHandler, and the OG Address
+	// Library's ID 711558 (alandtse/CommonLibF4), are 0x58CF080.
+	struct Correction
+	{
+		std::uint16_t major, minor, build;
+		std::uint64_t id;
+		std::uint64_t rva;
+	};
+	constexpr Correction CORRECTIONS[] = {
+		{ 1, 10, 163, 4796135, 0x58CF080 },  // TESDataHandler::Singleton
+	};
+
 	std::optional<std::uint64_t> FromRuntime(std::uint64_t a_id, RD::RuntimeDatabase::ResolveFailure* a_failure = nullptr)
 	{
 		if (!gRuntime)
 			return std::nullopt;
 		const auto& module = RD::Module::get();
+		const auto  version = module.version();
+		for (const auto& correction : CORRECTIONS) {
+			if (correction.id == a_id && version[0] == correction.major && version[1] == correction.minor && version[2] == correction.build)
+				return correction.rva;
+		}
 		const auto  result = gRuntime->resolve_detailed(a_id, module.version(), module, RD::RuntimeDatabase::ResolveMode::kNormal);
 		if (a_failure)
 			*a_failure = result.failure;

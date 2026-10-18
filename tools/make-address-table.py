@@ -26,6 +26,12 @@ import argparse, mmap, os, re, struct, sys
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 MAGIC = b'F4RDBIN\0'
 
+# AE ID -> OG Address Library ID, for 1.10.163.0, where the database's own
+# 1.10.163 entry is wrong (src/compat/IDDB.cpp CORRECTIONS): these win.
+OG_FIX = {
+    4796135: 711558,   # TESDataHandler::Singleton (database: 0x6B2A0, code; F4SE's g_dataHandler is 0x58CF080)
+}
+
 # AE ID -> OG Address Library ID, for 1.10.163.0 (see the top).
 OG_EXTRA = {
     2201126: 1212056,  # TESObjectREFR::GetDisplayFullName
@@ -112,7 +118,8 @@ def from_og_library(path):
     for k in range(struct.unpack_from('<Q', m, 0)[0]):
         i, v = struct.unpack_from('<QQ', m, 8 + 16 * k)
         og[i] = v
-    return {ae: og[o] for ae, o in OG_EXTRA.items() if o in og}
+    return ({ae: og[o] for ae, o in OG_EXTRA.items() if o in og},
+            {ae: og[o] for ae, o in OG_FIX.items() if o in og})
 
 
 def from_mapping(path, wanted):
@@ -138,8 +145,10 @@ def main():
     if a.database:
         table.update(from_database(a.database, a.version, wanted))
         if a.version == '1.10.163.0':
-            for i, rva in from_og_library(a.database).items():
+            extra, fix = from_og_library(a.database)
+            for i, rva in extra.items():
                 table.setdefault(i, rva)
+            table.update(fix)
     for path in a.mapping:
         table.update(from_mapping(path, wanted))
     out = a.out or os.path.join(REPO, 'Data', 'F4SE', 'Plugins', '4Stim', 'Addresses',
