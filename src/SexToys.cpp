@@ -175,6 +175,7 @@ namespace SexToys
 			}
 			std::vector<bool> used(g_toys.size(), false);
 			std::size_t       inUse = 0;
+			bool              anySlot = false;
 			for (std::size_t a = 0; a < g_scene->actions.size() && inUse < g_toys.size(); ++a) {
 				const auto& action = g_scene->actions[a];
 				Group       group;
@@ -187,6 +188,7 @@ namespace SexToys
 						continue;
 					}
 					const auto actor = g_actors[role];
+					anySlot = anySlot || !side->toySlots.empty();
 					for (const auto& slot : side->toySlots) {
 						for (std::size_t t = 0; t < g_toys.size(); ++t) {
 							if (used[t] || !Synced(actor)) {
@@ -211,6 +213,10 @@ namespace SexToys
 					REX::INFO("Sex toys: \"{}\" action {} ({}): {} toy(s)", g_scene->id, a, action.type->id, group.toys.size());
 					g_groups.push_back(std::move(group));
 				}
+			}
+			if (g_groups.empty()) {
+				REX::INFO("Sex toys: \"{}\": {} for the {} toy(s)", g_scene->id,
+					anySlot ? "no slot whose actor sToySynchronization allows" : "its actions have no toy slots (\"toySlot\")", g_toys.size());
 			}
 		}
 

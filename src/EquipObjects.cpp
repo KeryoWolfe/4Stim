@@ -175,6 +175,7 @@ namespace EquipObjects
 			if (!a_handler.equipped) {
 				return;
 			}
+			REX::INFO("Equip objects: {:08X} takes off \"{}\" ({:08X})", a_id, a_handler.object->id, a_handler.equipped);
 			Dispatch("TakeOffObjects"sv, a_id, { static_cast<std::int32_t>(a_handler.equipped) });
 			a_handler.equipped = 0;
 		}
@@ -347,6 +348,7 @@ namespace EquipObjects
 		EnsureLoaded();
 		const auto list = g_byType.find(a_type);
 		if (list == g_byType.end() || std::ranges::none_of(list->second, [&](const auto& o) { return Lower(o->id) == a_objectID; })) {
+			REX::WARN("Equip objects: no \"{}\" object \"{}\" to choose for {:08X}", a_type, a_objectID, a_id);
 			return false;
 		}
 		const auto object = *std::ranges::find_if(list->second, [&](const auto& o) { return Lower(o->id) == a_objectID; });
@@ -372,7 +374,15 @@ namespace EquipObjects
 		a_type = Lower(a_type);
 		std::scoped_lock lock(g_lock);
 		const auto       state = Find(a_id);
-		return state && EquipLocked(a_id, *state, a_type);
+		if (!state) {
+			REX::INFO("Equip objects: {:08X} isn't in a scene, no \"{}\" put on", a_id, a_type);
+			return false;
+		}
+		if (!EquipLocked(a_id, *state, a_type)) {
+			REX::INFO("Equip objects: no \"{}\" object for {:08X} (none of that type installed?)", a_type, a_id);
+			return false;
+		}
+		return true;
 	}
 
 	void Unequip(std::uint32_t a_id, std::string a_type)

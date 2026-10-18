@@ -415,6 +415,7 @@ namespace Options
 		EnsureLoaded();
 		CheckScene(a_actors);
 		const auto rest = a_id.substr(OPTION_PREFIX.size());
+		REX::INFO("Options: picked \"{}\"", a_id);
 		if (rest == ":back") {
 			if (!g_path.empty()) {
 				g_path.pop_back();
@@ -432,17 +433,26 @@ namespace Options
 			return;
 		}
 		const auto parts = Split(rest.substr(1), '|');
-		if (parts.size() != 4) {
+		std::size_t index = 0;
+		int         actorIndex = -1;
+		try {
+			if (parts.size() != 4) {
+				throw std::invalid_argument("parts");
+			}
+			index = static_cast<std::size_t>(std::stoul(parts[0]));
+			actorIndex = std::stoi(parts[1]);
+		} catch (const std::exception&) {
+			REX::WARN("Options: \"{}\" isn't an option row", a_id);
 			return;
 		}
-		const auto index = static_cast<std::size_t>(std::stoul(parts[0]));
-		const int  actorIndex = std::stoi(parts[1]);
 		if (index >= g_options.size()) {
+			REX::WARN("Options: option {} doesn't exist (options reloaded?)", index);
 			return;
 		}
 		const auto& option = g_options[index];
 		const auto  state = std::ranges::find_if(option.states, [&](const State& s) { return s.name == parts[2]; });
 		if (state == option.states.end() || state->function.empty()) {
+			REX::WARN("Options: \"{}\" has no state \"{}\" with a function", option.name, parts[2]);
 			return;
 		}
 		const auto vm = FourStim::GetVM();
@@ -452,7 +462,8 @@ namespace Options
 		// As OStim's ExecuteOption: (state), (state, actor), (state, actor, object).
 		RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
 		const auto actor = actorIndex >= 0 && static_cast<std::size_t>(actorIndex) < a_actors.size() ? RE::TESForm::GetFormByID<RE::Actor>(a_actors[actorIndex]) : nullptr;
-		REX::INFO("Options: \"{}\" ({}) -> {}.{}", option.name, state->name, state->script, state->function);
+		REX::INFO("Options: \"{}\" ({}) -> {}.{} for {:08X}{}", option.name, state->name, state->script, state->function, actor ? actor->GetFormID() : 0,
+			parts[3].empty() ? std::string{} : " (\"" + parts[3] + "\")");
 		if (actor && !parts[3].empty()) {
 			vm->DispatchStaticCall(state->script, state->function, callback, std::string(state->name), actor, std::string(parts[3]));
 		} else if (actor) {
