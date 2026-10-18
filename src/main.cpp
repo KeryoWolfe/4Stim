@@ -8834,6 +8834,9 @@ F4SE_PLUGIN_LOAD(const F4SE::LoadInterface* a_f4se)
 		}
 		if (missing > 0) {
 			REX::ERROR("Addresses: {} of {} missing; 4Stim can't run on this game version and isn't loaded", missing, std::size(Compat::REQUIRED_IDS));
+			if (!Compat::UsingRuntimeDatabase()) {
+				REX::ERROR("Addresses: Runtime Database isn't installed (Data\\F4SE\\Plugins\\f4rd-runtime.bin, nexusmods.com/fallout4/mods/108394): on this game version 4Stim needs it");
+			}
 			return false;
 		}
 		REX::INFO("Addresses: all {} found", std::size(Compat::REQUIRED_IDS));
