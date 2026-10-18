@@ -158,6 +158,7 @@ namespace
 	std::unique_ptr<RD::RuntimeDatabase> gRuntime;
 	std::filesystem::path                gRuntimePath;
 	std::filesystem::path                gRuntimeLooked;  // where it was looked for (the log)
+	std::vector<std::string>             gRuntimeProbes;  // each place, and what was there
 
 	std::optional<std::uint64_t> FromRuntime(std::uint64_t a_id, RD::RuntimeDatabase::ResolveFailure* a_failure = nullptr)
 	{
@@ -285,10 +286,16 @@ namespace REL
 		// f4rd-runtime-<version>.bin, beside the plugin or in
 		// Data\F4SE\Plugins under the game's folder.
 		std::filesystem::path runtime;
-		for (const auto& dir : { plugin.parent_path(), std::filesystem::path(L"Data") / L"F4SE" / L"Plugins" }) {
+		wchar_t exe[REX::W32::MAX_PATH]{};
+		REX::W32::GetModuleFileNameW(nullptr, exe, REX::W32::MAX_PATH);  // the game's executable
+		const auto gameData = std::filesystem::path(exe).parent_path() / L"Data" / L"F4SE" / L"Plugins";
+		for (const auto& dir : { plugin.parent_path(), std::filesystem::path(L"Data") / L"F4SE" / L"Plugins", gameData }) {
 			for (const auto& name : { std::wstring(L"f4rd-runtime.bin"), std::format(L"f4rd-runtime-{}.bin", version) }) {
 				std::error_code ec;
-				if (runtime.empty() && std::filesystem::exists(dir / name, ec))
+				const bool      found = std::filesystem::exists(dir / name, ec);
+				gRuntimeProbes.push_back(std::format("{} {}{}", (dir / name).string(), found ? "found" : "not there",
+					ec ? " (" + ec.message() + ")" : std::string{}));
+				if (runtime.empty() && found)
 					runtime = dir / name;
 			}
 		}
@@ -668,6 +675,12 @@ namespace Compat
 	std::filesystem::path RuntimeDatabasePathLooked()
 	{
 		return gRuntimeLooked;
+	}
+
+	std::vector<std::string> RuntimeDatabaseProbes()
+	{
+		(void)REL::IDDB::GetSingleton();
+		return gRuntimeProbes;
 	}
 
 	std::string WhyMissing(std::uint64_t a_id)

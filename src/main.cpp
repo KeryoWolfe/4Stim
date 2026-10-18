@@ -8823,6 +8823,9 @@ F4SE_PLUGIN_LOAD(const F4SE::LoadInterface* a_f4se)
 	// table for 1.10.163; compat/IDDB.cpp). Every address it uses must be
 	// found, or it doesn't load at all (instead of crashing later).
 	if (Compat::UsingAddressTable()) {
+		for (const auto& probe : Compat::RuntimeDatabaseProbes()) {
+			REX::INFO("Addresses: Runtime Database at {}", probe);
+		}
 		REX::INFO("Addresses: {}, {}", Compat::UsingRuntimeDatabase() ? "CommonLibF4RD's Runtime Database" : "4Stim's own table",
 			Compat::AddressTablePath().string());
 		int missing = 0;
