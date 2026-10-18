@@ -189,6 +189,21 @@
 					}
 				},
 				{
+					"id": "bUsePlaybackSpeed:General",
+					"text": "$4Stim_MCM_bUsePlaybackSpeed",
+					"help": "$4Stim_MCM_bUsePlaybackSpeed_Help",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "switcher",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
 					"id": "bLockScenes:General",
 					"text": "$4Stim_MCM_bLockScenes",
 					"help": "$4Stim_MCM_bLockScenes_Help",
@@ -1940,6 +1955,224 @@
 						"min": 0,
 						"max": 200,
 						"step": 1,
+						"sourceType": "ModSettingFloat"
+					}
+				}
+			]
+		},
+		{
+			"pageDisplayName": "$4Stim_MCM_PageSextoys",
+			"content": [
+				{
+					"id": "bToysEnabled:SexToys",
+					"text": "$4Stim_MCM_bToysEnabled",
+					"help": "$4Stim_MCM_bToysEnabled_Help",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "switcher",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "i4S_sToySynchronization:SexToys",
+					"text": "$4Stim_MCM_sToySynchronization",
+					"help": "$4Stim_MCM_sToySynchronization_Help",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "dropdown",
+					"valueOptions": {
+						"sourceType": "ModSettingInt",
+						"options": [
+							"$4Stim_MCM_sToySynchronization_0",
+							"$4Stim_MCM_sToySynchronization_1",
+							"$4Stim_MCM_sToySynchronization_2",
+							"$4Stim_MCM_sToySynchronization_3"
+						]
+					}
+				},
+				{
+					"id": "i4S_sToyScaling:SexToys",
+					"text": "$4Stim_MCM_sToyScaling",
+					"help": "$4Stim_MCM_sToyScaling_Help",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "dropdown",
+					"valueOptions": {
+						"sourceType": "ModSettingInt",
+						"options": [
+							"$4Stim_MCM_sToyScaling_0",
+							"$4Stim_MCM_sToyScaling_1",
+							"$4Stim_MCM_sToyScaling_2",
+							"$4Stim_MCM_sToyScaling_3"
+						]
+					}
+				},
+				{
+					"id": "fToyMinScale:SexToys",
+					"text": "$4Stim_MCM_fToyMinScale",
+					"help": "$4Stim_MCM_fToyMinScale_Help",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "slider",
+					"valueOptions": {
+						"min": 0,
+						"max": 10,
+						"step": 0.05,
+						"sourceType": "ModSettingFloat"
+					}
+				},
+				{
+					"id": "fToyMaxScale:SexToys",
+					"text": "$4Stim_MCM_fToyMaxScale",
+					"help": "$4Stim_MCM_fToyMaxScale_Help",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "slider",
+					"valueOptions": {
+						"min": 0,
+						"max": 10,
+						"step": 0.05,
+						"sourceType": "ModSettingFloat"
+					}
+				},
+				{
+					"id": "fToyMinMagnitude:SexToys",
+					"text": "$4Stim_MCM_fToyMinMagnitude",
+					"help": "$4Stim_MCM_fToyMinMagnitude_Help",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "slider",
+					"valueOptions": {
+						"min": 0,
+						"max": 1,
+						"step": 0.05,
+						"sourceType": "ModSettingFloat"
+					}
+				},
+				{
+					"id": "fToyMaxMagnitude:SexToys",
+					"text": "$4Stim_MCM_fToyMaxMagnitude",
+					"help": "$4Stim_MCM_fToyMaxMagnitude_Help",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "slider",
+					"valueOptions": {
+						"min": 0,
+						"max": 1,
+						"step": 0.05,
+						"sourceType": "ModSettingFloat"
+					}
+				},
+				{
+					"id": "bToyPeaks:SexToys",
+					"text": "$4Stim_MCM_bToyPeaks",
+					"help": "$4Stim_MCM_bToyPeaks_Help",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "switcher",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "fToyMinPeak:SexToys",
+					"text": "$4Stim_MCM_fToyMinPeak",
+					"help": "$4Stim_MCM_fToyMinPeak_Help",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "slider",
+					"valueOptions": {
+						"min": 0,
+						"max": 1,
+						"step": 0.05,
+						"sourceType": "ModSettingFloat"
+					}
+				},
+				{
+					"id": "fToyMaxPeak:SexToys",
+					"text": "$4Stim_MCM_fToyMaxPeak",
+					"help": "$4Stim_MCM_fToyMaxPeak_Help",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "slider",
+					"valueOptions": {
+						"min": 0,
+						"max": 1,
+						"step": 0.05,
+						"sourceType": "ModSettingFloat"
+					}
+				},
+				{
+					"id": "bToyClimax:SexToys",
+					"text": "$4Stim_MCM_bToyClimax",
+					"help": "$4Stim_MCM_bToyClimax_Help",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "switcher",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "fToyClimaxMagnitude:SexToys",
+					"text": "$4Stim_MCM_fToyClimaxMagnitude",
+					"help": "$4Stim_MCM_fToyClimaxMagnitude_Help",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "slider",
+					"valueOptions": {
+						"min": 0,
+						"max": 1,
+						"step": 0.05,
 						"sourceType": "ModSettingFloat"
 					}
 				}

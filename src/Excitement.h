@@ -72,4 +72,6 @@ namespace Excitement
 	bool  IsStalled(std::uint32_t a_id);
 	// Seconds until a_id climaxes at the current rate, or -1 if they won't.
 	float TimeUntilClimax(std::uint32_t a_id);
+	// How fast a_id's excitement rises, per second (0 if not in a scene).
+	float Rate(std::uint32_t a_id);
 }

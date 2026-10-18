@@ -54,6 +54,10 @@ namespace Undress
 	// a_afterScene: the scene ended, so the redress idle (if any) plays first.
 	void Redress(std::uint32_t a_id, bool a_force = false, bool a_afterScene = false);
 
+	// OStim's NoUndressing (a thread builder's): scenes don't undress a_id
+	// while blocked (the HUD's undress still does). Main thread.
+	void Block(std::uint32_t a_id, bool a_blocked);
+
 	// A game is loading: forget everything.
 	void Clear();
 }

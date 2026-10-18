@@ -6,6 +6,7 @@
 #include <memory>
 
 #include "Actions.h"
+#include "SexToys.h"
 #include "Sounds.h"
 
 namespace Peaks
@@ -162,6 +163,7 @@ namespace Peaks
 		// OStim's NodeHandler::sendPeak: the action's "peak" sounds.
 		void SendPeak(SceneState& a_state, std::size_t a_action)
 		{
+			SexToys::Peak(a_state.actors, a_action);  // OStim's ToyThread peak listener
 			for (const auto& player : a_state.sounds) {
 				if (player.action == a_action && player.sound->kind == Actions::ActionSound::Kind::kPeak) {
 					Play(player);

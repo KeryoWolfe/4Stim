@@ -62,7 +62,8 @@ namespace EquipObjects
 		std::unordered_set<std::uint32_t>                                            g_items;
 		std::unordered_map<std::uint32_t, ActorState>                                g_actors;
 		// The object each actor wears of a type, chosen in the HUD's options
-		// (OStim's options menu): actor -> type -> object id. Until a game loads.
+		// (OStim's options menu): actor -> type -> object id. Saved with the
+		// game (main.cpp's co-save, as OStim's serialized equip objects).
 		std::unordered_map<std::uint32_t, std::unordered_map<std::string, std::string>> g_chosen;
 
 		void LoadLocked()
@@ -483,7 +484,24 @@ namespace EquipObjects
 	void Clear()
 	{
 		std::scoped_lock lock(g_lock);
-		g_actors.clear();
+		g_actors.clear();  // choices stay: the save's are read in (ClearChosen first)
+	}
+
+	std::unordered_map<std::uint32_t, std::unordered_map<std::string, std::string>> AllChosen()
+	{
+		std::scoped_lock lock(g_lock);
+		return g_chosen;
+	}
+
+	void RestoreChosen(std::unordered_map<std::uint32_t, std::unordered_map<std::string, std::string>> a_chosen)
+	{
+		std::scoped_lock lock(g_lock);
+		g_chosen = std::move(a_chosen);
+	}
+
+	void ClearChosen()
+	{
+		std::scoped_lock lock(g_lock);
 		g_chosen.clear();
 	}
 }

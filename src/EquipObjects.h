@@ -63,6 +63,12 @@ namespace EquipObjects
 	std::vector<std::uint32_t> Given(std::uint32_t a_id);
 	void                       TakeBack(std::uint32_t a_id, const std::vector<std::uint32_t>& a_items);
 
-	// A game is loading: forget everyone.
+	// Each actor's chosen objects (type -> object id), for the save; put
+	// back from it (a game loading or a new one: ClearChosen first).
+	std::unordered_map<std::uint32_t, std::unordered_map<std::string, std::string>> AllChosen();
+	void RestoreChosen(std::unordered_map<std::uint32_t, std::unordered_map<std::string, std::string>> a_chosen);
+	void ClearChosen();
+
+	// A game is loading: forget who wears what (the choices stay).
 	void Clear();
 }

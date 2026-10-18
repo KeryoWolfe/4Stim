@@ -27,6 +27,12 @@ namespace SceneEvents
 		// SendEvent, unlike DispatchMethodCall, doesn't need the receiving
 		// script's name: it runs the function on whichever attached scripts
 		// have it, and skips the rest.
+		bool WithoutPlayer(const std::vector<std::uint32_t>& a_actors)
+		{
+			const auto player = RE::PlayerCharacter::GetSingleton();
+			return !player || std::ranges::find(a_actors, player->GetFormID()) == a_actors.end();
+		}
+
 		template <class... Args>
 		void Send(std::string_view a_function, Args... a_args)
 		{
@@ -82,6 +88,23 @@ namespace SceneEvents
 		}
 	}
 
+	namespace
+	{
+		NativeListener g_native = nullptr;
+
+		void Native(Kind a_kind, const std::vector<std::uint32_t>& a_actors, std::uint32_t a_actor = 0)
+		{
+			if (g_native) {
+				g_native(a_kind, a_actors, a_actor);
+			}
+		}
+	}
+
+	void SetNativeListener(NativeListener a_listener)
+	{
+		g_native = a_listener;
+	}
+
 	void Clear()
 	{
 		std::scoped_lock lock(g_lock);
@@ -91,17 +114,23 @@ namespace SceneEvents
 	void SceneStarted(const std::vector<std::uint32_t>& a_actors, const std::string& a_sceneID)
 	{
 		Physics::SceneStarted(a_actors, a_sceneID);
+		Native(Kind::kStart, a_actors);
 		Send("FourStim_OnSceneStart"sv, FourStim::ResolveActors(a_actors), a_sceneID);
+		if (WithoutPlayer(a_actors)) {
+			Send("FourStim_OnNPCSceneStart"sv, FourStim::ResolveActors(a_actors), a_sceneID);
+		}
 	}
 
 	void SceneChanged(const std::vector<std::uint32_t>& a_actors, const std::string& a_oldID, const std::string& a_newID)
 	{
 		Physics::SceneChanged(a_actors, a_newID);
+		Native(Kind::kChange, a_actors);
 		Send("FourStim_OnSceneChange"sv, FourStim::ResolveActors(a_actors), a_oldID, a_newID);
 	}
 
 	void SpeedChanged(const std::vector<std::uint32_t>& a_actors, const std::string& a_sceneID, int a_level, int a_count)
 	{
+		Native(Kind::kSpeed, a_actors);
 		Send("FourStim_OnSpeedChange"sv, FourStim::ResolveActors(a_actors), a_sceneID,
 			static_cast<std::int32_t>(a_level), static_cast<std::int32_t>(a_count));
 	}
@@ -109,7 +138,16 @@ namespace SceneEvents
 	void SceneEnded(const std::vector<std::uint32_t>& a_actors, const std::string& a_sceneID)
 	{
 		Physics::SceneEnded(a_actors);
+		Native(Kind::kEnd, a_actors);
 		Send("FourStim_OnSceneEnd"sv, FourStim::ResolveActors(a_actors), a_sceneID);
+		if (WithoutPlayer(a_actors)) {
+			Send("FourStim_OnNPCSceneEnd"sv, FourStim::ResolveActors(a_actors), a_sceneID);
+		}
+	}
+
+	void SequenceEnded(const std::vector<std::uint32_t>& a_actors, const std::string& a_sequenceID)
+	{
+		Send("FourStim_OnSequenceEnd"sv, FourStim::ResolveActors(a_actors), a_sequenceID);
 	}
 
 	void FurnitureChanged(const std::vector<std::uint32_t>& a_actors, std::uint32_t a_furniture, const std::string& a_type, const std::string& a_sceneID)
@@ -120,6 +158,7 @@ namespace SceneEvents
 
 	void Climaxed(std::uint32_t a_actor, const std::vector<std::uint32_t>& a_actors, const std::string& a_sceneID, int a_times)
 	{
+		Native(Kind::kClimax, a_actors, a_actor);
 		const auto who = FourStim::ResolveActors({ a_actor });
 		Send("FourStim_OnClimax"sv, who.front(), FourStim::ResolveActors(a_actors), a_sceneID, a_times);
 	}

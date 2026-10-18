@@ -36,7 +36,7 @@ The audit compared every finished feature with OStim's source; it's being carrie
 - ~~**Actor scaling and heels.**~~ Done (docs/SCALING.md): OStim's scaling (`SetScaling`, role `scale`, NPC height evened out), heels from the High Heels System's `.json` and `.txt` files, scaled with `scaleHeight` when feet are on the ground, lowered when not, and in the alignment key. Mesh extra-data heights (`HHS` NiFloatExtraData) done too. HHS MCM heights are its `.txt` files, already read. Still to do: other heel mods, LooksMenu height. (Furniture `multiplyScale` is done.)
 - ~~**Facial expressions.**~~ Done (docs/EXPRESSIONS.md): OStim's expression files and layers (underlying by action or `default`, `moan` / `climax` events, `expressionOverride`), Skyrim types mapped onto Fallout 4's face morphs (`Expression Morphs.json`), set smoothly with `mfg morphs`; `noFacialExpressions`, `SetExpressionDurationMin` / `Max`. Still to do: expression `delay`. (OStim's eye `look` directions are done, with the eye bones.)
 - ~~**Sound.**~~ Done (docs/SOUND.md): OStim's voice sets per NPC / voice type / sex, moans (`moan` / `muffled` from actions), climax sounds, with event expressions; sound files or folders as well as descriptors; `moanIntervalMin` / `Max`, `moanVolume`. Action sounds and event reactions came with Peaks and events. Still to do: dialogue (comments, climax comments, post-scene lines), `talk`. (Muting actors is done, OPTIONS.md.)
-- ~~**Peaks and events.**~~ Done (docs/EVENTS.md): OStim's action `peak` (bonedistance on Fallout 4's vanilla bones, loop) and `4StimPeak` annotations (`doPeaks`, `peaksAnnotated`); action `sounds` (peak, bonedistance, loop; `muted`, `soundVolume`); OStim's event files (spank, wash) with stimulation, sound, camera shake, rumble, supertypes and voice set reactions, fired by `4StimEvent` annotations or `FourStim.CallEvent`, heard through `FourStim_OnEvent`; `4StimPlayExpression`. Still to do: sex toys on peaks. (Muting is done.)
+- ~~**Peaks and events.**~~ Done (docs/EVENTS.md): OStim's action `peak` (bonedistance on Fallout 4's vanilla bones, loop) and `4StimPeak` annotations (`doPeaks`, `peaksAnnotated`); action `sounds` (peak, bonedistance, loop; `muted`, `soundVolume`); OStim's event files (spank, wash) with stimulation, sound, camera shake, rumble, supertypes and voice set reactions, fired by `4StimEvent` annotations or `FourStim.CallEvent`, heard through `FourStim_OnEvent`; `4StimPlayExpression`. Sex toys follow the peaks (API.md). (Muting is done.)
 - ~~**Lights.**~~ Done (docs/LIGHTS.md): OStim's face / crotch / ass lights, bright or dim, per sex (`sMaleLight` / `sFemaleLight`), `SetOnlyLightInDark`; game lights placed and moved with a bone (no plugin), removed before saves. Still to do: lights per NPC, the check for actors with a light from another mod, choosing from the HUD; with a 4Stim plugin, OStim-style light armor (Equip objects).
 - ~~**Camera extras.**~~ Done (docs/SETTINGS.md): `SetUseFreeCam`, `SetCameraSpeed`, `SetFreeCamFOV`, `SetForceFirstPerson`, fades as scenes with the player start and end (`SetUseFades`), slow motion at a climax (`SetSlowMoOrgasms`). Auto mode fades came with pass 3. Still to do: the custom time scale (`SetCustomTimescale`).
 
@@ -53,10 +53,10 @@ The audit compared every finished feature with OStim's source; it's being carrie
 - ~~**OStim's scene fields.**~~ Done (docs/SCENES.md): every field of OStim NG's scene files is read. Last ones: the actor `noStrip`, `singleSpeed`, the `look*` eye directions (eye bones, EXPRESSIONS.md), `scaleOffsetWithFurniture` with furniture `multiplyScale`; the test pack backfilled from OStim's files (scale, scaleHeight, look, feetOnGround overrides, expressionAction, noStrip, singleSpeed). `border` / `noWarnings` came with Settings and UI; `playbackSpeed` is under Settings and UI.
 
 ### For other mods
-- **Papyrus API.** A thread builder (actors, furniture, start scene or sequence, flags: no auto mode, no undress...), scene metadata queries, random scene by tags (OLibrary), per-actor data, OStim's `OFurniture.FindFurniture` / `FindFurnitureOfType` (on the main thread). (The furniture type and change functions are done.)
-- **More events.** NPC scene start / end, sequence end (below). (Climax and furniture changed are done: `FourStim_OnClimax`, `FourStim_OnFurnitureChange`.)
-- **A C++ plugin interface** for other F4SE plugins (start / stop, listeners, alignment).
-- **Save data.** Running scenes are saved and start again on load (done, with Concurrent scenes). Still to do: per-actor choices (voice set, equip objects, alignment) in the F4SE co-save, as those features come.
+- ~~**Papyrus API.**~~ Done (docs/API.md): OStim's API scripts as `FourStimThread` (thread IDs, 0 = the player's), `FourStimThreadBuilder` (furniture, starting scenes and sequences, duration, end after the sequence, undress / no undressing, no auto mode, no player control, metadata), `FourStimLibrary` (random scenes by scene tags, actor tags and actions), `FourStimMetadata`, `FourStimActor` (with per-actor metadata and expressions) and `FourStimFurniture` (`FindFurniture` / `FindFurnitureOfType`). Still to do: OStim's multi-actor "ForAll" and action actor / target library variants as named functions (`FindRandomScene` covers them), `QueueNavigation`'s wait, `WarpTo`'s fades.
+- ~~**More events.**~~ Done: `FourStim_OnNPCSceneStart` / `FourStim_OnNPCSceneEnd` and `FourStim_OnSequenceEnd`.
+- ~~**A C++ plugin interface**~~ Done (docs/API.md, `include/4Stim/PluginInterface.h`): OStim's interface map with "Threads" (threads, listeners, builder, actors) and "SexToys", and 4Stim's "Alignment". Still to do: OStim's graph (scene data as objects), furniture and settings interfaces, if a plugin needs them.
+- ~~**Save data.**~~ Done: running scenes start again on load (with Concurrent scenes), and the equip objects chosen for actors are saved. (Alignment is saved in its own file, as OStim; 4Stim has no per-actor voice set choice yet.)
 
 ### Settings and UI
 - ~~**MCM page.**~~ Done (docs/MCM.md): every setting a control can show (112), on 14 pages generated from 4Stim.ini (tools/make-mcm.py), with the climax effects (slow motion, shake, blur and strength, edge glow strength and size, rumble), the MCM's own hotkeys for every scene key, export / import (OStim's mcmsettings.json) and back to 4Stim.ini; changes apply at once, and whichever of 4Stim.ini and the MCM was changed last wins at start.
@@ -64,8 +64,8 @@ The audit compared every finished feature with OStim's source; it's being carrie
 - ~~**Options in the HUD.**~~ Done (docs/OPTIONS.md): OStim's options files in the Utility tab (pages, per actor, equip object toggles and choices, Papyrus functions), with 4Stim's per-actor undress, mute, strap-on and tongue; OStim's `Mute` / `Unmute` / `IsMuted`, action sounds' `muteWithActor` / `muteWithTarget`.
 - ~~**Translations.**~~ Done (docs/TRANSLATIONS.md): `Interface\Translations\4Stim_<language>.txt` for the picker, HUD, notifications, MCM and options (tools/make-translations.py).
 - ~~**Navigation `border` / `noWarnings`.**~~ Done (docs/SCENES.md).
-- **Sex toys** (device integration). Optional, last: OStim's are a plugin interface for device plugins, so it comes after the C++ plugin interface (For other mods).
-- **`playbackSpeed`.** OStim's per-speed animation rate (its `OStimSpeed` behavior variable): in Fallout 4, by stepping each scene actor's animation graph faster or slower from the plugin (one new game address, also in the old-gen table).
+- ~~**Sex toys**~~ Done (docs/API.md): OStim's "SexToys" plugin interface for device plugins, toys on actions' `toySlot`s in the player's scene, updates on peaks, climax pulses, OStim's global toy settings (`[SexToys]`, MCM page). Still to do: per-toy and per-slot settings (OStim's toy menu); test with a device plugin.
+- ~~**`playbackSpeed`.**~~ Done (docs/API.md): the scene actors' animation updates scaled by the speed's `playbackSpeed` (`bUsePlaybackSpeed`). Needs checking in game with a scene that sets one (the hook is on the actors' `UpdateAnimation`).
 
 ## Later
 
@@ -81,7 +81,6 @@ The audit compared every finished feature with OStim's source; it's being carrie
 - Race filtering
 - Claim registry
 - First-person camera
-- A sequence-end event for other mods
 
 ## Separate projects
 

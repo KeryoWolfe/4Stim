@@ -28,5 +28,6 @@ target("4Stim")
     -- add src files
     add_files("src/**.cpp")
     add_headerfiles("src/**.h")
-    add_includedirs("src")
+    add_includedirs("src", "include")
+    add_headerfiles("include/**.h")
     set_pcxxheader("src/pch.h")

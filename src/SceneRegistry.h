@@ -137,7 +137,7 @@ namespace SceneRegistry
 	// One speed of a scene.
 	struct SpeedInfo
 	{
-		float playbackSpeed = 1.0F;  // OStim's: kept, not used yet (Fallout 4's graphs have no speed variable for it)
+		float playbackSpeed = 1.0F;  // OStim's: how fast the animation plays (main.cpp's PlaybackSpeed scales the actors' animation updates)
 		float displaySpeed = 0.0F;   // OStim's speed label (0 = not given): kept, not shown yet
 	};
 

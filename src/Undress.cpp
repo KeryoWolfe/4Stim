@@ -5,6 +5,7 @@
 #include <optional>
 #include <mutex>
 #include <unordered_map>
+#include <unordered_set>
 
 #include "Actions.h"
 #include "ActorProperties.h"
@@ -34,6 +35,7 @@ namespace Undress
 		std::vector<Timed>                       g_timed;  // main thread
 		std::mutex                               g_lock;
 		std::unordered_map<std::uint32_t, State> g_states;
+		std::unordered_set<std::uint32_t>        g_blocked;  // OStim's NoUndressing (a thread builder's): not undressed by scenes
 
 		bool Allowed(int a_slot)
 		{
@@ -136,6 +138,12 @@ namespace Undress
 		{
 			if (!a_byHand && (!g_config.enabled || (!g_config.player && IsPlayer(a_id)))) {
 				return;
+			}
+			{
+				std::scoped_lock lock(g_lock);
+				if (!a_byHand && g_blocked.contains(a_id)) {
+					return;
+				}
 			}
 			std::uint32_t mask = 0;
 			{
@@ -337,10 +345,21 @@ namespace Undress
 		HUD::OnFocusedSceneChanged();
 	}
 
+	void Block(std::uint32_t a_id, bool a_blocked)
+	{
+		std::scoped_lock lock(g_lock);
+		if (a_blocked) {
+			g_blocked.insert(a_id);
+		} else {
+			g_blocked.erase(a_id);
+		}
+	}
+
 	void Clear()
 	{
 		g_timed.clear();
 		std::scoped_lock lock(g_lock);
 		g_states.clear();
+		g_blocked.clear();
 	}
 }

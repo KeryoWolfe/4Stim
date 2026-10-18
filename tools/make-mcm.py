@@ -39,6 +39,8 @@ PAD_LABELS = ['None', 'LB', 'RB', 'LT', 'RT', 'X', 'Y', 'Left stick (press)', 'R
 for _k in PAD_KEYS:
     CHOICES[_k] = PAD_BUTTONS
 CHOICES['sPadScheme'] = ['Modern', 'Classic']
+CHOICES['sToySynchronization'] = ['player', 'male', 'female', 'scene']
+CHOICES['sToyScaling'] = ['none', 'rate', 'value', 'speed']
 CHOICE_LABELS = {
     'sTargetMode': ['Crosshair', 'Nearest'],
     'sHUDControls': ['Tabs', 'Columns (OStim)'],
@@ -49,6 +51,8 @@ CHOICE_LABELS = {
 for _k in PAD_KEYS:
     CHOICE_LABELS[_k] = PAD_LABELS
 CHOICE_LABELS['sPadScheme'] = ['4Stim Modern', 'OStim Classic']
+CHOICE_LABELS['sToySynchronization'] = ['The player', 'The first man', 'The first woman', 'Anyone']
+CHOICE_LABELS['sToyScaling'] = ['None (strongest)', 'Excitement rate', 'Excitement', 'Scene speed']
 
 # key: (label, kind, options). kind: bool; int / float (min, max, step);
 # choice; key (an MCM key input: "keycode,modifiers", a string); ms (OStim's
@@ -210,12 +214,27 @@ SETTINGS = {
     'sFemaleLight': ('Light for women', 'choice'),
     'SetOnlyLightInDark': ('Only in the dark', 'bool'),
     'fLightLevelDark': ('Dark below light level', 'float', (0, 200, 1)),
+    # General
+    'bUsePlaybackSpeed': ("Scenes' playback speeds", 'bool'),
+    # Sex toys
+    'bToysEnabled': ('Sex toys', 'bool'),
+    'sToySynchronization': ('Toys follow', 'choice'),
+    'sToyScaling': ('Strength follows', 'choice'),
+    'fToyMinScale': ('Weakest at or below', 'float', (0, 10, 0.05)),
+    'fToyMaxScale': ('Strongest at or above', 'float', (0, 10, 0.05)),
+    'fToyMinMagnitude': ('Weakest strength', 'float', (0, 1, 0.05)),
+    'fToyMaxMagnitude': ('Strongest strength', 'float', (0, 1, 0.05)),
+    'bToyPeaks': ('Pulse on peaks', 'bool'),
+    'fToyMinPeak': ('Weakest pulse', 'float', (0, 1, 0.05)),
+    'fToyMaxPeak': ('Strongest pulse', 'float', (0, 1, 0.05)),
+    'bToyClimax': ('Pulse on climax', 'bool'),
+    'fToyClimaxMagnitude': ('Climax pulse', 'float', (0, 1, 0.05)),
 }
 
 # Pages: (title, [(ini section, [keys])]).
 PAGES = [
     ('General', [('General', ['sTargetMode', 'fMaxDistance', 'fCrosshairCone', 'fProximityRadius', 'fActorRadius', 'SetUseIntroScenes',
-                              'NPCSceneDuration', 'bResumeScenes', 'SetResetPosition', 'fTransitionLead', 'bLockScenes', 'bGuardScenes', 'bLogAnimEvents'])]),
+                              'NPCSceneDuration', 'bResumeScenes', 'SetResetPosition', 'fTransitionLead', 'bUsePlaybackSpeed', 'bLockScenes', 'bGuardScenes', 'bLogAnimEvents'])]),
     ('Camera', [('General', ['SetUseFreeCam', 'SetCameraSpeed', 'SetFreeCamFOV', 'SetForceFirstPerson', 'SetUseFades', 'SetUseAutoFades'])]),
     ('Furniture', [('General', ['SetEnableFurniture', 'SetSelectFurniture', 'SetFurnitureSearchDistance', 'fFurnitureHeight', 'SetResetClutter',
                                 'SetResetClutterRadius', 'bLogFurniture'])]),
@@ -243,6 +262,8 @@ PAGES = [
     ('Faces and sound', [('Expressions', ['noFacialExpressions', 'SetExpressionDurationMin', 'SetExpressionDurationMax']),
                          ('Sound', ['bSounds', 'moanIntervalMin', 'moanIntervalMax', 'moanVolume', 'soundVolume', 'iSoundPriority'])]),
     ('Lights', [('Lights', ['sMaleLight', 'sFemaleLight', 'SetOnlyLightInDark', 'fLightLevelDark'])]),
+    ('Sex toys', [('SexToys', ['bToysEnabled', 'sToySynchronization', 'sToyScaling', 'fToyMinScale', 'fToyMaxScale', 'fToyMinMagnitude',
+                               'fToyMaxMagnitude', 'bToyPeaks', 'fToyMinPeak', 'fToyMaxPeak', 'bToyClimax', 'fToyClimaxMagnitude'])]),
     # As OStim's Controls page: its scene keys, then its navigation keys.
     ('Hotkeys', [('General', ['SetKeyMap', 'keyNpcSceneStart', 'SetKeyUp', 'SetKeyDown', 'SetPullOut',
                               'SetFreeCamToggleKey', 'keySearch', 'keyAlignment', 'keyHideUI'], 'Scene keys'),

@@ -108,6 +108,7 @@ namespace Actions
 			side.muffled = it->value("muffled", false);
 			side.expressionOverride = Lower(it->value("expressionOverride", std::string{}));
 			side.equipObjects = LowerList(*it, "equipObject");  // OStim's field name (a string or a list)
+			side.toySlots = LowerList(*it, "toySlot");          // OStim's, a string or a list
 			if (const auto v = it->find("undressSlots"); v != it->end() && v->is_array()) {
 				for (const auto& slot : *v) {
 					if (slot.is_number_integer() && slot.get<int>() >= 30 && slot.get<int>() <= 61) {

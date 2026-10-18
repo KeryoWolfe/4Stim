@@ -231,4 +231,11 @@ namespace Excitement
 		}
 		return std::max(100.0F - s->excitement, 0.0F) / rate;
 	}
+
+	float Rate(std::uint32_t a_id)
+	{
+		std::scoped_lock lock(g_lock);
+		const auto s = Find(a_id);
+		return s ? Rate(*s) : 0.0F;
+	}
 }

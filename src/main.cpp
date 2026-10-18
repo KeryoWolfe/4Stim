@@ -1,5 +1,6 @@
 #include <array>
 #include <atomic>
+#include <condition_variable>
 #include <functional>
 #include <chrono>
 #include <mutex>
@@ -32,6 +33,8 @@
 #include "Translations.h"
 #include "MCM.h"
 #include "Options.h"
+#include "SexToys.h"
+#include "4Stim/PluginInterface.h"
 #include "compat/Addresses.h"
 #include "compat/RequiredIDs.h"
 
@@ -178,8 +181,70 @@ namespace
 		float         resetClutterRadius = 500.0F;
 		std::uint32_t npcSceneKey = 0;           // opens the picker for an NPC-only scene, even in a scene (0 = Shift + the hotkey)
 		bool          resumeScenes = false;      // scenes running in a save start again when it's loaded (OStim ends them)
+		bool          usePlaybackSpeed = true;   // scenes' playbackSpeed (OStim's, always on there): their actors' animations faster / slower
 	};
 	Settings g_settings;
+
+	// ---- playbackSpeed ----
+	// OStim's per-speed animation rate ("playbackSpeed", which OStim feeds to
+	// its OStimSpeed graph variable). Fallout 4's animation graphs have no
+	// such variable, so 4Stim scales the time step of each scene actor's
+	// animation update instead (TESObjectREFR::UpdateAnimation, vfunc 0x9F,
+	// on the Actor and PlayerCharacter vtables): 2 plays twice as fast.
+	// bUsePlaybackSpeed=0 leaves animations at their own rate.
+	struct PlaybackSpeed
+	{
+		using func_t = void (*)(RE::TESObjectREFR*, float);
+		static inline func_t                                  originalActor = nullptr;
+		static inline func_t                                  originalPlayer = nullptr;
+		static inline std::mutex                              lock;
+		static inline std::unordered_map<std::uint32_t, float> rates;  // only actors not at 1
+		static inline std::atomic<bool>                       any = false;
+
+		static float RateOf(RE::TESObjectREFR* a_ref)
+		{
+			if (!any.load(std::memory_order_relaxed) || !a_ref) {
+				return 1.0F;
+			}
+			std::scoped_lock l(lock);
+			const auto it = rates.find(a_ref->GetFormID());
+			return it != rates.end() ? it->second : 1.0F;
+		}
+
+		static void ThunkActor(RE::TESObjectREFR* a_this, float a_delta) { originalActor(a_this, a_delta * RateOf(a_this)); }
+		static void ThunkPlayer(RE::TESObjectREFR* a_this, float a_delta) { originalPlayer(a_this, a_delta * RateOf(a_this)); }
+
+		static void Install()
+		{
+			REL::Relocation<std::uintptr_t> actorVtbl{ RE::VTABLE::Actor[0] };
+			originalActor = reinterpret_cast<func_t>(actorVtbl.write_vfunc(0x9F, ThunkActor));
+			REL::Relocation<std::uintptr_t> playerVtbl{ RE::VTABLE::PlayerCharacter[0] };
+			originalPlayer = reinterpret_cast<func_t>(playerVtbl.write_vfunc(0x9F, ThunkPlayer));
+			REX::INFO("playbackSpeed hook installed");
+		}
+
+		// a_ids play at a_rate (1 = their own rate).
+		static void Set(const std::vector<std::uint32_t>& a_ids, float a_rate)
+		{
+			std::scoped_lock l(lock);
+			for (const auto id : a_ids) {
+				if (a_rate == 1.0F || !g_settings.usePlaybackSpeed) {
+					rates.erase(id);
+				} else {
+					rates[id] = a_rate;
+				}
+			}
+			any = !rates.empty();
+		}
+
+		static void Clear()
+		{
+			std::scoped_lock l(lock);
+			rates.clear();
+			any = false;
+		}
+	};
+
 
 	// [AutoMode] in 4Stim.ini (see "Auto mode" below).
 	struct AutoConfig
@@ -703,6 +768,11 @@ namespace
 				} else if (key == "ftransitionlead") {
 					g_settings.transitionLead = std::clamp(std::stof(value), -2.0F, 5.0F);
 				}
+				// Sex toys (SexToys.h) and playbackSpeed.
+				if (SexToys::ReadSetting(key, value)) {
+				} else if (key == "buseplaybackspeed") {
+					g_settings.usePlaybackSpeed = std::stoi(value) != 0;
+				}
 				// OStim's look directions (EyeLook.h).
 				if (key == "bdisableeyelook") {
 					EyeLook::Settings().disabled = std::stoi(value) != 0;
@@ -1214,6 +1284,18 @@ namespace
 			float speedCooldown = 0.0F;
 		};
 		Auto autoMode;
+
+		// OStim's threads (docs/API.md): an ID other mods use for it (0 =
+		// the player's scene, as OStim's player thread; others count up from
+		// 1), its metadata, and what a thread builder asked for.
+		std::int32_t                                 threadID = 0;
+		std::vector<std::string>                     metadata;      // lowercase
+		std::unordered_map<std::string, float>       metaFloat;     // key lowercase
+		std::unordered_map<std::string, std::string> metaString;
+		bool                                         noAutoMode = false;
+		bool                                         noPlayerControl = false;
+		bool                                         noUndress = false;
+		bool                                         endAfterSequence = false;
 	};
 
 	// Remembers the outgoing speed when a scene enters a transition.
@@ -1252,11 +1334,32 @@ namespace
 	std::mutex                   g_pendingResumeLock;
 	std::optional<PendingResume> g_pendingResume;
 
+	// A thread builder's start (OStim's OThreadBuilder.Start, docs/API.md):
+	// what the next scene started for these actors takes over.
+	struct PendingStart
+	{
+		std::vector<std::uint32_t> actors;  // sorted
+		std::int32_t               threadID = 0;
+		float                      duration = 0.0F;  // seconds; 0 = the usual
+		bool                       undressAtStart = false;
+		bool                       noAutoMode = false;
+		bool                       noPlayerControl = false;
+		bool                       noUndress = false;
+		bool                       endAfterSequence = false;
+		std::vector<std::string>   metadata;
+	};
+	std::mutex                  g_pendingStartLock;
+	std::optional<PendingStart> g_pendingStart;
+	std::int32_t                g_nextThreadID = 1;  // NPC scenes; the player's is 0
+
 	void LockScene(ActiveScene& a_active);
 	void UnlockActors(const std::vector<std::uint32_t>& a_ids);
 	void RestoreScales(const ActiveScene& a_active);
 	void MoveApart(const ActiveScene& a_ended);
 	void ArmAutoplay(ActiveScene& a_scene);
+	void EndActiveScene(const ActiveScene& a_scene, std::string_view a_why);
+	void ForgetActorMeta(const std::vector<std::uint32_t>& a_ids);
+	std::thread::id g_mainThread;  // the game's main thread (set at kGameLoaded)
 	void StartAutoMode(ActiveScene& a_active);
 	void StopAutoMode(ActiveScene& a_active);
 	void AutoModeTick(ActiveScene& a_active, float a_seconds);
@@ -1328,6 +1431,8 @@ namespace
 				Expressions::Leave(left);
 				Sounds::Leave(left);
 				Peaks::Leave(left);
+				SexToys::Leave(left);
+				PlaybackSpeed::Set(left, 1.0F);
 				Lights::Leave(left);
 				EquipObjects::Leave(left);
 				PenisBend::Leave(left);
@@ -1341,6 +1446,28 @@ namespace
 			return replaced;
 		});
 		ActiveScene scene{ a_actors, a_sceneID };
+		const bool hasPlayer = std::ranges::any_of(a_actors, [](std::uint32_t id) { return IsPlayer(RE::TESForm::GetFormByID<RE::Actor>(id)); });
+		std::optional<PendingStart> start;
+		{
+			auto sorted = a_actors;
+			std::ranges::sort(sorted);
+			std::scoped_lock lock(g_pendingStartLock);
+			if (g_pendingStart && g_pendingStart->actors == sorted) {
+				start = std::move(g_pendingStart);
+				g_pendingStart.reset();
+			}
+		}
+		scene.threadID = hasPlayer ? 0 : start && start->threadID > 0 ? start->threadID : g_nextThreadID++;
+		if (start) {
+			scene.metadata = start->metadata;
+			scene.noAutoMode = start->noAutoMode;
+			scene.noPlayerControl = start->noPlayerControl;
+			scene.noUndress = start->noUndress;
+			scene.endAfterSequence = start->endAfterSequence;
+			for (const auto id : a_actors) {
+				Undress::Block(id, start->noUndress);
+			}
+		}
 		if (const auto furniture = PendingFurnitureFor(a_actors, true)) {
 			scene.furnitureRef = furniture->ref;
 			scene.furnitureType = furniture->type;
@@ -1431,12 +1558,21 @@ namespace
 			PlayOnActiveScene(added, added.sequence->entries.front().scene, added.sequence->entries.front().speed);
 		}
 		ArmAutoplay(added);
-		const bool withPlayer = std::ranges::any_of(added.actors, [](std::uint32_t id) { return IsPlayer(RE::TESForm::GetFormByID<RE::Actor>(id)); });
+		const bool withPlayer = hasPlayer;
 		if (!withPlayer && g_settings.npcSceneDuration > 0.0F) {
 			added.stopTimer = g_settings.npcSceneDuration;
 			StartAutoplayTicks();
 		}
-		if (withPlayer ? g_autoConfig.player : g_autoConfig.npc) {
+		if (start && start->duration > 0.0F) {
+			added.stopTimer = start->duration;  // OStim's SetDuration, the player's scene too
+			StartAutoplayTicks();
+		}
+		if (start && start->undressAtStart) {
+			for (const auto id : added.actors) {
+				Undress::StripAll(id, true);
+			}
+		}
+		if (added.noPlayerControl || (!added.noAutoMode && (withPlayer ? g_autoConfig.player : g_autoConfig.npc))) {
 			StartAutoMode(added);
 		}
 		// Started again from a save: back to where it was.
@@ -1474,6 +1610,10 @@ namespace
 		}
 		auto ended = std::move(*it);
 		g_activeScenes.erase(it);
+		for (const auto id : ended.actors) {
+			Undress::Block(id, false);
+		}
+		ForgetActorMeta(ended.actors);
 		FreeFurniture(ended);
 		UnlockActors(ended.actors);
 		MoveApart(ended);
@@ -1482,6 +1622,8 @@ namespace
 		Expressions::Leave(ended.actors);
 		Sounds::Leave(ended.actors);
 		Peaks::Leave(ended.actors);
+		SexToys::Leave(ended.actors);
+		PlaybackSpeed::Set(ended.actors, 1.0F);
 		Lights::Leave(ended.actors);
 		EquipObjects::Leave(ended.actors);
 		PenisBend::Leave(ended.actors);
@@ -1647,6 +1789,12 @@ namespace
 			}
 			REX::INFO("Sequence \"{}\": finished on \"{}\"", sequence->id, a_active.sceneID);
 			a_active.sequence.reset();
+			SceneEvents::SequenceEnded(a_active.actors, sequence->id);
+			if (a_active.endAfterSequence) {
+				EndActiveScene(a_active, "its sequence ended (EndAfterSequence)");
+				a_active.remaining = -1.0F;
+				return;
+			}
 			// Ended on a transition: let it finish moving on.
 			const auto scene = SceneRegistry::Find(a_active.sceneID);
 			if (!scene || !scene->IsTransition()) {
@@ -2791,6 +2939,12 @@ namespace
 			sexes.push_back(ActorProperties::MaleExcitement(RE::TESForm::GetFormByID<RE::Actor>(id)) ? SceneRegistry::Sex::kMale : SceneRegistry::Sex::kFemale);
 		}
 		Excitement::Enter(a_scene.actors, sexes, *scene, a_scene.speed);
+		// OStim's playbackSpeed for this speed.
+		if (a_scene.speed >= 0 && static_cast<std::size_t>(a_scene.speed) < scene->speedInfo.size()) {
+			PlaybackSpeed::Set(a_scene.actors, std::clamp(scene->speedInfo[static_cast<std::size_t>(a_scene.speed)].playbackSpeed, 0.05F, 10.0F));
+		} else {
+			PlaybackSpeed::Set(a_scene.actors, 1.0F);
+		}
 		// Faces and voices follow the scene too (OStim's changeNode).
 		const float relativeSpeed = scene->speeds.empty() ? 0.0F : static_cast<float>(a_scene.speed) / static_cast<float>(scene->speeds.size());
 		for (std::size_t role = 0; role < a_scene.actors.size(); ++role) {
@@ -2800,6 +2954,9 @@ namespace
 		// Peaks and action sounds (OStim's node handler), and lights.
 		const bool withPlayer = std::ranges::any_of(a_scene.actors, [](std::uint32_t id) { return IsPlayer(RE::TESForm::GetFormByID<RE::Actor>(id)); });
 		Peaks::Enter(a_scene.actors, scene, a_scene.speed, withPlayer);
+		if (withPlayer) {
+			SexToys::Enter(a_scene.actors, scene, a_scene.speed);  // OStim drives toys from the player's thread
+		}
 		Lights::Enter(a_scene.actors);
 		StartAutoplayTicks();
 	}
@@ -2833,6 +2990,7 @@ namespace
 		const auto& config = Excitement::Settings();
 		std::erase_if(a_active.awaitingClimax, [&](const auto& a_entry) { return a_entry.actor == a_actorID; });
 		Excitement::Climaxed(a_actorID);
+		SexToys::Climax(a_actorID);
 		if (a_active.autoMode.on && a_active.autoMode.stage == ActiveScene::Auto::Stage::kPullout) {
 			a_active.autoMode.stage = ActiveScene::Auto::Stage::kMain;
 			a_active.autoMode.cooldown = std::min(a_active.autoMode.cooldown, 3.0F);
@@ -2966,6 +3124,7 @@ namespace
 			}
 			Sounds::Tick(elapsed);
 			Peaks::Tick(elapsed);
+			SexToys::Tick(elapsed);
 			Expressions::Tick(elapsed);
 			UpdateClimaxShake();
 			GuardScenes(elapsed);
@@ -4706,11 +4865,19 @@ namespace
 
 	// Changes the player's scene speed by a_delta. Returns the new speed
 	// (1-based), or 0 if the player isn't in a scene.
+	// OStim's NoPlayerControl (a thread builder's): the player's own speed,
+	// navigation and auto mode keys leave this scene alone.
+	bool NoPlayerControl(std::uint32_t a_actorID)
+	{
+		const auto active = a_actorID ? FindActiveScene(a_actorID) : nullptr;
+		return active && active->noPlayerControl;
+	}
+
 	std::int32_t ChangeSceneSpeedImpl(std::int32_t a_delta)
 	{
 		const auto current = GetPlayerScene();
 		const auto scene = current.role0 ? SceneRegistry::Find(current.sceneID) : nullptr;
-		if (!scene) {
+		if (!scene || NoPlayerControl(current.role0)) {
 			return 0;
 		}
 		const int count = static_cast<int>(scene->speeds.size());
@@ -4733,6 +4900,10 @@ namespace
 		const auto current = GetPlayerScene();
 		const auto from = current.role0 ? SceneRegistry::Find(current.sceneID) : nullptr;
 		const auto to = SceneRegistry::Find(a_destination);
+		if (NoPlayerControl(current.role0)) {
+			REX::INFO("NavigateScene: this scene was started with NoPlayerControl");
+			return false;
+		}
 		if (!from || !to || to->actors.size() != from->actors.size()) {
 			REX::WARN("NavigateScene: can't go to \"{}\"", a_destination);
 			return false;
@@ -6117,7 +6288,7 @@ namespace
 			}
 		} else if (a_action == "automode") {
 			// On / off for the scene you're in or watching.
-			if (const auto active = focused.Active() ? FindActiveScene(focused.role0) : nullptr) {
+			if (const auto active = focused.Active() ? FindActiveScene(focused.role0) : nullptr; active && !active->noPlayerControl) {
 				if (active->autoMode.on) {
 					StopAutoMode(*active);
 				} else {
@@ -6397,6 +6568,1359 @@ namespace
 		}
 	};
 
+	// ---- OStim's thread API (docs/API.md): FourStimThread, FourStimThreadBuilder ----
+	// A thread is a running scene; its ID is ActiveScene::threadID (0 = the
+	// player's, as OStim's player thread). Reads happen where Papyrus calls
+	// them, as the other natives here do; changes go to the main thread.
+
+	ActiveScene* FindThread(std::int32_t a_threadID)
+	{
+		const auto it = std::ranges::find_if(g_activeScenes, [&](const ActiveScene& a_scene) { return a_scene.threadID == a_threadID; });
+		return it != g_activeScenes.end() ? &*it : nullptr;
+	}
+
+	std::int32_t ThreadIDOf(std::uint32_t a_actorID)
+	{
+		const auto active = FindActiveScene(a_actorID);
+		return active ? active->threadID : -1;
+	}
+
+	// Runs a_do on the main thread with the thread a_threadID, if it's running then.
+	template <class F>
+	void WithThread(std::int32_t a_threadID, F a_do)
+	{
+		F4SE::GetTaskInterface()->AddTask([a_threadID, a_do = std::move(a_do)]() mutable {
+			if (const auto active = FindThread(a_threadID)) {
+				a_do(*active);
+			}
+		});
+	}
+
+	std::string LowerCopy(std::string a_text)
+	{
+		std::ranges::transform(a_text, a_text.begin(), [](unsigned char ch) { return static_cast<char>(std::tolower(ch)); });
+		return a_text;
+	}
+
+	std::vector<std::string> SplitCSV(const std::string& a_csv)
+	{
+		std::vector<std::string> out;
+		std::string              item;
+		for (const char ch : a_csv + ",") {
+			if (ch == ',') {
+				const auto b = item.find_first_not_of(" \t");
+				const auto e = item.find_last_not_of(" \t");
+				if (b != std::string::npos) {
+					out.push_back(item.substr(b, e - b + 1));
+				}
+				item.clear();
+			} else {
+				item += ch;
+			}
+		}
+		return out;
+	}
+
+	// The scenes a new scene for a_cast can start with on a_furniture ("" =
+	// off furniture), any role order that fits (a thread builder's actors
+	// get OStim's order when it fits, else another).
+	std::vector<std::shared_ptr<const SceneRegistry::Scene>> ScenesForActors(const std::vector<std::uint32_t>& a_cast, const std::string& a_furniture)
+	{
+		SceneRegistry::ListFilter filter;
+		filter.actors = ConditionsOf(a_cast);
+		std::vector<std::shared_ptr<const SceneRegistry::Scene>> out;
+		for (const auto& summary : SceneRegistry::List(a_cast.size(), filter)) {
+			const auto scene = SceneRegistry::Find(summary.id);
+			if (scene && SceneFitsFurniture(*scene, a_furniture)) {
+				out.push_back(scene);
+			}
+		}
+		return out;
+	}
+
+	// Why a_actor can't be in a new scene, or "" if they can (as
+	// FourStimScene.CanUseActor).
+	std::string CantUse(RE::Actor* a_actor)
+	{
+		if (!a_actor) {
+			return "no actor";
+		}
+		if (a_actor->IsChild()) {
+			return "children are never eligible";
+		}
+		if (a_actor->IsDead(false)) {
+			return "dead";
+		}
+		if (a_actor->IsInCombat()) {
+			return "in combat";
+		}
+		if (FindActiveScene(a_actor->GetFormID())) {
+			return "already in a scene";
+		}
+		return {};
+	}
+
+	// OStim's thread builder.
+	struct ThreadBuilder
+	{
+		std::vector<std::uint32_t>                actors;
+		std::vector<std::uint32_t>                dominant;
+		std::uint32_t                             furniture = 0;
+		bool                                      noFurniture = false;
+		float                                     duration = 0.0F;
+		std::vector<SceneRegistry::SequenceEntry> starting;  // starting scenes / sequence
+		bool                                      endAfterSequence = false;
+		bool                                      undress = false;
+		bool                                      noAutoMode = false;
+		bool                                      noPlayerControl = false;
+		bool                                      noUndress = false;
+		std::vector<std::string>                  metadata;
+	};
+	std::mutex                                        g_buildersLock;
+	std::unordered_map<std::int32_t, ThreadBuilder>   g_builders;
+	std::int32_t                                      g_nextBuilderID = 1;
+
+	std::int32_t BuilderCreate(std::vector<RE::Actor*> a_actors)
+	{
+		ThreadBuilder builder;
+		for (const auto actor : a_actors) {
+			if (actor) {
+				builder.actors.push_back(actor->GetFormID());
+			}
+		}
+		if (builder.actors.empty()) {
+			REX::WARN("ThreadBuilder.Create: no actors");
+			return -1;
+		}
+		std::scoped_lock lock(g_buildersLock);
+		const auto id = g_nextBuilderID++;
+		g_builders.emplace(id, std::move(builder));
+		return id;
+	}
+
+	// Runs a_do on builder a_id (if it exists).
+	template <class F>
+	bool WithBuilder(std::int32_t a_id, F a_do)
+	{
+		std::scoped_lock lock(g_buildersLock);
+		const auto it = g_builders.find(a_id);
+		if (it == g_builders.end()) {
+			REX::WARN("ThreadBuilder: no builder {}", a_id);
+			return false;
+		}
+		a_do(it->second);
+		return true;
+	}
+
+	// Starts a scene from a builder (OStim's Start). Returns the thread ID it
+	// will have (0 for the player's), or -1. The scene itself starts a moment
+	// later (Papyrus places the actors); IsRunning says once it has.
+	std::int32_t StartThread(ThreadBuilder a_builder)
+	{
+		const auto player = RE::PlayerCharacter::GetSingleton();
+		bool       withPlayer = false;
+		for (const auto id : a_builder.actors) {
+			const auto actor = RE::TESForm::GetFormByID<RE::Actor>(id);
+			if (const auto why = CantUse(actor); !why.empty()) {
+				REX::WARN("ThreadBuilder.Start: {:08X} can't be in a scene ({})", id, why);
+				return -1;
+			}
+			withPlayer = withPlayer || (player && id == player->GetFormID());
+		}
+		if (!a_builder.starting.empty()) {
+			const auto first = SceneRegistry::Find(a_builder.starting.front().scene);
+			if (!first || first->actors.size() != a_builder.actors.size()) {
+				REX::WARN("ThreadBuilder.Start: \"{}\" isn't a scene for {} actor(s)", a_builder.starting.front().scene, a_builder.actors.size());
+				return -1;
+			}
+		}
+		std::int32_t threadID = 0;
+		if (!withPlayer) {
+			std::scoped_lock lock(g_pendingStartLock);
+			threadID = g_nextThreadID++;
+		}
+		F4SE::GetTaskInterface()->AddTask([builder = std::move(a_builder), threadID, withPlayer]() {
+			// OStim's order: the dominant actors first, then those with a penis.
+			auto cast = builder.actors;
+			std::ranges::stable_sort(cast, [](std::uint32_t a, std::uint32_t b) { return ActorProperties::Cached(a).penis && !ActorProperties::Cached(b).penis; });
+			std::ranges::stable_partition(cast, [&](std::uint32_t id) { return std::ranges::find(builder.dominant, id) != builder.dominant.end(); });
+
+			// Where: the furniture given, else (unless NoFurniture) the nearest
+			// that has a scene for them, as OStim's thread starters.
+			std::optional<Furniture::Found> piece;
+			if (builder.furniture) {
+				if (const auto ref = RE::TESForm::GetFormByID<RE::TESObjectREFR>(builder.furniture)) {
+					const auto type = Furniture::Classify(ref);
+					if (type.empty()) {
+						REX::WARN("ThreadBuilder: {:08X} isn't furniture of any type, starting without it", builder.furniture);
+					} else if (FurnitureBlocked(builder.furniture) || std::ranges::any_of(g_activeScenes, [&](const ActiveScene& a) { return a.furnitureRef == builder.furniture; })) {
+						REX::WARN("ThreadBuilder: {:08X} is in use, starting without it", builder.furniture);
+					} else {
+						piece = Furniture::Found{ type, {}, builder.furniture, 0.0F, std::nullopt };
+					}
+				}
+			} else if (!builder.noFurniture && g_settings.useFurniture && builder.starting.empty()) {
+				const auto first = RE::TESForm::GetFormByID<RE::Actor>(cast.front());
+				if (first) {
+					for (const auto& found : FurnitureNear(first->data.location, first)) {
+						if (!ScenesForActors(cast, found.type).empty()) {
+							piece = found;
+							break;
+						}
+					}
+				}
+			}
+			const std::string here = piece ? piece->type : std::string{};
+
+			std::shared_ptr<const SceneRegistry::Scene> scene;
+			if (!builder.starting.empty()) {
+				scene = SceneRegistry::Find(builder.starting.front().scene);
+			} else {
+				std::string why;
+				scene = PickStartScene(ScenesForActors(cast, here), here, withPlayer, why);
+				if (!scene && piece) {
+					piece.reset();  // nothing fits there: right here instead
+					scene = PickStartScene(ScenesForActors(cast, {}), {}, withPlayer, why);
+				}
+			}
+			if (!scene) {
+				REX::WARN("ThreadBuilder: no scene for {} actor(s){}", cast.size(), here.empty() ? std::string{} : " on " + here);
+				return;
+			}
+
+			// Who takes which role.
+			auto order = SceneRegistry::AssignRoles(scene->actors, ConditionsOf(cast));
+			if (order.size() != cast.size()) {
+				REX::WARN("ThreadBuilder: these actors don't fit \"{}\"'s roles", scene->id);
+				return;
+			}
+			std::vector<std::int32_t>  ordered;
+			std::vector<std::uint32_t> sorted;
+			for (const auto index : order) {
+				ordered.push_back(static_cast<std::int32_t>(cast[index]));
+				sorted.push_back(cast[index]);
+			}
+			std::ranges::sort(sorted);
+
+			if (piece) {
+				PendingFurniture pending{ piece->ref, piece->type, sorted };
+				pending.offset = scene->furnitureOffset;
+				pending.floorScene = scene->furniture.empty();
+				pending.fixedSpot = piece->spot;
+				std::scoped_lock lock(g_pendingFurnitureLock);
+				g_pendingFurniture = std::move(pending);
+			}
+			if (builder.starting.size() > 1 || (builder.starting.size() == 1 && builder.starting.front().duration > 0.0F)) {
+				auto sequence = std::make_shared<SceneRegistry::Sequence>();
+				sequence->id = std::format("thread {}", threadID);
+				sequence->actorCount = cast.size();
+				sequence->entries = builder.starting;
+				QueueSequence(std::move(sequence), sorted);
+			}
+			{
+				std::scoped_lock lock(g_pendingStartLock);
+				PendingStart start;
+				start.actors = sorted;
+				start.threadID = threadID;
+				start.duration = builder.duration;
+				start.undressAtStart = builder.undress;
+				start.noAutoMode = builder.noAutoMode;
+				start.noPlayerControl = builder.noPlayerControl;
+				start.noUndress = builder.noUndress;
+				start.endAfterSequence = builder.endAfterSequence;
+				start.metadata = builder.metadata;
+				g_pendingStart = std::move(start);
+			}
+			REX::INFO("ThreadBuilder: thread {} starting \"{}\"{}", threadID, scene->id, here.empty() ? std::string{} : " on " + here);
+			if (g_vm) {
+				RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
+				const std::int32_t anchor = withPlayer ? 0 : static_cast<std::int32_t>(cast.front());
+				g_vm->DispatchStaticCall("FourStimMenu"sv, "StartPickedCast"sv, callback, scene->id, ordered, anchor);
+			}
+		});
+		return threadID;
+	}
+
+	// FourStimThreadBuilder (OThreadBuilder)
+	std::int32_t TB_Create(std::monostate, std::vector<RE::Actor*> a_actors) { return BuilderCreate(std::move(a_actors)); }
+	void TB_SetDominantActors(std::monostate, std::int32_t a_id, std::vector<RE::Actor*> a_actors)
+	{
+		WithBuilder(a_id, [&](ThreadBuilder& b) {
+			b.dominant.clear();
+			for (const auto actor : a_actors) {
+				if (actor) {
+					b.dominant.push_back(actor->GetFormID());
+				}
+			}
+		});
+	}
+	void TB_SetFurniture(std::monostate, std::int32_t a_id, RE::TESObjectREFR* a_ref)
+	{
+		WithBuilder(a_id, [&](ThreadBuilder& b) { b.furniture = a_ref ? a_ref->GetFormID() : 0; });
+	}
+	void TB_SetDuration(std::monostate, std::int32_t a_id, float a_seconds)
+	{
+		WithBuilder(a_id, [&](ThreadBuilder& b) { b.duration = std::max(a_seconds, 0.0F); });
+	}
+	void TB_SetStartingAnimation(std::monostate, std::int32_t a_id, std::string a_scene)
+	{
+		WithBuilder(a_id, [&](ThreadBuilder& b) { b.starting = { SceneRegistry::SequenceEntry{ a_scene, 0.0F, 0 } }; });
+	}
+	void TB_AddStartingAnimation(std::monostate, std::int32_t a_id, std::string a_scene, float a_duration, bool)
+	{
+		WithBuilder(a_id, [&](ThreadBuilder& b) { b.starting.push_back(SceneRegistry::SequenceEntry{ a_scene, a_duration, 0 }); });
+	}
+	void TB_SetStartingSequence(std::monostate, std::int32_t a_id, std::string a_sequence)
+	{
+		const auto sequence = SceneRegistry::FindSequence(a_sequence);
+		if (!sequence) {
+			REX::WARN("ThreadBuilder.SetStartingSequence: no sequence \"{}\"", a_sequence);
+			return;
+		}
+		WithBuilder(a_id, [&](ThreadBuilder& b) { b.starting = sequence->entries; });
+	}
+	void TB_ConcatStartingSequence(std::monostate, std::int32_t a_id, std::string a_sequence, bool)
+	{
+		const auto sequence = SceneRegistry::FindSequence(a_sequence);
+		if (!sequence) {
+			REX::WARN("ThreadBuilder.ConcatStartingSequence: no sequence \"{}\"", a_sequence);
+			return;
+		}
+		WithBuilder(a_id, [&](ThreadBuilder& b) { b.starting.insert(b.starting.end(), sequence->entries.begin(), sequence->entries.end()); });
+	}
+	void TB_EndAfterSequence(std::monostate, std::int32_t a_id) { WithBuilder(a_id, [](ThreadBuilder& b) { b.endAfterSequence = true; }); }
+	void TB_UndressActors(std::monostate, std::int32_t a_id) { WithBuilder(a_id, [](ThreadBuilder& b) { b.undress = true; }); }
+	void TB_NoAutoMode(std::monostate, std::int32_t a_id) { WithBuilder(a_id, [](ThreadBuilder& b) { b.noAutoMode = true; }); }
+	void TB_NoPlayerControl(std::monostate, std::int32_t a_id) { WithBuilder(a_id, [](ThreadBuilder& b) { b.noPlayerControl = true; }); }
+	void TB_NoUndressing(std::monostate, std::int32_t a_id) { WithBuilder(a_id, [](ThreadBuilder& b) { b.noUndress = true; }); }
+	void TB_NoFurniture(std::monostate, std::int32_t a_id) { WithBuilder(a_id, [](ThreadBuilder& b) { b.noFurniture = true; }); }
+	void TB_SetMetadata(std::monostate, std::int32_t a_id, std::vector<std::string> a_metadata)
+	{
+		WithBuilder(a_id, [&](ThreadBuilder& b) {
+			b.metadata.clear();
+			for (auto& m : a_metadata) {
+				b.metadata.push_back(LowerCopy(m));
+			}
+		});
+	}
+	void TB_SetMetadataCSV(std::monostate, std::int32_t a_id, std::string a_csv)
+	{
+		TB_SetMetadata({}, a_id, SplitCSV(a_csv));
+	}
+	std::int32_t TB_Start(std::monostate, std::int32_t a_id)
+	{
+		ThreadBuilder builder;
+		{
+			std::scoped_lock lock(g_buildersLock);
+			const auto it = g_builders.find(a_id);
+			if (it == g_builders.end()) {
+				REX::WARN("ThreadBuilder.Start: no builder {}", a_id);
+				return -1;
+			}
+			builder = std::move(it->second);
+			g_builders.erase(it);
+		}
+		return StartThread(std::move(builder));
+	}
+	void TB_Cancel(std::monostate, std::int32_t a_id)
+	{
+		std::scoped_lock lock(g_buildersLock);
+		g_builders.erase(a_id);
+	}
+
+	// FourStimThread (OThread)
+	std::int32_t T_QuickStart(std::monostate, std::vector<RE::Actor*> a_actors, std::string a_scene, RE::TESObjectREFR* a_furniture)
+	{
+		const auto id = BuilderCreate(std::move(a_actors));
+		if (id < 0) {
+			return -1;
+		}
+		if (!a_scene.empty()) {
+			TB_SetStartingAnimation({}, id, a_scene);
+		}
+		if (a_furniture) {
+			TB_SetFurniture({}, id, a_furniture);
+		}
+		return TB_Start({}, id);
+	}
+	bool T_IsRunning(std::monostate, std::int32_t a_id) { return FindThread(a_id) != nullptr; }
+	void T_Stop(std::monostate, std::int32_t a_id)
+	{
+		WithThread(a_id, [](ActiveScene& a) { EndActiveScene(a, "asked by another mod (FourStimThread.Stop)"); });
+	}
+	std::int32_t T_GetThreadCount(std::monostate) { return static_cast<std::int32_t>(g_activeScenes.size()); }
+	std::vector<std::int32_t> T_GetAllThreadIDs(std::monostate)
+	{
+		std::vector<std::int32_t> ids;
+		for (const auto& a : g_activeScenes) {
+			ids.push_back(a.threadID);
+		}
+		return ids;
+	}
+	std::string T_GetScene(std::monostate, std::int32_t a_id)
+	{
+		const auto a = FindThread(a_id);
+		return a ? a->sceneID : std::string{};
+	}
+	// NavigateTo (OStim: through transitions where it can): a transition
+	// running finishes first; WarpTo goes there at once.
+	void ThreadGoTo(std::int32_t a_id, std::string a_scene, bool a_warp)
+	{
+		WithThread(a_id, [a_scene, a_warp](ActiveScene& a) {
+			const auto to = SceneRegistry::Find(a_scene);
+			if (!to || to->actors.size() != a.actors.size()) {
+				REX::WARN("FourStimThread: thread {} can't go to \"{}\"", a.threadID, a_scene);
+				return;
+			}
+			const auto from = SceneRegistry::Find(a.sceneID);
+			if (!a_warp && from && from->IsTransition()) {
+				a.queuedScene = to->id;
+				return;
+			}
+			if (a.sequence) {
+				a.sequence.reset();  // another mod took over
+			}
+			const int speed = std::min(a.speed, static_cast<int>(to->speeds.size()) - 1);
+			if (PlayOnActiveScene(a, to->id, std::max(speed, 0))) {
+				ArmAutoplay(a);
+			}
+		});
+	}
+	void T_NavigateTo(std::monostate, std::int32_t a_id, std::string a_scene) { ThreadGoTo(a_id, std::move(a_scene), false); }
+	void T_WarpTo(std::monostate, std::int32_t a_id, std::string a_scene, bool) { ThreadGoTo(a_id, std::move(a_scene), true); }
+	std::int32_t T_GetSpeed(std::monostate, std::int32_t a_id)
+	{
+		const auto a = FindThread(a_id);
+		return a ? a->speed : -1;
+	}
+	void T_SetSpeed(std::monostate, std::int32_t a_id, std::int32_t a_speed)
+	{
+		WithThread(a_id, [a_speed](ActiveScene& a) {
+			const auto scene = SceneRegistry::Find(a.sceneID);
+			if (!scene || scene->speeds.empty()) {
+				return;
+			}
+			const int speed = std::clamp(a_speed, 0, static_cast<int>(scene->speeds.size()) - 1);
+			if (speed != a.speed) {
+				PlayOnActiveScene(a, a.sceneID, speed);
+			}
+		});
+	}
+	std::vector<RE::Actor*> T_GetActors(std::monostate, std::int32_t a_id)
+	{
+		std::vector<RE::Actor*> out;
+		if (const auto a = FindThread(a_id)) {
+			for (const auto id : a->actors) {
+				out.push_back(RE::TESForm::GetFormByID<RE::Actor>(id));
+			}
+		}
+		return out;
+	}
+	RE::Actor* T_GetActor(std::monostate, std::int32_t a_id, std::int32_t a_index)
+	{
+		const auto a = FindThread(a_id);
+		return a && a_index >= 0 && static_cast<std::size_t>(a_index) < a->actors.size() ? RE::TESForm::GetFormByID<RE::Actor>(a->actors[a_index]) : nullptr;
+	}
+	std::int32_t T_GetActorPosition(std::monostate, std::int32_t a_id, RE::Actor* a_actor)
+	{
+		const auto a = FindThread(a_id);
+		if (!a || !a_actor) {
+			return -1;
+		}
+		const auto it = std::ranges::find(a->actors, a_actor->GetFormID());
+		return it != a->actors.end() ? static_cast<std::int32_t>(it - a->actors.begin()) : -1;
+	}
+	void T_StallClimax(std::monostate, std::int32_t a_id)
+	{
+		WithThread(a_id, [](ActiveScene& a) {
+			for (const auto id : a.actors) {
+				Excitement::SetStalled(id, true);
+			}
+		});
+	}
+	void T_PermitClimax(std::monostate, std::int32_t a_id, bool)
+	{
+		WithThread(a_id, [](ActiveScene& a) {
+			for (const auto id : a.actors) {
+				Excitement::SetStalled(id, false);
+			}
+		});
+	}
+	bool T_IsClimaxStalled(std::monostate, std::int32_t a_id)
+	{
+		const auto a = FindThread(a_id);
+		return a && std::ranges::any_of(a->actors, [](std::uint32_t id) { return Excitement::IsStalled(id); });
+	}
+	RE::TESObjectREFR* T_GetFurniture(std::monostate, std::int32_t a_id)
+	{
+		const auto a = FindThread(a_id);
+		return a && a->furnitureRef ? RE::TESForm::GetFormByID<RE::TESObjectREFR>(a->furnitureRef) : nullptr;
+	}
+	std::string T_GetFurnitureType(std::monostate, std::int32_t a_id)
+	{
+		const auto a = FindThread(a_id);
+		return a ? a->furnitureType : std::string{};
+	}
+	bool T_IsInAutoMode(std::monostate, std::int32_t a_id)
+	{
+		const auto a = FindThread(a_id);
+		return a && a->autoMode.on;
+	}
+	void T_StartAutoMode(std::monostate, std::int32_t a_id)
+	{
+		WithThread(a_id, [](ActiveScene& a) {
+			if (!a.autoMode.on) {
+				StartAutoMode(a);
+			}
+		});
+	}
+	void T_StopAutoMode(std::monostate, std::int32_t a_id)
+	{
+		WithThread(a_id, [](ActiveScene& a) {
+			if (a.autoMode.on) {
+				StopAutoMode(a);
+			}
+		});
+	}
+	bool T_HasMetadata(std::monostate, std::int32_t a_id, std::string a_meta)
+	{
+		const auto a = FindThread(a_id);
+		return a && std::ranges::find(a->metadata, LowerCopy(a_meta)) != a->metadata.end();
+	}
+	void T_AddMetadata(std::monostate, std::int32_t a_id, std::string a_meta)
+	{
+		WithThread(a_id, [meta = LowerCopy(a_meta)](ActiveScene& a) {
+			if (std::ranges::find(a.metadata, meta) == a.metadata.end()) {
+				a.metadata.push_back(meta);
+			}
+		});
+	}
+	std::vector<std::string> T_GetMetadata(std::monostate, std::int32_t a_id)
+	{
+		const auto a = FindThread(a_id);
+		return a ? a->metadata : std::vector<std::string>{};
+	}
+	bool T_HasMetaFloat(std::monostate, std::int32_t a_id, std::string a_key)
+	{
+		const auto a = FindThread(a_id);
+		return a && a->metaFloat.contains(LowerCopy(a_key));
+	}
+	float T_GetMetaFloat(std::monostate, std::int32_t a_id, std::string a_key)
+	{
+		const auto a = FindThread(a_id);
+		if (!a) {
+			return 0.0F;
+		}
+		const auto it = a->metaFloat.find(LowerCopy(a_key));
+		return it != a->metaFloat.end() ? it->second : 0.0F;
+	}
+	void T_SetMetaFloat(std::monostate, std::int32_t a_id, std::string a_key, float a_value)
+	{
+		WithThread(a_id, [key = LowerCopy(a_key), a_value](ActiveScene& a) { a.metaFloat[key] = a_value; });
+	}
+	bool T_HasMetaString(std::monostate, std::int32_t a_id, std::string a_key)
+	{
+		const auto a = FindThread(a_id);
+		return a && a->metaString.contains(LowerCopy(a_key));
+	}
+	std::string T_GetMetaString(std::monostate, std::int32_t a_id, std::string a_key)
+	{
+		const auto a = FindThread(a_id);
+		if (!a) {
+			return {};
+		}
+		const auto it = a->metaString.find(LowerCopy(a_key));
+		return it != a->metaString.end() ? it->second : std::string{};
+	}
+	void T_SetMetaString(std::monostate, std::int32_t a_id, std::string a_key, std::string a_value)
+	{
+		WithThread(a_id, [key = LowerCopy(a_key), value = std::move(a_value)](ActiveScene& a) { a.metaString[key] = value; });
+	}
+	bool T_PlaySequence(std::monostate, std::int32_t a_id, std::string a_sequence, bool, bool)
+	{
+		const auto sequence = SceneRegistry::FindSequence(a_sequence);
+		const auto a = FindThread(a_id);
+		if (!sequence || !a) {
+			return false;
+		}
+		F4SE::GetTaskInterface()->AddTask([actor = a->actors.front(), sequence]() { StartSequenceOnScene(actor, sequence); });
+		return true;
+	}
+	std::int32_t A_GetThreadID(std::monostate, RE::Actor* a_actor) { return a_actor ? ThreadIDOf(a_actor->GetFormID()) : -1; }
+
+	// ---- OStim's OLibrary, OMetadata, OActor, OFurniture (docs/API.md) ----
+
+	std::vector<std::uint32_t> IDsOf(const std::vector<RE::Actor*>& a_actors)
+	{
+		std::vector<std::uint32_t> ids;
+		for (const auto actor : a_actors) {
+			if (actor) {
+				ids.push_back(actor->GetFormID());
+			}
+		}
+		return ids;
+	}
+
+	bool HasAnyOf(const std::vector<std::string>& a_have, const std::vector<std::string>& a_wanted)
+	{
+		return std::ranges::any_of(a_wanted, [&](const std::string& w) {
+			return std::ranges::any_of(a_have, [&](const std::string& h) { return _stricmp(h.c_str(), w.c_str()) == 0; });
+		});
+	}
+
+	bool HasAllOf(const std::vector<std::string>& a_have, const std::vector<std::string>& a_wanted)
+	{
+		return std::ranges::all_of(a_wanted, [&](const std::string& w) {
+			return std::ranges::any_of(a_have, [&](const std::string& h) { return _stricmp(h.c_str(), w.c_str()) == 0; });
+		});
+	}
+
+	// OStim's OLibrary.GetRandom...: a random scene these actors can play
+	// (any role order that fits), on a_furniture ("" = off furniture), with
+	// the scene tags, actions and (for role a_position, or -1: any role)
+	// actor tags asked for; empty lists ask nothing. Not transitions or
+	// scenes marked noRandomSelection, as OStim. "" if none.
+	std::string RandomScene(const std::vector<RE::Actor*>& a_actors, const std::string& a_furniture, const std::vector<std::string>& a_anyTags,
+		const std::vector<std::string>& a_allTags, const std::vector<std::string>& a_anyActions, const std::vector<std::string>& a_allActions,
+		std::int32_t a_position, const std::vector<std::string>& a_anyActorTags, const std::vector<std::string>& a_allActorTags)
+	{
+		const auto cast = IDsOf(a_actors);
+		if (cast.empty()) {
+			return {};
+		}
+		std::vector<std::shared_ptr<const SceneRegistry::Scene>> pool;
+		for (const auto& scene : ScenesForActors(cast, LowerCopy(a_furniture))) {
+			if (scene->IsTransition() || scene->noRandomSelection) {
+				continue;
+			}
+			if ((!a_anyTags.empty() && !HasAnyOf(scene->tags, a_anyTags)) || !HasAllOf(scene->tags, a_allTags)) {
+				continue;
+			}
+			if (!a_anyActions.empty() && std::ranges::none_of(a_anyActions, [&](const std::string& t) { return scene->HasAction(t); })) {
+				continue;
+			}
+			if (!std::ranges::all_of(a_allActions, [&](const std::string& t) { return scene->HasAction(t); })) {
+				continue;
+			}
+			if (!a_anyActorTags.empty() || !a_allActorTags.empty()) {
+				bool fits = false;
+				for (std::size_t role = 0; role < scene->actors.size() && !fits; ++role) {
+					if (a_position >= 0 && static_cast<std::size_t>(a_position) != role) {
+						continue;
+					}
+					const auto& tags = scene->actors[role].tags;
+					fits = (a_anyActorTags.empty() || HasAnyOf(tags, a_anyActorTags)) && HasAllOf(tags, a_allActorTags);
+				}
+				if (!fits) {
+					continue;
+				}
+			}
+			pool.push_back(scene);
+		}
+		if (pool.empty()) {
+			return {};
+		}
+		static std::mt19937 rng{ std::random_device{}() };
+		return pool[std::uniform_int_distribution<std::size_t>(0, pool.size() - 1)(rng)]->id;
+	}
+
+	// FourStimLibrary: one native the OLibrary-named functions wrap.
+	std::string L_FindRandomScene(std::monostate, std::vector<RE::Actor*> a_actors, std::string a_furniture, std::vector<std::string> a_anyTags,
+		std::vector<std::string> a_allTags, std::vector<std::string> a_anyActions, std::vector<std::string> a_allActions, std::int32_t a_position,
+		std::vector<std::string> a_anyActorTags, std::vector<std::string> a_allActorTags)
+	{
+		return RandomScene(a_actors, a_furniture, a_anyTags, a_allTags, a_anyActions, a_allActions, a_position, a_anyActorTags, a_allActorTags);
+	}
+
+	std::vector<std::string> L_SplitCSV(std::monostate, std::string a_csv) { return SplitCSV(a_csv); }
+
+	std::vector<std::string> L_GetAllScenes(std::monostate)
+	{
+		std::vector<std::string> ids;
+		for (std::size_t count = 1; count <= 16; ++count) {
+			for (const auto& summary : SceneRegistry::List(count)) {
+				ids.push_back(summary.id);
+			}
+		}
+		return ids;
+	}
+
+	// FourStimMetadata (OMetadata)
+	std::string M_GetName(std::monostate, std::string a_id)
+	{
+		const auto scene = SceneRegistry::Find(a_id);
+		return scene ? scene->name : std::string{};
+	}
+	bool M_IsTransition(std::monostate, std::string a_id)
+	{
+		const auto scene = SceneRegistry::Find(a_id);
+		return scene && scene->IsTransition();
+	}
+	std::string M_GetDestination(std::monostate, std::string a_id)
+	{
+		const auto scene = SceneRegistry::Find(a_id);
+		return scene ? scene->destination : std::string{};
+	}
+	std::vector<std::string> M_GetSceneTags(std::monostate, std::string a_id)
+	{
+		const auto scene = SceneRegistry::Find(a_id);
+		return scene ? scene->tags : std::vector<std::string>{};
+	}
+	std::string M_GetFurnitureType(std::monostate, std::string a_id)
+	{
+		const auto scene = SceneRegistry::Find(a_id);
+		return scene ? scene->furniture : std::string{};
+	}
+	std::int32_t M_GetMaxSpeed(std::monostate, std::string a_id)
+	{
+		const auto scene = SceneRegistry::Find(a_id);
+		return scene ? static_cast<std::int32_t>(scene->speeds.size()) - 1 : -1;
+	}
+	std::int32_t M_GetDefaultSpeed(std::monostate, std::string a_id)
+	{
+		const auto scene = SceneRegistry::Find(a_id);
+		return scene ? scene->defaultSpeed : -1;
+	}
+	std::vector<std::string> M_GetNavigations(std::monostate, std::string a_id)
+	{
+		std::vector<std::string> out;
+		if (const auto scene = SceneRegistry::Find(a_id)) {
+			for (const auto& nav : scene->navigations) {
+				out.push_back(nav.to);
+			}
+		}
+		return out;
+	}
+	std::string M_GetAutoTransition(std::monostate, std::string a_id, std::string a_type)
+	{
+		const auto scene = SceneRegistry::Find(a_id);
+		return scene ? scene->AutoTransition(LowerCopy(a_type)) : std::string{};
+	}
+	std::string M_GetAutoTransitionForActor(std::monostate, std::string a_id, std::int32_t a_position, std::string a_type)
+	{
+		const auto scene = SceneRegistry::Find(a_id);
+		if (!scene || a_position < 0 || static_cast<std::size_t>(a_position) >= scene->actors.size()) {
+			return {};
+		}
+		return scene->actors[a_position].AutoTransition(LowerCopy(a_type));
+	}
+	bool M_IsNoRandomSelection(std::monostate, std::string a_id)
+	{
+		const auto scene = SceneRegistry::Find(a_id);
+		return scene && scene->noRandomSelection;
+	}
+	std::string M_GetModpack(std::monostate, std::string a_id)
+	{
+		const auto scene = SceneRegistry::Find(a_id);
+		return scene ? scene->modpack : std::string{};
+	}
+
+	// FourStimActor (OActor): per-actor metadata, kept while they're in a scene.
+	std::mutex                                                g_actorMetaLock;
+	struct ActorMeta
+	{
+		std::vector<std::string>                     tags;
+		std::unordered_map<std::string, float>       floats;
+		std::unordered_map<std::string, std::string> strings;
+	};
+	std::unordered_map<std::uint32_t, ActorMeta> g_actorMeta;
+
+	void ForgetActorMeta(const std::vector<std::uint32_t>& a_ids)
+	{
+		std::scoped_lock lock(g_actorMetaLock);
+		for (const auto id : a_ids) {
+			g_actorMeta.erase(id);
+		}
+	}
+
+	bool AM_HasMetadata(std::monostate, RE::Actor* a_actor, std::string a_meta)
+	{
+		std::scoped_lock lock(g_actorMetaLock);
+		const auto it = a_actor ? g_actorMeta.find(a_actor->GetFormID()) : g_actorMeta.end();
+		return it != g_actorMeta.end() && std::ranges::find(it->second.tags, LowerCopy(a_meta)) != it->second.tags.end();
+	}
+	void AM_AddMetadata(std::monostate, RE::Actor* a_actor, std::string a_meta)
+	{
+		if (!a_actor || !FindActiveScene(a_actor->GetFormID())) {
+			return;
+		}
+		std::scoped_lock lock(g_actorMetaLock);
+		auto&      tags = g_actorMeta[a_actor->GetFormID()].tags;
+		const auto meta = LowerCopy(a_meta);
+		if (std::ranges::find(tags, meta) == tags.end()) {
+			tags.push_back(meta);
+		}
+	}
+	std::vector<std::string> AM_GetMetadata(std::monostate, RE::Actor* a_actor)
+	{
+		std::scoped_lock lock(g_actorMetaLock);
+		const auto it = a_actor ? g_actorMeta.find(a_actor->GetFormID()) : g_actorMeta.end();
+		return it != g_actorMeta.end() ? it->second.tags : std::vector<std::string>{};
+	}
+	bool AM_HasMetaFloat(std::monostate, RE::Actor* a_actor, std::string a_key)
+	{
+		std::scoped_lock lock(g_actorMetaLock);
+		const auto it = a_actor ? g_actorMeta.find(a_actor->GetFormID()) : g_actorMeta.end();
+		return it != g_actorMeta.end() && it->second.floats.contains(LowerCopy(a_key));
+	}
+	float AM_GetMetaFloat(std::monostate, RE::Actor* a_actor, std::string a_key)
+	{
+		std::scoped_lock lock(g_actorMetaLock);
+		const auto it = a_actor ? g_actorMeta.find(a_actor->GetFormID()) : g_actorMeta.end();
+		if (it == g_actorMeta.end()) {
+			return 0.0F;
+		}
+		const auto f = it->second.floats.find(LowerCopy(a_key));
+		return f != it->second.floats.end() ? f->second : 0.0F;
+	}
+	void AM_SetMetaFloat(std::monostate, RE::Actor* a_actor, std::string a_key, float a_value)
+	{
+		if (!a_actor || !FindActiveScene(a_actor->GetFormID())) {
+			return;
+		}
+		std::scoped_lock lock(g_actorMetaLock);
+		g_actorMeta[a_actor->GetFormID()].floats[LowerCopy(a_key)] = a_value;
+	}
+	bool AM_HasMetaString(std::monostate, RE::Actor* a_actor, std::string a_key)
+	{
+		std::scoped_lock lock(g_actorMetaLock);
+		const auto it = a_actor ? g_actorMeta.find(a_actor->GetFormID()) : g_actorMeta.end();
+		return it != g_actorMeta.end() && it->second.strings.contains(LowerCopy(a_key));
+	}
+	std::string AM_GetMetaString(std::monostate, RE::Actor* a_actor, std::string a_key)
+	{
+		std::scoped_lock lock(g_actorMetaLock);
+		const auto it = a_actor ? g_actorMeta.find(a_actor->GetFormID()) : g_actorMeta.end();
+		if (it == g_actorMeta.end()) {
+			return {};
+		}
+		const auto f = it->second.strings.find(LowerCopy(a_key));
+		return f != it->second.strings.end() ? f->second : std::string{};
+	}
+	void AM_SetMetaString(std::monostate, RE::Actor* a_actor, std::string a_key, std::string a_value)
+	{
+		if (!a_actor || !FindActiveScene(a_actor->GetFormID())) {
+			return;
+		}
+		std::scoped_lock lock(g_actorMetaLock);
+		g_actorMeta[a_actor->GetFormID()].strings[LowerCopy(a_key)] = std::move(a_value);
+	}
+	bool AM_PlayExpression(std::monostate, RE::Actor* a_actor, std::string a_expression)
+	{
+		return a_actor && Expressions::SetEvent(a_actor->GetFormID(), LowerCopy(a_expression), true);
+	}
+	void AM_ClearExpression(std::monostate, RE::Actor* a_actor)
+	{
+		if (a_actor) {
+			Expressions::ClearEvent(a_actor->GetFormID());
+		}
+	}
+
+	// FourStimFurniture (OFurniture): furniture near a_center (OStim's
+	// FindFurniture: the pieces a scene for a_actorCount could go on, nearest
+	// first; FindFurnitureOfType: the nearest of a type). a_sameFloor: how far
+	// up or down (0 = 4Stim's fFurnitureHeight). Main thread: Papyrus waits
+	// for the answer.
+	std::vector<Furniture::Found> FurnitureAround(RE::TESObjectREFR* a_center, float a_radius, float a_sameFloor)
+	{
+		std::vector<Furniture::Found> found;
+		if (!a_center) {
+			return found;
+		}
+		const auto     center = a_center->data.location;
+		const float    radius = a_radius > 0.0F ? a_radius : g_settings.furnitureRadius;
+		const float    height = a_sameFloor > 0.0F ? a_sameFloor : g_settings.furnitureHeight;
+		auto search = [&]() {
+			auto list = Furniture::FindNear(center, radius, height, false, a_center);
+			std::erase_if(list, [](const Furniture::Found& f) {
+				return f.ref && (FurnitureBlocked(f.ref) || std::ranges::any_of(g_activeScenes, [&](const ActiveScene& a) { return a.furnitureRef == f.ref; }));
+			});
+			return list;
+		};
+		if (std::this_thread::get_id() == g_mainThread) {
+			return search();
+		}
+		// Shared, so a late answer after the wait gave up has somewhere to go.
+		struct Answer
+		{
+			std::mutex                    lock;
+			std::condition_variable       cv;
+			bool                          ready = false;
+			std::vector<Furniture::Found> found;
+		};
+		auto answer = std::make_shared<Answer>();
+		F4SE::GetTaskInterface()->AddTask([answer, center, radius, height, centerID = a_center->GetFormID()]() {
+			const auto ref = RE::TESForm::GetFormByID<RE::TESObjectREFR>(centerID);
+			auto       list = Furniture::FindNear(center, radius, height, false, ref);
+			std::erase_if(list, [](const Furniture::Found& f) {
+				return f.ref && (FurnitureBlocked(f.ref) || std::ranges::any_of(g_activeScenes, [&](const ActiveScene& a) { return a.furnitureRef == f.ref; }));
+			});
+			{
+				std::scoped_lock lock(answer->lock);
+				answer->found = std::move(list);
+				answer->ready = true;
+			}
+			answer->cv.notify_one();
+		});
+		std::unique_lock lock(answer->lock);
+		answer->cv.wait_for(lock, std::chrono::seconds(5), [&]() { return answer->ready; });
+		found = std::move(answer->found);
+		return found;
+	}
+	std::vector<RE::TESObjectREFR*> F_FindFurniture(std::monostate, std::int32_t a_actorCount, RE::TESObjectREFR* a_center, float a_radius, float a_sameFloor)
+	{
+		std::vector<RE::TESObjectREFR*> out;
+		for (const auto& f : FurnitureAround(a_center, a_radius, a_sameFloor)) {
+			if (!f.ref) {
+				continue;  // walls are spots, not objects
+			}
+			const bool any = a_actorCount <= 0 || std::ranges::any_of(SceneRegistry::List(static_cast<std::size_t>(a_actorCount)),
+				[&](const SceneRegistry::SceneSummary& s) { return !s.furniture.empty() && FurnitureFits(s.furniture, f.type); });
+			if (any) {
+				out.push_back(RE::TESForm::GetFormByID<RE::TESObjectREFR>(f.ref));
+			}
+		}
+		return out;
+	}
+	RE::TESObjectREFR* F_FindFurnitureOfType(std::monostate, std::string a_type, RE::TESObjectREFR* a_center, float a_radius, float a_sameFloor)
+	{
+		const auto type = LowerCopy(a_type);
+		for (const auto& f : FurnitureAround(a_center, a_radius, a_sameFloor)) {
+			if (f.ref && Furniture::IsA(f.type, type)) {
+				return RE::TESForm::GetFormByID<RE::TESObjectREFR>(f.ref);
+			}
+		}
+		return nullptr;
+	}
+
+	// ---- C++ plugin interface (include/4Stim/PluginInterface.h, docs/API.md) ----
+	// OStim's PluginInterfaceImplementation: an interface map other F4SE
+	// plugins get with an InterfaceExchangeMessage, holding "Threads",
+	// "Alignment" (4Stim's) and "SexToys" (SexToys.cpp). Threads and their
+	// actors are handed out as objects that live for the session: a thread
+	// keeps a copy of what it last was, so a stop listener can still read it.
+	namespace API
+	{
+		class ActorImpl final : public FourStimAPI::ThreadActor
+		{
+		public:
+			explicit ActorImpl(std::uint32_t a_id) :
+				id(a_id) {}
+
+			void* getGameActor() override { return RE::TESForm::GetFormByID<RE::Actor>(id); }
+			void  undress() override
+			{
+				Undress::StripAll(id, true);
+			}
+			void redress() override
+			{
+				const auto i = id;
+				F4SE::GetTaskInterface()->AddTask([i]() { Undress::Redress(i, true); });
+			}
+			void removeWeapons() override { Weapons("HolsterForScene"sv); }
+			void addWeapons() override { Weapons("RearmAfterScene"sv); }
+			float getExcitement() override { return Excitement::Get(id); }
+			void  setExcitement(float a_excitement) override { Excitement::Set(id, a_excitement); }
+			void  climax() override
+			{
+				Excitement::SetStalled(id, false);
+				Excitement::Set(id, 100.0F);  // as FourStim.Climax: the scene clock climaxes them
+			}
+
+			std::uint32_t id;
+
+		private:
+			void Weapons(std::string_view a_function) const
+			{
+				const auto actor = RE::TESForm::GetFormByID<RE::Actor>(id);
+				if (g_vm && actor) {
+					RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
+					g_vm->DispatchStaticCall("FourStimScene"sv, a_function, callback, actor);
+				}
+			}
+		};
+
+		std::mutex                                                   g_apiLock;
+		std::unordered_map<std::uint32_t, std::unique_ptr<ActorImpl>> g_apiActors;
+
+		ActorImpl* ActorFor(std::uint32_t a_id)
+		{
+			std::scoped_lock lock(g_apiLock);
+			auto& slot = g_apiActors[a_id];
+			if (!slot) {
+				slot = std::make_unique<ActorImpl>(a_id);
+			}
+			return slot.get();
+		}
+
+		class ThreadImpl final : public FourStimAPI::Thread
+		{
+		public:
+			explicit ThreadImpl(std::int32_t a_id) :
+				id(a_id) {}
+
+			// Copies what the running thread is now (main thread).
+			void Refresh(const ActiveScene& a_active)
+			{
+				running = true;
+				actors = a_active.actors;
+				sceneID = LowerCopy(a_active.sceneID);
+				speed = a_active.speed;
+				furnitureType = a_active.furnitureType;
+				furniture = a_active.furnitureRef;
+				player = std::ranges::any_of(actors, [](std::uint32_t a) { return IsPlayer(RE::TESForm::GetFormByID<RE::Actor>(a)); });
+			}
+
+			std::int32_t  getThreadID() override { return id; }
+			bool          isPlayerThread() override { return player; }
+			bool          isRunning() override { return running; }
+			std::uint32_t getActorCount() override { return running ? static_cast<std::uint32_t>(actors.size()) : 0u; }
+			FourStimAPI::ThreadActor* getActor(std::uint32_t a_position) override
+			{
+				return running && a_position < actors.size() ? ActorFor(actors[a_position]) : nullptr;
+			}
+			void forEachThreadActor(FourStimAPI::ThreadActorVisitor* a_visitor) override
+			{
+				if (!a_visitor || !running) {
+					return;
+				}
+				for (const auto a : std::vector<std::uint32_t>(actors)) {
+					if (!a_visitor->visit(ActorFor(a))) {
+						break;
+					}
+				}
+			}
+			const char*  getCurrentSceneID() override { return sceneID.c_str(); }
+			std::int32_t getSpeed() override { return speed; }
+			const char*  getFurnitureType() override { return furnitureType.c_str(); }
+			void*        getFurnitureObject() override { return furniture ? RE::TESForm::GetFormByID<RE::TESObjectREFR>(furniture) : nullptr; }
+			void         navigateTo(const char* a_sceneID) override { ThreadGoTo(id, a_sceneID ? a_sceneID : "", false); }
+			void         warpTo(const char* a_sceneID) override { ThreadGoTo(id, a_sceneID ? a_sceneID : "", true); }
+			void         setSpeed(std::int32_t a_speed) override { T_SetSpeed({}, id, a_speed); }
+			void         stop() override
+			{
+				WithThread(id, [](ActiveScene& a) { EndActiveScene(a, "asked by another plugin (Thread::stop)"); });
+			}
+
+			std::int32_t               id;
+			bool                       running = false;
+			bool                       player = false;
+			std::vector<std::uint32_t> actors;
+			std::string                sceneID;
+			std::int32_t               speed = 0;
+			std::string                furnitureType;
+			std::uint32_t              furniture = 0;
+		};
+
+		std::unordered_map<std::int32_t, std::unique_ptr<ThreadImpl>> g_apiThreads;
+
+		ThreadImpl* ThreadFor(std::int32_t a_id)
+		{
+			std::scoped_lock lock(g_apiLock);
+			auto& slot = g_apiThreads[a_id];
+			if (!slot) {
+				slot = std::make_unique<ThreadImpl>(a_id);
+			}
+			return slot.get();
+		}
+
+		// The thread object for a running scene, brought up to date.
+		ThreadImpl* ThreadOf(const ActiveScene& a_active)
+		{
+			const auto thread = ThreadFor(a_active.threadID);
+			thread->Refresh(a_active);
+			return thread;
+		}
+
+		// OStim's thread builder for C++: one of the Papyrus builders.
+		class BuilderImpl final : public FourStimAPI::ThreadBuilder
+		{
+		public:
+			explicit BuilderImpl(std::int32_t a_id) :
+				id(a_id) {}
+
+			static std::vector<RE::Actor*> Actors(std::uint32_t a_count, void** a_actors)
+			{
+				std::vector<RE::Actor*> out;
+				for (std::uint32_t i = 0; a_actors && i < a_count; ++i) {
+					out.push_back(static_cast<RE::Actor*>(a_actors[i]));
+				}
+				return out;
+			}
+
+			void setDominantActors(std::uint32_t a_count, void** a_actors) override { TB_SetDominantActors({}, id, Actors(a_count, a_actors)); }
+			void setFurniture(void* a_furniture) override { TB_SetFurniture({}, id, static_cast<RE::TESObjectREFR*>(a_furniture)); }
+			void setDuration(float a_seconds) override { TB_SetDuration({}, id, a_seconds); }
+			void setStartingScene(const char* a_scene) override { TB_SetStartingAnimation({}, id, a_scene ? a_scene : ""); }
+			void addStartingScene(const char* a_scene, float a_duration, bool a_navigateTo) override
+			{
+				TB_AddStartingAnimation({}, id, a_scene ? a_scene : "", a_duration, a_navigateTo);
+			}
+			void setStartingSequence(const char* a_sequence) override { TB_SetStartingSequence({}, id, a_sequence ? a_sequence : ""); }
+			void concatStartingSequence(const char* a_sequence, bool a_navigateTo) override
+			{
+				TB_ConcatStartingSequence({}, id, a_sequence ? a_sequence : "", a_navigateTo);
+			}
+			void endAfterSequence() override { TB_EndAfterSequence({}, id); }
+			void undressActors() override { TB_UndressActors({}, id); }
+			void noAutoMode() override { TB_NoAutoMode({}, id); }
+			void noPlayerControl() override { TB_NoPlayerControl({}, id); }
+			void noUndressing() override { TB_NoUndressing({}, id); }
+			void noFurniture() override { TB_NoFurniture({}, id); }
+			void setMetadataCSV(const char* a_metadata) override { TB_SetMetadataCSV({}, id, a_metadata ? a_metadata : ""); }
+			std::int32_t start() override
+			{
+				const auto thread = TB_Start({}, id);
+				delete this;
+				return thread;
+			}
+			void cancel() override
+			{
+				TB_Cancel({}, id);
+				delete this;
+			}
+
+			std::int32_t id;
+		};
+
+		using ThreadListeners = std::vector<FourStimAPI::ThreadEventListener*>;
+		ThreadListeners                                     g_onStart, g_onSpeed, g_onNode, g_onStop;
+		std::vector<FourStimAPI::ThreadActorEventListener*> g_onClimax;
+
+		class ThreadInterfaceImpl final : public FourStimAPI::ThreadInterface
+		{
+		public:
+			std::uint32_t getVersion() override { return 1; }
+
+			FourStimAPI::Thread* getThread(std::int32_t a_threadID) override
+			{
+				const auto active = FindThread(a_threadID);
+				return active ? ThreadOf(*active) : nullptr;
+			}
+
+			void registerThreadStartListener(FourStimAPI::ThreadEventListener* a_listener) override { Add(g_onStart, a_listener); }
+			void registerSpeedChangedListener(FourStimAPI::ThreadEventListener* a_listener) override { Add(g_onSpeed, a_listener); }
+			void registerNodeChangedListener(FourStimAPI::ThreadEventListener* a_listener) override { Add(g_onNode, a_listener); }
+			void registerClimaxListener(FourStimAPI::ThreadActorEventListener* a_listener) override
+			{
+				if (a_listener) {
+					std::scoped_lock lock(g_apiLock);
+					g_onClimax.push_back(a_listener);
+				}
+			}
+			void registerThreadStopListener(FourStimAPI::ThreadEventListener* a_listener) override { Add(g_onStop, a_listener); }
+
+			FourStimAPI::ThreadBuilder* createThreadBuilder(std::uint32_t a_count, void** a_actors) override
+			{
+				const auto id = BuilderCreate(BuilderImpl::Actors(a_count, a_actors));
+				return id >= 0 ? new BuilderImpl(id) : nullptr;
+			}
+
+			FourStimAPI::ThreadActor* getActor(void* a_gameActor) override
+			{
+				const auto actor = static_cast<RE::Actor*>(a_gameActor);
+				return actor && FindActiveScene(actor->GetFormID()) ? ActorFor(actor->GetFormID()) : nullptr;
+			}
+
+		private:
+			static void Add(ThreadListeners& a_list, FourStimAPI::ThreadEventListener* a_listener)
+			{
+				if (a_listener) {
+					std::scoped_lock lock(g_apiLock);
+					a_list.push_back(a_listener);
+				}
+			}
+		};
+
+		// 4Stim's own: a thread's alignment, as the HUD's alignment menu edits it.
+		class AlignmentInterfaceImpl final : public FourStimAPI::AlignmentInterface
+		{
+		public:
+			std::uint32_t getVersion() override { return 1; }
+
+			bool getOffset(std::int32_t a_threadID, std::uint32_t a_position, FourStimAPI::AlignmentOffset* a_offset) override
+			{
+				const auto active = FindThread(a_threadID);
+				if (!active || !a_offset || a_position >= active->actors.size()) {
+					return false;
+				}
+				const auto scene = SceneRegistry::Find(active->sceneID);
+				const auto settled = scene ? SceneRegistry::Settled(scene) : nullptr;
+				const auto sceneID = settled ? settled->id : active->sceneID;
+				const auto found = Alignment::Find(active->alignKey, sceneID, a_position);
+				auto       o = found.value_or(Alignment::Offset{});
+				if (!found && settled && a_position < settled->actors.size()) {
+					o.bend = settled->actors[a_position].penisBend;  // OStim's default: the scene's
+				}
+				*a_offset = { o.x, o.y, o.z, o.rot, o.scale, o.bend };
+				return true;
+			}
+
+			bool setOffset(std::int32_t a_threadID, std::uint32_t a_position, const FourStimAPI::AlignmentOffset* a_offset) override
+			{
+				const auto active = FindThread(a_threadID);
+				if (!active || !a_offset || a_position >= active->actors.size()) {
+					return false;
+				}
+				Alignment::Offset o;
+				o.x = a_offset->x;
+				o.y = a_offset->y;
+				o.z = a_offset->z;
+				o.rot = a_offset->rot;
+				o.scale = a_offset->scale;
+				o.bend = std::clamp(a_offset->bend, -9.0F, 9.0F);
+				WithThread(a_threadID, [a_position, o](ActiveScene& a) {
+					if (a_position >= a.actors.size()) {
+						return;
+					}
+					const auto scene = SceneRegistry::Find(a.sceneID);
+					const auto id = scene ? SceneRegistry::Settled(scene)->id : a.sceneID;
+					Alignment::Set(a.alignKey, id, a_position, o);
+					LockScene(a);
+				});
+				return true;
+			}
+
+			bool resetOffset(std::int32_t a_threadID, std::uint32_t a_position) override
+			{
+				const auto active = FindThread(a_threadID);
+				if (!active || a_position >= active->actors.size()) {
+					return false;
+				}
+				WithThread(a_threadID, [a_position](ActiveScene& a) {
+					if (a_position >= a.actors.size()) {
+						return;
+					}
+					const auto scene = SceneRegistry::Find(a.sceneID);
+					const auto id = scene ? SceneRegistry::Settled(scene)->id : a.sceneID;
+					Alignment::Remove(a.alignKey, id, a_position);
+					LockScene(a);
+				});
+				return true;
+			}
+		};
+
+		class InterfaceMapImpl final : public FourStimAPI::InterfaceMap
+		{
+		public:
+			FourStimAPI::PluginInterface* queryInterface(const char* a_name) override
+			{
+				std::scoped_lock lock(mapLock);
+				const auto it = a_name ? map.find(a_name) : map.end();
+				return it != map.end() ? it->second : nullptr;
+			}
+			bool addInterface(const char* a_name, FourStimAPI::PluginInterface* a_interface) override
+			{
+				std::scoped_lock lock(mapLock);
+				return a_name && a_interface && map.emplace(a_name, a_interface).second;
+			}
+			FourStimAPI::PluginInterface* removeInterface(const char* a_name) override
+			{
+				std::scoped_lock lock(mapLock);
+				const auto it = a_name ? map.find(a_name) : map.end();
+				if (it == map.end()) {
+					return nullptr;
+				}
+				const auto removed = it->second;
+				map.erase(it);
+				return removed;
+			}
+
+			std::mutex                                                     mapLock;
+			std::unordered_map<std::string, FourStimAPI::PluginInterface*> map;
+		};
+
+		InterfaceMapImpl* Map()
+		{
+			static InterfaceMapImpl map;
+			static bool             filled = false;
+			if (!filled) {
+				filled = true;
+				static ThreadInterfaceImpl    threads;
+				static AlignmentInterfaceImpl alignment;
+				map.addInterface(FourStimAPI::ThreadInterface::NAME, &threads);
+				map.addInterface(FourStimAPI::AlignmentInterface::NAME, &alignment);
+				map.addInterface(FourStimAPI::SexToyInterface::NAME, SexToys::Interface());
+			}
+			return &map;
+		}
+
+		// Another plugin asks for the map (OStim's UnspecificedSenderMessageHandler).
+		void OnPluginMessage(F4SE::MessagingInterface::Message* a_msg)
+		{
+			if (a_msg && a_msg->type == FourStimAPI::InterfaceExchangeMessage::MESSAGE_TYPE && a_msg->data &&
+				a_msg->dataLen >= sizeof(FourStimAPI::InterfaceExchangeMessage)) {
+				static_cast<FourStimAPI::InterfaceExchangeMessage*>(a_msg->data)->interfaceMap = Map();
+				REX::INFO("Plugin interface: handed to {}", a_msg->sender ? a_msg->sender : "a plugin");
+			}
+		}
+
+		// A game loads: no thread runs any more.
+		void ForgetThreads()
+		{
+			std::scoped_lock lock(g_apiLock);
+			for (auto& [id, t] : g_apiThreads) {
+				t->running = false;
+			}
+		}
+
+		// SceneEvents' native listener: the threads' listeners (main thread).
+		void OnSceneEvent(SceneEvents::Kind a_kind, const std::vector<std::uint32_t>& a_actors, std::uint32_t a_actor)
+		{
+			ThreadImpl* thread = nullptr;
+			if (a_kind == SceneEvents::Kind::kEnd) {
+				// The scene's gone already: the thread with these actors.
+				std::scoped_lock lock(g_apiLock);
+				for (auto& [id, t] : g_apiThreads) {
+					if (t->running && t->actors == a_actors) {
+						thread = t.get();
+						break;
+					}
+				}
+				if (!thread) {
+					return;  // never asked for, so never known: nobody can be holding it
+				}
+			} else {
+				const auto active = a_actors.empty() ? nullptr : FindActiveScene(a_actors.front());
+				if (!active) {
+					return;
+				}
+				thread = ThreadOf(*active);
+			}
+			ThreadListeners                                     listeners;
+			std::vector<FourStimAPI::ThreadActorEventListener*> climax;
+			{
+				std::scoped_lock lock(g_apiLock);
+				switch (a_kind) {
+				case SceneEvents::Kind::kStart:
+					listeners = g_onStart;
+					break;
+				case SceneEvents::Kind::kChange:
+					listeners = g_onNode;
+					break;
+				case SceneEvents::Kind::kSpeed:
+					listeners = g_onSpeed;
+					break;
+				case SceneEvents::Kind::kEnd:
+					listeners = g_onStop;
+					break;
+				case SceneEvents::Kind::kClimax:
+					climax = g_onClimax;
+					break;
+				}
+			}
+			for (const auto listener : listeners) {
+				listener->listen(thread);
+			}
+			for (const auto listener : climax) {
+				listener->listen(thread, ActorFor(a_actor));
+			}
+			if (a_kind == SceneEvents::Kind::kEnd) {
+				thread->running = false;
+			}
+		}
+	}
+
 	bool RegisterPapyrusFunctions(RE::BSScript::IVirtualMachine* a_vm)
 	{
 		g_vm = a_vm;
@@ -6500,6 +8024,91 @@ namespace
 		a_vm->BindNativeMethod(SCRIPT_NAME, "GetEquipObjectID"sv, GetEquipObjectID);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "RegisterForSceneEvents"sv, RegisterForSceneEvents);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "UnregisterForSceneEvents"sv, UnregisterForSceneEvents);
+		// OStim's API scripts (docs/API.md).
+		constexpr auto THREAD = "FourStimThread"sv;
+		a_vm->BindNativeMethod(THREAD, "QuickStart"sv, T_QuickStart);
+		a_vm->BindNativeMethod(THREAD, "IsRunning"sv, T_IsRunning);
+		a_vm->BindNativeMethod(THREAD, "Stop"sv, T_Stop);
+		a_vm->BindNativeMethod(THREAD, "GetThreadCount"sv, T_GetThreadCount);
+		a_vm->BindNativeMethod(THREAD, "GetAllThreadIDs"sv, T_GetAllThreadIDs);
+		a_vm->BindNativeMethod(THREAD, "GetScene"sv, T_GetScene);
+		a_vm->BindNativeMethod(THREAD, "NavigateTo"sv, T_NavigateTo);
+		a_vm->BindNativeMethod(THREAD, "WarpTo"sv, T_WarpTo);
+		a_vm->BindNativeMethod(THREAD, "GetSpeed"sv, T_GetSpeed);
+		a_vm->BindNativeMethod(THREAD, "SetSpeed"sv, T_SetSpeed);
+		a_vm->BindNativeMethod(THREAD, "GetActors"sv, T_GetActors);
+		a_vm->BindNativeMethod(THREAD, "GetActor"sv, T_GetActor);
+		a_vm->BindNativeMethod(THREAD, "GetActorPosition"sv, T_GetActorPosition);
+		a_vm->BindNativeMethod(THREAD, "StallClimax"sv, T_StallClimax);
+		a_vm->BindNativeMethod(THREAD, "PermitClimax"sv, T_PermitClimax);
+		a_vm->BindNativeMethod(THREAD, "IsClimaxStalled"sv, T_IsClimaxStalled);
+		a_vm->BindNativeMethod(THREAD, "GetFurniture"sv, T_GetFurniture);
+		a_vm->BindNativeMethod(THREAD, "GetFurnitureType"sv, T_GetFurnitureType);
+		a_vm->BindNativeMethod(THREAD, "IsInAutoMode"sv, T_IsInAutoMode);
+		a_vm->BindNativeMethod(THREAD, "StartAutoMode"sv, T_StartAutoMode);
+		a_vm->BindNativeMethod(THREAD, "StopAutoMode"sv, T_StopAutoMode);
+		a_vm->BindNativeMethod(THREAD, "HasMetadata"sv, T_HasMetadata);
+		a_vm->BindNativeMethod(THREAD, "AddMetadata"sv, T_AddMetadata);
+		a_vm->BindNativeMethod(THREAD, "GetMetadata"sv, T_GetMetadata);
+		a_vm->BindNativeMethod(THREAD, "HasMetaFloat"sv, T_HasMetaFloat);
+		a_vm->BindNativeMethod(THREAD, "GetMetaFloat"sv, T_GetMetaFloat);
+		a_vm->BindNativeMethod(THREAD, "SetMetaFloat"sv, T_SetMetaFloat);
+		a_vm->BindNativeMethod(THREAD, "HasMetaString"sv, T_HasMetaString);
+		a_vm->BindNativeMethod(THREAD, "GetMetaString"sv, T_GetMetaString);
+		a_vm->BindNativeMethod(THREAD, "SetMetaString"sv, T_SetMetaString);
+		a_vm->BindNativeMethod(THREAD, "PlaySequence"sv, T_PlaySequence);
+		constexpr auto BUILDER = "FourStimThreadBuilder"sv;
+		a_vm->BindNativeMethod(BUILDER, "Create"sv, TB_Create);
+		a_vm->BindNativeMethod(BUILDER, "SetDominantActors"sv, TB_SetDominantActors);
+		a_vm->BindNativeMethod(BUILDER, "SetFurniture"sv, TB_SetFurniture);
+		a_vm->BindNativeMethod(BUILDER, "SetDuration"sv, TB_SetDuration);
+		a_vm->BindNativeMethod(BUILDER, "SetStartingAnimation"sv, TB_SetStartingAnimation);
+		a_vm->BindNativeMethod(BUILDER, "AddStartingAnimation"sv, TB_AddStartingAnimation);
+		a_vm->BindNativeMethod(BUILDER, "SetStartingSequence"sv, TB_SetStartingSequence);
+		a_vm->BindNativeMethod(BUILDER, "ConcatStartingSequence"sv, TB_ConcatStartingSequence);
+		a_vm->BindNativeMethod(BUILDER, "EndAfterSequence"sv, TB_EndAfterSequence);
+		a_vm->BindNativeMethod(BUILDER, "UndressActors"sv, TB_UndressActors);
+		a_vm->BindNativeMethod(BUILDER, "NoAutoMode"sv, TB_NoAutoMode);
+		a_vm->BindNativeMethod(BUILDER, "NoPlayerControl"sv, TB_NoPlayerControl);
+		a_vm->BindNativeMethod(BUILDER, "NoUndressing"sv, TB_NoUndressing);
+		a_vm->BindNativeMethod(BUILDER, "NoFurniture"sv, TB_NoFurniture);
+		a_vm->BindNativeMethod(BUILDER, "SetMetadata"sv, TB_SetMetadata);
+		a_vm->BindNativeMethod(BUILDER, "SetMetadataCSV"sv, TB_SetMetadataCSV);
+		a_vm->BindNativeMethod(BUILDER, "Start"sv, TB_Start);
+		a_vm->BindNativeMethod(BUILDER, "Cancel"sv, TB_Cancel);
+		constexpr auto LIBRARY = "FourStimLibrary"sv;
+		a_vm->BindNativeMethod(LIBRARY, "FindRandomScene"sv, L_FindRandomScene);
+		a_vm->BindNativeMethod(LIBRARY, "SplitCSV"sv, L_SplitCSV);
+		a_vm->BindNativeMethod(LIBRARY, "GetAllScenes"sv, L_GetAllScenes);
+		constexpr auto METADATA = "FourStimMetadata"sv;
+		a_vm->BindNativeMethod(METADATA, "GetName"sv, M_GetName);
+		a_vm->BindNativeMethod(METADATA, "IsTransition"sv, M_IsTransition);
+		a_vm->BindNativeMethod(METADATA, "GetDestination"sv, M_GetDestination);
+		a_vm->BindNativeMethod(METADATA, "GetSceneTags"sv, M_GetSceneTags);
+		a_vm->BindNativeMethod(METADATA, "GetFurnitureType"sv, M_GetFurnitureType);
+		a_vm->BindNativeMethod(METADATA, "GetMaxSpeed"sv, M_GetMaxSpeed);
+		a_vm->BindNativeMethod(METADATA, "GetDefaultSpeed"sv, M_GetDefaultSpeed);
+		a_vm->BindNativeMethod(METADATA, "GetNavigations"sv, M_GetNavigations);
+		a_vm->BindNativeMethod(METADATA, "GetAutoTransition"sv, M_GetAutoTransition);
+		a_vm->BindNativeMethod(METADATA, "GetAutoTransitionForActor"sv, M_GetAutoTransitionForActor);
+		a_vm->BindNativeMethod(METADATA, "IsNoRandomSelection"sv, M_IsNoRandomSelection);
+		a_vm->BindNativeMethod(METADATA, "GetModpack"sv, M_GetModpack);
+		constexpr auto ACTOR = "FourStimActor"sv;
+		a_vm->BindNativeMethod(ACTOR, "GetThreadID"sv, A_GetThreadID);
+		a_vm->BindNativeMethod(ACTOR, "HasMetadata"sv, AM_HasMetadata);
+		a_vm->BindNativeMethod(ACTOR, "AddMetadata"sv, AM_AddMetadata);
+		a_vm->BindNativeMethod(ACTOR, "GetMetadata"sv, AM_GetMetadata);
+		a_vm->BindNativeMethod(ACTOR, "HasMetaFloat"sv, AM_HasMetaFloat);
+		a_vm->BindNativeMethod(ACTOR, "GetMetaFloat"sv, AM_GetMetaFloat);
+		a_vm->BindNativeMethod(ACTOR, "SetMetaFloat"sv, AM_SetMetaFloat);
+		a_vm->BindNativeMethod(ACTOR, "HasMetaString"sv, AM_HasMetaString);
+		a_vm->BindNativeMethod(ACTOR, "GetMetaString"sv, AM_GetMetaString);
+		a_vm->BindNativeMethod(ACTOR, "SetMetaString"sv, AM_SetMetaString);
+		a_vm->BindNativeMethod(ACTOR, "PlayExpression"sv, AM_PlayExpression);
+		a_vm->BindNativeMethod(ACTOR, "ClearExpression"sv, AM_ClearExpression);
+		constexpr auto FURNITURE = "FourStimFurniture"sv;
+		a_vm->BindNativeMethod(FURNITURE, "FindFurniture"sv, F_FindFurniture);
+		a_vm->BindNativeMethod(FURNITURE, "FindFurnitureOfType"sv, F_FindFurnitureOfType);
 		REX::INFO("Papyrus functions bound");
 		return true;
 	}
@@ -6513,6 +8122,8 @@ namespace
 
 	constexpr std::uint32_t SAVE_UID = 'FSTM';
 	constexpr std::uint32_t SCENES_RECORD = 'SCNS';
+	constexpr std::uint32_t CHOICES_RECORD = 'EQCH';  // each actor's chosen equip objects (OStim saves them in its actor data)
+	constexpr std::uint32_t CHOICES_VERSION = 1;
 	constexpr std::uint32_t SCENES_VERSION = 5;  // 2: each actor's own scale (alignment scales them); 3: equip objects given; 4: wall spot, furniture blocked, clutter; 5: weapon taken off
 
 	struct SavedScene
@@ -6608,6 +8219,47 @@ namespace
 		if (count > 0) {
 			REX::INFO("Save data: {} running scene(s) saved", count);
 		}
+		// The equip objects chosen for actors (the HUD's options,
+		// FourStimActor.SetEquipObjectID).
+		const auto chosen = EquipObjects::AllChosen();
+		if (!chosen.empty() && a_intfc->OpenRecord(CHOICES_RECORD, CHOICES_VERSION)) {
+			a_intfc->WriteRecordData(static_cast<std::uint32_t>(chosen.size()));
+			for (const auto& [id, types] : chosen) {
+				a_intfc->WriteRecordData(id);
+				a_intfc->WriteRecordData(static_cast<std::uint32_t>(types.size()));
+				for (const auto& [type, object] : types) {
+					WriteString(a_intfc, type);
+					WriteString(a_intfc, object);
+				}
+			}
+		}
+	}
+
+	// The CHOICES_RECORD: actor -> type -> object id.
+	void ReadChoices(const F4SE::SerializationInterface* a_intfc)
+	{
+		std::unordered_map<std::uint32_t, std::unordered_map<std::string, std::string>> chosen;
+		std::uint32_t actors = 0;
+		a_intfc->ReadRecordData(actors);
+		for (std::uint32_t a = 0; a < actors && a < 65536; ++a) {
+			std::uint32_t id = 0, types = 0;
+			a_intfc->ReadRecordData(id);
+			a_intfc->ReadRecordData(types);
+			const auto resolved = a_intfc->ResolveFormID(id).value_or(0);
+			for (std::uint32_t t = 0; t < types && t < 256; ++t) {
+				std::string type, object;
+				if (!ReadString(a_intfc, type) || !ReadString(a_intfc, object)) {
+					REX::WARN("Save data: the equip object choices are damaged, the rest skipped");
+					EquipObjects::RestoreChosen(std::move(chosen));
+					return;
+				}
+				if (resolved) {
+					chosen[resolved][type] = object;
+				}
+			}
+		}
+		REX::INFO("Save data: equip objects chosen for {} actor(s)", chosen.size());
+		EquipObjects::RestoreChosen(std::move(chosen));
 	}
 
 	void OnGameLoadedData(const F4SE::SerializationInterface* a_intfc)
@@ -6616,6 +8268,10 @@ namespace
 		std::uint32_t type = 0, version = 0, length = 0;
 		auto resolve = [&](std::uint32_t a_id) { return a_intfc->ResolveFormID(a_id).value_or(0); };
 		while (a_intfc->GetNextRecordInfo(type, version, length)) {
+			if (type == CHOICES_RECORD && version == CHOICES_VERSION) {
+				ReadChoices(a_intfc);
+				continue;
+			}
 			if (type != SCENES_RECORD || version < 1 || version > SCENES_VERSION) {
 				continue;
 			}
@@ -6724,6 +8380,7 @@ namespace
 
 	void OnGameReverted(const F4SE::SerializationInterface*)
 	{
+		EquipObjects::ClearChosen();  // before a save's are read, or a new game
 		std::scoped_lock lock(g_savedLock);
 		g_loadedScenes.clear();
 	}
@@ -6869,6 +8526,10 @@ namespace
 		switch (a_msg->type) {
 		case F4SE::MessagingInterface::kPostLoad:
 			REX::INFO("kPostLoad");
+			// Every plugin is loaded now: any of them may ask for the plugin
+			// interface (a nullptr sender: messages from all of them).
+			F4SE::GetMessagingInterface()->RegisterListener(API::OnPluginMessage, std::string_view{});
+			SceneEvents::SetNativeListener(API::OnSceneEvent);
 			break;
 		case F4SE::MessagingInterface::kPreLoadGame:
 		case F4SE::MessagingInterface::kNewGame:
@@ -6892,6 +8553,9 @@ namespace
 				Expressions::Clear();
 				Sounds::Clear();
 				Peaks::Clear();
+				SexToys::Clear();
+				PlaybackSpeed::Clear();
+				API::ForgetThreads();
 				Lights::Clear();
 				Undress::Clear();
 				EquipObjects::Clear();
@@ -6909,6 +8573,7 @@ namespace
 			break;
 		case F4SE::MessagingInterface::kPostLoadGame:
 			ResumeSavedScenes();
+			SexToys::Reload();  // OStim: device plugins register their toys on every save load
 			break;
 		case F4SE::MessagingInterface::kPreSaveGame:
 			// Lights are placed references: none go into the save (the scene
@@ -6918,6 +8583,7 @@ namespace
 		case F4SE::MessagingInterface::kGameLoaded:
 			{
 				REX::INFO("kGameLoaded");
+				g_mainThread = std::this_thread::get_id();
 				AnimEventHook::Install();
 				static bool menuRegistered = false;
 				if (!menuRegistered) {
@@ -6942,6 +8608,9 @@ namespace
 				Expressions::Clear();
 				Sounds::Clear();
 				Peaks::Clear();
+				SexToys::Clear();
+				PlaybackSpeed::Clear();
+				API::ForgetThreads();
 				Lights::Clear();
 				Undress::Clear();
 				EquipObjects::Clear();
@@ -7170,6 +8839,7 @@ F4SE_PLUGIN_LOAD(const F4SE::LoadInterface* a_f4se)
 	MCM::Sync();  // whichever of 4Stim.ini and the MCM's settings changed last wins
 	LoadSettings();
 	InputHook::Install();
+	PlaybackSpeed::Install();
 	F4SE::GetMessagingInterface()->RegisterListener(OnMessage);
 	F4SE::GetPapyrusInterface()->Register(RegisterPapyrusFunctions);
 	if (const auto serialization = F4SE::GetSerializationInterface()) {

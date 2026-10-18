@@ -30,6 +30,7 @@ namespace Actions
 		bool                     muffled = false;          // their mouth is busy: muffled sounds
 		std::string              expressionOverride;       // facial expression set while doing it ("openmouth", "tongue"...)
 		std::vector<std::string> equipObjects;             // OStim's "equipObject": equip object types this side's actor wears ("tongue"...), lowercase
+		std::vector<std::string> toySlots;                 // OStim's "toySlot": sex toy slots this side drives ("genital", "anus"...), lowercase (SexToys.h)
 	};
 
 	// How an action's peaks (its strokes, thrusts, slaps) are found, as

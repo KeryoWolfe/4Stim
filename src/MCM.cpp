@@ -43,13 +43,15 @@ namespace MCM
 			std::string_view              key;  // 4Stim.ini's, lowercase
 			std::vector<std::string_view> options;
 		};
-		const std::array<Choice, 17> CHOICES{ {
+		const std::array<Choice, 19> CHOICES{ {
 			{ "stargetmode", { "Crosshair", "Proximity" } },
 			{ "shudcontrols", { "Tabs", "Columns" } },
 			{ "stheme", { "Color", "PipBoy" } },
 			{ "smalelight", { "nolight", "facelight", "facelightdim", "crotchlight", "crotchlightdim", "asslight", "asslightdim" } },
 			{ "sfemalelight", { "nolight", "facelight", "facelightdim", "crotchlight", "crotchlightdim", "asslight", "asslightdim" } },
 			{ "spadscheme", { "Modern", "Classic" } },
+			{ "stoysynchronization", { "player", "male", "female", "scene" } },
+			{ "stoyscaling", { "none", "rate", "value", "speed" } },
 			// Controller buttons ([Controller]).
 			{ "spadhotkey", { "None", "LB", "RB", "LT", "RT", "X", "Y", "LS", "RS", "Back" } },
 			{ "spadnpcscene", { "None", "LB", "RB", "LT", "RT", "X", "Y", "LS", "RS", "Back" } },

@@ -23,6 +23,7 @@ An OStim-style scene framework for **Fallout 4** (1.11.240, "Anniversary Edition
 - **Actor scaling and heels:** everyone is scaled to the animation's size, and High Heels System heels are handled, as OStim does ([docs/SCALING.md](docs/SCALING.md)).
 - **Peaks, events and lights:** slaps and strokes on each thrust, spanks with their sound, stimulation and camera shake, and optional face or crotch lights in the dark, as OStim's ([docs/EVENTS.md](docs/EVENTS.md), [docs/LIGHTS.md](docs/LIGHTS.md)).
 - **Faces and voices:** facial expressions and moans / climax sounds, from OStim's expression files and voice sets ([docs/EXPRESSIONS.md](docs/EXPRESSIONS.md), [docs/SOUND.md](docs/SOUND.md)).
+- **For other mods:** OStim NG's Papyrus API (threads, thread builder, library, metadata, actors, furniture) under 4Stim's names, scene events, a C++ plugin interface for F4SE plugins, and OStim's sex toy support for device plugins ([docs/API.md](docs/API.md)).
 - **OStim's settings:** `4Stim.ini` uses OStim NG's setting names and defaults, so Skyrim users can find their way ([docs/SETTINGS.md](docs/SETTINGS.md)).
 - **Saving mid-scene:** scenes running when you save end cleanly when that save is loaded, as in OStim, or start again with `bResumeScenes=1`.
 - **Free camera** during scenes, with the player's controls locked to what a scene allows.
@@ -60,7 +61,8 @@ Data/                  Files that ship with the mod
   Scripts/Source/User/ Papyrus sources (FourStim, FourStimScene, FourStimMenu, FourStimTest)
 Interface-src/         ActionScript 3 sources for the picker and HUD movies
 tools/                 package-alpha.ps1 (test build archives)
-docs/                  Scene format (SCENES.md) and HUD API (HUD_API.md)
+docs/                  Scene format (SCENES.md), HUD API (HUD_API.md), API for other mods (API.md)
+include/4Stim/         C++ plugin interface for other F4SE plugins (PluginInterface.h)
 lib/commonlibf4/       CommonLibF4 (git submodule)
 ```
 
