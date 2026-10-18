@@ -34,22 +34,3 @@ Function PutBack(int aiRefID, float afX, float afY, float afZ, float afAngleX, f
 	akRef.SetAngle(afAngleX, afAngleY, afAngleZ)
 EndFunction
 
-; ---- OStim NG's OFurniture (docs\API.md) ----
-
-; The furniture around CenterRef a scene for ActorCount actors could be played
-; on, nearest first (0 = any count). Radius 0 = fFurnitureRadius, SameFloor 0 =
-; fFurnitureHeight (how far up or down it may be). Furniture in use or blocked
-; is left out.
-ObjectReference[] Function FindFurniture(int ActorCount, ObjectReference CenterRef, float Radius = 0.0, float SameFloor = 0.0) Global Native
-
-; The nearest furniture of Type (or a kind of it) around CenterRef, or None.
-ObjectReference Function FindFurnitureOfType(string Type, ObjectReference CenterRef, float Radius = 0.0, float SameFloor = 0.0) Global Native
-
-string Function GetFurnitureType(ObjectReference FurnitureRef) Global
-	return FourStim.GetFurnitureType(FurnitureRef)
-EndFunction
-
-; Whether SubType is SuperType or a kind of it.
-bool Function IsChildOf(string SuperType, string SubType) Global
-	return FourStim.IsFurnitureChildOf(SuperType, SubType)
-EndFunction

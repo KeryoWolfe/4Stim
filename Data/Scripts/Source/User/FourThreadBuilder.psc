@@ -1,11 +1,11 @@
-Scriptname FourStimThreadBuilder Native Hidden
+Scriptname FourThreadBuilder Native Hidden
 {OStim NG's OThreadBuilder for 4Stim (docs\API.md): set a scene up, then Start
 it. Same functions as OStim's.
 
-	int BuilderID = FourStimThreadBuilder.Create(Actors)
-	FourStimThreadBuilder.SetFurniture(BuilderID, Bed)
-	FourStimThreadBuilder.NoAutoMode(BuilderID)
-	int ThreadID = FourStimThreadBuilder.Start(BuilderID)
+	int BuilderID = FourThreadBuilder.Create(Actors)
+	FourThreadBuilder.SetFurniture(BuilderID, Bed)
+	FourThreadBuilder.NoAutoMode(BuilderID)
+	int ThreadID = FourThreadBuilder.Start(BuilderID)
 }
 
 ; A builder for these actors (any order: OStim's, dominant actors first, then

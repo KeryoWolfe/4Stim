@@ -4,20 +4,20 @@ What other mods can use: OStim NG's Papyrus API scripts with 4Stim's names, scen
 
 | OStim NG | 4Stim | What |
 |---|---|---|
-| `OThread` | `FourStimThread` | running scenes by thread ID |
-| `OThreadBuilder` | `FourStimThreadBuilder` | starting scenes with options |
-| `OLibrary` | `FourStimLibrary` | random scenes by tags and actions |
-| `OMetadata` | `FourStimMetadata` | what a scene is |
-| `OActor` | `FourStimActor` | one actor in a scene |
-| `OFurniture` | `FourStimFurniture` | furniture types and finding furniture |
+| `OThread` | `FourThread` | running scenes by thread ID |
+| `OThreadBuilder` | `FourThreadBuilder` | starting scenes with options |
+| `OLibrary` | `FourLibrary` | random scenes by tags and actions |
+| `OMetadata` | `FourMetadata` | what a scene is |
+| `OActor` | `FourActor` | one actor in a scene |
+| `OFurniture` | `FourFurniture` | furniture types and finding furniture |
 | `OSexIntegrationMain` events | `FourStim.RegisterForSceneEvents` | scene events (below) |
 | `PluginInterface` (SKSE) | `include/4Stim/PluginInterface.h` (F4SE) | C++ |
 
-`FourStim.psc` keeps 4Stim's own functions (scene start, excitement, equip objects, furniture...); the scripts above wrap many of them under OStim's names.
+The API scripts are named `Four...` (OStim's `O...` prefix; Papyrus names can't start with a digit, so not `4...`). `FourStim.psc` keeps 4Stim's own functions (scene start, excitement, equip objects, furniture...); the scripts above wrap many of them under OStim's names.
 
 ## Threads
 
-A thread is a running scene. The player's scene is thread **0**, as OStim's player thread; scenes without the player get **1, 2, 3...** in the order they start (OStim counts them from 1 too). `FourStimActor.GetThreadID(akActor)` gives an actor's thread (-1 if none).
+A thread is a running scene. The player's scene is thread **0**, as OStim's player thread; scenes without the player get **1, 2, 3...** in the order they start (OStim counts them from 1 too). `FourActor.GetThreadID(akActor)` gives an actor's thread (-1 if none).
 
 ```papyrus
 Actor[] actors = new Actor[2]
@@ -25,47 +25,47 @@ actors[0] = Game.GetPlayer()
 actors[1] = akPartner
 
 ; Quick: a scene that fits, on the nearest furniture with a scene for them.
-int thread = FourStimThread.QuickStart(actors)
+int thread = FourThread.QuickStart(actors)
 
 ; With options:
-int builder = FourStimThreadBuilder.Create(actors)
-FourStimThreadBuilder.SetFurniture(builder, akBed)
-FourStimThreadBuilder.SetStartingSequence(builder, "mysequence")
-FourStimThreadBuilder.EndAfterSequence(builder)
-FourStimThreadBuilder.NoPlayerControl(builder)
-FourStimThreadBuilder.SetMetadataCSV(builder, "mymod,romance")
-thread = FourStimThreadBuilder.Start(builder)
+int builder = FourThreadBuilder.Create(actors)
+FourThreadBuilder.SetFurniture(builder, akBed)
+FourThreadBuilder.SetStartingSequence(builder, "mysequence")
+FourThreadBuilder.EndAfterSequence(builder)
+FourThreadBuilder.NoPlayerControl(builder)
+FourThreadBuilder.SetMetadataCSV(builder, "mymod,romance")
+thread = FourThreadBuilder.Start(builder)
 ```
 
-`Start` / `QuickStart` return the thread ID the scene will have (-1 if it can't start: an actor is dead, a child, in combat or already in a scene, or the scene doesn't fit them). The scene itself starts a moment later, once the actors are placed: `FourStimThread.IsRunning(thread)` says when.
+`Start` / `QuickStart` return the thread ID the scene will have (-1 if it can't start: an actor is dead, a child, in combat or already in a scene, or the scene doesn't fit them). The scene itself starts a moment later, once the actors are placed: `FourThread.IsRunning(thread)` says when.
 
-### FourStimThreadBuilder
+### FourThreadBuilder
 
 `Create(Actor[])`, `SetDominantActors(id, Actor[])` (they take the first roles, as OStim), `SetFurniture(id, ref)`, `NoFurniture(id)`, `SetDuration(id, seconds)` (the scene ends after it), `SetStartingAnimation(id, scene)`, `AddStartingAnimation(id, scene, duration, navigateTo)` (several make a sequence), `SetStartingSequence(id, sequence)`, `ConcatStartingSequence(id, sequence, navigateTo)`, `EndAfterSequence(id)`, `UndressActors(id)` (everyone undressed at the start), `NoUndressing(id)` (scenes don't undress them; the HUD still can), `NoAutoMode(id)`, `NoPlayerControl(id)` (no speed or navigation keys, auto mode drives the scene), `SetMetadata(id, string[])` / `SetMetadataCSV(id, csv)`, `Start(id)`, `Cancel(id)`. `NoPostDialogue` is there and does nothing (4Stim has no post-scene dialogue).
 
 Without a starting scene, the builder picks a scene the way the scene picker would for those actors: an intro or idle scene that fits them (and the furniture). Its actors get OStim's order when it fits the scene's roles (dominant actors first, then those with a penis), another order when it doesn't.
 
-### FourStimThread
+### FourThread
 
 `QuickStart`, `IsRunning`, `Stop`, `GetThreadCount`, `GetAllThreadIDs`, `GetScene`, `NavigateTo` (after a transition that's playing) / `WarpTo` (at once), `QueueNavigation` / `QueueWarp` (go at once: 4Stim doesn't wait the duration), `GetSpeed` / `SetSpeed` (0-based), `PlaySequence`, `GetActors` / `GetActor(id, index)` / `GetActorPosition`, `StallClimax` / `PermitClimax` / `IsClimaxStalled`, `GetFurniture` / `GetFurnitureType` / `ChangeFurniture`, `IsInAutoMode` / `StartAutoMode` / `StopAutoMode`, `AutoTransition` / `AutoTransitionForActor`, `CallEvent`, and metadata: `HasMetadata` / `AddMetadata` / `GetMetadata`, `Has` / `Get` / `SetMetaFloat`, `Has` / `Get` / `SetMetaString` (kept while the thread runs).
 
-## FourStimLibrary
+## FourLibrary
 
 Random scenes for a set of actors, with OStim's function names: `GetRandomScene(actors)`, `GetRandomFurnitureScene(actors, type)`, and for each, scene tags (`...WithSceneTag`, `...WithAnySceneTag`, `...WithAllSceneTags`, `CSV` versions), one actor's tags (`...WithSingleActorTag(actors, position, tag)`, `Any` / `All`, `CSV`), any actor's tags (`...WithMultiActorTagForAny`), and actions (`...WithAction`, `...WithAnyAction`, `...WithAllActions`, `CSV`), each also as `GetRandomFurnitureScene...` with a furniture type. A scene qualifies if these actors can play it (any role order that fits their sexes and actor properties), it's not a transition, and it isn't marked `noRandomSelection`. They return "" when none fits.
 
 All of them use one native: `FindRandomScene(actors, furnitureType, anySceneTags, allSceneTags, anyActions, allActions, position, anyActorTags, allActorTags)`, which mods can call directly for combinations OStim spells out as separate functions (its multi-actor "ForAll" and action actor / target variants aren't wrapped yet). `GetAllScenes()` lists every scene, `SplitCSV("a,b")` splits a list.
 
-## FourStimMetadata
+## FourMetadata
 
 By scene ID: `GetName`, `GetActorCount`, `IsTransition`, `GetDestination`, `GetFurnitureType`, `GetModpack`, `IsNoRandomSelection`, `GetMaxSpeed` / `GetDefaultSpeed`, `GetNavigations`, `GetAutoTransition` / `GetAutoTransitionForActor`, `GetSceneTags` / `HasSceneTag` / `HasAnySceneTag` / `HasAllSceneTags` (+`CSV`), `GetActorTags` / `HasActorTag`, `GetActionCount`, `HasAction`, `HasActionTag`, `FindAction` / `FindActionForActor` / `FindActionForTarget`, `GetActionType`, `GetActionActor` / `GetActionTarget` / `GetActionPerformer`.
 
-## FourStimActor
+## FourActor
 
 `GetThreadID`, `IsInOStim` (and 4Stim's `IsIn4Stim`), `VerifyActors`, `HasSchlong`, excitement (`Get` / `Set` / `ModifyExcitement`, multiplier), `Climax`, `GetTimesClimaxed`, `StallClimax` / `PermitClimax` / `IsClimaxStalled`, `Mute` / `Unmute` / `IsMuted`, `Undress` / `Redress`, `RemoveWeapons` / `AddWeapons` (put back when the scene ends either way), equip objects (`EquipObject`, `UnequipObject`, `Get` / `SetEquipObjectID`), `AutoTransition`, per-actor metadata (as the thread's, kept while they're in a scene), `PlayExpression(act, event)` / `ClearExpression` (an expression event from `Expressions\`, held until cleared).
 
 The equip object chosen for an actor (`SetEquipObjectID`, or the HUD's options) is saved with the game, as OStim saves its actors' equip objects.
 
-## FourStimFurniture
+## FourFurniture
 
 `FindFurniture(actorCount, centerRef, radius = 0, sameFloor = 0)`: the furniture around `centerRef` a scene for that many actors could go on, nearest first (0 = any count; radius 0 = `SetFurnitureSearchDistance`, sameFloor 0 = `fFurnitureHeight`); furniture in use or blocked is left out. `FindFurnitureOfType(type, centerRef, radius, sameFloor)`: the nearest of a type (or a kind of it), or None. `GetFurnitureType(ref)`, `IsChildOf(superType, subType)`. (Walls aren't objects, so these don't return them.)
 
@@ -86,7 +86,7 @@ Function FourStim_OnClimax(Actor akActor, Actor[] akActors, String asSceneID, in
 Function FourStim_OnEvent(String asEvent, Actor akActor, Actor akTarget, Actor akPerformer, Actor[] akActors, String asSceneID)
 ```
 
-These are OStim's mod events (`ostim_thread_start`, `ostim_thread_end`, `ostim_npcscene_start`, `ostim_thread_sequenceend`...) as calls on the registered scripts: Fallout 4's Papyrus has no mod events. `FourStimThread` / `FourStimActor.GetThreadID` turn the actors into a thread ID.
+These are OStim's mod events (`ostim_thread_start`, `ostim_thread_end`, `ostim_npcscene_start`, `ostim_thread_sequenceend`...) as calls on the registered scripts: Fallout 4's Papyrus has no mod events. `FourThread` / `FourActor.GetThreadID` turn the actors into a thread ID.
 
 ## C++: the plugin interface
 

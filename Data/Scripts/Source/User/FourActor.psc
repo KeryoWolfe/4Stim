@@ -1,4 +1,4 @@
-Scriptname FourStimActor Native Hidden
+Scriptname FourActor Native Hidden
 {OStim NG's OActor for 4Stim (docs\API.md): one actor in a scene. The common
 functions, with OStim's names; most wrap FourStim.* functions.}
 

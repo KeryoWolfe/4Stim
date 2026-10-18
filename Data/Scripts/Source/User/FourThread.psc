@@ -1,4 +1,4 @@
-Scriptname FourStimThread Native Hidden
+Scriptname FourThread Native Hidden
 {OStim NG's OThread for 4Stim (docs\API.md): running scenes by thread ID.
 The player's scene is thread 0, as OStim's player thread; scenes without the
 player count up from 1. Same functions and arguments as OStim's.}

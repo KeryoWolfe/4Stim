@@ -1,4 +1,4 @@
-Scriptname FourStimLibrary Native Hidden
+Scriptname FourLibrary Native Hidden
 {OStim NG's OLibrary for 4Stim (docs\API.md): random scenes for actors, by
 scene tags, actor tags and actions. Same names and arguments as OStim's; the
 scenes are ones these actors can play (any role order that fits), not

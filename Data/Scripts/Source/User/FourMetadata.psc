@@ -1,4 +1,4 @@
-Scriptname FourStimMetadata Native Hidden
+Scriptname FourMetadata Native Hidden
 {OStim NG's OMetadata for 4Stim (docs\API.md): what a scene is, by its ID.
 The common functions, with OStim's names; the scene file format is
 docs\SCENES.md.}
@@ -41,7 +41,7 @@ bool Function HasAnySceneTag(string ID, string[] Tags) Global
 	return false
 EndFunction
 bool Function HasAnySceneTagCSV(string ID, string Tags) Global
-	return HasAnySceneTag(ID, FourStimLibrary.SplitCSV(Tags))
+	return HasAnySceneTag(ID, FourLibrary.SplitCSV(Tags))
 EndFunction
 bool Function HasAllSceneTags(string ID, string[] Tags) Global
 	string[] have = GetSceneTags(ID)
@@ -55,7 +55,7 @@ bool Function HasAllSceneTags(string ID, string[] Tags) Global
 	return true
 EndFunction
 bool Function HasAllSceneTagsCSV(string ID, string Tags) Global
-	return HasAllSceneTags(ID, FourStimLibrary.SplitCSV(Tags))
+	return HasAllSceneTags(ID, FourLibrary.SplitCSV(Tags))
 EndFunction
 
 ; Actor tags of the role at Position.

@@ -6569,7 +6569,7 @@ namespace
 		}
 	};
 
-	// ---- OStim's thread API (docs/API.md): FourStimThread, FourStimThreadBuilder ----
+	// ---- OStim's thread API (docs/API.md): FourThread, FourThreadBuilder ----
 	// A thread is a running scene; its ID is ActiveScene::threadID (0 = the
 	// player's, as OStim's player thread). Reads happen where Papyrus calls
 	// them, as the other natives here do; changes go to the main thread.
@@ -6842,7 +6842,7 @@ namespace
 		return threadID;
 	}
 
-	// FourStimThreadBuilder (OThreadBuilder)
+	// FourThreadBuilder (OThreadBuilder)
 	std::int32_t TB_Create(std::monostate, std::vector<RE::Actor*> a_actors) { return BuilderCreate(std::move(a_actors)); }
 	void TB_SetDominantActors(std::monostate, std::int32_t a_id, std::vector<RE::Actor*> a_actors)
 	{
@@ -6929,7 +6929,7 @@ namespace
 		g_builders.erase(a_id);
 	}
 
-	// FourStimThread (OThread)
+	// FourThread (OThread)
 	std::int32_t T_QuickStart(std::monostate, std::vector<RE::Actor*> a_actors, std::string a_scene, RE::TESObjectREFR* a_furniture)
 	{
 		const auto id = BuilderCreate(std::move(a_actors));
@@ -6947,7 +6947,7 @@ namespace
 	bool T_IsRunning(std::monostate, std::int32_t a_id) { return FindThread(a_id) != nullptr; }
 	void T_Stop(std::monostate, std::int32_t a_id)
 	{
-		WithThread(a_id, [](ActiveScene& a) { EndActiveScene(a, "asked by another mod (FourStimThread.Stop)"); });
+		WithThread(a_id, [](ActiveScene& a) { EndActiveScene(a, "asked by another mod (FourThread.Stop)"); });
 	}
 	std::int32_t T_GetThreadCount(std::monostate) { return static_cast<std::int32_t>(g_activeScenes.size()); }
 	std::vector<std::int32_t> T_GetAllThreadIDs(std::monostate)
@@ -6970,7 +6970,7 @@ namespace
 		WithThread(a_id, [a_scene, a_warp](ActiveScene& a) {
 			const auto to = SceneRegistry::Find(a_scene);
 			if (!to || to->actors.size() != a.actors.size()) {
-				REX::WARN("FourStimThread: thread {} can't go to \"{}\"", a.threadID, a_scene);
+				REX::WARN("FourThread: thread {} can't go to \"{}\"", a.threadID, a_scene);
 				return;
 			}
 			const auto from = SceneRegistry::Find(a.sceneID);
@@ -7225,7 +7225,7 @@ namespace
 		return pool[std::uniform_int_distribution<std::size_t>(0, pool.size() - 1)(rng)]->id;
 	}
 
-	// FourStimLibrary: one native the OLibrary-named functions wrap.
+	// FourLibrary: one native the OLibrary-named functions wrap.
 	std::string L_FindRandomScene(std::monostate, std::vector<RE::Actor*> a_actors, std::string a_furniture, std::vector<std::string> a_anyTags,
 		std::vector<std::string> a_allTags, std::vector<std::string> a_anyActions, std::vector<std::string> a_allActions, std::int32_t a_position,
 		std::vector<std::string> a_anyActorTags, std::vector<std::string> a_allActorTags)
@@ -7246,7 +7246,7 @@ namespace
 		return ids;
 	}
 
-	// FourStimMetadata (OMetadata)
+	// FourMetadata (OMetadata)
 	std::string M_GetName(std::monostate, std::string a_id)
 	{
 		const auto scene = SceneRegistry::Find(a_id);
@@ -7316,7 +7316,7 @@ namespace
 		return scene ? scene->modpack : std::string{};
 	}
 
-	// FourStimActor (OActor): per-actor metadata, kept while they're in a scene.
+	// FourActor (OActor): per-actor metadata, kept while they're in a scene.
 	std::mutex                                                g_actorMetaLock;
 	struct ActorMeta
 	{
@@ -7417,7 +7417,7 @@ namespace
 		}
 	}
 
-	// FourStimFurniture (OFurniture): furniture near a_center (OStim's
+	// FourFurniture (OFurniture): furniture near a_center (OStim's
 	// FindFurniture: the pieces a scene for a_actorCount could go on, nearest
 	// first; FindFurnitureOfType: the nearest of a type). a_sameFloor: how far
 	// up or down (0 = 4Stim's fFurnitureHeight). Main thread: Papyrus waits
@@ -8026,7 +8026,7 @@ namespace
 		a_vm->BindNativeMethod(SCRIPT_NAME, "RegisterForSceneEvents"sv, RegisterForSceneEvents);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "UnregisterForSceneEvents"sv, UnregisterForSceneEvents);
 		// OStim's API scripts (docs/API.md).
-		constexpr auto THREAD = "FourStimThread"sv;
+		constexpr auto THREAD = "FourThread"sv;
 		a_vm->BindNativeMethod(THREAD, "QuickStart"sv, T_QuickStart);
 		a_vm->BindNativeMethod(THREAD, "IsRunning"sv, T_IsRunning);
 		a_vm->BindNativeMethod(THREAD, "Stop"sv, T_Stop);
@@ -8058,7 +8058,7 @@ namespace
 		a_vm->BindNativeMethod(THREAD, "GetMetaString"sv, T_GetMetaString);
 		a_vm->BindNativeMethod(THREAD, "SetMetaString"sv, T_SetMetaString);
 		a_vm->BindNativeMethod(THREAD, "PlaySequence"sv, T_PlaySequence);
-		constexpr auto BUILDER = "FourStimThreadBuilder"sv;
+		constexpr auto BUILDER = "FourThreadBuilder"sv;
 		a_vm->BindNativeMethod(BUILDER, "Create"sv, TB_Create);
 		a_vm->BindNativeMethod(BUILDER, "SetDominantActors"sv, TB_SetDominantActors);
 		a_vm->BindNativeMethod(BUILDER, "SetFurniture"sv, TB_SetFurniture);
@@ -8077,11 +8077,11 @@ namespace
 		a_vm->BindNativeMethod(BUILDER, "SetMetadataCSV"sv, TB_SetMetadataCSV);
 		a_vm->BindNativeMethod(BUILDER, "Start"sv, TB_Start);
 		a_vm->BindNativeMethod(BUILDER, "Cancel"sv, TB_Cancel);
-		constexpr auto LIBRARY = "FourStimLibrary"sv;
+		constexpr auto LIBRARY = "FourLibrary"sv;
 		a_vm->BindNativeMethod(LIBRARY, "FindRandomScene"sv, L_FindRandomScene);
 		a_vm->BindNativeMethod(LIBRARY, "SplitCSV"sv, L_SplitCSV);
 		a_vm->BindNativeMethod(LIBRARY, "GetAllScenes"sv, L_GetAllScenes);
-		constexpr auto METADATA = "FourStimMetadata"sv;
+		constexpr auto METADATA = "FourMetadata"sv;
 		a_vm->BindNativeMethod(METADATA, "GetName"sv, M_GetName);
 		a_vm->BindNativeMethod(METADATA, "IsTransition"sv, M_IsTransition);
 		a_vm->BindNativeMethod(METADATA, "GetDestination"sv, M_GetDestination);
@@ -8094,7 +8094,7 @@ namespace
 		a_vm->BindNativeMethod(METADATA, "GetAutoTransitionForActor"sv, M_GetAutoTransitionForActor);
 		a_vm->BindNativeMethod(METADATA, "IsNoRandomSelection"sv, M_IsNoRandomSelection);
 		a_vm->BindNativeMethod(METADATA, "GetModpack"sv, M_GetModpack);
-		constexpr auto ACTOR = "FourStimActor"sv;
+		constexpr auto ACTOR = "FourActor"sv;
 		a_vm->BindNativeMethod(ACTOR, "GetThreadID"sv, A_GetThreadID);
 		a_vm->BindNativeMethod(ACTOR, "HasMetadata"sv, AM_HasMetadata);
 		a_vm->BindNativeMethod(ACTOR, "AddMetadata"sv, AM_AddMetadata);
@@ -8107,7 +8107,7 @@ namespace
 		a_vm->BindNativeMethod(ACTOR, "SetMetaString"sv, AM_SetMetaString);
 		a_vm->BindNativeMethod(ACTOR, "PlayExpression"sv, AM_PlayExpression);
 		a_vm->BindNativeMethod(ACTOR, "ClearExpression"sv, AM_ClearExpression);
-		constexpr auto FURNITURE = "FourStimFurniture"sv;
+		constexpr auto FURNITURE = "FourFurniture"sv;
 		a_vm->BindNativeMethod(FURNITURE, "FindFurniture"sv, F_FindFurniture);
 		a_vm->BindNativeMethod(FURNITURE, "FindFurnitureOfType"sv, F_FindFurnitureOfType);
 		REX::INFO("Papyrus functions bound");
@@ -8221,7 +8221,7 @@ namespace
 			REX::INFO("Save data: {} running scene(s) saved", count);
 		}
 		// The equip objects chosen for actors (the HUD's options,
-		// FourStimActor.SetEquipObjectID).
+		// FourActor.SetEquipObjectID).
 		const auto chosen = EquipObjects::AllChosen();
 		if (!chosen.empty() && a_intfc->OpenRecord(CHOICES_RECORD, CHOICES_VERSION)) {
 			a_intfc->WriteRecordData(static_cast<std::uint32_t>(chosen.size()));
