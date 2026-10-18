@@ -7,6 +7,7 @@
 #include <filesystem>
 #include <fstream>
 #include <memory>
+#include <mutex>
 #include <optional>
 #include <random>
 #include <unordered_map>
@@ -366,6 +367,57 @@ namespace Sounds
 		started = false;
 	}
 
+	namespace
+	{
+		// A sound output model (SOPM) for the sound files, which have none of
+		// their own: without one they played as 2D sounds, heard as loud
+		// wherever the player was (an NPC scene across town followed you
+		// around). The game's own models, picked once: one that fades with
+		// distance, audible out to about 2000 units (closest to it), as
+		// Fallout 4's voices are.
+		const RE::BSISoundOutputModel* OutputModel()
+		{
+			static std::once_flag                 once;
+			static const RE::BSISoundOutputModel* model = nullptr;
+			std::call_once(once, []() {
+				const auto handler = RE::TESDataHandler::GetSingleton();
+				if (!handler) {
+					return;
+				}
+				float          best = 0.0F;
+				std::uint32_t  bestID = 0;
+				for (const auto form : handler->GetFormArray<RE::BGSSoundOutput>()) {
+					if (!form) {
+						continue;
+					}
+					const RE::BSISoundOutputModel* candidate = form;
+					if (!candidate->DoGetAttenuatesWithDistance()) {
+						continue;
+					}
+					// How far it's still heard (in 100-unit steps, up to 10000).
+					float reach = 0.0F;
+					for (float d = 100.0F; d <= 10000.0F && candidate->DoGetAudibility(d); d += 100.0F) {
+						reach = d;
+					}
+					if (reach < 800.0F) {
+						continue;
+					}
+					if (!model || std::fabs(reach - 2000.0F) < std::fabs(best - 2000.0F)) {
+						model = candidate;
+						best = reach;
+						bestID = form->GetFormID();
+					}
+				}
+				if (model) {
+					REX::INFO("Sound: files play through sound output model {:08X} (heard out to about {} units)", bestID, best);
+				} else {
+					REX::WARN("Sound: no sound output model that fades with distance; sound files play as 2D sounds");
+				}
+			});
+			return model;
+		}
+	}
+
 	Playing Play(const Sound& a_sound, RE::Actor* a_actor, float a_volume)
 	{
 		Playing playing;
@@ -389,6 +441,11 @@ namespace Sounds
 				const float db = -20.0F * std::log10(a_volume);
 				playing.handle.SetStaticAttenuation(static_cast<std::uint16_t>(std::clamp(db * 100.0F, 0.0F, 10000.0F)));
 			}
+			// Positional, on the actor (OutputModel: else it's 2D).
+			if (const auto model = OutputModel()) {
+				playing.handle.SetOutputModel(model);
+			}
+			playing.handle.SetPosition(root->world.translate);
 			playing.handle.SetObjectToFollow(root);
 			playing.handle.Play();
 			playing.until = std::chrono::steady_clock::now() + std::chrono::seconds(10);  // safety net

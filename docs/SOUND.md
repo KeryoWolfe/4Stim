@@ -46,7 +46,7 @@ As in OStim:
 
 `moanVolume` (0-1) sets how loud. Sounds follow the actor.
 
-Sound files are played with Fallout 4's audio usage flags `iSoundFlags` (`0x1A`) and priority `iSoundPriority` (128). If no sound plays, `4Stim.log` says `Sound: couldn't load ...` for files the game couldn't open.
+Sound files are played with Fallout 4's audio usage flags `iSoundFlags` (`0x1A`) and priority `iSoundPriority` (128). They play on the actor, through one of the game's sound output models that fade with distance (picked once, the one heard out to about 2000 units; `4Stim.log` names it), so an NPC scene is heard where it is, not wherever the player is. If no sound plays, `4Stim.log` says `Sound: couldn't load ...` for files the game couldn't open.
 
 ## Action sounds
 
