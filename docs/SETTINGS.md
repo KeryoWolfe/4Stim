@@ -25,6 +25,8 @@ Times given with OStim's names are in milliseconds, as in OStim. `SetFurnitureSe
 | `keyHideUI` | `0x6A` (numpad *) | | Hide / show the HUD |
 | `SetOsaUpKey` / `SetOsaDownKey` / `SetOsaLeftKey` / `SetOsaRightKey` | `0x68` / `0x65` / `0x64` / `0x66` (numpad 8 / 5 / 4 / 6) | | The HUD's up, down, left, right (the arrow keys work too) |
 | `sPadHotkey`, `sPadNPCScene`, `sPadSpeedUp`, `sPadSpeedDown`, `sPadAutoMode`, `sPadPullOut`, `sPadEnd`, `sPadSearch`, `sPadAlign`, `sPadFreeCam`, `sPadHideUI` (`[Controller]`, 4Stim's) | `None` | | A controller button for that scene key: `LB`, `RB`, `LT`, `RT`, `X`, `Y`, `LS`, `RS`, `Back` |
+| `sPadScheme` (`[Controller]`, 4Stim's) | `Modern` | | How the controller moves through the HUD: `Modern` (B to the tab buttons, then hide) or `Classic` (OStim's navigation keys on the d-pad and A) |
+| `fHUDFadeTime` (`[HUD]`) | 10 | | OStim's UI `fadeTime`: seconds without input before the HUD fades out and hands the keys back (0 = never) |
 | `SetOsaYesKey` / `SetOsaTogKey` | `0x67` / `0x69` (numpad 7 / 9) | | The HUD's choose (Enter works too) / between the list and the tab buttons |
 | `SetUseFreeCam` | 1 | | Free camera in scenes with you |
 | `SetCameraSpeed` | 3 | `fFreeCameraSpeed` (a multiplier) | Free camera speed (the game's `fFreeCameraTranslationSpeed`) |

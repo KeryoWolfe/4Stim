@@ -90,6 +90,8 @@ namespace HUD
 		std::string               g_themeName = "Color";
 		bool                      g_enabled = true;
 		bool                      g_columns = false;  // sHUDControls=Columns (OStim's scheme)
+		bool                      g_padClassic = false;  // sPadScheme=Classic: the controller as OStim's navigation keys
+		float                     g_fadeTime = 10.0F;    // fHUDFadeTime: seconds without input before the HUD fades (0 = never)
 		json                      g_theme;
 		std::vector<UtilityEntry> g_utility;
 
@@ -660,6 +662,19 @@ namespace HUD
 				}
 				GValue arg(columns ? "columns" : "tabs");
 				InvokeOptional("SetControlScheme", &arg, 1);
+				// The controller's scheme and the fade (optional SetPadScheme /
+				// SetFadeTime).
+				bool  classic;
+				float fade;
+				{
+					std::scoped_lock lock(g_configLock);
+					classic = g_padClassic;
+					fade = g_fadeTime;
+				}
+				GValue pad(classic ? "classic" : "modern");
+				InvokeOptional("SetPadScheme", &pad, 1);
+				GValue seconds(static_cast<double>(fade));
+				InvokeOptional("SetFadeTime", &seconds, 1);
 			}
 
 			// Hidden by the hide-HUD key (optional HUD API function SetHidden).
@@ -1000,6 +1015,12 @@ namespace HUD
 						AddEntry(list, nav.to, FourStim::FormatLabel(nav.label, a_focused), icon, "scene", nav.border);
 					}
 				}
+				// OStim's speed buttons, under its options: here, list rows
+				// (kinds "speedUp" / "speedDown"; ChangeSpeed).
+				if (a_scene && a_scene->speeds.size() > 1) {
+					AddEntry(list, "__speedup", TR("$4Stim_SpeedUp", "Faster"), IconPath("4Stim/symbols/arrow_up"), "speedUp");
+					AddEntry(list, "__speeddown", TR("$4Stim_SpeedDown", "Slower"), IconPath("4Stim/symbols/arrow_down"), "speedDown");
+				}
 				if (a_focused.Active()) {
 					// Watching an NPC scene: leave it running and go back to the game.
 					const auto player = RE::PlayerCharacter::GetSingleton();
@@ -1141,6 +1162,19 @@ namespace HUD
 		g_themeName = a_theme.empty() ? "Color" : std::move(a_theme);
 		g_enabled = a_enabled;
 		g_columns = a_columns;
+	}
+
+	void SetControllerOptions(bool a_classic, float a_fadeTime)
+	{
+		std::scoped_lock lock(g_configLock);
+		g_padClassic = a_classic;
+		g_fadeTime = std::max(a_fadeTime, 0.0F);
+	}
+
+	bool PadClassic()
+	{
+		std::scoped_lock lock(g_configLock);
+		return g_padClassic;
 	}
 
 	void LoadConfig()

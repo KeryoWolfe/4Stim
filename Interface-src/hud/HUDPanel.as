@@ -3,6 +3,7 @@ package hud
 	import flash.display.MovieClip;
 	import flash.display.Sprite;
 	import flash.events.Event;
+	import flash.utils.getTimer;
 
 	// The default 4Stim HUD (Menu_mc of FourStimHUDMenu.swf). Implements HUD
 	// API version 1 -- see HUD_API.md for every function here. Layout numbers
@@ -52,11 +53,23 @@ package hud
 		private var _focused:Boolean = false;
 		// OStim's control scheme ("columns"): Up / Down move in the list,
 		// Left / Right between the list and the tab buttons. _tabFocus: the
-		// tab buttons have the keys.
+		// tab buttons have the keys (a ring on one; it opens on Accept).
 		private var _columns:Boolean = false;
 		private var _tabFocus:Boolean = false;
 		private var _paused:Boolean = false;
 		private var _ready:Boolean = false;
+		// The controller's scheme: "modern" (4Stim's: B to the tab buttons,
+		// then hide; d-pad Left / Right only change an Align value) or
+		// "classic" (OStim's navigation: d-pad Left / Right between the list
+		// and the tab buttons, as its columns).
+		private var _padClassic:Boolean = false;
+		// OStim's fade: after _fadeTime seconds without input the HUD fades
+		// out and hands the keys back; any of its keys brings it back.
+		private var _fadeTime:Number = 10;
+		private var _lastInput:int = 0;
+		private var _fade:Number = 1;     // 0 faded out .. 1 shown
+		private var _lastFrame:int = 0;
+		private var _opacity:Number = 1;  // the theme's
 
 		public function HUDPanel()
 		{
@@ -75,6 +88,7 @@ package hud
 			_root.addChild(_logo);
 			_logo.addEventListener(Event.COMPLETE, onLogoLoaded);
 			_tabs.selectID("navigation");
+			wake();
 			applyTheme();
 			addEventListener(Event.ENTER_FRAME, onEnterFrame);
 		}
@@ -116,6 +130,9 @@ package hud
 		public function SetScene(a_scene:Object):void
 		{
 			var changed:Boolean = a_scene == null || String(a_scene.id) != String(_scene.id);
+			if (String(_scene.id) == "" && a_scene != null) {
+				wake();  // a new scene: shown, as OStim's menu opens with it
+			}
 			_scene = a_scene != null ? a_scene : { id: "", name: "", actorCount: 0, tags: [] };
 			if (changed) {
 				callLogo("onSceneChanged", [String(_scene.id), int(_scene.actorCount)]);
@@ -173,6 +190,7 @@ package hud
 		// "align", "search"), for OStim's alignment and search keys.
 		public function ShowTab(a_id:String):void
 		{
+			wake();
 			if (_tabs.selectedID == a_id) {
 				return;
 			}
@@ -185,6 +203,9 @@ package hud
 		public function SetHidden(a_hidden:Boolean):void
 		{
 			_root.visible = !a_hidden;
+			if (!a_hidden) {
+				wake();
+			}
 		}
 
 		public function SetFocus(a_focused:Boolean):void
@@ -192,8 +213,30 @@ package hud
 			_focused = a_focused;
 			if (!a_focused) {
 				_tabFocus = false;
+			} else {
+				wake();
 			}
 			updateFocus();
+		}
+
+		// Optional (HUD_API.md): the controller's scheme, "modern" (4Stim's)
+		// or "classic" (OStim's navigation).
+		public function SetPadScheme(a_scheme:String):void
+		{
+			_padClassic = String(a_scheme).toLowerCase() == "classic";
+		}
+
+		// Optional (HUD_API.md): OStim's fadeTime, seconds without input
+		// before the HUD fades out (and hands the keys back); 0 = never.
+		public function SetFadeTime(a_seconds:Number):void
+		{
+			_fadeTime = a_seconds > 0 ? a_seconds : 0;
+			wake();
+		}
+
+		private function wake():void
+		{
+			_lastInput = getTimer();
 		}
 
 		// Optional (HUD_API.md): "tabs" (Left / Right change tabs, the
@@ -239,70 +282,60 @@ package hud
 				return false;
 			}
 			if (!a_down) {
-				return a_name == "Up" || a_name == "Down" || a_name == "Left" || a_name == "Right" || a_name == "Accept" || a_name == "Cancel" || a_name == "Back" || a_name == "Toggle" || a_name == "PadLeft" || a_name == "PadRight";
+				return a_name == "Up" || a_name == "Down" || a_name == "Left" || a_name == "Right" || a_name == "Accept" || a_name == "Cancel" ||
+				       a_name == "Back" || a_name == "Toggle" || a_name == "PadLeft" || a_name == "PadRight";
 			}
-			// The controller's d-pad Left / Right: only an Align row's value
-			// (B, not Left / Right, reaches the tab buttons on a controller).
+			wake();
+			// The controller's d-pad Left / Right. Classic (OStim's): between
+			// the list and the tab buttons, as its columns. Modern: only an
+			// Align row's value (B reaches the tab buttons).
 			if (a_name == "PadLeft" || a_name == "PadRight") {
-				var padRow:Object = _list.selectedEntry;
-				if (!_tabFocus && _tabs.selectedID == "align" && padRow != null) {
-					var padDir:int = a_name == "PadLeft" ? -1 : 1;
-					switch (String(padRow.kind)) {
-						case "alignValue":
-							code("AlignAdjust", String(padRow.field), padDir);
-							break;
-						case "alignActor":
-							code("AlignActor", padDir);
-							break;
-						case "alignStep":
-							code("AlignStep", padDir);
-							break;
+				var side:String = a_name == "PadLeft" ? "Left" : "Right";
+				if (_padClassic) {
+					if (_tabFocus) {
+						return handleTabFocus(side, true);
 					}
+					if (!handleColumns(side)) {
+						alignChange(side);
+					}
+					return true;
 				}
+				if (!_tabFocus) {
+					alignChange(side);
+				}
+				return true;
+			}
+			// The controller's B. Classic: OStim has no back key, so it hands
+			// the keys back to the game (as Esc). Modern: below.
+			if (a_name == "Back" && _padClassic) {
+				code("ReleaseFocus");
 				return true;
 			}
 			// OStim's Toggle key (numpad 9): between the list and the tab buttons.
 			if (a_name == "Toggle") {
-				_tabFocus = !_tabFocus;
-				updateFocus();
 				if (_tabFocus) {
-					code("SetHorizontalRepeat", false);
+					leaveTabs();
 				} else {
-					updateRepeat();
+					enterTabs();
 				}
 				return true;
 			}
-			if (_tabFocus && handleTabFocus(a_name)) {
+			if (_tabFocus && handleTabFocus(a_name, _columns)) {
 				return true;
 			}
-			// The controller's B (4Stim's controller scheme): from the list to
-			// the tab buttons (Up / Down pick a tab, A goes back to the list);
-			// from the tab buttons it hides the HUD, the scene going on (A shows
-			// it again).
+			// The controller's B (Modern): from the list to the tab buttons (Up /
+			// Down pick a tab, A opens it); from the tab buttons it hides the HUD,
+			// the scene going on (A shows it again).
 			if (a_name == "Back") {
-				_tabFocus = true;
-				updateFocus();
-				code("SetHorizontalRepeat", false);
+				enterTabs();
 				return true;
 			}
 			if (_columns && handleColumns(a_name)) {
 				return true;
 			}
 			// Align tab: Left / Right change the selected row's value.
-			var row:Object = _list.selectedEntry;
-			if (_tabs.selectedID == "align" && row != null && (a_name == "Left" || a_name == "Right")) {
-				var dir:int = a_name == "Left" ? -1 : 1;
-				switch (String(row.kind)) {
-					case "alignValue":
-						code("AlignAdjust", String(row.field), dir);
-						return true;
-					case "alignActor":
-						code("AlignActor", dir);
-						return true;
-					case "alignStep":
-						code("AlignStep", dir);
-						return true;
-				}
+			if ((a_name == "Left" || a_name == "Right") && alignChange(a_name)) {
+				return true;
 			}
 			switch (a_name) {
 				case "Up":
@@ -341,38 +374,79 @@ package hud
 
 		// ---- Internals ----
 
-		// The tab buttons have the keys (OStim's control scheme, or the
-		// controller's B). Returns true if it handled a_name.
-		private function handleTabFocus(a_name:String):Boolean
+		// Left / Right on an Align row that takes them: its value. Returns
+		// whether there was one.
+		private function alignChange(a_side:String):Boolean
+		{
+			var row:Object = _list.selectedEntry;
+			if (_tabs.selectedID != "align" || row == null) {
+				return false;
+			}
+			var dir:int = a_side == "Left" ? -1 : 1;
+			switch (String(row.kind)) {
+				case "alignValue":
+					code("AlignAdjust", String(row.field), dir);
+					return true;
+				case "alignActor":
+					code("AlignActor", dir);
+					return true;
+				case "alignStep":
+					code("AlignStep", dir);
+					return true;
+			}
+			return false;
+		}
+
+		// The keys to the tab buttons (OStim's menu selector): the ring starts
+		// on the tab shown.
+		private function enterTabs():void
+		{
+			_tabFocus = true;
+			_tabs.highlight(_tabs.selected);
+			updateFocus();
+			code("SetHorizontalRepeat", false);
+		}
+
+		private function leaveTabs():void
+		{
+			_tabFocus = false;
+			updateFocus();
+			updateRepeat();
+		}
+
+		// The tab buttons have the keys. As OStim's menu selector, Up / Down
+		// move the ring and Yes (Accept) opens that tab and goes back to the
+		// list. a_columns: Left / Right as OStim's (towards the list: back to
+		// it, without opening anything), else they move the ring too. B
+		// (Modern) hides the HUD. Returns true if it handled a_name.
+		private function handleTabFocus(a_name:String, a_columns:Boolean):Boolean
 		{
 			var toList:String = _mirror ? "Left" : "Right";
 			switch (a_name) {
 				case "Up":
 				case "PrevTab":
-					_tabs.select(_tabs.selected - 1);
-					showTab(false);
+					_tabs.highlight(_tabs.highlighted - 1);
 					return true;
 				case "Down":
 				case "NextTab":
-					_tabs.select(_tabs.selected + 1);
-					showTab(false);
+					_tabs.highlight(_tabs.highlighted + 1);
 					return true;
 				case "Left":
 				case "Right":
-					if (_columns && a_name != toList) {
-						return true;  // already at the tabs
-					}
-					if (!_columns) {
-						// The tabs scheme: Left / Right change tabs here too.
-						_tabs.select(_tabs.selected + (a_name == "Left" ? -1 : 1));
-						showTab(false);
+					if (a_columns) {
+						if (a_name == toList) {
+							leaveTabs();
+						}
 						return true;
 					}
-					// Columns: toList goes back to the list, as Accept.
+					_tabs.highlight(_tabs.highlighted + (a_name == "Left" ? -1 : 1));
+					return true;
 				case "Accept":
-					_tabFocus = false;
-					updateFocus();
-					updateRepeat();
+					if (_tabs.highlighted != _tabs.selected) {
+						_tabs.select(_tabs.highlighted);
+						showTab(false);
+					}
+					leaveTabs();
 					return true;
 				case "Back":
 					code("Hide");
@@ -381,34 +455,48 @@ package hud
 			return false;  // Cancel, speed keys: as usual
 		}
 
-		// OStim's control scheme, in the list. Returns true if it handled
-		// a_name. Left / Right still change a value on the Align tab's value,
-		// actor and step rows (the safeguard): the tab buttons are reached
-		// from any other row, or with LB / RB.
+		// OStim's columns, in the list. Returns true if it handled a_name.
+		// Left / Right still change a value on the Align tab's value, actor and
+		// step rows (the safeguard): the tab buttons are reached from any other
+		// row.
 		private function handleColumns(a_name:String):Boolean
 		{
 			var toTabs:String = _mirror ? "Right" : "Left";
 			var toList:String = _mirror ? "Left" : "Right";
+			if (a_name != toTabs && a_name != toList) {
+				return false;
+			}
+			var row:Object = _list.selectedEntry;
+			var kind:String = row != null ? String(row.kind) : "";
+			if (_tabs.selectedID == "align" && (kind == "alignValue" || kind == "alignActor" || kind == "alignStep")) {
+				return false;  // changes the value
+			}
 			if (a_name == toTabs) {
-				var row:Object = _list.selectedEntry;
-				var kind:String = row != null ? String(row.kind) : "";
-				if (_tabs.selectedID == "align" && (kind == "alignValue" || kind == "alignActor" || kind == "alignStep")) {
-					return false;  // changes the value
-				}
-				_tabFocus = true;
-				updateFocus();
-				code("SetHorizontalRepeat", false);
-				return true;
+				enterTabs();
 			}
-			if (a_name == toList) {
-				var r:Object = _list.selectedEntry;
-				var k:String = r != null ? String(r.kind) : "";
-				if (_tabs.selectedID == "align" && (k == "alignValue" || k == "alignActor" || k == "alignStep")) {
-					return false;  // changes the value
-				}
-				return true;  // already in the list
+			return true;  // toList: already in the list
+		}
+
+		// OStim's fade: no input for _fadeTime seconds fades the HUD out (and
+		// hands the keys back); wake() brings it back. Not while paused.
+		private function updateFade():void
+		{
+			var now:int = getTimer();
+			var dt:Number = _lastFrame > 0 ? Math.min((now - _lastFrame) / 1000, 0.1) : 0;
+			_lastFrame = now;
+			if (_paused) {
+				_lastInput += int(dt * 1000);  // the clock stops with the game
 			}
-			return false;
+			var idle:Number = (now - _lastInput) / 1000;
+			var target:Number = _fadeTime > 0 && idle >= _fadeTime ? 0 : 1;
+			if (_fade == target) {
+				return;
+			}
+			_fade = target > _fade ? Math.min(1, _fade + dt / 0.2) : Math.max(0, _fade - dt / 0.6);
+			_root.alpha = _opacity * _fade;
+			if (_fade == 0 && _focused) {
+				code("ReleaseFocus");
+			}
 		}
 
 		private function onEnterFrame(a_event:Event):void
@@ -424,6 +512,7 @@ package hud
 					HUDLog.write("F4SE functions not found; .dds icons can't be shown");
 				}
 			}
+			updateFade();
 			// Tell the plugin once its functions are attached to BGSCodeObj.
 			if (!_ready && hasFunction(BGSCodeObj, "Ready")) {
 				_ready = true;
@@ -474,6 +563,12 @@ package hud
 					break;
 				case "alignReset":
 					code("AlignReset");
+					break;
+				case "speedUp":  // OStim's speed buttons, as rows (the plugin sends them)
+					code("ChangeSpeed", 1);
+					break;
+				case "speedDown":
+					code("ChangeSpeed", -1);
 					break;
 				default:  // Utility entries have no kind
 					code("RunUtility", String(a_entry.id));
@@ -589,7 +684,8 @@ package hud
 			var offsetX:Number = Number(_theme.layout("offsetX", 0));
 			var offsetY:Number = Number(_theme.layout("offsetY", 0));
 			_root.scaleX = _root.scaleY = scale > 0 ? scale : 1;
-			_root.alpha = Number(_theme.layout("opacity", 1));
+			_opacity = Number(_theme.layout("opacity", 1));
+			_root.alpha = _opacity * _fade;
 			_root.x = _mirror ? _screen.x2 - offsetX : _screen.x1 + offsetX;
 			_root.y = _screen.y2 - offsetY;
 		}

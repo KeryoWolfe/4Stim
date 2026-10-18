@@ -38,6 +38,7 @@ PAD_BUTTONS = ['None', 'LB', 'RB', 'LT', 'RT', 'X', 'Y', 'LS', 'RS', 'Back']
 PAD_LABELS = ['None', 'LB', 'RB', 'LT', 'RT', 'X', 'Y', 'Left stick (press)', 'Right stick (press)', 'Back / View']
 for _k in PAD_KEYS:
     CHOICES[_k] = PAD_BUTTONS
+CHOICES['sPadScheme'] = ['Modern', 'Classic']
 CHOICE_LABELS = {
     'sTargetMode': ['Crosshair', 'Nearest'],
     'sHUDControls': ['Tabs', 'Columns (OStim)'],
@@ -47,6 +48,7 @@ CHOICE_LABELS = {
 }
 for _k in PAD_KEYS:
     CHOICE_LABELS[_k] = PAD_LABELS
+CHOICE_LABELS['sPadScheme'] = ['4Stim Modern', 'OStim Classic']
 
 # key: (label, kind, options). kind: bool; int / float (min, max, step);
 # choice; key (an MCM key input: the key's code, decimal); ms (OStim's
@@ -72,6 +74,7 @@ SETTINGS = {
     'SetOsaYesKey': ('Yes (choose)', 'key'),
     'SetOsaEndKey': ('End the scene', 'key'),
     # Controller
+    'sPadScheme': ('Controller scheme', 'choice'),
     'sPadHotkey': ('Start a scene / the HUD', 'choice'),
     'sPadNPCScene': ('Start a scene without you', 'choice'),
     'sPadSpeedUp': ('Faster', 'choice'),
@@ -140,6 +143,7 @@ SETTINGS = {
     'bEnableHUD': ('HUD in scenes', 'bool'),
     'sHUDControls': ('HUD controls', 'choice'),
     'sTheme': ('HUD theme', 'choice'),
+    'fHUDFadeTime': ('Fade out after (seconds, 0 = never)', 'float', (0, 60, 1)),
     # Excitement
     'bEnableExcitement': ('Excitement', 'bool'),
     'SetsexExcitementMult': ('Male excitement rate', 'float', (0, 5, 0.05)),
@@ -222,7 +226,7 @@ PAGES = [
     ('Alignment', [('Alignment', ['alignmentGroupBySex', 'alignmentGroupByHeight', 'alignmentGroupByHeels', 'SetSchlongBending', 'fPenisBendStep',
                                   'iPenisBendAxis', 'bDisableEyeLook', 'fLookMaxSide', 'fLookMaxUp']),
                    ('Scaling', ['SetScaling'])]),
-    ('HUD', [('HUD', ['bEnableHUD', 'sHUDControls', 'sTheme'])]),
+    ('HUD', [('HUD', ['bEnableHUD', 'sHUDControls', 'fHUDFadeTime', 'sTheme'])]),
     ('Excitement', [('Excitement', ['bEnableExcitement', 'SetsexExcitementMult', 'SetFemaleSexExcitementMult', 'excitementDecayRate',
                                     'excitementDecayGracePeriod', 'postOrgasmExcitement', 'postOrgasmExcitementMax', 'SetAutoClimaxAnims',
                                     'endOnPlayerOrgasm', 'SetEndOnOrgasm', 'SetEndOnSubOrgasm', 'SetEndOnBothOrgasm', 'endNPCSceneOnOrgasm',
@@ -245,7 +249,7 @@ PAGES = [
                  ('AutoMode', ['SetControlToggle'], None),
                  ('General', ['SetOsaUpKey', 'SetOsaDownKey', 'SetOsaLeftKey', 'SetOsaRightKey', 'SetOsaTogKey', 'SetOsaYesKey',
                               'SetOsaEndKey'], 'Navigation keys')]),
-    ('Controller', [('Controller', PAD_KEYS, None)]),
+    ('Controller', [('Controller', ['sPadScheme'], None), ('Controller', PAD_KEYS, 'Buttons')]),
 ]
 
 def read_ini():

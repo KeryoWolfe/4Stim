@@ -38,7 +38,7 @@ If you're updating from an earlier test build, replace both mods (don't merge th
 | Numpad 9 | The HUD: between the list and the tab buttons. |
 | Esc, Backspace | Back, or hand the keys back to the game. |
 | Controller buttons | The Controller page in the MCM (or `[Controller]` in `4Stim.ini`) gives scene keys to LB, RB, LT, RT, X, Y, the sticks or Back; none by default. |
-| Controller B | The HUD: from the list to the tab buttons (Up / Down pick a tab, A back to the list); again, hide the HUD (the scene goes on). A shows it again. |
+| Controller B | 4Stim Modern scheme: from the list to the tab buttons (Up / Down pick a tab, A opens it); again, hide the HUD (the scene goes on). A shows it again. OStim Classic (MCM Controller page): the d-pad and A are OStim's navigation keys. |
 | Numpad + / - | Faster / slower. |
 | Numpad 0 | Auto mode on or off for your scene. |
 | Numpad 1, numpad ., K, L, numpad /, numpad * | Pull out, end the scene, search, Align tab, free camera, hide the HUD (OStim's keys). |

@@ -18,8 +18,9 @@ package hud
 		private var _tabs:Array;     // { id, label, icon }
 		private var _buttons:Array = [];  // { bg, icon, label }
 		private var _theme:Theme;
-		private var _selected:int = 0;
-		private var _focused:Boolean = false;  // the tab buttons have the keys (OStim's control scheme)
+		private var _selected:int = 0;     // the tab shown
+		private var _highlight:int = 0;    // the button the keys are on, while the buttons have them (OStim's menu selector)
+		private var _focused:Boolean = false;  // the tab buttons have the keys
 
 		public function TabBar(a_tabs:Array)
 		{
@@ -32,6 +33,15 @@ package hud
 		public function get count():int { return _tabs.length; }
 		public function get selected():int { return _selected; }
 		public function get selectedID():String { return _tabs[_selected].id; }
+		public function get highlighted():int { return _highlight; }
+
+		// Moves the keys' ring to a button without showing its tab (OStim: the
+		// menu opens on Yes).
+		public function highlight(a_index:int):void
+		{
+			_highlight = (a_index + _tabs.length) % _tabs.length;
+			refresh();
+		}
 
 		public function setTheme(a_theme:Theme):void
 		{
@@ -80,6 +90,7 @@ package hud
 		public function select(a_index:int):void
 		{
 			_selected = (a_index + _tabs.length) % _tabs.length;
+			_highlight = _selected;
 			refresh();
 		}
 
@@ -101,10 +112,11 @@ package hud
 			for (var i:int = 0; i < _buttons.length; i++) {
 				var button:Object = _buttons[i];
 				var on:Boolean = i == _selected;
+				var ring:Boolean = _focused && i == _highlight;
 				var g:* = button.bg.graphics;
 				g.clear();
-				var border:Array = on ? [_theme.colors("accent")[0]] : _theme.colors("tabBorder");
-				g.lineStyle(on && _focused ? 4 : 2, border[0].c, border[0].a);
+				var border:Array = on || ring ? [_theme.colors("accent")[0]] : _theme.colors("tabBorder");
+				g.lineStyle(ring ? 4 : 2, border[0].c, border[0].a);
 				Theme.begin(g, on ? _theme.colors("tabSelected") : _theme.colors("tabBackground"), 0, 0, SIZE, SIZE, Math.PI / 4);
 				g.drawRect(1, 1, SIZE - 2, SIZE - 2);
 				g.endFill();

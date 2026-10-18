@@ -61,6 +61,13 @@ namespace HUD
 	void               Show();
 	[[nodiscard]] bool IsHidden();
 
+	// The controller's scheme (sPadScheme: false = 4Stim Modern, true =
+	// OStim Classic) and fHUDFadeTime (OStim's fadeTime: seconds without
+	// input before the HUD fades out and hands the keys back; 0 = never).
+	// Sent with the control scheme (optional SetPadScheme / SetFadeTime).
+	void               SetControllerOptions(bool a_classic, float a_fadeTime);
+	[[nodiscard]] bool PadClassic();
+
 	[[nodiscard]] bool IsOpen();
 	[[nodiscard]] bool IsFocused();
 	void               SetFocus(bool a_focused);  // any thread

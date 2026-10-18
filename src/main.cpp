@@ -145,6 +145,8 @@ namespace
 		// (0x100 LB...); 0 = none, the default.
 		std::uint32_t padHotkey = 0, padNpcScene = 0, padSpeedUp = 0, padSpeedDown = 0, padAutoMode = 0, padPullOut = 0;
 		std::uint32_t padEnd = 0, padSearch = 0, padAlign = 0, padFreeCam = 0, padHideUI = 0;
+		bool          padClassic = false;  // sPadScheme: Modern (4Stim's) or Classic (OStim's navigation)
+		float         hudFadeTime = 10.0F; // fHUDFadeTime (OStim's UI fadeTime, 10 s): the HUD fades after this long without input
 		std::string   hudTheme = "Color";     // file name in Data\Interface\4Stim\Themes\, without .json
 		bool          hudEnabled = true;
 		bool          hudColumns = false;     // sHUDControls=Columns: OStim's control scheme (Left / Right between the list and the tab buttons)
@@ -460,7 +462,15 @@ namespace
 					g_settings.hudTheme = value;
 				}
 				// Controller buttons (a chain of their own, C1061).
-				if (key.starts_with("spad")) {
+				if (key == "spadscheme" || key == "fhudfadetime") {
+					if (key == "spadscheme") {
+						auto v = value;
+						std::ranges::transform(v, v.begin(), [](unsigned char ch) { return static_cast<char>(std::tolower(ch)); });
+						g_settings.padClassic = v == "classic";
+					} else {
+						g_settings.hudFadeTime = std::clamp(std::stof(value), 0.0F, 600.0F);
+					}
+				} else if (key.starts_with("spad")) {
 					const auto button = PadButton(value);
 					if (key == "spadhotkey") {
 						g_settings.padHotkey = button;
@@ -730,6 +740,7 @@ namespace
 		// The HUD's theme, on / off and layout, here so a reload (the MCM's
 		// changes) applies them too; HUD::LoadConfig then reads the theme.
 		HUD::SetOptions(g_settings.hudTheme, g_settings.hudEnabled, g_settings.hudColumns);
+		HUD::SetControllerOptions(g_settings.padClassic, g_settings.hudFadeTime);
 		HUD::SetNavigationKeys({ g_settings.navUpKey, g_settings.navDownKey, g_settings.navLeftKey, g_settings.navRightKey,
 			g_settings.navYesKey, g_settings.navToggleKey });
 		const auto& pb = PenisBend::Settings();
@@ -6029,7 +6040,10 @@ namespace
 		// hid it: 4Stim's controller scheme, docs/HUD.md).
 		if (a_event->device.get() == RE::INPUT_DEVICE::kGamepad) {
 			const auto button = static_cast<std::uint32_t>(a_event->idCode);
-			if (button == 0x1000 && HUD::IsOpen() && (HUD::IsHidden() || !HUD::IsFocused()) && GetPlayerScene().Active()) {
+			// A (and with the Classic scheme the d-pad too, as OStim's
+			// navigation keys bring its menu up) shows the HUD and gives it the keys.
+			const bool wakes = button == 0x1000 || (HUD::PadClassic() && (button == 0x1 || button == 0x2 || button == 0x4 || button == 0x8));
+			if (wakes && HUD::IsOpen() && (HUD::IsHidden() || !HUD::IsFocused()) && GetPlayerScene().Active()) {
 				HUD::Show();
 				return;
 			}

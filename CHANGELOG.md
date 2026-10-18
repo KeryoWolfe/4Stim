@@ -2,6 +2,8 @@
 
 ## Next
 
+- **Controller scheme** (MCM Controller page, `sPadScheme`): 4Stim Modern (B to the tab buttons, then hide) or OStim Classic (OStim's navigation on the d-pad and A: Left to the tab buttons, Right back).
+- **The HUD, closer to OStim's menu:** the tab buttons are OStim's menu selector (Up / Down move a ring, Yes / A opens the tab and goes back to the list); "Faster" / "Slower" rows under the Navigation list, as OStim's speed buttons; and OStim's fade: after `fHUDFadeTime` seconds (10) without input the HUD fades out and hands the keys back, and any of its keys brings it back.
 - **Weapons back on after a scene:** the weapon taken off as a scene starts goes back on when it ends (the player and NPCs), also after loading a save mid-scene.
 - **OStim's keys by default:** Up arrow starts a scene, numpad + / - speed, numpad 1 pull out, numpad 0 auto mode, numpad / free camera, numpad * hide the HUD, numpad . end, K search, L Align; and OStim's navigation keys for the HUD (numpad 8 / 5 / 4 / 6, 7 to choose, 9 between the list and the tab buttons; `SetOsaUpKey`...), besides the arrows and Enter.
 - **Controller:** B goes from the HUD's list to its tab buttons (Up / Down pick a tab), B again hides the HUD while the scene goes on, and A shows it again. The old LB / RB (tabs) and Y / X (speed) are gone, and the d-pad's Left / Right only change an Align value (no more moving between the list and the tabs); the MCM's new Controller page (`[Controller]`) gives any scene key a button, none by default.

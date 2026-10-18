@@ -860,6 +860,24 @@
 					}
 				},
 				{
+					"id": "fHUDFadeTime:HUD",
+					"text": "$4Stim_MCM_fHUDFadeTime",
+					"help": "$4Stim_MCM_fHUDFadeTime_Help",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "slider",
+					"valueOptions": {
+						"min": 0,
+						"max": 60,
+						"step": 1,
+						"sourceType": "ModSettingFloat"
+					}
+				},
+				{
 					"id": "i4S_sTheme:HUD",
 					"text": "$4Stim_MCM_sTheme",
 					"help": "$4Stim_MCM_sTheme_Help",
@@ -2198,6 +2216,29 @@
 		{
 			"pageDisplayName": "$4Stim_MCM_PageController",
 			"content": [
+				{
+					"id": "i4S_sPadScheme:Controller",
+					"text": "$4Stim_MCM_sPadScheme",
+					"help": "$4Stim_MCM_sPadScheme_Help",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "dropdown",
+					"valueOptions": {
+						"sourceType": "ModSettingInt",
+						"options": [
+							"$4Stim_MCM_sPadScheme_0",
+							"$4Stim_MCM_sPadScheme_1"
+						]
+					}
+				},
+				{
+					"type": "section",
+					"text": "$4Stim_MCM_SectionButtons"
+				},
 				{
 					"id": "i4S_sPadHotkey:Controller",
 					"text": "$4Stim_MCM_sPadHotkey",
