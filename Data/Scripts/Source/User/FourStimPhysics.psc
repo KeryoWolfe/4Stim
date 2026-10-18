@@ -30,3 +30,38 @@ int Function Swap(int aiActorID, String asFrom1, String asTo1, String asFrom2, S
 	endif
 	return -1
 EndFunction
+
+; A scene ended: afDelay seconds later (out of the scene's pose, in their own
+; idle), the swap undone, then the physics rebuilt from the reference pose.
+; Undoing it while the body was still in the scene's pose could rebuild the
+; physics around that pose (a penis left stretched, stuck at an angle).
+; Returns what Swap returns, or -4 if they're in a new scene by then (the
+; swap stays: it's that scene's now).
+int Function SwapAfterScene(int aiActorID, String asFrom1, String asTo1, String asFrom2, String asTo2, String asFrom3, String asTo3, float afDelay) Global
+	Utility.Wait(afDelay)
+	Actor akActor = Game.GetForm(aiActorID) as Actor
+	if akActor && FourStim.IsInScene(akActor)
+		return -4
+	endif
+	int result = Swap(aiActorID, asFrom1, asTo1, asFrom2, asTo2, asFrom3, asTo3)
+	Utility.Wait(0.2)
+	ResetNow(aiActorID)
+	return result
+EndFunction
+
+; A scene ended for an actor without a swap: afDelay seconds later, their
+; physics rebuilt from the reference pose all the same.
+Function ResetAfterScene(int aiActorID, float afDelay) Global
+	Utility.Wait(afDelay)
+	Actor akActor = Game.GetForm(aiActorID) as Actor
+	if akActor && !FourStim.IsInScene(akActor)
+		ResetNow(aiActorID)
+	endif
+EndFunction
+
+Function ResetNow(int aiActorID) Global
+	Actor akActor = Game.GetForm(aiActorID) as Actor
+	if akActor && DynamicHDT.HasPhysicsSystem(akActor)
+		DynamicHDT.ResetPhysics(akActor, true)  ; full: from the reference pose
+	endif
+EndFunction

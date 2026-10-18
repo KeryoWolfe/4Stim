@@ -2,6 +2,7 @@
 
 ## Next
 
+- **Fixed:** a penis could be left stretched and stuck at an angle after a scene: the physics swap back now waits until the actor is out of the scene's pose, and everyone's SMP physics is rebuilt from the reference pose after a scene (FSMP's `ResetPhysics`).
 - **Controller scheme** (MCM Controller page, `sPadScheme`): 4Stim Modern (B to the tab buttons, then hide) or OStim Classic (OStim's navigation on the d-pad and A: Left to the tab buttons, Right back).
 - **The HUD, closer to OStim's menu:** the tab buttons are OStim's menu selector (Up / Down move a ring, Yes / A opens the tab and goes back to the list); "Faster" / "Slower" rows under the Navigation list, as OStim's speed buttons; and OStim's fade: after `fHUDFadeTime` seconds (10) without input the HUD fades out and hands the keys back, and any of its keys brings it back.
 - **Weapons back on after a scene:** the weapon taken off as a scene starts goes back on when it ends (the player and NPCs), also after loading a save mid-scene.
