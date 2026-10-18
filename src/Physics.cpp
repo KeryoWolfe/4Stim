@@ -13,6 +13,9 @@
 #include "Bridge.h"
 #include "SceneRegistry.h"
 
+#include "RE/B/BSResourceNiBinaryStream.h"
+#include "RE/N/NiStringExtraData.h"
+
 // CommonLibF4 declares this but doesn't define it; needed to derive a
 // callback (the game never calls it on its own functors through us).
 RE::BSScript::IStackCallbackFunctor::~IStackCallbackFunctor() = default;
@@ -30,6 +33,12 @@ namespace Physics
 			std::string           from;          // the physics file the body normally uses
 			std::string           to;            // during a scene
 			std::string           toReceiving;   // during a scene, for an actor on the receiving end ("" = to)
+			// Suffix syntax: instead of "to" / "toReceiving", the actor's own
+			// physics file with this before ".xml" ("Hard": MaleBody.xml ->
+			// MaleBodyHard.xml); "from" is then optional (any file the body's
+			// meshes name, else only that one).
+			std::string           toSuffix;
+			std::string           toReceivingSuffix;
 			std::vector<std::string> sceneTags;  // only scenes with one of these tags ("" = every scene)
 		};
 
@@ -114,6 +123,8 @@ namespace Physics
 					swap.from = entry.value("from", std::string{});
 					swap.to = entry.value("to", std::string{});
 					swap.toReceiving = entry.value("toReceiving", std::string{});
+					swap.toSuffix = entry.value("toSuffix", std::string{});
+					swap.toReceivingSuffix = entry.value("toReceivingSuffix", std::string{});
 					if (const auto tags = entry.find("sceneTags"); tags != entry.end() && tags->is_array()) {
 						for (const auto& tag : *tags) {
 							if (tag.is_string()) {
@@ -121,14 +132,120 @@ namespace Physics
 							}
 						}
 					}
-					if (swap.from.empty() || swap.to.empty()) {
-						REX::WARN("Physics: {}: swap \"{}\" needs \"from\" and \"to\", skipped", file, swap.id);
+					if (swap.toSuffix.empty() && (swap.from.empty() || swap.to.empty())) {
+						REX::WARN("Physics: {}: swap \"{}\" needs \"from\" and \"to\", or \"toSuffix\", skipped", file, swap.id);
 						continue;
 					}
 					g_swaps.push_back(std::move(swap));
 				}
 			}
 			REX::INFO("Physics: {} swap(s) from {} file(s)", g_swaps.size(), files.size());
+		}
+
+		// ---- Suffix syntax ----
+
+		// A path as meshes name it, for comparing: lowercase, backslashes,
+		// without "meshes\".
+		std::string Normal(std::string_view a_path)
+		{
+			auto out = Lower(a_path);
+			std::ranges::replace(out, '/', '\\');
+			return out.starts_with("meshes\\") ? out.substr(7) : out;
+		}
+
+		// The physics files a_actor's meshes name (FSMP's "HDT Skinned Mesh
+		// Physics Object" string on a mesh's nodes), as named. Main thread.
+		void CollectPhysicsFiles(RE::NiAVObject* a_object, int a_depth, std::vector<std::string>& a_out)
+		{
+			if (!a_object) {
+				return;
+			}
+			static const RE::BSFixedString key{ "HDT Skinned Mesh Physics Object" };
+			// Always a string by FSMP's convention (as FSMP reads it).
+			if (const auto extra = static_cast<RE::NiStringExtraData*>(a_object->GetExtraData(key))) {
+				const std::string file = extra->GetValue().c_str();
+				if (!file.empty() && std::ranges::none_of(a_out, [&](const std::string& f) { return Normal(f) == Normal(file); })) {
+					a_out.push_back(file);
+				}
+			}
+			if (const auto node = a_depth > 0 ? a_object->IsNode() : nullptr) {
+				for (const auto& child : node->children) {
+					CollectPhysicsFiles(child.get(), a_depth - 1, a_out);
+				}
+			}
+		}
+
+		std::vector<std::string> PhysicsFilesOf(RE::Actor* a_actor)
+		{
+			std::vector<std::string> files;
+			CollectPhysicsFiles(a_actor ? a_actor->Get3D(false) : nullptr, 16, files);
+			return files;
+		}
+
+		// Whether the game has the file (loose or in an archive).
+		bool FileExists(const std::string& a_path)
+		{
+			const auto bare = Normal(a_path);
+			RE::BSResourceNiBinaryStream stream(("Meshes\\" + bare).c_str());
+			return static_cast<bool>(stream);
+		}
+
+		// a_file with a_suffix before ".xml" ("" if it isn't an .xml, or
+		// already ends with the suffix: then it's the swapped file already).
+		std::string WithSuffix(const std::string& a_file, const std::string& a_suffix)
+		{
+			const auto lower = Lower(a_file);
+			if (a_suffix.empty() || !lower.ends_with(".xml")) {
+				return {};
+			}
+			const auto stem = a_file.substr(0, a_file.size() - 4);
+			if (Lower(stem).ends_with(Lower(a_suffix))) {
+				return {};
+			}
+			return stem + a_suffix + a_file.substr(a_file.size() - 4);
+		}
+
+		// What a swap does to a_actor: from, to, toReceiving (empty from: it
+		// doesn't apply to them). Full paths as written; with a suffix, the
+		// first of the actor's physics files (or "from") whose suffixed file
+		// exists.
+		struct Resolved
+		{
+			std::string from, to, toReceiving;
+		};
+		Resolved Resolve(const Swap& a_swap, RE::Actor* a_actor)
+		{
+			if (a_swap.toSuffix.empty()) {
+				Resolved r{ a_swap.from, a_swap.to, a_swap.toReceiving };
+				if (r.toReceiving.empty() && !a_swap.toReceivingSuffix.empty()) {
+					if (auto alt = WithSuffix(a_swap.from, a_swap.toReceivingSuffix); !alt.empty() && FileExists(alt)) {
+						r.toReceiving = std::move(alt);
+					}
+				}
+				return r;
+			}
+			const auto files = PhysicsFilesOf(a_actor);
+			for (const auto& file : files) {
+				if (!a_swap.from.empty() && Normal(file) != Normal(a_swap.from)) {
+					continue;
+				}
+				auto to = WithSuffix(file, a_swap.toSuffix);
+				if (to.empty() || !FileExists(to)) {
+					continue;
+				}
+				Resolved r{ file, std::move(to), a_swap.toReceiving };
+				if (r.toReceiving.empty() && !a_swap.toReceivingSuffix.empty()) {
+					if (auto alt = WithSuffix(file, a_swap.toReceivingSuffix); !alt.empty() && FileExists(alt)) {
+						r.toReceiving = std::move(alt);
+					}
+				}
+				return r;
+			}
+			if (!files.empty()) {
+				REX::INFO("Physics: {:08X}: swap \"{}\": none of its {} physics file(s) has a \"{}\" version", a_actor->GetFormID(), a_swap.id,
+					files.size(), a_swap.toSuffix);
+			}
+			return {};
 		}
 
 		// Logs what SwapPhysicsFile returned: false means FSMP found no active
@@ -280,9 +397,13 @@ namespace Physics
 						continue;
 					}
 				}
-				const auto& to = Receiving(scene.get(), role) && !swap.toReceiving.empty() ? swap.toReceiving : swap.to;
-				if (CallSwap(actor, swap.from, to)) {
-					g_applied[id] = { swap.from, to, swap.to, swap.toReceiving };
+				const auto resolved = Resolve(swap, actor);
+				if (resolved.from.empty()) {
+					continue;  // a suffix swap with no file for this body: the next swap may fit
+				}
+				const auto& to = Receiving(scene.get(), role) && !resolved.toReceiving.empty() ? resolved.toReceiving : resolved.to;
+				if (CallSwap(actor, resolved.from, to)) {
+					g_applied[id] = { resolved.from, to, resolved.to, resolved.toReceiving };
 				}
 				break;  // one swap per actor
 			}

@@ -6,6 +6,7 @@
 - **C++ plugin interface** (`include/4Stim/PluginInterface.h`): OStim's interface map for F4SE plugins, with threads (listeners, builder), alignment and sex toys.
 - **Sex toys** (OStim's): device plugins register toys through the plugin interface; 4Stim drives them from the player's scene, on actions' `toySlot`s, with OStim's settings (`[SexToys]`, MCM Sex toys page). **Intiface Central** built in (`bIntiface`): 4Stim connects to it and uses its vibrate-type devices with no other mod.
 - **`playbackSpeed`** (OStim's): a scene speed can play its animation faster or slower (`bUsePlaybackSpeed`).
+- **Physics swaps, suffix syntax:** `toSuffix` / `toReceivingSuffix` ("Hard", "HardBottom") swap whatever physics file the actor's body names for its suffixed version, so one entry covers a body's variants and other bodies named the same way (docs/PHYSICS.md).
 - **Saved:** the equip objects chosen for actors (strap-on, tongue...) are kept in the save.
 - **Fixed:** scene sounds (moans, climaxes, slaps) followed the player instead of staying where the scene is: sound files now play through one of the game's positional sound output models.
 - **Fixed:** a penis could be left stretched and stuck at an angle after a scene: the physics swap back now waits until the actor is out of the scene's pose, and everyone's SMP physics is rebuilt from the reference pose after a scene (FSMP's `ResetPhysics`).

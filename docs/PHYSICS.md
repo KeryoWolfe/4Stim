@@ -26,5 +26,26 @@ Swaps are defined in JSON files in `Data\F4SE\Plugins\4Stim\Physics\`. 4Stim shi
 | `to` | yes | The file to use during a scene. |
 | `toReceiving` | no | The file for an actor on the receiving end: the target of someone's action that needs their anus or vagina (anal or vaginal sex, pegging, fingering, rimming...). In a scene without such an action, every role but the first (OStim's scenes put the giving one first). Defaults to `to`. |
 | `sceneTags` | no | Only swap in scenes with one of these tags, e.g. `["sexual"]`. Default: every scene. |
+| `toSuffix` | instead of `to` | Suffix syntax: the actor's own physics file with this before `.xml` (`"Hard"`: `MaleBody.xml` becomes `MaleBodyHard.xml`). `from` is then optional. |
+| `toReceivingSuffix` | no | The same for the receiving end (`"HardBottom"`). Also works with a full-path `from`. |
 
-Each actor gets at most one swap (the first that matches), when their scene starts. It's swapped back 2 seconds after the scene ends, once they're out of its last pose, and then FSMP rebuilds their physics from the reference pose (`DynamicHDT.ResetPhysics`; everyone in the scene gets that rebuild, swapped or not). Swapping back while the body was still in the scene's pose could leave a penis stretched and stuck at an angle. A new scene within those 2 seconds keeps the swap. On a scene change, an actor whose swap has a `toReceiving` switches between it and `to` if they went from giving to receiving or back (a man who was on top, now bottoming).
+### Suffix syntax
+
+Instead of naming every file, a swap can give suffixes. 4Stim then looks at the physics files the actor's meshes name (FSMP's `HDT Skinned Mesh Physics Object`), takes the first one that has a suffixed version (loose or in an archive), and swaps it for that, so one entry covers a body's variants and any body that names its files the same way:
+
+```json
+{
+	"swaps": [
+		{
+			"id": "Hard physics, any body",
+			"sex": "male",
+			"toSuffix": "Hard",
+			"toReceivingSuffix": "HardBottom"
+		}
+	]
+}
+```
+
+With a `from`, only that file is swapped (`"from": "meshes\\A-Body\\body\\MaleBody.xml", "toSuffix": "Hard"`). A file that already ends with the suffix is left alone, and an actor with no file that has a suffixed version gets the next swap that fits (the log says which files it had). `toReceivingSuffix` falls back to `toSuffix`'s file when the body has no receiving version.
+
+Each actor gets at most one swap (the first that matches; a suffix swap only matches if the actor has a file with that suffixed version), when their scene starts. It's swapped back 2 seconds after the scene ends, once they're out of its last pose, and then FSMP rebuilds their physics from the reference pose (`DynamicHDT.ResetPhysics`; everyone in the scene gets that rebuild, swapped or not). Swapping back while the body was still in the scene's pose could leave a penis stretched and stuck at an angle. A new scene within those 2 seconds keeps the swap. On a scene change, an actor whose swap has a `toReceiving` switches between it and `to` if they went from giving to receiving or back (a man who was on top, now bottoming).
