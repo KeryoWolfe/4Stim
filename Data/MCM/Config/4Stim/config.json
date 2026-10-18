@@ -10,11 +10,6 @@
 			"type": "image",
 			"libName": "4Stim",
 			"className": "FourStimLogo"
-		},
-		{
-			"text": "$4Stim_MCM_Intro",
-			"type": "text",
-			"align": "center"
 		}
 	],
 	"pages": [
