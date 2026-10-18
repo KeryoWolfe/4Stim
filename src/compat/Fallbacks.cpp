@@ -53,6 +53,8 @@ namespace Compat
 		// there.
 		const auto player = RE::PlayerCharacter::GetSingleton();
 		const auto cell = player ? player->GetParentCell() : nullptr;
+		REX::INFO("Compat: references within {:.0f} of the player's cell {:08X} ({})", a_radius, cell ? cell->GetFormID() : 0,
+			!cell ? "none" : cell->IsInterior() ? "interior" : "exterior");
 		if (!cell) {
 			return;
 		}
@@ -69,6 +71,7 @@ namespace Compat
 		const float xMinus = a_origin.x - a_radius;
 		const float yPlus = a_origin.y + a_radius;
 		const float yMinus = a_origin.y - a_radius;
+		REX::INFO("Compat: worldspace {:08X}, {} cell(s) in its map", world->GetFormID(), world->cellMap.size());
 		for (const auto& entry : world->cellMap) {
 			const auto exterior = entry.second;
 			if (!exterior || !exterior->IsAttached()) {

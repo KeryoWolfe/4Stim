@@ -5275,6 +5275,7 @@ namespace
 		}
 		const auto center = player->GetPosition();
 		ActorProperties::Remember(player);
+		REX::INFO("Picker: player's actor properties worked out");
 		Compat::ForEachReferenceInRange(center, a_radius, [&](RE::TESObjectREFR* a_ref) {
 			const auto actor = a_ref ? a_ref->As<RE::Actor>() : nullptr;
 			if (!actor || actor == player || actor->GetDelete() || (actor->formFlags & 0x800) != 0 || !actor->Get3D()) {
@@ -5287,6 +5288,7 @@ namespace
 			// As OStim: only actors with an actor type (docs/ACTORS.md:
 			// people, by the default actor properties). Worked out here, on
 			// the main thread, for the picker's lists.
+			REX::INFO("Picker: checking {:08X}", actor->GetFormID());
 			ActorProperties::Remember(actor);
 			if (ActorProperties::Cached(actor->GetFormID()).type.empty()) {
 				return RE::BSContainer::ForEachResult::kContinue;
@@ -6050,7 +6052,9 @@ namespace
 		// the loaded cells), then open the picker.
 		F4SE::GetTaskInterface()->AddTask([a_targetID, a_npcsOnly]() {
 			{
+				REX::INFO("Picker: looking for actors (target {:08X})", static_cast<std::uint32_t>(a_targetID));
 				auto candidates = FindCandidates(g_settings.actorRadius);
+				REX::INFO("Picker: {} candidate(s) found", candidates.size());
 				auto running = SnapshotRunning();
 				std::scoped_lock lock(g_castLock);
 				g_cast.clear();
@@ -6082,8 +6086,10 @@ namespace
 			std::vector<Furniture::Found> found;
 			const auto                    player = RE::PlayerCharacter::GetSingleton();
 			if (player && g_settings.useFurniture) {
+				REX::INFO("Picker: looking for furniture");
 				Furniture::Reload();
 				found = FurnitureNear(player->GetPosition(), player);
+				REX::INFO("Picker: {} furniture found", found.size());
 			}
 			{
 				std::scoped_lock lock(g_pickerFurnitureLock);
