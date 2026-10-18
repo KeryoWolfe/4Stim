@@ -51,7 +51,7 @@ for _k in PAD_KEYS:
 CHOICE_LABELS['sPadScheme'] = ['4Stim Modern', 'OStim Classic']
 
 # key: (label, kind, options). kind: bool; int / float (min, max, step);
-# choice; key (an MCM key input: the key's code, decimal); ms (OStim's
+# choice; key (an MCM key input: "keycode,modifiers", a string); ms (OStim's
 # milliseconds in 4Stim.ini, a slider in seconds: src/MCM.cpp's MILLISECONDS). Keys not listed
 # (bone names, slot lists) aren't on the pages and stay in 4Stim.ini.
 SETTINGS = {
@@ -274,7 +274,9 @@ def read_ini():
 def mcm_key(key, kind):
     if kind == 'ms':
         return 'f4S_' + key  # OStim's milliseconds, shown in seconds
-    if kind in ('choice', 'key') and not re.match(r'^[bifs][A-Z]', key):
+    if kind == 'key':
+        return 's4S_' + key  # MCM's key input keeps "keycode,modifiers" in a string
+    if kind == 'choice' and not re.match(r'^[bifs][A-Z]', key):
         return 'i4S_' + key
     if kind == 'choice':
         return 'i4S_' + key
@@ -290,7 +292,7 @@ def mcm_value(key, kind, value):
     if kind == 'bool':
         return '0' if value.strip() in ('0', 'false') else '1'
     if kind == 'key':
-        return str(int(value, 0))
+        return f'{int(value, 0)},0'
     if kind == 'ms':
         return f'{float(value) / 1000:g}'
     return value
@@ -331,8 +333,11 @@ def main():
                     'action': {'type': 'CallGlobalFunction', 'script': 'FourStimMCM', 'function': 'SettingChanged', 'params': []},
                 }
                 if kind == 'key':
+                    # MCM's key input: a string "keycode,modifiers" (its
+                    # MCM_Menu splits valueString; an int setting broke the
+                    # pages after it). Keycodes are Windows virtual keys.
                     control['type'] = 'keyinput'
-                    control['valueOptions'] = {'sourceType': 'ModSettingInt'}
+                    control['valueOptions'] = {'sourceType': 'ModSettingString', 'allowModifierKeys': False}
                 elif kind == 'bool':
                     control['type'] = 'switcher'
                     control['valueOptions'] = {'sourceType': 'ModSettingBool'}

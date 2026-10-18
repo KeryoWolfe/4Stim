@@ -262,8 +262,15 @@ namespace MCM
 			if (a_mcmKey.starts_with("b")) {
 				return SameValue(a_iniValue, "0") || Lower(a_iniValue) == "false" ? "0" : "1";
 			}
-			// Whole numbers in decimal: 4Stim.ini's keys are hex (0x26), MCM's
-			// key inputs read decimal (38).
+			// A key: MCM's key input holds "keycode,modifiers" ("38,0").
+			if (a_mcmKey.starts_with("s4S_") || a_mcmKey.starts_with("s4s_")) {
+				try {
+					return std::to_string(std::stoll(a_iniValue, nullptr, 0)) + ",0";
+				} catch (...) {
+					return "0,0";
+				}
+			}
+			// Whole numbers in decimal (4Stim.ini may write hex).
 			if (a_mcmKey.starts_with("i") && (a_iniValue.starts_with("0x") || a_iniValue.starts_with("0X"))) {
 				try {
 					return std::to_string(std::stoll(a_iniValue, nullptr, 16));
@@ -337,6 +344,15 @@ namespace MCM
 			try {
 				const auto index = static_cast<std::size_t>(std::stoul(std::string(a_value)));
 				return std::pair{ iniKey, std::string(choice->options[std::min(index, choice->options.size() - 1)]) };
+			} catch (...) {
+				return std::nullopt;
+			}
+		}
+		// A key from MCM's key input: "keycode,modifiers" -> the keycode.
+		if (Lower(a_mcmKey.substr(0, std::min<std::size_t>(4, a_mcmKey.size()))) == "s4s_") {
+			const auto text = std::string(a_value);
+			try {
+				return std::pair{ iniKey, std::to_string(std::stoll(text.substr(0, text.find(',')))) };
 			} catch (...) {
 				return std::nullopt;
 			}
