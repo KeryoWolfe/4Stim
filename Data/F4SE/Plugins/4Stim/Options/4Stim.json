@@ -10,7 +10,7 @@
 		{
 			"name": "4StimActor",
 			"description": "$4Stim_OptActor",
-			"icon": "4Stim/symbols/gender_f",
+			"icon": "4Stim/symbols/gender_{sex}",
 			"parent": "4StimActors",
 			"repeat": "actor"
 		},

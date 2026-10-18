@@ -34,7 +34,7 @@ As OStim's:
 |---|---|
 | page `name` | Its id (a page already defined by an earlier file is skipped, as OStim). |
 | page `description` | What the row says; `{actor}` is the actor's name on a per-actor page. |
-| page `icon`, `border` | The row's icon (a path under `Data\Interface\4Stim\Icons\`; OStim's `OStim/...` paths are taken as `4Stim/...`) and its border color (`rrggbb`). |
+| page `icon`, `border` | The row's icon (a path under `Data\Interface\4Stim\Icons\`; OStim's `OStim/...` paths are taken as `4Stim/...`) and its border color (`rrggbb`). 4Stim's: on a per-actor page, `{sex}` in the icon is the actor's `m` or `f` (`4Stim/symbols/gender_{sex}`); OStim shows one icon for every actor. |
 | page `parent` | The page it's in; `null` for the top. |
 | page `repeat` | `"actor"`: one page per actor in the scene. |
 | option `page` | The page it's in. |

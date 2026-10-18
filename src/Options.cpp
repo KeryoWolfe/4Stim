@@ -13,6 +13,7 @@
 
 #include "Bridge.h"
 #include "EquipObjects.h"
+#include "SceneRegistry.h"
 #include "Sounds.h"
 #include "Translations.h"
 #include "Undress.h"
@@ -319,7 +320,15 @@ namespace Options
 				for (std::size_t i = 0; i < a_actors.size(); ++i) {
 					auto label = Text(page.description);
 					Replace(label, "{actor}", ActorName(a_actors[i], false));
-					rows.push_back({ std::format("{}page:{}|{}", OPTION_PREFIX, page.name, i), label, page.icon, page.border });
+					// 4Stim's: "{sex}" in a per-actor page's icon is the actor's
+					// "m" or "f" (4Stim/symbols/gender_{sex}); OStim shows the
+					// same icon for every actor.
+					auto icon = page.icon;
+					if (icon.find("{sex}") != std::string::npos) {
+						const auto actor = RE::TESForm::GetFormByID<RE::Actor>(a_actors[i]);
+						Replace(icon, "{sex}", actor && SceneRegistry::SexOf(actor) == SceneRegistry::Sex::kMale ? "m" : "f");
+					}
+					rows.push_back({ std::format("{}page:{}|{}", OPTION_PREFIX, page.name, i), label, icon, page.border });
 				}
 			} else {
 				auto label = Text(page.description);
