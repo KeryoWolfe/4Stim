@@ -12,6 +12,7 @@
 #include <unordered_set>
 
 #include "Actions.h"
+#include "compat/Fallbacks.h"
 #include "Excitement.h"
 #include "Undress.h"
 #include "Alignment.h"
@@ -2659,7 +2660,9 @@ namespace
 			const auto base = furniture->GetObjectReference();
 			REX::INFO("Furniture use: {:08X} is using {:08X} (base {:08X} \"{}\"), taking them out", a_actor->GetFormID(), furniture->GetFormID(),
 				base ? base->GetFormID() : 0, base && base->GetFormEditorID() ? base->GetFormEditorID() : "");
-			a_actor->StopInteractingQuick(true, false, true);
+			if (Compat::CanStopInteractingQuick()) {
+				a_actor->StopInteractingQuick(true, false, true);
+			}
 		}
 		if (a_doNothing || furniture) {
 			a_actor->InitiateDoNothingPackage();
@@ -5202,7 +5205,7 @@ namespace
 		}
 		const auto female = [](std::uint32_t a_id) {
 			const auto actor = RE::TESForm::GetFormByID<RE::Actor>(a_id);
-			return actor && actor->GetSex() == RE::SEX::kFemale;
+			return actor && Compat::GetSex(actor) == RE::SEX::kFemale;
 		};
 		return female(a_cast[0]) == female(a_cast[1]) ? g_settings.playerSelectRoleGay : g_settings.playerSelectRoleStraight;
 	}
@@ -5267,13 +5270,12 @@ namespace
 	{
 		std::vector<Candidate> out;
 		const auto player = RE::PlayerCharacter::GetSingleton();
-		const auto tes = RE::TES::GetSingleton();
-		if (!player || !tes) {
+		if (!player) {
 			return out;
 		}
 		const auto center = player->GetPosition();
 		ActorProperties::Remember(player);
-		tes->ForEachReferenceInRange(center, a_radius, [&](RE::TESObjectREFR* a_ref) {
+		Compat::ForEachReferenceInRange(center, a_radius, [&](RE::TESObjectREFR* a_ref) {
 			const auto actor = a_ref ? a_ref->As<RE::Actor>() : nullptr;
 			if (!actor || actor == player || actor->GetDelete() || (actor->formFlags & 0x800) != 0 || !actor->Get3D()) {
 				return RE::BSContainer::ForEachResult::kContinue;
@@ -8821,7 +8823,8 @@ F4SE_PLUGIN_LOAD(const F4SE::LoadInterface* a_f4se)
 	// On a game version other than AE with its Address Library, 4Stim finds
 	// the game's code through CommonLibF4RD's Runtime Database (and its own
 	// table for 1.10.163; compat/IDDB.cpp). Every address it uses must be
-	// found, or it doesn't load at all (instead of crashing later).
+	// found, or it doesn't load at all (instead of crashing later), apart
+	// from the few it can do without (compat/Fallbacks.h).
 	if (Compat::UsingAddressTable()) {
 		for (const auto& probe : Compat::RuntimeDatabaseProbes()) {
 			REX::INFO("Addresses: Runtime Database at {}", probe);
@@ -8829,11 +8832,20 @@ F4SE_PLUGIN_LOAD(const F4SE::LoadInterface* a_f4se)
 		REX::INFO("Addresses: {}, {}", Compat::UsingRuntimeDatabase() ? "CommonLibF4RD's Runtime Database" : "4Stim's own table",
 			Compat::AddressTablePath().string());
 		int missing = 0;
+		int doneWithout = 0;
 		for (const auto& required : Compat::REQUIRED_IDS) {
-			if (!Compat::HasAddress(required.id)) {
-				REX::ERROR("Addresses: {} ({}) not found: {}", required.name, required.id, Compat::WhyMissing(required.id));
-				++missing;
+			if (Compat::HasAddress(required.id)) {
+				continue;
 			}
+			// A few have a stand-in (compat/Fallbacks.h): 4Stim loads without them.
+			const auto optional = std::ranges::find_if(Compat::OPTIONAL_IDS, [&](const Compat::OptionalID& a_optional) { return a_optional.id == required.id; });
+			if (optional != std::ranges::end(Compat::OPTIONAL_IDS)) {
+				REX::WARN("Addresses: {} ({}) not found ({}); {}", required.name, required.id, Compat::WhyMissing(required.id), optional->without);
+				++doneWithout;
+				continue;
+			}
+			REX::ERROR("Addresses: {} ({}) not found: {}", required.name, required.id, Compat::WhyMissing(required.id));
+			++missing;
 		}
 		if (missing > 0) {
 			REX::ERROR("Addresses: {} of {} missing; 4Stim can't run on this game version and isn't loaded", missing, std::size(Compat::REQUIRED_IDS));
@@ -8843,7 +8855,12 @@ F4SE_PLUGIN_LOAD(const F4SE::LoadInterface* a_f4se)
 			}
 			return false;
 		}
-		REX::INFO("Addresses: all {} found", std::size(Compat::REQUIRED_IDS));
+		Compat::Prime();
+		if (doneWithout > 0) {
+			REX::INFO("Addresses: {} of {} found, the other {} done without", std::ssize(Compat::REQUIRED_IDS) - doneWithout, std::size(Compat::REQUIRED_IDS), doneWithout);
+		} else {
+			REX::INFO("Addresses: all {} found", std::size(Compat::REQUIRED_IDS));
+		}
 	}
 
 	MCM::Sync();  // whichever of 4Stim.ini and the MCM's settings changed last wins

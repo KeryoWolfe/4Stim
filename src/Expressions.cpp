@@ -1,4 +1,5 @@
 #include "Expressions.h"
+#include "compat/Fallbacks.h"
 
 #include <algorithm>
 #include <array>
@@ -501,7 +502,7 @@ namespace Expressions
 		}
 		auto&      state = g_states[a_id];
 		const auto actor = RE::TESForm::GetFormByID<RE::Actor>(a_id);
-		state.female = actor && actor->GetSex() == RE::SEX::kFemale;
+		state.female = actor && Compat::GetSex(actor) == RE::SEX::kFemale;
 		state.speed = a_relativeSpeed;
 		if (state.sceneID == a_scene.id) {
 			return;  // a speed change: the next pick uses the new speed

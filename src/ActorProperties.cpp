@@ -1,4 +1,5 @@
 #include "ActorProperties.h"
+#include "compat/Fallbacks.h"
 
 #include <algorithm>
 #include <cctype>
@@ -214,7 +215,7 @@ namespace ActorProperties
 					return false;
 				}
 			}
-			if (a_c.female && (a_actor->GetSex() == RE::SEX::kFemale) != *a_c.female) {
+			if (a_c.female && (Compat::GetSex(a_actor) == RE::SEX::kFemale) != *a_c.female) {
 				return false;
 			}
 			if (a_c.player && (a_actor == RE::PlayerCharacter::GetSingleton()) != *a_c.player) {
@@ -243,7 +244,7 @@ namespace ActorProperties
 			}
 			if (a_c.penis) {
 				// Inside a "sex" property's own condition, by the body.
-				const bool penis = t_inPenis ? a_actor->GetSex() == RE::SEX::kMale : HasPenisLocked(a_actor);
+				const bool penis = t_inPenis ? Compat::GetSex(a_actor) == RE::SEX::kMale : HasPenisLocked(a_actor);
 				if (penis != *a_c.penis) {
 					return false;
 				}
@@ -370,7 +371,7 @@ namespace ActorProperties
 			if (outer) {
 				t_inPenis = false;
 			}
-			return sex ? *sex : a_actor->GetSex() == RE::SEX::kMale;
+			return sex ? *sex : Compat::GetSex(a_actor) == RE::SEX::kMale;
 		}
 
 		SceneRegistry::ActorCondition ConditionLocked(RE::Actor* a_actor)
@@ -391,7 +392,7 @@ namespace ActorProperties
 				}
 			}
 			out.penis = HasPenisLocked(a_actor);
-			switch (a_actor->GetSex()) {
+			switch (Compat::GetSex(a_actor)) {
 			case RE::SEX::kFemale:
 				out.sex = g_config.futaUseMaleRole && out.penis ? SceneRegistry::Sex::kAny : SceneRegistry::Sex::kFemale;
 				break;
@@ -482,13 +483,13 @@ namespace ActorProperties
 
 	bool MaleExcitement(RE::Actor* a_actor)
 	{
-		const bool female = a_actor && a_actor->GetSex() == RE::SEX::kFemale;
+		const bool female = a_actor && Compat::GetSex(a_actor) == RE::SEX::kFemale;
 		return !female || (g_config.futaUseMaleExcitement && HasPenis(a_actor));
 	}
 
 	bool MaleClimax(RE::Actor* a_actor)
 	{
-		const bool female = a_actor && a_actor->GetSex() == RE::SEX::kFemale;
+		const bool female = a_actor && Compat::GetSex(a_actor) == RE::SEX::kFemale;
 		return HasPenis(a_actor) && (!female || g_config.futaUseMaleClimax);
 	}
 

@@ -1,4 +1,5 @@
 #include "Lights.h"
+#include "compat/Fallbacks.h"
 
 #include <algorithm>
 #include <cctype>
@@ -95,7 +96,7 @@ namespace Lights
 			if (!g_loaded) {
 				LoadLocked();
 			}
-			const auto& id = a_actor->GetSex() == RE::SEX::kFemale ? g_config.femaleLight : g_config.maleLight;
+			const auto& id = Compat::GetSex(a_actor) == RE::SEX::kFemale ? g_config.femaleLight : g_config.maleLight;
 			const auto  it = g_types.find(Lower(id));
 			if (it == g_types.end()) {
 				if (Lower(id) != "nolight") {

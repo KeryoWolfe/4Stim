@@ -1,4 +1,5 @@
 #include "Scaling.h"
+#include "compat/Fallbacks.h"
 
 #include <algorithm>
 #include <cctype>
@@ -220,7 +221,7 @@ namespace Scaling
 		if (!a_actor) {
 			return 0.0F;
 		}
-		const std::size_t sex = a_actor->GetSex() == RE::SEX::kFemale ? 1 : 0;
+		const std::size_t sex = Compat::GetSex(a_actor) == RE::SEX::kFemale ? 1 : 0;
 		float             best = 0.0F;
 		for (const auto id : Undress::WornItems(a_actor)) {
 			const auto armor = RE::TESForm::GetFormByID<RE::TESObjectARMO>(id);

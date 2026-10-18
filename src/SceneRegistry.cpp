@@ -1,4 +1,5 @@
 #include "SceneRegistry.h"
+#include "compat/Fallbacks.h"
 
 #include "Actions.h"
 
@@ -892,7 +893,7 @@ namespace SceneRegistry
 		if (!a_actor) {
 			return Sex::kAny;
 		}
-		switch (a_actor->GetSex()) {
+		switch (Compat::GetSex(a_actor)) {
 		case RE::SEX::kMale:
 			return Sex::kMale;
 		case RE::SEX::kFemale:

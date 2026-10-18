@@ -1,4 +1,5 @@
 #include "Sounds.h"
+#include "compat/Fallbacks.h"
 
 #include <algorithm>
 #include <cctype>
@@ -272,7 +273,7 @@ namespace Sounds
 					}
 				}
 			}
-			return a_actor->GetSex() == RE::SEX::kFemale ? g_defaultFemale : g_defaultMale;
+			return Compat::GetSex(a_actor) == RE::SEX::kFemale ? g_defaultFemale : g_defaultMale;
 		}
 
 		float RandomInterval()
@@ -431,7 +432,7 @@ namespace Sounds
 				return playing;
 			}
 			const auto& file = a_sound.files[std::uniform_int_distribution<std::size_t>(0, a_sound.files.size() - 1)(g_random)];
-			audio->GetSoundHandleByFile(playing.handle, RE::BSResource::ID(file.c_str()), g_config.flags, g_config.priority);
+			audio->GetSoundHandleByFile(playing.handle, Compat::ResourceID(file.c_str()), g_config.flags, g_config.priority);
 			if (playing.handle.soundID == static_cast<std::uint32_t>(-1)) {
 				REX::WARN("Sound: couldn't load {}", file);
 				return playing;
@@ -445,7 +446,9 @@ namespace Sounds
 			if (const auto model = OutputModel()) {
 				playing.handle.SetOutputModel(model);
 			}
-			playing.handle.SetPosition(root->world.translate);
+			if (Compat::CanSetSoundPosition()) {
+				playing.handle.SetPosition(root->world.translate);
+			}
 			playing.handle.SetObjectToFollow(root);
 			playing.handle.Play();
 			playing.until = std::chrono::steady_clock::now() + std::chrono::seconds(10);  // safety net

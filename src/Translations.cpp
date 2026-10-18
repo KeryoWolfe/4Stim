@@ -1,4 +1,5 @@
 #include "Translations.h"
+#include "compat/Fallbacks.h"
 
 #include <algorithm>
 #include <cctype>
@@ -151,7 +152,25 @@ namespace Translations
 		if (!std::filesystem::exists(std::string(FOLDER) + name, ec)) {
 			name = "4Stim_en.txt";
 		}
-		if (std::filesystem::exists(std::string(FOLDER) + name, ec)) {
+		if (!Compat::CanAddTranslations()) {
+			// 1.10.163: the Runtime Database has no
+			// BSScaleformTranslator::AddTranslations there (docs/OLDGEN.md).
+			// As F4SE's own translation loader does, put the texts (Load's:
+			// the game's language's, over the English) in the translator's
+			// table directly.
+			auto widen = [](const std::string& a_text) {
+				return std::filesystem::path(std::u8string(reinterpret_cast<const char8_t*>(a_text.data()), a_text.size())).wstring();
+			};
+			std::size_t added = 0;
+			for (const auto& [key, text] : Entries()) {
+				const auto wideKey = widen(key);
+				const auto wideText = widen(text);
+				if (translator->translator.translationMap.emplace(RE::BSFixedStringWCS(wideKey.c_str()), RE::BSFixedStringWCS(wideText.c_str())).second) {
+					++added;
+				}
+			}
+			REX::INFO("Translations: {} text(s) added to the game's translator", added);
+		} else if (std::filesystem::exists(std::string(FOLDER) + name, ec)) {
 			const auto file = "Interface\\Translations\\" + name;
 			translator->AddTranslationsFile(file.c_str());
 			REX::INFO("Translations: {} handed to the game", name);

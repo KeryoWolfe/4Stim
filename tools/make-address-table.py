@@ -10,6 +10,11 @@ Sources, later ones winning:
   --mapping  <plugin>.mapping   a CommonLibF4RD plugin's complete mapping,
                                 written on that game version (it adds the
                                 addresses the database finds by pattern)
+  OG_EXTRA (1.10.163.0 only)    AE IDs the database has no 1.10.163 entry or
+                                working pattern for, by their OG Address
+                                Library IDs (alandtse/CommonLibF4, which names
+                                both, and CommonLibF4 for OG), looked up in the
+                                OG Address Library at the database's start
 
   python tools/make-address-table.py --version 1.10.163.0 --database <path> [--mapping <path>]
 
@@ -20,6 +25,23 @@ import argparse, mmap, os, re, struct, sys
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 MAGIC = b'F4RDBIN\0'
+
+# AE ID -> OG Address Library ID, for 1.10.163.0 (see the top).
+OG_EXTRA = {
+    2201126: 1212056,  # TESObjectREFR::GetDisplayFullName
+    2207107: 1257181,  # TESNPC::GetSex
+    2229625: 353571,   # Actor::SetHeading
+    2248368: 224913,   # PlayerCamera::ToggleFreeCameraMode
+    2248421: 839543,   # PlayerCamera::QCameraEquals
+    2267970: 1419977,  # BSTimer::SetGlobalTimeMultiplier
+    2268263: 1432984,  # BSInputEnableManager::EnableUserEvent
+    2268272: 659989,   # BSInputEnableLayer::DecRef
+    2277771: 476687,   # bhkPickData::GetHitFraction
+    2703058: 1321158,  # BSAudioManager::Singleton
+    2703179: 1256126,  # BSTimer::Singleton
+    4796297: 781703,   # BSInputEnableManager::Singleton
+    4798212: 303410,   # PlayerCharacter::Singleton (F4SE 0.6.23's g_player)
+}
 
 
 def library_ids():
@@ -80,6 +102,19 @@ def from_database(path, version, wanted):
     return out
 
 
+def from_og_library(path):
+    """OG_EXTRA, from the OG Address Library at the database's start."""
+    f = open(path, 'rb')
+    m = mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_READ)
+    if m[:8] == MAGIC:
+        return {}
+    og = {}
+    for k in range(struct.unpack_from('<Q', m, 0)[0]):
+        i, v = struct.unpack_from('<QQ', m, 8 + 16 * k)
+        og[i] = v
+    return {ae: og[o] for ae, o in OG_EXTRA.items() if o in og}
+
+
 def from_mapping(path, wanted):
     out = {}
     for line in open(path, encoding='utf-8', errors='ignore'):
@@ -102,6 +137,9 @@ def main():
     table = {}
     if a.database:
         table.update(from_database(a.database, a.version, wanted))
+        if a.version == '1.10.163.0':
+            for i, rva in from_og_library(a.database).items():
+                table.setdefault(i, rva)
     for path in a.mapping:
         table.update(from_mapping(path, wanted))
     out = a.out or os.path.join(REPO, 'Data', 'F4SE', 'Plugins', '4Stim', 'Addresses',
@@ -111,6 +149,9 @@ def main():
         f.write('# 4Stim address table for Fallout 4 %s (docs/OLDGEN.md): AE Address Library ID -> RVA.\n' % a.version)
         f.write('# Made by tools/make-address-table.py from the CommonLibF4RD Runtime Database%s.\n'
                 % (' and a CommonLibF4RD mapping' if a.mapping else ''))
+        if a.version == '1.10.163.0':
+            f.write('# Also: %d addresses the Runtime Database has no 1.10.163 entry for, by their OG Address Library IDs from\n' % len(OG_EXTRA))
+            f.write('# alandtse/CommonLibF4 (OG + NG) and CommonLibF4 for OG (tools/make-address-table.py OG_EXTRA).\n')
         for i in sorted(table):
             f.write('%d 0x%X\n' % (i, table[i]))
     print('%s: %d of %d IDs' % (out, len(table), len(wanted)))

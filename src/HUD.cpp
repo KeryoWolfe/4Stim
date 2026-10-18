@@ -14,6 +14,7 @@
 #include <nlohmann/json.hpp>
 
 #include "Excitement.h"
+#include "compat/Fallbacks.h"
 #include "Undress.h"
 #include "Bridge.h"
 #include "HUD.h"
@@ -959,7 +960,7 @@ namespace HUD
 						if (const auto n = actor->GetDisplayFullName(); n && *n) {
 							name = n;
 						}
-						const auto s = actor->GetSex();
+						const auto s = Compat::GetSex(actor);
 						sex = s == RE::SEX::kMale ? "male" : s == RE::SEX::kFemale ? "female" : "other";
 						player = actor == RE::PlayerCharacter::GetSingleton();
 					}

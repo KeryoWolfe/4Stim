@@ -13,7 +13,26 @@
 
 ## How it loads
 
-At startup (`src/compat/IDDB.cpp`): AE with its Address Library uses the Address Library. Otherwise, with `f4rd-runtime.bin` installed, every address goes through the Runtime Database (cached, and shared with other CommonLibF4RD plugins in the game), and 4Stim's own table for that version (if it has one) fills in anything the database can't. 4Stim then checks every address it needs (`src/compat/RequiredIDs.h`); if any can't be found, it doesn't load, and `4Stim.log` says which and why (not in the database, pattern not found...).
+At startup (`src/compat/IDDB.cpp`): AE with its Address Library uses the Address Library. Otherwise, with `f4rd-runtime.bin` installed, every address goes through the Runtime Database (cached, and shared with other CommonLibF4RD plugins in the game), and 4Stim's own table for that version (if it has one) fills in anything the database can't. 4Stim then checks every address it needs (`src/compat/RequiredIDs.h`); if any can't be found, it doesn't load, and `4Stim.log` says which and why (not in the database, pattern not found...). A few it can do without (`src/compat/Fallbacks.h`, below): those are logged as warnings with what 4Stim does instead.
+
+## 1.10.163: what the Runtime Database can't find
+
+A 1.10.163 tester's log (October 2026) had the Runtime Database finding 87 of the 107 addresses; the other 20 have no 1.10.163 entry or search pattern in the database, or a pattern that no longer matches. 0.3.0 handles them like this:
+
+- **12 from their OG IDs**, put in 4Stim's table: `alandtse/CommonLibF4` (a CommonLibF4 for OG and NG) names both IDs for `GetDisplayFullName`, `Actor::SetHeading`, `ToggleFreeCameraMode`, `QCameraEquals`, `SetGlobalTimeMultiplier`, the `BSTimer`, `BSInputEnableManager` and `BSAudioManager` singletons, `EnableUserEvent`, `BSInputEnableLayer::DecRef` and `bhkPickData::GetHitFraction`; the player singleton is F4SE 0.6.23's `g_player`. The OG Address Library at the start of `f4rd-runtime.bin` gives their addresses (`OG_EXTRA` in `tools/make-address-table.py`). Their signatures are the same as AE's in that CommonLibF4.
+- **8 done another way** (`src/compat/Fallbacks.cpp`), only where the address isn't found (AE and NG still call the game's function):
+
+| Missing | Instead |
+|---|---|
+| `Actor::GetSex` | the base NPC's sex (`TESNPC::GetSex`, which 1.10.163 has), as Papyrus's `ActorBase.GetSex` |
+| `TES::Singleton`, `GridCellArray::Get` | nearby actors, furniture and clutter come from the player's interior cell, or the attached cells in the worldspace's cell map, and the sky cell (what `TES::ForEachReferenceInRange` covers) |
+| `hkReferencedObject::RemoveReference` | after a raycast, 4Stim drops the Havok world reference itself (Havok's count: the low 16 bits) |
+| `BSResource::ID::GenerateFromPath` | 4Stim works out a sound file's resource ID itself: the CRC-32 of the lowercase file name and folder, and the extension, as BA2 archives store files. On AE the first three sounds are checked against the game's (`Compat: resource ID of ...` in the log) |
+| `BSScaleformTranslator::AddTranslations` | MCM's texts go into the game's translator table directly, as F4SE's own translation loader does |
+| `BSSoundHandle::SetPosition` | sounds just follow the actor (`SetObjectToFollow`), without a start position |
+| `Actor::StopInteractingQuick` | **lost:** an NPC using furniture or an idle marker isn't taken out of it before a scene |
+
+That covers all 20 from that log; a log from 1.10.163 with 0.3.0 says whether anything else is missing.
 
 The F4SE version data says 4Stim is address-independent (signatures) and uses the 1.10.980 and 1.11.137 struct layouts (`src/PluginVersion.cpp`), as CommonLibF4RD plugins do, so F4SE on NG and AE versions loads it; old F4SE (1.10.163) asks `F4SEPlugin_Query` instead.
 
@@ -45,10 +64,10 @@ It writes the table, then says how many addresses it has and which of 4Stim's ar
 1. **Search the code ourselves:** read those patterns from `f4rd-runtime.bin` and scan the 1.10.163 executable at startup, as CommonLibF4RD does. Needs the format worked out and a 1.10.163 tester.
 2. **Build on CommonLibF4RD** ("Runtime Database version" in TODO.md), which does all of that and covers OG, NG and AE with one plugin.
 
-Until then 1.10.163 doesn't load (4Stim checks every address at startup and says which are missing).
+Since then CommonLibF4RD's resolver was built in (above), which searches the code itself.
 
 ## Departures
 
 - OStim (Skyrim) uses the Address Library on every version. On 1.10.163, 4Stim uses its own table, because Fallout 4's 1.10.163 Address Library uses different IDs from AE's.
 - To read the table, 4Stim builds its own copy of CommonLibF4's address loader (`src/compat/IDDB.cpp`) and F4SE setup (`src/compat/F4SE_API.cpp`: F4SE 0.6.23 has no save folder name, so it's taken as `Fallout4`), and exports `F4SEPlugin_Query`, which old F4SE versions ask for.
-- 1.10.984 (next-gen) isn't supported: no tester.
+- On 1.10.163, 8 game functions are replaced by 4Stim's own code (above); OStim has no such case.

@@ -1,4 +1,5 @@
 #include "SexToys.h"
+#include "compat/Fallbacks.h"
 
 #include <array>
 #include <mutex>
@@ -85,7 +86,7 @@ namespace SexToys
 		bool IsMale(std::uint32_t a_id)
 		{
 			const auto actor = RE::TESForm::GetFormByID<RE::Actor>(a_id);
-			return actor && actor->GetSex() == RE::SEX::kMale;
+			return actor && Compat::GetSex(actor) == RE::SEX::kMale;
 		}
 
 		// OStim's SynchronizationType: does the actor in this slot get a toy?

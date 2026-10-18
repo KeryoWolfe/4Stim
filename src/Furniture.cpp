@@ -13,6 +13,7 @@
 #include <nlohmann/json.hpp>
 
 #include "Bridge.h"
+#include "compat/Fallbacks.h"
 
 namespace Furniture
 {
@@ -417,7 +418,8 @@ namespace Furniture
 			if (!a_cell) {
 				return out;
 			}
-			RE::bhkPickData pick;
+			RE::bhkPickData        pick;
+			const Compat::PickGuard guard{ pick };
 			pick.SetStartEnd(a_from, a_to);
 			pick.castQuery.m_filterData.m_collisionFilterInfo = static_cast<std::uint32_t>(RE::COL_LAYER::kLOS);
 			const auto object = a_cell->Pick(pick);
@@ -660,13 +662,9 @@ namespace Furniture
 		std::scoped_lock lock(g_lock);
 		EnsureLoaded();
 		std::vector<Found> found;
-		const auto         tes = RE::TES::GetSingleton();
-		if (!tes) {
-			return found;
-		}
 		// Furniture near enough to stand in front of a wall: no wall spot there.
 		std::vector<RE::TESObjectREFR*> obstacles;
-		tes->ForEachReferenceInRange(a_center, a_radius, [&](RE::TESObjectREFR* a_ref) {
+		Compat::ForEachReferenceInRange(a_center, a_radius, [&](RE::TESObjectREFR* a_ref) {
 			const auto base = a_ref ? a_ref->GetObjectReference() : nullptr;
 			if (!base) {
 				return RE::BSContainer::ForEachResult::kContinue;
@@ -756,7 +754,8 @@ namespace Furniture
 			if (!cell) {
 				return 1.0F;
 			}
-			RE::bhkPickData pick;
+			RE::bhkPickData        pick;
+			const Compat::PickGuard guard{ pick };
 			pick.SetStartEnd(a_from, a_to);
 			pick.castQuery.m_filterData.m_collisionFilterInfo = static_cast<std::uint32_t>(RE::COL_LAYER::kLOS);
 			const auto hit = cell->Pick(pick);
@@ -1054,11 +1053,10 @@ namespace Furniture
 	std::vector<ClutterItem> SnapshotClutter(const RE::NiPoint3& a_center, float a_radius)
 	{
 		std::vector<ClutterItem> items;
-		const auto               tes = RE::TES::GetSingleton();
-		if (!tes || a_radius <= 0.0F) {
+		if (a_radius <= 0.0F) {
 			return items;
 		}
-		tes->ForEachReferenceInRange(a_center, a_radius, [&](RE::TESObjectREFR* a_ref) {
+		Compat::ForEachReferenceInRange(a_center, a_radius, [&](RE::TESObjectREFR* a_ref) {
 			const auto base = a_ref ? a_ref->GetObjectReference() : nullptr;
 			if (!base || !IsClutter(base->GetFormType()) || a_ref->IsDisabled() || a_ref->IsDeleted() || !a_ref->Get3D()) {
 				return RE::BSContainer::ForEachResult::kContinue;
