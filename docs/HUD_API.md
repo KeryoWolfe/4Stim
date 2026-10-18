@@ -262,7 +262,9 @@ Input names while the HUD is focused:
 
 | Name | Keyboard | Controller |
 |---|---|---|
-| `Up`, `Down`, `Left`, `Right` | Arrow keys, OStim's navigation keys (numpad 8, 5, 4, 6) | D-pad |
+| `Up`, `Down` | Arrow keys, OStim's navigation keys (numpad 8, 5) | D-pad up / down |
+| `Left`, `Right` | Arrow keys, OStim's navigation keys (numpad 4, 6) | |
+| `PadLeft`, `PadRight` | | D-pad left / right: only an Align row's value (they never change tabs or move to the tab buttons; B does) |
 | `Accept` | Enter, numpad 7 (OStim's Yes) | A |
 | `Cancel` | Esc, Backspace | |
 | `Back` | | B: from the list to the tab buttons; from the tab buttons, call `Hide` (the plugin shows the HUD again on A) |

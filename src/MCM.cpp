@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <array>
 #include <cctype>
+#include <format>
 #include <fstream>
 #include <cmath>
 #include <map>
@@ -61,6 +62,39 @@ namespace MCM
 			{ "spadfreecam", { "None", "LB", "RB", "LT", "RT", "X", "Y", "LS", "RS", "Back" } },
 			{ "spadhideui", { "None", "LB", "RB", "LT", "RT", "X", "Y", "LS", "RS", "Back" } },
 		} };
+
+		// OStim's settings in milliseconds (4Stim.ini has them so, as OStim):
+		// the MCM shows them in seconds, as "f4S_<name>". Lowercase.
+		const std::array<std::string_view, 10> MILLISECONDS{
+			"setexpressiondurationmin",
+			"setexpressiondurationmax",
+			"moanintervalmin",
+			"moanintervalmax",
+			"npcsceneduration",
+			"excitementdecaygraceperiod",
+			"automodeanimdurationmin",
+			"automodeanimdurationmax",
+			"autospeedcontrolintervalmin",
+			"autospeedcontrolintervalmax",
+		};
+
+		bool InMilliseconds(std::string_view a_iniKey)
+		{
+			const auto key = Lower(a_iniKey);
+			return std::ranges::find(MILLISECONDS, key) != MILLISECONDS.end();
+		}
+
+		std::string FormatNumber(double a_value)
+		{
+			auto text = std::format("{:.3f}", a_value);
+			while (text.ends_with('0')) {
+				text.pop_back();
+			}
+			if (text.ends_with('.')) {
+				text.pop_back();
+			}
+			return text;
+		}
 
 		const Choice* FindChoice(std::string_view a_iniKey)
 		{
@@ -215,6 +249,14 @@ namespace MCM
 				}
 				return "0";
 			}
+			// Milliseconds in 4Stim.ini, seconds in the MCM.
+			if ((a_mcmKey.starts_with("f4S_") || a_mcmKey.starts_with("f4s_")) && InMilliseconds(IniKeyOf(a_mcmKey))) {
+				try {
+					return FormatNumber(std::stod(a_iniValue) / 1000.0);
+				} catch (...) {
+					return a_iniValue;
+				}
+			}
 			// Booleans as MCM writes them.
 			if (a_mcmKey.starts_with("b")) {
 				return SameValue(a_iniValue, "0") || Lower(a_iniValue) == "false" ? "0" : "1";
@@ -296,6 +338,19 @@ namespace MCM
 				return std::pair{ iniKey, std::string(choice->options[std::min(index, choice->options.size() - 1)]) };
 			} catch (...) {
 				return std::nullopt;
+			}
+		}
+		if (InMilliseconds(iniKey)) {
+			const auto prefix = Lower(a_mcmKey.substr(0, std::min<std::size_t>(4, a_mcmKey.size())));
+			if (prefix == "i4s_") {
+				return std::nullopt;  // an older MCM page's milliseconds: its seconds one replaced it
+			}
+			if (prefix == "f4s_") {
+				try {
+					return std::pair{ iniKey, std::to_string(std::llround(std::stod(std::string(a_value)) * 1000.0)) };
+				} catch (...) {
+					return std::nullopt;
+				}
 			}
 		}
 		return std::pair{ iniKey, std::string(a_value) };

@@ -49,7 +49,8 @@ for _k in PAD_KEYS:
     CHOICE_LABELS[_k] = PAD_LABELS
 
 # key: (label, kind, options). kind: bool; int / float (min, max, step);
-# choice; key (an MCM key input: the key's code, decimal). Keys not listed
+# choice; key (an MCM key input: the key's code, decimal); ms (OStim's
+# milliseconds in 4Stim.ini, a slider in seconds: src/MCM.cpp's MILLISECONDS). Keys not listed
 # (bone names, slot lists) aren't on the pages and stay in 4Stim.ini.
 SETTINGS = {
     # Hotkeys (keyboard, as OStim's): MCM key inputs over 4Stim.ini's keys.
@@ -95,7 +96,7 @@ SETTINGS = {
     'SetUseFades': ('Fade at the start and end', 'bool'),
     'SetUseAutoFades': ('Fade between auto mode scenes', 'bool'),
     'SetUseIntroScenes': ('Start with intro scenes', 'bool'),
-    'NPCSceneDuration': ('NPC scenes last (ms, 0 = no limit)', 'int', (0, 1800000, 15000)),
+    'NPCSceneDuration': ('NPC scenes last (seconds, 0 = no limit)', 'ms', (0, 1800, 15)),
     'fTransitionLead': ('Transition lead (seconds)', 'float', (-2, 5, 0.05)),
     'SetOnlyGayAnimsInGayScenes': ('Roles for the intended sex only', 'bool'),
     'unrestrictedNavigation': ('Unrestricted navigation', 'bool'),
@@ -144,7 +145,7 @@ SETTINGS = {
     'SetsexExcitementMult': ('Male excitement rate', 'float', (0, 5, 0.05)),
     'SetFemaleSexExcitementMult': ('Female excitement rate', 'float', (0, 5, 0.05)),
     'excitementDecayRate': ('Excitement decay per second', 'float', (0, 5, 0.05)),
-    'excitementDecayGracePeriod': ('Decay grace period (ms)', 'int', (0, 30000, 500)),
+    'excitementDecayGracePeriod': ('Decay grace period (seconds)', 'ms', (0, 30, 0.5)),
     'postOrgasmExcitement': ('Excitement after a climax', 'float', (0, 100, 1)),
     'postOrgasmExcitementMax': ('Highest excitement after a climax', 'float', (0, 100, 1)),
     'SetAutoClimaxAnims': ('Climax animations', 'bool'),
@@ -164,8 +165,8 @@ SETTINGS = {
     # AutoMode
     'SetAIControl': ('Auto mode in your scenes', 'bool'),
     'bAutoModeNPC': ('Auto mode in NPC scenes', 'bool'),
-    'autoModeAnimDurationMin': ('Shortest scene (ms)', 'int', (1000, 60000, 500)),
-    'autoModeAnimDurationMax': ('Longest scene (ms)', 'int', (1000, 120000, 500)),
+    'autoModeAnimDurationMin': ('Shortest scene (seconds)', 'ms', (1, 60, 0.5)),
+    'autoModeAnimDurationMax': ('Longest scene (seconds)', 'ms', (1, 120, 0.5)),
     'autoModeForeplayChance': ('Foreplay chance (%)', 'int', (0, 100, 1)),
     'autoModeForeplayThresholdMin': ('Foreplay until excitement (least)', 'int', (0, 100, 1)),
     'autoModeForeplayThresholdMax': ('Foreplay until excitement (most)', 'int', (0, 100, 1)),
@@ -176,8 +177,8 @@ SETTINGS = {
     'autoModeLimitToNavigationDistance': ('Only scenes within those steps', 'bool'),
     'bAutoModeStandingOnFloor': ('Standing off furniture, lying on beds', 'bool'),
     'SetActorSpeedControl': ('Auto speed', 'bool'),
-    'autoSpeedControlIntervalMin': ('Speed change every (ms, least)', 'int', (500, 30000, 500)),
-    'autoSpeedControlIntervalMax': ('Speed change every (ms, most)', 'int', (500, 30000, 500)),
+    'autoSpeedControlIntervalMin': ('Speed change every (seconds, least)', 'ms', (0.5, 30, 0.5)),
+    'autoSpeedControlIntervalMax': ('Speed change every (seconds, most)', 'ms', (0.5, 30, 0.5)),
     'autoSpeedControlExcitementMin': ('Auto speed from excitement', 'int', (0, 100, 1)),
     'autoSpeedControlExcitementMax': ('Auto speed up to excitement', 'int', (0, 100, 1)),
     # Undress
@@ -191,12 +192,12 @@ SETTINGS = {
     'SetAnimateRedress': ('Redress animations', 'bool'),
     # Expressions
     'noFacialExpressions': ('No facial expressions', 'bool'),
-    'SetExpressionDurationMin': ('Expression lasts (ms, least)', 'int', (250, 20000, 250)),
-    'SetExpressionDurationMax': ('Expression lasts (ms, most)', 'int', (250, 20000, 250)),
+    'SetExpressionDurationMin': ('Expression lasts (seconds, least)', 'ms', (0.25, 20, 0.25)),
+    'SetExpressionDurationMax': ('Expression lasts (seconds, most)', 'ms', (0.25, 20, 0.25)),
     # Sound
     'bSounds': ('Sounds', 'bool'),
-    'moanIntervalMin': ('Moan every (ms, least)', 'int', (250, 20000, 250)),
-    'moanIntervalMax': ('Moan every (ms, most)', 'int', (250, 20000, 250)),
+    'moanIntervalMin': ('Moan every (seconds, least)', 'ms', (0.25, 20, 0.25)),
+    'moanIntervalMax': ('Moan every (seconds, most)', 'ms', (0.25, 20, 0.25)),
     'moanVolume': ('Moan volume', 'float', (0, 2, 0.05)),
     'soundVolume': ('Sound volume', 'float', (0, 2, 0.05)),
     'iSoundPriority': ('Sound priority', 'int', (0, 255, 1)),
@@ -267,6 +268,8 @@ def read_ini():
 
 
 def mcm_key(key, kind):
+    if kind == 'ms':
+        return 'f4S_' + key  # OStim's milliseconds, shown in seconds
     if kind in ('choice', 'key') and not re.match(r'^[bifs][A-Z]', key):
         return 'i4S_' + key
     if kind == 'choice':
@@ -284,6 +287,8 @@ def mcm_value(key, kind, value):
         return '0' if value.strip() in ('0', 'false') else '1'
     if kind == 'key':
         return str(int(value, 0))
+    if kind == 'ms':
+        return f'{float(value) / 1000:g}'
     return value
 
 
@@ -318,7 +323,7 @@ def main():
                 control = {
                     'id': f'{name}:{section}',
                     'text': text(f'$4Stim_MCM_{key}', label),
-                    'help': text(f'$4Stim_MCM_{key}_Help', comment or label),
+                    'help': text(f'$4Stim_MCM_{key}_Help', (comment or label) + (' Here in seconds (4Stim.ini has milliseconds, as OStim).' if kind == 'ms' else '')),
                     'action': {'type': 'CallGlobalFunction', 'script': 'FourStimMCM', 'function': 'SettingChanged', 'params': []},
                 }
                 if kind == 'key':

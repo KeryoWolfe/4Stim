@@ -843,7 +843,7 @@ namespace HUD
 			bool                                  _loaded = false;
 			bool                                  _paused = false;
 			Scaleform::Render::Rect<float>        _screen{};
-			int                                   _heldDir = 0;   // -1 up, +1 down, -2 left, +2 right, 0 none
+			int                                   _heldDir = 0;   // -1 up, +1 down, -2 left, +2 right, -3 / +3 d-pad left / right, 0 none
 			bool                                  _horizontalRepeat = false;  // the movie wants Left / Right repeated (Align tab)
 			std::chrono::steady_clock::time_point _heldSince{};
 			int                                   _repeats = 0;
@@ -1056,7 +1056,14 @@ namespace HUD
 			// works the same whether or not the game is paused.
 			const char* HeldName() const
 			{
-				return _heldDir == -1 ? "Up" : _heldDir == 1 ? "Down" : _heldDir == -2 ? "Left" : "Right";
+				switch (_heldDir) {
+				case -1: return "Up";
+				case 1: return "Down";
+				case -2: return "Left";
+				case 2: return "Right";
+				case -3: return "PadLeft";
+				default: return "PadRight";
+				}
 			}
 
 			void RepeatHeldNavigation()
@@ -1116,8 +1123,8 @@ namespace HUD
 				switch (code) {
 				case 0x0001: return "Up";      // d-pad
 				case 0x0002: return "Down";
-				case 0x0004: return "Left";
-				case 0x0008: return "Right";
+				case 0x0004: return "PadLeft";   // d-pad left / right: only an Align value (4Stim's controller scheme)
+				case 0x0008: return "PadRight";
 				case 0x1000: return "Accept";  // A
 				case 0x2000: return "Back";    // B: the tab buttons, then hide (4Stim's controller scheme)
 				default: return nullptr;       // the other buttons: [Controller] in 4Stim.ini
@@ -1336,10 +1343,11 @@ namespace HUD
 		}
 		const std::string_view n(name);
 		const bool             upDown = n == "Up"sv || n == "Down"sv;
-		const bool             leftRight = (n == "Left"sv || n == "Right"sv) && g_menu->WantsHorizontalRepeat();
+		const bool             padLeftRight = n == "PadLeft"sv || n == "PadRight"sv;
+		const bool             leftRight = (n == "Left"sv || n == "Right"sv || padLeftRight) && g_menu->WantsHorizontalRepeat();
 		if (a_event->QJustPressed()) {
 			if (upDown || leftRight) {
-				g_menu->SetHeld(n == "Up"sv ? -1 : n == "Down"sv ? 1 : n == "Left"sv ? -2 : 2);
+				g_menu->SetHeld(n == "Up"sv ? -1 : n == "Down"sv ? 1 : n == "Left"sv ? -2 : n == "Right"sv ? 2 : n == "PadLeft"sv ? -3 : 3);
 			}
 			GValue args[2]{ name, true };
 			g_menu->InvokeRequired("ProcessUserEvent", args, 2);

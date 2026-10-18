@@ -4,7 +4,7 @@ With Fallout 4's [Mod Configuration Menu](https://www.nexusmods.com/fallout4/mod
 
 ## Pages
 
-General, Camera, Furniture, Roles, Alignment, HUD, Excitement, Climax effects (slow motion, camera shake, blur and its strength, the edge glow's strength and size, rumble), Auto mode, Undressing, Faces and sound, Lights, Hotkeys, and Save and load. Each setting's help text is its comment in `4Stim.ini`, and its name there is in SETTINGS.md.
+General, Camera, Furniture, Roles, Alignment, HUD, Excitement, Climax effects (slow motion, camera shake, blur and its strength, the edge glow's strength and size, rumble), Auto mode, Undressing, Faces and sound, Lights, Hotkeys, and Save and load. OStim's millisecond settings (expressions, moans, NPC scene length, excitement grace period, auto mode's scene lengths and speed changes) are in seconds here; `4Stim.ini` keeps milliseconds, as OStim. Each setting's help text is its comment in `4Stim.ini`, and its name there is in SETTINGS.md.
 
 Only in `4Stim.ini` (the MCM has no control for them): the undress slots (`sUndressSlots`), bone names (`sPenisBendNode`, `sLeftEyeNode`, `sRightEyeNode`), sound flags (`iSoundFlags`), and the keys' Windows key codes (the Hotkeys page has the MCM's own hotkeys instead).
 

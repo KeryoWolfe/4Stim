@@ -239,7 +239,27 @@ package hud
 				return false;
 			}
 			if (!a_down) {
-				return a_name == "Up" || a_name == "Down" || a_name == "Left" || a_name == "Right" || a_name == "Accept" || a_name == "Cancel" || a_name == "Back" || a_name == "Toggle";
+				return a_name == "Up" || a_name == "Down" || a_name == "Left" || a_name == "Right" || a_name == "Accept" || a_name == "Cancel" || a_name == "Back" || a_name == "Toggle" || a_name == "PadLeft" || a_name == "PadRight";
+			}
+			// The controller's d-pad Left / Right: only an Align row's value
+			// (B, not Left / Right, reaches the tab buttons on a controller).
+			if (a_name == "PadLeft" || a_name == "PadRight") {
+				var padRow:Object = _list.selectedEntry;
+				if (!_tabFocus && _tabs.selectedID == "align" && padRow != null) {
+					var padDir:int = a_name == "PadLeft" ? -1 : 1;
+					switch (String(padRow.kind)) {
+						case "alignValue":
+							code("AlignAdjust", String(padRow.field), padDir);
+							break;
+						case "alignActor":
+							code("AlignActor", padDir);
+							break;
+						case "alignStep":
+							code("AlignStep", padDir);
+							break;
+					}
+				}
+				return true;
 			}
 			// OStim's Toggle key (numpad 9): between the list and the tab buttons.
 			if (a_name == "Toggle") {

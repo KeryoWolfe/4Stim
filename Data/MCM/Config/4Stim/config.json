@@ -123,7 +123,7 @@
 					}
 				},
 				{
-					"id": "i4S_NPCSceneDuration:General",
+					"id": "f4S_NPCSceneDuration:General",
 					"text": "$4Stim_MCM_NPCSceneDuration",
 					"help": "$4Stim_MCM_NPCSceneDuration_Help",
 					"action": {
@@ -135,9 +135,9 @@
 					"type": "slider",
 					"valueOptions": {
 						"min": 0,
-						"max": 1800000,
-						"step": 15000,
-						"sourceType": "ModSettingInt"
+						"max": 1800,
+						"step": 15,
+						"sourceType": "ModSettingFloat"
 					}
 				},
 				{
@@ -953,7 +953,7 @@
 					}
 				},
 				{
-					"id": "i4S_excitementDecayGracePeriod:Excitement",
+					"id": "f4S_excitementDecayGracePeriod:Excitement",
 					"text": "$4Stim_MCM_excitementDecayGracePeriod",
 					"help": "$4Stim_MCM_excitementDecayGracePeriod_Help",
 					"action": {
@@ -965,9 +965,9 @@
 					"type": "slider",
 					"valueOptions": {
 						"min": 0,
-						"max": 30000,
-						"step": 500,
-						"sourceType": "ModSettingInt"
+						"max": 30,
+						"step": 0.5,
+						"sourceType": "ModSettingFloat"
 					}
 				},
 				{
@@ -1272,7 +1272,7 @@
 					}
 				},
 				{
-					"id": "i4S_autoModeAnimDurationMin:AutoMode",
+					"id": "f4S_autoModeAnimDurationMin:AutoMode",
 					"text": "$4Stim_MCM_autoModeAnimDurationMin",
 					"help": "$4Stim_MCM_autoModeAnimDurationMin_Help",
 					"action": {
@@ -1283,14 +1283,14 @@
 					},
 					"type": "slider",
 					"valueOptions": {
-						"min": 1000,
-						"max": 60000,
-						"step": 500,
-						"sourceType": "ModSettingInt"
+						"min": 1,
+						"max": 60,
+						"step": 0.5,
+						"sourceType": "ModSettingFloat"
 					}
 				},
 				{
-					"id": "i4S_autoModeAnimDurationMax:AutoMode",
+					"id": "f4S_autoModeAnimDurationMax:AutoMode",
 					"text": "$4Stim_MCM_autoModeAnimDurationMax",
 					"help": "$4Stim_MCM_autoModeAnimDurationMax_Help",
 					"action": {
@@ -1301,10 +1301,10 @@
 					},
 					"type": "slider",
 					"valueOptions": {
-						"min": 1000,
-						"max": 120000,
-						"step": 500,
-						"sourceType": "ModSettingInt"
+						"min": 1,
+						"max": 120,
+						"step": 0.5,
+						"sourceType": "ModSettingFloat"
 					}
 				},
 				{
@@ -1479,7 +1479,7 @@
 					}
 				},
 				{
-					"id": "i4S_autoSpeedControlIntervalMin:AutoMode",
+					"id": "f4S_autoSpeedControlIntervalMin:AutoMode",
 					"text": "$4Stim_MCM_autoSpeedControlIntervalMin",
 					"help": "$4Stim_MCM_autoSpeedControlIntervalMin_Help",
 					"action": {
@@ -1490,14 +1490,14 @@
 					},
 					"type": "slider",
 					"valueOptions": {
-						"min": 500,
-						"max": 30000,
-						"step": 500,
-						"sourceType": "ModSettingInt"
+						"min": 0.5,
+						"max": 30,
+						"step": 0.5,
+						"sourceType": "ModSettingFloat"
 					}
 				},
 				{
-					"id": "i4S_autoSpeedControlIntervalMax:AutoMode",
+					"id": "f4S_autoSpeedControlIntervalMax:AutoMode",
 					"text": "$4Stim_MCM_autoSpeedControlIntervalMax",
 					"help": "$4Stim_MCM_autoSpeedControlIntervalMax_Help",
 					"action": {
@@ -1508,10 +1508,10 @@
 					},
 					"type": "slider",
 					"valueOptions": {
-						"min": 500,
-						"max": 30000,
-						"step": 500,
-						"sourceType": "ModSettingInt"
+						"min": 0.5,
+						"max": 30,
+						"step": 0.5,
+						"sourceType": "ModSettingFloat"
 					}
 				},
 				{
@@ -1699,7 +1699,7 @@
 					}
 				},
 				{
-					"id": "i4S_SetExpressionDurationMin:Expressions",
+					"id": "f4S_SetExpressionDurationMin:Expressions",
 					"text": "$4Stim_MCM_SetExpressionDurationMin",
 					"help": "$4Stim_MCM_SetExpressionDurationMin_Help",
 					"action": {
@@ -1710,14 +1710,14 @@
 					},
 					"type": "slider",
 					"valueOptions": {
-						"min": 250,
-						"max": 20000,
-						"step": 250,
-						"sourceType": "ModSettingInt"
+						"min": 0.25,
+						"max": 20,
+						"step": 0.25,
+						"sourceType": "ModSettingFloat"
 					}
 				},
 				{
-					"id": "i4S_SetExpressionDurationMax:Expressions",
+					"id": "f4S_SetExpressionDurationMax:Expressions",
 					"text": "$4Stim_MCM_SetExpressionDurationMax",
 					"help": "$4Stim_MCM_SetExpressionDurationMax_Help",
 					"action": {
@@ -1728,10 +1728,10 @@
 					},
 					"type": "slider",
 					"valueOptions": {
-						"min": 250,
-						"max": 20000,
-						"step": 250,
-						"sourceType": "ModSettingInt"
+						"min": 0.25,
+						"max": 20,
+						"step": 0.25,
+						"sourceType": "ModSettingFloat"
 					}
 				},
 				{
@@ -1750,7 +1750,7 @@
 					}
 				},
 				{
-					"id": "i4S_moanIntervalMin:Sound",
+					"id": "f4S_moanIntervalMin:Sound",
 					"text": "$4Stim_MCM_moanIntervalMin",
 					"help": "$4Stim_MCM_moanIntervalMin_Help",
 					"action": {
@@ -1761,14 +1761,14 @@
 					},
 					"type": "slider",
 					"valueOptions": {
-						"min": 250,
-						"max": 20000,
-						"step": 250,
-						"sourceType": "ModSettingInt"
+						"min": 0.25,
+						"max": 20,
+						"step": 0.25,
+						"sourceType": "ModSettingFloat"
 					}
 				},
 				{
-					"id": "i4S_moanIntervalMax:Sound",
+					"id": "f4S_moanIntervalMax:Sound",
 					"text": "$4Stim_MCM_moanIntervalMax",
 					"help": "$4Stim_MCM_moanIntervalMax_Help",
 					"action": {
@@ -1779,10 +1779,10 @@
 					},
 					"type": "slider",
 					"valueOptions": {
-						"min": 250,
-						"max": 20000,
-						"step": 250,
-						"sourceType": "ModSettingInt"
+						"min": 0.25,
+						"max": 20,
+						"step": 0.25,
+						"sourceType": "ModSettingFloat"
 					}
 				},
 				{
