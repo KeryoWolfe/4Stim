@@ -77,7 +77,8 @@ bool Function HasMetaString(int ThreadID, string MetaID) Global Native
 string Function GetMetaString(int ThreadID, string MetaID) Global Native
 Function SetMetaString(int ThreadID, string MetaID, string Value) Global Native
 
-; Fires an event (docs\EVENTS.md); Actor, Target and Performer are positions.
-Function CallEvent(int ThreadID, string EventName, int Actor, int Target = -1, int Performer = -1) Global
-	FourStim.CallEvent(GetActor(ThreadID, 0), EventName, Actor, Target, Performer)
+; Fires an event (docs\EVENTS.md); ActorPosition, Target and Performer are
+; positions. (OStim calls the first "Actor", which Papyrus here takes for the type.)
+Function CallEvent(int ThreadID, string EventName, int ActorPosition, int Target = -1, int Performer = -1) Global
+	FourStim.CallEvent(GetActor(ThreadID, 0), EventName, ActorPosition, Target, Performer)
 EndFunction
