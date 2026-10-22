@@ -250,6 +250,17 @@ Function SuppressInteraction(Actor akActor) Global Native
 ; Reverses SuppressInteraction.
 Function RestoreInteraction(Actor akActor) Global Native
 
+; ---- Nothing interrupts a scene (FourStimScene.CalmForScene) ----
+
+; Keeps what the actor was before the scene: their own base Aggression
+; (-1 for the player) and whether they were already a ghost. Only the
+; first call counts until ForgetCalm (a scene change calms again).
+Function RememberCalm(Actor akActor, float afAggression, bool abWasGhost) Global Native
+bool Function IsCalmed(Actor akActor) Global Native
+float Function CalmAggressionOf(Actor akActor) Global Native
+bool Function CalmWasGhost(Actor akActor) Global Native
+Function ForgetCalm(Actor akActor) Global Native
+
 ; ---- Positioning ----
 
 ; Places akTarget afDistance units from akAnchor, offset by afAngleOffset

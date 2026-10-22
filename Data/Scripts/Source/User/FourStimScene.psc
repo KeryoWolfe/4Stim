@@ -106,6 +106,7 @@ Function PrepareActor(Actor akActor) Global
 EndFunction
 
 Function LockForScene(Actor akActor) Global
+	CalmForScene(akActor)
 	if IsPlayer(akActor)
 		; No SetRestrained on the player: it also freezes look/move input,
 		; which the free camera and first-person look need. The input layer
@@ -123,7 +124,73 @@ Function ReleaseFromScene(Actor akActor) Global
 		akActor.SetRestrained(false)
 		akActor.EvaluatePackage()  ; walk back into their routine
 	endif
+	UncalmAfterScene(akActor)
 	RearmAfterScene(akActor)
+EndFunction
+
+; Nothing interrupts a scene (the project owner's rule; OStim instead ends
+; a thread when an actor is in combat or dead). For the whole scene the
+; actor is a ghost (hits, projectiles and explosions pass through: no
+; stagger, no damage reactions), and an NPC is unaggressive (Aggression 0:
+; starts no fights) and taken out of combat. What they were before is kept
+; by the plugin (and in the save) and put back by UncalmAfterScene. The
+; plugin's scene guard calls CalmAgainByID if someone gets into combat or
+; draws a weapon anyway.
+Function CalmForScene(Actor akActor) Global
+	ActorValue avAggression = Game.GetAggressionAV()
+	if !FourStim.IsCalmed(akActor)
+		float fAggression = -1.0
+		if !IsPlayer(akActor)
+			fAggression = akActor.GetBaseValue(avAggression)
+		endif
+		FourStim.RememberCalm(akActor, fAggression, akActor.IsGhost())
+	endif
+	akActor.SetGhost(true)
+	if !IsPlayer(akActor)
+		akActor.SetValue(avAggression, 0.0)
+		akActor.StopCombat()
+		akActor.StopCombatAlarm()
+	endif
+EndFunction
+
+; Undoes CalmForScene: their own aggression and ghost state back.
+Function UncalmAfterScene(Actor akActor) Global
+	if !FourStim.IsCalmed(akActor)
+		return
+	endif
+	float fAggression = FourStim.CalmAggressionOf(akActor)
+	if fAggression >= 0.0 && !IsPlayer(akActor)
+		akActor.SetValue(Game.GetAggressionAV(), fAggression)
+	endif
+	if !FourStim.CalmWasGhost(akActor)
+		akActor.SetGhost(false)
+	endif
+	FourStim.ForgetCalm(akActor)
+EndFunction
+
+; UncalmAfterScene by form ID (called by the plugin).
+Function UncalmByID(int aiActorID) Global
+	Actor akActor = Game.GetForm(aiActorID) as Actor
+	if akActor
+		UncalmAfterScene(akActor)
+	endif
+EndFunction
+
+; An NPC in a scene got into combat or drew a weapon anyway: out of combat,
+; weapon away (the one HolsterForScene noted stays the one put back), and
+; calm again. The plugin plays the scene again for everyone in it.
+Function CalmAgainByID(int aiActorID) Global
+	Actor akActor = Game.GetForm(aiActorID) as Actor
+	if akActor == None || IsPlayer(akActor)
+		return
+	endif
+	akActor.StopCombat()
+	akActor.StopCombatAlarm()
+	Weapon akWeapon = akActor.GetEquippedWeapon()
+	if akWeapon
+		akActor.UnequipItem(akWeapon, false, true)
+	endif
+	CalmForScene(akActor)
 EndFunction
 
 ; Forces the game's full third-person view at scene start -- the proper
@@ -194,6 +261,7 @@ Function ReleaseAfterLoad(int aiActorID) Global
 	akActor.SetRestrained(false)
 	akActor.EvaluatePackage()
 	FourStim.RestoreInteraction(akActor)
+	UncalmAfterScene(akActor)
 EndFunction
 
 ; Plays a sound descriptor (an OStim-style voice set's "sound") on an actor.
