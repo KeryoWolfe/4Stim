@@ -76,7 +76,7 @@ Still worth checking from before: NPCs who were busy (sitting, working) dropping
 
 The same 4Stim works on 1.10.163, 1.10.984 and other 1.11 versions through [Runtime Database](https://www.nexusmods.com/fallout4/mods/108394) (install it like any mod; it puts `f4rd-runtime.bin` in `F4SE\Plugins`). 4Stim finds the game's code with it when the game starts; that first start can take a little longer. This is **experimental**: no one has played a scene on those versions yet, so we'd like to know:
 
-- Does 4Stim load? `4Stim.log` starts with `Addresses: CommonLibF4RD's Runtime Database`, then `Addresses: all ... found`, or lists what it couldn't find (send that). On 1.10.163 it's normal to see up to 8 warnings ending in what 4Stim does instead, then `Addresses: ... found, the other ... done without`: those are handled (docs/OLDGEN.md). On 1.10.163, NPCs using furniture (a chair, a workbench) aren't taken out of it before a scene.
+- Does 4Stim load? `4Stim.log` starts with `Addresses: CommonLibF4RD's Runtime Database`, then `Addresses: all ... found`, or lists what it couldn't find (send that). On 1.10.163 it's normal to see up to 8 warnings ending in what 4Stim does instead, then `Addresses: ... found, the other ... done without`: those are handled (docs/OLDGEN.md).
 - On 1.10.163: do the MCM's texts show (not `$4Stim_...`), and do scene sounds (moans, slaps) play?
 - Do scenes start, with actors in place and animating, and does the HUD show?
 - Anything that works on 1.11.240 but not there.

@@ -30,7 +30,7 @@ A 1.10.163 tester's log (October 2026) had the Runtime Database finding 87 of th
 | `BSResource::ID::GenerateFromPath` | 4Stim works out a sound file's resource ID itself: the CRC-32 of the lowercase file name and folder, and the extension, as BA2 archives store files. On AE the first three sounds are checked against the game's (`Compat: resource ID of ...` in the log) |
 | `BSScaleformTranslator::AddTranslations` | MCM's texts go into the game's translator table directly, as F4SE's own translation loader does |
 | `BSSoundHandle::SetPosition` | sounds just follow the actor (`SetObjectToFollow`), without a start position |
-| `Actor::StopInteractingQuick` | **lost:** an NPC using furniture or an idle marker isn't taken out of it before a scene |
+| `Actor::StopInteractingQuick` | an NPC using furniture or an idle marker is moved onto their own spot through Papyrus (`FourStimScene.LeaveFurnitureByID`, `MoveTo`), which takes them out of it. Without it, a tester's NPC kept a mirror's idle marker animation under every scene |
 
 **A wrong database entry.** The Runtime Database's 1.10.163 address for `TESDataHandler::Singleton` (0x6B2A0) is code, not the data handler, so 4Stim read instructions as a pointer and crashed setting up a scene. F4SE 0.6.23's `g_dataHandler` and the OG Address Library (ID 711558) agree on 0x58CF080; `src/compat/IDDB.cpp` (`CORRECTIONS`) uses that over the database. The other singletons 4Stim uses match F4SE 0.6.23 and `alandtse/CommonLibF4`, as do the 32 functions that CommonLibF4 names for both versions.
 

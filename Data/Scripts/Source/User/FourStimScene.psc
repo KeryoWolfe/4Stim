@@ -71,6 +71,18 @@ Function HolsterForScene(Actor akActor) Global
 	endif
 EndFunction
 
+; Takes an NPC out of the furniture or idle marker they're using (a chair,
+; a mirror...) by moving them onto their own spot. Called by the plugin on
+; 1.10.163, where the game's StopInteractingQuick isn't found
+; (docs/OLDGEN.md).
+Function LeaveFurnitureByID(int aiActorID) Global
+	Actor akActor = Game.GetForm(aiActorID) as Actor
+	if akActor == None || IsPlayer(akActor)
+		return
+	endif
+	akActor.MoveTo(akActor)
+EndFunction
+
 ; An NPC in a scene drew a weapon with no fight going on (called by the
 ; plugin's scene guard, which then plays the scene again): unequipped
 ; again. The weapon HolsterForScene noted stays the one put back.

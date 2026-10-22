@@ -21,7 +21,7 @@ namespace Compat
 		{ 2698044, "nearby actors and furniture are found through the worldspace's loaded cells" },
 		{ 2194566, "nearby actors and furniture are found through the worldspace's loaded cells" },
 		{ 2195747, "4Stim releases its raycasts' Havok world reference itself" },
-		{ 2231227, "NPCs using furniture or an idle marker aren't taken out of it before a scene" },
+		{ 2231227, "NPCs using furniture or an idle marker are taken out of it through Papyrus (MoveTo their own spot)" },
 		{ 2267064, "4Stim's sounds follow the actor without a start position" },
 		{ 2269259, "4Stim works out sound files' resource IDs itself" },
 		{ 2295298, "MCM texts are added to the game's translator by 4Stim itself" },

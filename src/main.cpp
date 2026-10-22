@@ -2664,6 +2664,13 @@ namespace
 				base ? base->GetFormID() : 0, base && base->GetFormEditorID() ? base->GetFormEditorID() : "");
 			if (Compat::CanStopInteractingQuick()) {
 				a_actor->StopInteractingQuick(true, false, true);
+			} else if (g_vm) {
+				// 1.10.163 (no StopInteractingQuick there, docs/OLDGEN.md): a
+				// tester's NPC stayed in a mirror's idle marker under every
+				// scene. Moved onto their own spot through Papyrus instead,
+				// which takes an actor out of furniture.
+				RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
+				Compat::DispatchStaticCall(g_vm, "FourStimScene"sv, "LeaveFurnitureByID"sv, callback, static_cast<std::int32_t>(a_actor->GetFormID()));
 			}
 		}
 		if (a_doNothing || furniture) {
