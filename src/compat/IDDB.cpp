@@ -31,7 +31,10 @@
 
 #include <algorithm>
 #include <cstring>
+#include <format>
 #include <fstream>
+#include <initializer_list>
+#include <string>
 #include <memory>
 #include <optional>
 #include <sstream>
@@ -219,32 +222,71 @@ namespace
 	// 4Stim: the address table for this game version, sorted by ID.
 	std::vector<REL::IDDB::MAPPING> g4StimTable;
 	std::filesystem::path           g4StimTablePath;
+	std::vector<std::string>        g4StimTableProbes;  // where it was looked for, and what was there (the log)
 
 	// "<id> <rva>" per line (the RVA in hex with 0x, or decimal); lines
 	// starting with # are comments. The format of CommonLibF4RD's .mapping
 	// files, so one can be used as it is.
-	bool Load4StimTable(const std::filesystem::path& a_path)
+	// A line that isn't "<id> <rva>" is skipped (and counted) rather than
+	// failing the whole table, and a UTF-8 byte order mark (a text editor's)
+	// is ignored.
+	bool Load4StimTable(const std::filesystem::path& a_path, std::size_t* a_badLines = nullptr)
 	{
-		std::ifstream in(a_path);
+		std::ifstream in(a_path, std::ios::binary);
 		if (!in)
 			return false;
-		std::string line;
+		std::vector<REL::IDDB::MAPPING> table;
+		std::size_t                     bad = 0;
+		std::string                     line;
+		bool                            first = true;
 		while (std::getline(in, line)) {
-			const auto start = line.find_first_not_of(" \t");
+			if (first && line.starts_with("\xEF\xBB\xBF"))
+				line.erase(0, 3);
+			first = false;
+			const auto start = line.find_first_not_of(" \t\r");
 			if (start == std::string::npos || line[start] == '#')
 				continue;
 			std::istringstream fields(line.substr(start));
 			std::string        id, rva;
-			if (!(fields >> id >> rva))
+			if (!(fields >> id >> rva)) {
+				++bad;
 				continue;
+			}
 			try {
-				g4StimTable.push_back({ std::stoull(id, nullptr, 10), std::stoull(rva, nullptr, 0) });
+				table.push_back({ std::stoull(id, nullptr, 10), std::stoull(rva, nullptr, 0) });
 			} catch (...) {
-				return false;
+				++bad;
 			}
 		}
-		std::sort(g4StimTable.begin(), g4StimTable.end(), [](auto&& a_lhs, auto&& a_rhs) { return a_lhs.id < a_rhs.id; });
-		return !g4StimTable.empty();
+		if (a_badLines)
+			*a_badLines = bad;
+		if (table.empty())
+			return false;
+		std::sort(table.begin(), table.end(), [](auto&& a_lhs, auto&& a_rhs) { return a_lhs.id < a_rhs.id; });
+		g4StimTable = std::move(table);
+		return true;
+	}
+
+	// The first of a_places that holds a table this version can use, noting
+	// each one looked at for the log.
+	void FindTable(std::initializer_list<std::filesystem::path> a_places)
+	{
+		for (const auto& table : a_places) {
+			std::error_code ec;
+			if (!std::filesystem::exists(table, ec)) {
+				g4StimTableProbes.push_back(std::format("{} not there", table.string()));
+				continue;
+			}
+			std::size_t bad = 0;
+			if (!Load4StimTable(table, &bad)) {
+				g4StimTableProbes.push_back(std::format("{} found, but no addresses could be read from it", table.string()));
+				continue;
+			}
+			g4StimTablePath = table;
+			g4StimTableProbes.push_back(std::format("{} found: {} addresses{}", table.string(), g4StimTable.size(),
+				bad ? std::format(", {} line(s) skipped", bad) : std::string{}));
+			return;
+		}
 	}
 
 	std::optional<std::uint64_t> FromTable(std::uint64_t a_id)
@@ -330,9 +372,8 @@ namespace REL
 			if (gRuntime) {
 				gRuntimePath = runtime;
 				m_path = runtime;
-				const auto table = plugin.parent_path() / L"4Stim" / L"Addresses" / std::format(L"version-{}.txt", version);
-				if (std::filesystem::exists(table) && Load4StimTable(table))
-					g4StimTablePath = table;
+				const auto name = std::format(L"version-{}.txt", version);
+				FindTable({ plugin.parent_path() / L"4Stim" / L"Addresses" / name, gameData / L"4Stim" / L"Addresses" / name });
 				return;
 			}
 		}
@@ -701,6 +742,12 @@ namespace Compat
 	{
 		(void)REL::IDDB::GetSingleton();
 		return gRuntimeProbes;
+	}
+
+	std::vector<std::string> AddressTableProbes()
+	{
+		(void)REL::IDDB::GetSingleton();
+		return g4StimTableProbes;
 	}
 
 	std::string WhyMissing(std::uint64_t a_id)

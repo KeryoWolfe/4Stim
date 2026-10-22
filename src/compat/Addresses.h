@@ -27,6 +27,10 @@ namespace Compat
 	// Each place it was looked for, and whether it was there (the log).
 	std::vector<std::string> RuntimeDatabaseProbes();
 
+	// Where 4Stim's own table was looked for beside the Runtime Database,
+	// and what was there (the log).
+	std::vector<std::string> AddressTableProbes();
+
 	// Why HasAddress is false for a_id.
 	std::string WhyMissing(std::uint64_t a_id);
 }
