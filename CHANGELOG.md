@@ -4,7 +4,6 @@
 
 OStim parity: everything on the roadmap's "OStim parity" list is in.
 
-- **Nothing interrupts a scene:** actors in a scene can't be hit (ghosts for the scene), NPCs in one start no fights and are taken out of combat, and anyone who gets into combat or draws a weapon anyway is put straight back into the scene. Everything is put back when it ends. (OStim ends a scene instead.)
 - **Fixed:** the HUD's options (strap-on, tongue, undress, mute, and other mods' options files) did nothing: the actor never reached the option's script. Options now go through `FourStimOptions.Run` with the actor's form ID.
 - **Toy slots:** the actions have OStim's `toySlot`s (genital, anus, nipples, scrotum), so sex toys get used in scenes; the log says when a scene has none.
 - **Other game versions (experimental):** CommonLibF4RD's resolver is built in: with [Runtime Database](https://www.nexusmods.com/fallout4/mods/108394) installed, the same 4Stim.dll runs on 1.10.163, 1.10.984 and other 1.11.x versions, finding the game's code at startup (docs/OLDGEN.md). 1.11.240 still uses the Address Library. On 1.10.163, the 20 addresses the database can't find there come from their OG IDs (12) or are done another way (8; one, taking NPCs out of furniture, is lost).

@@ -92,7 +92,6 @@ namespace
 		int                                   count = 0;
 	};
 	std::unordered_map<std::uint32_t, GuardKicks> g_guardKicks;
-	std::unordered_map<std::uint32_t, std::chrono::steady_clock::time_point> g_calmKicks;  // the scene guard's last calming, per actor
 
 	// Papyrus-facing script name. Must be "FourStim", not "4Stim" -- Papyrus
 	// identifiers can't start with a digit. The plugin/project itself is
@@ -2716,22 +2715,6 @@ namespace
 						LockScene(active);
 					}
 				}
-				// Nothing interrupts a scene: combat, or a weapon out, gets
-				// calmed and the scene played again (FourStimScene.CalmForScene).
-				if (actor->IsInCombat() || actor->GetWeaponMagicDrawn()) {
-					auto& last = g_calmKicks[id];
-					if (now - last > std::chrono::seconds(1)) {
-						last = now;
-						REX::INFO("Scene guard: {:08X} in \"{}\" {}; out of it and back into the scene", id, active.sceneID,
-							actor->IsInCombat() ? "got into combat" : "drew a weapon");
-						if (g_vm) {
-							RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
-							Compat::DispatchStaticCall(g_vm, "FourStimScene"sv, "CalmAgainByID"sv, callback, static_cast<std::int32_t>(id));
-						}
-						forceReplay = true;
-					}
-					continue;
-				}
 				if (auto& kicks = g_guardKicks[id]; kicks.count < 3 && now - kicks.last > std::chrono::seconds(5) && FurnitureOf(actor)) {
 					kicks.last = now;
 					if (++kicks.count == 3) {
@@ -4226,69 +4209,6 @@ namespace
 	// in the save with the scene.
 	std::mutex                                   g_sceneWeaponsLock;
 	std::unordered_map<std::uint32_t, std::uint32_t> g_sceneWeapons;  // actor -> weapon form
-
-	// ---- Nothing interrupts a scene ----
-	// The owner's rule, a departure from OStim (whose thread loop ends a
-	// scene the moment an actor is in combat or dead): for the whole scene
-	// every actor is a ghost (Actor.SetGhost: hits, projectiles and
-	// explosions pass through, so no stagger or damage reactions), NPCs are
-	// unaggressive (Aggression 0: they start no fights) and out of combat,
-	// and the scene guard pulls anyone who gets into combat or draws a
-	// weapon anyway straight back into the scene. What each actor was
-	// before (aggression, ghost) is kept here and in the save, and put back
-	// when the scene ends (FourStimScene.CalmForScene / UncalmAfterScene).
-	struct Calm
-	{
-		float aggression = -1.0F;  // their own base Aggression (-1: not changed, the player)
-		bool  ghost = false;       // already a ghost before the scene
-	};
-	std::mutex                              g_calmLock;
-	std::unordered_map<std::uint32_t, Calm> g_calm;
-
-	void NoteCalm(std::uint32_t a_actor, const Calm& a_calm)
-	{
-		std::scoped_lock lock(g_calmLock);
-		g_calm.try_emplace(a_actor, a_calm);  // the first is what they were before (a scene change calms again)
-	}
-
-	std::optional<Calm> CalmOf(std::uint32_t a_actor)
-	{
-		std::scoped_lock lock(g_calmLock);
-		const auto       it = g_calm.find(a_actor);
-		return it != g_calm.end() ? std::optional<Calm>{ it->second } : std::nullopt;
-	}
-
-	void RememberCalm(std::monostate, RE::Actor* a_actor, float a_aggression, bool a_ghost)
-	{
-		if (a_actor) {
-			NoteCalm(a_actor->GetFormID(), { a_aggression, a_ghost });
-		}
-	}
-
-	bool IsCalmed(std::monostate, RE::Actor* a_actor)
-	{
-		return a_actor && CalmOf(a_actor->GetFormID()).has_value();
-	}
-
-	float CalmAggressionOf(std::monostate, RE::Actor* a_actor)
-	{
-		const auto calm = a_actor ? CalmOf(a_actor->GetFormID()) : std::nullopt;
-		return calm ? calm->aggression : -1.0F;
-	}
-
-	bool CalmWasGhost(std::monostate, RE::Actor* a_actor)
-	{
-		const auto calm = a_actor ? CalmOf(a_actor->GetFormID()) : std::nullopt;
-		return calm && calm->ghost;
-	}
-
-	void ForgetCalm(std::monostate, RE::Actor* a_actor)
-	{
-		if (a_actor) {
-			std::scoped_lock lock(g_calmLock);
-			g_calm.erase(a_actor->GetFormID());
-		}
-	}
 
 	void NoteSceneWeapon(std::uint32_t a_actor, std::uint32_t a_weapon)
 	{
@@ -8109,11 +8029,6 @@ namespace
 		a_vm->BindNativeMethod(SCRIPT_NAME, "IsMuted"sv, IsMuted);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "RememberSceneWeapon"sv, RememberSceneWeapon);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "TakeSceneWeapon"sv, TakeSceneWeapon);
-		a_vm->BindNativeMethod(SCRIPT_NAME, "RememberCalm"sv, RememberCalm);
-		a_vm->BindNativeMethod(SCRIPT_NAME, "IsCalmed"sv, IsCalmed);
-		a_vm->BindNativeMethod(SCRIPT_NAME, "CalmAggressionOf"sv, CalmAggressionOf);
-		a_vm->BindNativeMethod(SCRIPT_NAME, "CalmWasGhost"sv, CalmWasGhost);
-		a_vm->BindNativeMethod(SCRIPT_NAME, "ForgetCalm"sv, ForgetCalm);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "SetEquipObjectID"sv, SetEquipObjectID);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "GetEquipObjectID"sv, GetEquipObjectID);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "RegisterForSceneEvents"sv, RegisterForSceneEvents);
@@ -8218,7 +8133,7 @@ namespace
 	constexpr std::uint32_t SCENES_RECORD = 'SCNS';
 	constexpr std::uint32_t CHOICES_RECORD = 'EQCH';  // each actor's chosen equip objects (OStim saves them in its actor data)
 	constexpr std::uint32_t CHOICES_VERSION = 1;
-	constexpr std::uint32_t SCENES_VERSION = 6;  // 2: each actor's own scale (alignment scales them); 3: equip objects given; 4: wall spot, furniture blocked, clutter; 5: weapon taken off; 6: aggression and ghost before the scene
+	constexpr std::uint32_t SCENES_VERSION = 5;  // 2: each actor's own scale (alignment scales them); 3: equip objects given; 4: wall spot, furniture blocked, clutter; 5: weapon taken off
 
 	struct SavedScene
 	{
@@ -8236,7 +8151,6 @@ namespace
 		bool                                    furnitureBlocked = false;  // 4Stim blocked the furniture (version 4)
 		std::vector<Furniture::ClutterItem>     clutter;             // version 4
 		std::vector<std::uint32_t>              weapons;             // per actor: the weapon taken off, 0 = none (version 5)
-		std::vector<Calm>                       calm;                // per actor: aggression -2 = not calmed (version 6)
 	};
 	std::mutex              g_savedLock;
 	std::vector<SavedScene> g_loadedScenes;  // read from the save being loaded
@@ -8284,9 +8198,6 @@ namespace
 					a_intfc->WriteRecordData(item);
 				}
 				a_intfc->WriteRecordData(SceneWeaponOf(id));  // version 5
-				const auto calm = CalmOf(id).value_or(Calm{ -2.0F, false });  // version 6 (-2: not calmed)
-				a_intfc->WriteRecordData(calm.aggression);
-				a_intfc->WriteRecordData(static_cast<std::uint8_t>(calm.ghost ? 1 : 0));
 			}
 			WriteString(a_intfc, active.sceneID);
 			a_intfc->WriteRecordData(static_cast<std::int32_t>(active.speed));
@@ -8415,14 +8326,6 @@ namespace
 						weapon = weapon ? resolve(weapon) : 0;
 					}
 					saved.weapons.push_back(weapon);
-					Calm          calm{ -2.0F, false };
-					std::uint8_t  ghost = 0;
-					if (version >= 6) {
-						a_intfc->ReadRecordData(calm.aggression);
-						a_intfc->ReadRecordData(ghost);
-						calm.ghost = ghost != 0;
-					}
-					saved.calm.push_back(calm);
 					saved.given.push_back(std::move(given));
 					saved.actors.push_back(resolve(id));  // 0 if its plugin is gone
 					saved.excitement.push_back(excitement);
@@ -8526,15 +8429,9 @@ namespace
 				RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
 				Compat::DispatchStaticCall(g_vm, "FourStimScene"sv, "RearmByID"sv, callback, static_cast<std::int32_t>(id));
 			}
-			if (i < a_saved.calm.size() && a_saved.calm[i].aggression > -1.5F) {
-				NoteCalm(id, a_saved.calm[i]);  // ReleaseAfterLoad / UncalmByID put it back
-			}
 			if (!IsPlayer(actor) && g_vm) {
 				RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
 				Compat::DispatchStaticCall(g_vm, "FourStimScene"sv, "ReleaseAfterLoad"sv, callback, static_cast<std::int32_t>(id));
-			} else if (g_vm) {
-				RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
-				Compat::DispatchStaticCall(g_vm, "FourStimScene"sv, "UncalmByID"sv, callback, static_cast<std::int32_t>(id));
 			}
 		}
 	}
@@ -8563,9 +8460,6 @@ namespace
 			}
 			if (i < a_saved.weapons.size() && a_saved.weapons[i]) {
 				NoteSceneWeapon(a_saved.actors[i], a_saved.weapons[i]);  // back on when the scene ends
-			}
-			if (i < a_saved.calm.size() && a_saved.calm[i].aggression > -1.5F) {
-				NoteCalm(a_saved.actors[i], a_saved.calm[i]);  // what they were before, back when the scene ends
 			}
 			EquipObjects::TakeBack(a_saved.actors[i], a_saved.given[i]);  // the scene puts them on again
 			// Their own size back first: the scene measures it again when it starts.
