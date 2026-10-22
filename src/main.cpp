@@ -92,6 +92,7 @@ namespace
 		int                                   count = 0;
 	};
 	std::unordered_map<std::uint32_t, GuardKicks> g_guardKicks;
+	std::unordered_map<std::uint32_t, std::chrono::steady_clock::time_point> g_holsterKicks;  // the scene guard's last weapon put away, per actor
 
 	// Papyrus-facing script name. Must be "FourStim", not "4Stim" -- Papyrus
 	// identifiers can't start with a digit. The plugin/project itself is
@@ -2714,6 +2715,23 @@ namespace
 						active.lastRelock = now;
 						LockScene(active);
 					}
+				}
+				// A weapon out with no fight going on (an NPC drawing on an
+				// alarm or a threat that's gone): put away and the scene played
+				// again. In real combat (an attack on the scene), it's left to
+				// the game: a scene can be broken by an attack.
+				if (actor->GetWeaponMagicDrawn() && !actor->IsInCombat()) {
+					auto& last = g_holsterKicks[id];
+					if (now - last > std::chrono::seconds(1)) {
+						last = now;
+						REX::INFO("Scene guard: {:08X} in \"{}\" drew a weapon (not in combat): putting it away", id, active.sceneID);
+						if (g_vm) {
+							RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
+							Compat::DispatchStaticCall(g_vm, "FourStimScene"sv, "PutWeaponAwayByID"sv, callback, static_cast<std::int32_t>(id));
+						}
+						forceReplay = true;
+					}
+					continue;
 				}
 				if (auto& kicks = g_guardKicks[id]; kicks.count < 3 && now - kicks.last > std::chrono::seconds(5) && FurnitureOf(actor)) {
 					kicks.last = now;

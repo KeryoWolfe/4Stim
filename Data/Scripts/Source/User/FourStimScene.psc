@@ -71,6 +71,20 @@ Function HolsterForScene(Actor akActor) Global
 	endif
 EndFunction
 
+; An NPC in a scene drew a weapon with no fight going on (called by the
+; plugin's scene guard, which then plays the scene again): unequipped
+; again. The weapon HolsterForScene noted stays the one put back.
+Function PutWeaponAwayByID(int aiActorID) Global
+	Actor akActor = Game.GetForm(aiActorID) as Actor
+	if akActor == None || IsPlayer(akActor) || akActor.IsInCombat()
+		return
+	endif
+	Weapon akWeapon = akActor.GetEquippedWeapon()
+	if akWeapon
+		akActor.UnequipItem(akWeapon, false, true)
+	endif
+EndFunction
+
 ; The weapon HolsterForScene took off, back on (if they still have it and
 ; aren't holding another).
 Function RearmAfterScene(Actor akActor) Global
