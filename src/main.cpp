@@ -4867,16 +4867,26 @@ namespace
 				REX::INFO("Player scene: change to \"{}\" speed {} dropped, the scene changed first", next.sceneID, next.speed + 1);
 				return;
 			}
-			const auto ids = next.ActorIDs();
+			const auto  ids = next.ActorIDs();
+			std::string results;
 			for (std::size_t role = 0; role < idles.size() && role < ids.size(); ++role) {
 				const auto actor = RE::TESForm::GetFormByID<RE::Actor>(ids[role]);
 				const auto process = actor ? actor->currentProcess : nullptr;
-				if (process) {
-					process->PlayIdle(*actor, idles[role], nullptr);
+				const bool ok = process && process->PlayIdle(*actor, idles[role], nullptr);
+				results += std::format("{}{:08X} {}", results.empty() ? "" : ", ", ids[role], ok ? "ok" : process ? "refused" : "no AI process");
+				if (!ok && process) {
+					// Refused (a tester on 1.10.163: the player stood still while
+					// their partner moved on): once more on the next frame.
+					F4SE::GetTaskInterface()->AddTask([id = ids[role], idle = idles[role], sceneID = next.sceneID]() {
+						const auto again = RE::TESForm::GetFormByID<RE::Actor>(id);
+						const auto process = again ? again->currentProcess : nullptr;
+						const bool ok = process && GetPlayerScene().sceneID == sceneID && process->PlayIdle(*again, idle, nullptr);
+						REX::INFO("Player scene: {:08X} PlayIdle again: {}", id, ok ? "ok" : "refused again");
+					});
 				}
 			}
 			SetPlayerScene(next);
-			REX::INFO("Player scene: \"{}\" speed {}", next.sceneID, next.speed + 1);
+			REX::INFO("Player scene: \"{}\" speed {}: PlayIdle {}", next.sceneID, next.speed + 1, results);
 			TrackSceneChange(next.role0, next.sceneID, next.speed);
 			if (next.sceneID != previous.sceneID) {
 				SceneEvents::SceneChanged(next.ActorIDs(), previous.sceneID, next.sceneID);
