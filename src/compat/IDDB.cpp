@@ -174,8 +174,27 @@ namespace
 		std::uint64_t id;
 		std::uint64_t rva;
 	};
+	//
+	// Also the 1.10.163 addresses the database has no entry or working
+	// pattern for (docs/OLDGEN.md; tools/make-address-table.py OG_EXTRA),
+	// built in so an old copy of the 1.10.163 table can't stop 4Stim
+	// loading (a tester's table was from before they were added). From the
+	// OG Address Library by the IDs alandtse/CommonLibF4 names for them.
 	constexpr Correction CORRECTIONS[] = {
-		{ 1, 10, 163, 4796135, 0x58CF080 },  // TESDataHandler::Singleton
+		{ 1, 10, 163, 4796135, 0x58CF080 },  // TESDataHandler::Singleton (database wrong)
+		{ 1, 10, 163, 2201126, 0x40B760 },   // TESObjectREFR::GetDisplayFullName
+		{ 1, 10, 163, 2207107, 0x5A2560 },   // TESNPC::GetSex
+		{ 1, 10, 163, 2229625, 0xD720C0 },   // Actor::SetHeading
+		{ 1, 10, 163, 2248368, 0x124AE60 },  // PlayerCamera::ToggleFreeCameraMode
+		{ 1, 10, 163, 2248421, 0x124E7F0 },  // PlayerCamera::QCameraEquals
+		{ 1, 10, 163, 2267970, 0x1B139A0 },  // BSTimer::SetGlobalTimeMultiplier
+		{ 1, 10, 163, 2268263, 0x1B21EA0 },  // BSInputEnableManager::EnableUserEvent
+		{ 1, 10, 163, 2268272, 0x1B22460 },  // BSInputEnableLayer::DecRef
+		{ 1, 10, 163, 2277771, 0x1D72FF0 },  // bhkPickData::GetHitFraction
+		{ 1, 10, 163, 2703058, 0x5B0D208 },  // BSAudioManager::Singleton
+		{ 1, 10, 163, 2703179, 0x5B5B6C0 },  // BSTimer::Singleton
+		{ 1, 10, 163, 4796297, 0x58D0780 },  // BSInputEnableManager::Singleton
+		{ 1, 10, 163, 4798212, 0x5AA4388 },  // PlayerCharacter::Singleton (F4SE 0.6.23's g_player)
 	};
 
 	std::optional<std::uint64_t> FromRuntime(std::uint64_t a_id, RD::RuntimeDatabase::ResolveFailure* a_failure = nullptr)
