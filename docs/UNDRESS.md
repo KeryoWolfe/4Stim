@@ -20,7 +20,7 @@ Fallout 4's NPCs put their outfit back on by themselves, and other mods equip th
 - An NPC's items are taken off with Papyrus's `UnequipItem(item, abPreventEquip = true)`, so their AI doesn't put them back on (redressing equips them by script, which it allows). The player's aren't locked this way: it would keep you from putting them on yourself, and the player doesn't re-equip on their own. (Departure from OStim, which doesn't lock them: Skyrim's NPCs don't re-equip that way.)
 - Four times a second, the scene guard checks everyone in a scene, the player included, for anything 4Stim took off that's back on, and takes it off again (`Undress: ... back on mid-scene` in `4Stim.log`).
 
-When something stays on through a full undress, `4Stim.log` names it and its slots (`Undress: ... keeps ... on (slots ...)`), once per actor and scene. That's usually an outfit mod using a slot outside `sUndressSlots`, often one of the accessory slots 54 to 58: add those slots to `sUndressSlots` if your outfits use them for clothes rather than body parts.
+When something stays on through a full undress, `4Stim.log` names it and its slots (`Undress: ... keeps ... on (slots ...)`), once per actor and scene. That's an item with a NoStrip keyword, or one only in slots that aren't checked: check those slots on the MCM's Undressing slots page if your outfits use them for clothes.
 
 ## One piece at a time
 
@@ -42,19 +42,32 @@ The slots each part covers:
 
 ## What
 
-Only what's worn in the slots listed in `sUndressSlots` comes off. These are Fallout 4's biped slots, 30 to 61:
+As in OStim: a set of biped slots (OStim's `SetUndressingSlotMask`), and any armor worn that covers one of them comes off whole, unless it has a keyword with "NoStrip" in its name (OStim's `OStimNoStrip`, SexLab's `SexLabNoStrip`...: mods can mark items that must stay on). The slots are set on the MCM's **Undressing slots** page, a checkbox per slot as OStim's, or in `4Stim.ini`'s `[UndressSlots]` (`bUndressSlot30` to `bUndressSlot61`; OStim's `SetUndressingSlotMask`, a mask with bit 0 for slot 30, and the older `sUndressSlots` list are read too).
 
-| Slots | |
-|---|---|
-| 33 | Body: outfits, jumpsuits |
-| 34, 35 | Left and right hand |
-| 36–40 | Under-armor: torso, arms, legs |
-| 41–45 | Armor pieces: torso, arms, legs |
-| 46 | Headband: hats, helmets |
-| 47 | Eyes: glasses, goggles |
-| 50 | Neck: scarves, bandanas |
+**Skyrim and Fallout 4 dress differently.** Skyrim's armor is one piece per region (body 32, head 30, hands 33, feet 37), and modders took the unnamed slots (44–49, 52–61) for cloaks, backpacks and the like, and for parts of the body (SOS's schlong is 52). OStim's default undresses Skyrim's clothing and modders' slots and leaves hair, ears, tail, amulet, ring, circlet and the schlong on. Fallout 4's clothes come in layers: an outfit in 33 (usually also claiming the under-armor slots 36–40), armor pieces on top in 41–45, and mods' extra pieces (jackets, belts, bandoliers, backpacks) in the unnamed 54–58. 4Stim's default is OStim's, mapped to that:
 
-Hair (30, 31), the head (32), mouth (49), scalp (52), the accessory slots (54–58) and the Pip-Boy (60) are left alone by default. Body mods use some of these for parts of the body itself. Add any slot your outfits use to the list.
+| Slot | | Default |
+|---|---|---|
+| 30, 31 | Hair top, hair long | stays on |
+| 32 | FaceGen head | stays on |
+| 33 | BODY: outfits, jumpsuits | **comes off** |
+| 34, 35 | Left and right hand | **comes off** |
+| 36–40 | Under-armor: torso, arms, legs | **comes off** |
+| 41–45 | Armor pieces: torso, arms, legs | **comes off** |
+| 46 | Headband: hats, helmets | **comes off** |
+| 47 | Eyes: glasses, goggles | **comes off** |
+| 48 | Beard | stays on |
+| 49 | Mouth: masks, bandanas | **comes off** |
+| 50 | Neck: scarves, collars | stays on (as OStim's amulet slot) |
+| 51 | Ring | stays on (as OStim) |
+| 52 | Scalp | stays on |
+| 53 | Decapitation | stays on |
+| 54–58 | Unnamed: mods' extra clothing | **comes off** (as OStim's modders' slots) |
+| 59 | Shield | stays on |
+| 60 | Pip-Boy | stays on (the Pip-Boy itself never comes off) |
+| 61 | FX | stays on |
+
+If a body mod puts part of the body (genitals, pubic hair) in one of 54–58, uncheck that slot, or give the item a NoStrip keyword. 4Stim's own equip objects (strap-ons, tongues) always stay on.
 
 The action types' `undressSlots` were mapped from OStim's Skyrim `strippingSlots`:
 
@@ -69,7 +82,7 @@ The action types' `undressSlots` were mapped from OStim's Skyrim `strippingSlots
 | face | 49 |
 | pelvis | 33, 36, 39, 40, 44, 45 |
 
-Any slot outside `sUndressSlots` is skipped anyway.
+A slot that isn't checked is skipped anyway.
 
 ## Papyrus
 

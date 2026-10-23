@@ -232,6 +232,10 @@ SETTINGS = {
     'bToyClimax': ('Pulse on climax', 'bool'),
     'fToyClimaxMagnitude': ('Climax pulse', 'float', (0, 1, 0.05)),
 }
+# The Undressing slots page (OStim's slot mask page), Fallout 4's slot names.
+SLOT_NAMES = {30: 'Hair Top', 31: 'Hair Long', 32: 'FaceGen Head', 33: 'BODY', 34: 'L Hand', 35: 'R Hand', 36: '[U] Torso', 37: '[U] L Arm', 38: '[U] R Arm', 39: '[U] L Leg', 40: '[U] R Leg', 41: '[A] Torso', 42: '[A] L Arm', 43: '[A] R Arm', 44: '[A] L Leg', 45: '[A] R Leg', 46: 'Headband', 47: 'Eyes', 48: 'Beard', 49: 'Mouth', 50: 'Neck', 51: 'Ring', 52: 'Scalp', 53: 'Decapitation', 54: 'Unnamed', 55: 'Unnamed', 56: 'Unnamed', 57: 'Unnamed', 58: 'Unnamed', 59: 'Shield', 60: 'Pipboy', 61: 'FX'}
+for _slot, _name in SLOT_NAMES.items():
+    SETTINGS[f'bUndressSlot{_slot}'] = (f'{_slot} - {_name}', 'bool')
 
 # Pages: (title, [(ini section, [keys])]).
 PAGES = [
@@ -261,6 +265,7 @@ PAGES = [
                                  'autoSpeedControlExcitementMax'])]),
     ('Undressing', [('Undress', ['bUndress', 'SetAlwaysUndressAtStart', 'SetPartialUndressing', 'SetUndressIfNeed', 'bUndressPlayer', 'bRedress',
                                  'fUndressItemDelay', 'SetAnimateRedress'])]),
+    ('Undressing slots', [('UndressSlots', [f'bUndressSlot{s}' for s in range(30, 62)])]),
     ('Faces and sound', [('Expressions', ['noFacialExpressions', 'SetExpressionDurationMin', 'SetExpressionDurationMax']),
                          ('Sound', ['bSounds', 'moanIntervalMin', 'moanIntervalMax', 'moanVolume', 'soundVolume', 'iSoundPriority'])]),
     ('Lights', [('Lights', ['sMaleLight', 'sFemaleLight', 'SetOnlyLightInDark', 'fLightLevelDark'])]),
@@ -290,6 +295,7 @@ def read_ini():
             comment.append(line[1:].strip())
         elif '=' in line:
             key, value = [p.strip() for p in line.split('=', 1)]
+            value = value.split(';', 1)[0].strip()  # an inline comment
             out[key] = (section, value, ' '.join(comment))
     return out
 
@@ -352,7 +358,9 @@ def main():
                 control = {
                     'id': f'{name}:{section}',
                     'text': text(f'$4Stim_MCM_{key}', label),
-                    'help': text(f'$4Stim_MCM_{key}_Help', (comment or label) + (' Here in seconds (4Stim.ini has milliseconds, as OStim).' if kind == 'ms' else '')),
+                    'help': text(f'$4Stim_MCM_{key}_Help', (f"Slot {label}: on = what's worn there comes off when undressing (anything covering it, unless it has a NoStrip keyword)."
+                                                            if key.startswith('bUndressSlot') else (comment or label))
+                                 + (' Here in seconds (4Stim.ini has milliseconds, as OStim).' if kind == 'ms' else '')),
                     'action': {'type': 'CallGlobalFunction', 'script': 'FourStimMCM', 'function': 'SettingChanged', 'params': []},
                 }
                 if kind == 'key':
@@ -382,7 +390,7 @@ def main():
     # Export / import / 4Stim.ini.
     pages.append({'pageDisplayName': text('$4Stim_MCM_PageSettings', 'Save and load'), 'content': [
         {'text': text('$4Stim_MCM_SettingsNote', 'Settings changed here are kept in Data\\MCM\\Settings\\4Stim.ini, over 4Stim.ini. Whichever of the two you changed last wins when the game starts.'), 'type': 'text'},
-        {'text': text('$4Stim_MCM_IniOnly', 'Only in 4Stim.ini: the undress slots (sUndressSlots), bone names (sPenisBendNode, sLeftEyeNode, sRightEyeNode) and sound flags (iSoundFlags).'), 'type': 'text'},
+        {'text': text('$4Stim_MCM_IniOnly', 'Only in 4Stim.ini: bone names (sPenisBendNode, sLeftEyeNode, sRightEyeNode) and sound flags (iSoundFlags).'), 'type': 'text'},
         {'type': 'spacer'},
         {'text': text('$4Stim_MCM_Export', 'Export settings'), 'type': 'button',
          'help': text('$4Stim_MCM_Export_Help', 'The settings in effect to Documents\\My Games\\Fallout4\\4Stim\\mcmsettings.json, as OStim exports its own.'),

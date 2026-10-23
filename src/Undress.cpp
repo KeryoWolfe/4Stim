@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <array>
+#include <cctype>
 #include <chrono>
 #include <string>
 #include <optional>
@@ -53,6 +54,20 @@ namespace Undress
 		}
 
 		constexpr std::uint32_t PIPBOY = 0x00021B3B;  // the Pip-Boy (an armor) never comes off
+
+		// OStim's FormUtil::canUndress: an item with a keyword whose editor ID
+		// has "NoStrip" in it (OStimNoStrip, SexLabNoStrip...) stays on.
+		bool NoStrip(const RE::TESObjectARMO* a_armor)
+		{
+			bool found = false;
+			a_armor->ForEachKeyword([&](RE::BGSKeyword* a_keyword) {
+				std::string id(a_keyword->formEditorID.c_str());
+				std::ranges::transform(id, id.begin(), [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+				found = id.find("nostrip") != std::string::npos;
+				return found ? RE::BSContainer::ForEachResult::kStop : RE::BSContainer::ForEachResult::kContinue;
+			});
+			return found;
+		}
 
 		// Redress animations, OStim's way: a body part at a time (torso, feet,
 		// hands, head), each a one-actor scene tagged "redress" and the part,
@@ -148,7 +163,7 @@ namespace Undress
 		}
 
 		// After a full undress: what's still on (armor in slots outside
-		// sUndressSlots, mods' clothes in the accessory slots 54-58 say),
+		// the undress slots, or NoStrip),
 		// once per actor and scene, so a report of "armor left on" can be
 		// read in the log. Main thread.
 		void LogLeftovers(RE::Actor* a_actor, const std::vector<std::uint32_t>& a_takingOff)
@@ -168,8 +183,8 @@ namespace Undress
 				const auto item = RE::TESForm::GetFormByID(id);
 				const auto armor = item ? item->As<RE::TESObjectARMO>() : nullptr;
 				const char* name = armor ? armor->GetFullName() : nullptr;
-				REX::INFO("Undress: {:08X} keeps {:08X} \"{}\" on (slots {}; only slots in sUndressSlots come off)", a_actor->GetFormID(), id,
-					name ? name : "", SlotList(armor ? armor->GetFilledSlots() : 0));
+				REX::INFO("Undress: {:08X} keeps {:08X} \"{}\" on (slots {}; {})", a_actor->GetFormID(), id, name ? name : "",
+					SlotList(armor ? armor->GetFilledSlots() : 0), armor && NoStrip(armor) ? "a NoStrip keyword" : "none of them checked in the undress slots");
 			}
 		}
 
@@ -211,7 +226,13 @@ namespace Undress
 					return;
 				}
 				auto items = WornIn(actor, mask);
-				std::erase_if(items, [](std::uint32_t a_item) { return EquipObjects::IsObjectItem(a_item); });  // 4Stim's own strap-ons and such stay on
+				std::erase_if(items, [](std::uint32_t a_item) {
+					if (EquipObjects::IsObjectItem(a_item)) {
+						return true;  // 4Stim's own strap-ons and such stay on
+					}
+					const auto armor = RE::TESForm::GetFormByID<RE::TESObjectARMO>(a_item);
+					return armor && NoStrip(armor);
+				});
 				REX::INFO("Undress: {:08X}, slots 0x{:08X}: {} item(s) to take off", a_id, mask, items.size());
 				if (full) {
 					LogLeftovers(actor, items);

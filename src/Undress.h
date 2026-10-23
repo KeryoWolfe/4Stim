@@ -22,7 +22,12 @@ namespace Undress
 		bool             redress = true;      // back on when the scene ends
 		float            itemDelay = 0.0F;    // seconds between items, taking off and putting on (0 = all at once)
 		bool             animateRedress = false;  // NPCs play redress animations (scenes tagged "redress") as they dress after a scene
-		std::vector<int> slots{ 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 50 };  // biped slots 4Stim may undress
+		// Biped slots 4Stim may undress (OStim's SetUndressingSlotMask, its
+		// default mapped to Fallout 4's slots, docs/UNDRESS.md): body (33),
+		// hands (34, 35), under-armor and armor (36-45), headband (46), eyes
+		// (47), mouth (49), the modders' slots (54-58). Not hair, head, beard,
+		// neck, ring, scalp, decapitation, shield, Pip-Boy or FX.
+		std::vector<int> slots{ 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 49, 54, 55, 56, 57, 58 };
 	};
 	Config& Settings();
 

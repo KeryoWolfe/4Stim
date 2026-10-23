@@ -710,6 +710,28 @@ namespace
 					Undress::Settings().itemDelay = std::clamp(std::stof(value), 0.0F, 5.0F);
 				} else if (key == "banimateredress") {
 					Undress::Settings().animateRedress = std::stoi(value) != 0;
+				} else if (key == "setundressingslotmask") {
+					// OStim's name: a mask, bit 0 = slot 30.
+					const auto       mask = static_cast<std::uint32_t>(std::stoll(value, nullptr, 0));
+					std::vector<int> slots;
+					for (int slot = 30; slot <= 61; ++slot) {
+						if (mask & (1u << (slot - 30))) {
+							slots.push_back(slot);
+						}
+					}
+					Undress::Settings().slots = std::move(slots);
+				} else if (key.starts_with("bundressslot") && key.size() == 14) {
+					// One slot each (the MCM's Undressing slots page).
+					const int slot = std::stoi(key.substr(12));
+					if (slot >= 30 && slot <= 61) {
+						auto&      slots = Undress::Settings().slots;
+						const bool on = std::stoi(value) != 0;
+						std::erase(slots, slot);
+						if (on) {
+							slots.push_back(slot);
+							std::ranges::sort(slots);
+						}
+					}
 				} else if (key == "sundressslots") {
 					std::vector<int> slots;
 					std::string      token;

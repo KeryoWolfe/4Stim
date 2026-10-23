@@ -1714,6 +1714,491 @@
 			]
 		},
 		{
+			"pageDisplayName": "$4Stim_MCM_PageUndressingslots",
+			"content": [
+				{
+					"id": "bUndressSlot30:UndressSlots",
+					"text": "$4Stim_MCM_bUndressSlot30",
+					"help": "$4Stim_MCM_bUndressSlot30_Help",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "switcher",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "bUndressSlot31:UndressSlots",
+					"text": "$4Stim_MCM_bUndressSlot31",
+					"help": "$4Stim_MCM_bUndressSlot31_Help",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "switcher",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "bUndressSlot32:UndressSlots",
+					"text": "$4Stim_MCM_bUndressSlot32",
+					"help": "$4Stim_MCM_bUndressSlot32_Help",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "switcher",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "bUndressSlot33:UndressSlots",
+					"text": "$4Stim_MCM_bUndressSlot33",
+					"help": "$4Stim_MCM_bUndressSlot33_Help",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "switcher",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "bUndressSlot34:UndressSlots",
+					"text": "$4Stim_MCM_bUndressSlot34",
+					"help": "$4Stim_MCM_bUndressSlot34_Help",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "switcher",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "bUndressSlot35:UndressSlots",
+					"text": "$4Stim_MCM_bUndressSlot35",
+					"help": "$4Stim_MCM_bUndressSlot35_Help",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "switcher",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "bUndressSlot36:UndressSlots",
+					"text": "$4Stim_MCM_bUndressSlot36",
+					"help": "$4Stim_MCM_bUndressSlot36_Help",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "switcher",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "bUndressSlot37:UndressSlots",
+					"text": "$4Stim_MCM_bUndressSlot37",
+					"help": "$4Stim_MCM_bUndressSlot37_Help",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "switcher",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "bUndressSlot38:UndressSlots",
+					"text": "$4Stim_MCM_bUndressSlot38",
+					"help": "$4Stim_MCM_bUndressSlot38_Help",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "switcher",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "bUndressSlot39:UndressSlots",
+					"text": "$4Stim_MCM_bUndressSlot39",
+					"help": "$4Stim_MCM_bUndressSlot39_Help",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "switcher",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "bUndressSlot40:UndressSlots",
+					"text": "$4Stim_MCM_bUndressSlot40",
+					"help": "$4Stim_MCM_bUndressSlot40_Help",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "switcher",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "bUndressSlot41:UndressSlots",
+					"text": "$4Stim_MCM_bUndressSlot41",
+					"help": "$4Stim_MCM_bUndressSlot41_Help",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "switcher",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "bUndressSlot42:UndressSlots",
+					"text": "$4Stim_MCM_bUndressSlot42",
+					"help": "$4Stim_MCM_bUndressSlot42_Help",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "switcher",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "bUndressSlot43:UndressSlots",
+					"text": "$4Stim_MCM_bUndressSlot43",
+					"help": "$4Stim_MCM_bUndressSlot43_Help",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "switcher",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "bUndressSlot44:UndressSlots",
+					"text": "$4Stim_MCM_bUndressSlot44",
+					"help": "$4Stim_MCM_bUndressSlot44_Help",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "switcher",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "bUndressSlot45:UndressSlots",
+					"text": "$4Stim_MCM_bUndressSlot45",
+					"help": "$4Stim_MCM_bUndressSlot45_Help",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "switcher",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "bUndressSlot46:UndressSlots",
+					"text": "$4Stim_MCM_bUndressSlot46",
+					"help": "$4Stim_MCM_bUndressSlot46_Help",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "switcher",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "bUndressSlot47:UndressSlots",
+					"text": "$4Stim_MCM_bUndressSlot47",
+					"help": "$4Stim_MCM_bUndressSlot47_Help",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "switcher",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "bUndressSlot48:UndressSlots",
+					"text": "$4Stim_MCM_bUndressSlot48",
+					"help": "$4Stim_MCM_bUndressSlot48_Help",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "switcher",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "bUndressSlot49:UndressSlots",
+					"text": "$4Stim_MCM_bUndressSlot49",
+					"help": "$4Stim_MCM_bUndressSlot49_Help",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "switcher",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "bUndressSlot50:UndressSlots",
+					"text": "$4Stim_MCM_bUndressSlot50",
+					"help": "$4Stim_MCM_bUndressSlot50_Help",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "switcher",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "bUndressSlot51:UndressSlots",
+					"text": "$4Stim_MCM_bUndressSlot51",
+					"help": "$4Stim_MCM_bUndressSlot51_Help",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "switcher",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "bUndressSlot52:UndressSlots",
+					"text": "$4Stim_MCM_bUndressSlot52",
+					"help": "$4Stim_MCM_bUndressSlot52_Help",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "switcher",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "bUndressSlot53:UndressSlots",
+					"text": "$4Stim_MCM_bUndressSlot53",
+					"help": "$4Stim_MCM_bUndressSlot53_Help",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "switcher",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "bUndressSlot54:UndressSlots",
+					"text": "$4Stim_MCM_bUndressSlot54",
+					"help": "$4Stim_MCM_bUndressSlot54_Help",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "switcher",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "bUndressSlot55:UndressSlots",
+					"text": "$4Stim_MCM_bUndressSlot55",
+					"help": "$4Stim_MCM_bUndressSlot55_Help",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "switcher",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "bUndressSlot56:UndressSlots",
+					"text": "$4Stim_MCM_bUndressSlot56",
+					"help": "$4Stim_MCM_bUndressSlot56_Help",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "switcher",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "bUndressSlot57:UndressSlots",
+					"text": "$4Stim_MCM_bUndressSlot57",
+					"help": "$4Stim_MCM_bUndressSlot57_Help",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "switcher",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "bUndressSlot58:UndressSlots",
+					"text": "$4Stim_MCM_bUndressSlot58",
+					"help": "$4Stim_MCM_bUndressSlot58_Help",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "switcher",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "bUndressSlot59:UndressSlots",
+					"text": "$4Stim_MCM_bUndressSlot59",
+					"help": "$4Stim_MCM_bUndressSlot59_Help",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "switcher",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "bUndressSlot60:UndressSlots",
+					"text": "$4Stim_MCM_bUndressSlot60",
+					"help": "$4Stim_MCM_bUndressSlot60_Help",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "switcher",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "bUndressSlot61:UndressSlots",
+					"text": "$4Stim_MCM_bUndressSlot61",
+					"help": "$4Stim_MCM_bUndressSlot61_Help",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "switcher",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				}
+			]
+		},
+		{
 			"pageDisplayName": "$4Stim_MCM_PageFacesandsound",
 			"content": [
 				{

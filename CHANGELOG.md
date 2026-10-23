@@ -4,6 +4,7 @@
 
 OStim parity: everything on the roadmap's "OStim parity" list is in.
 
+- **Undressing, OStim's way for Fallout 4's clothes:** an MCM page of slot checkboxes (OStim's), OStim's default mapped to Fallout 4 (now also mouth and the modders' slots 54-58, where outfit mods put jackets and belts; neck stays on, as OStim's amulet slot), and OStim's NoStrip keyword rule (docs/UNDRESS.md).
 - **Fixed:** clothes coming back on mid-scene, so actors kept armor on or outfits came off only sometimes: NPCs no longer put their outfit back on by themselves, and anything 4Stim took off that's back on is taken off again within a second (docs/UNDRESS.md). What a full undress leaves on is logged with its slots.
 - **Fixed:** the HUD's options (strap-on, tongue, undress, mute, and other mods' options files) did nothing: the actor never reached the option's script. Options now go through `FourStimOptions.Run` with the actor's form ID.
 - **Toy slots:** the actions have OStim's `toySlot`s (genital, anus, nipples, scrotum), so sex toys get used in scenes; the log says when a scene has none.
