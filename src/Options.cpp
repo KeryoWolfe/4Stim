@@ -323,8 +323,18 @@ namespace Options
 		}
 		if (!g_path.empty()) {
 			const auto parent = g_path.size() > 1 ? FindPage(g_path[g_path.size() - 2].page) : nullptr;
-			rows.push_back({ std::string(OPTION_PREFIX) + ":back", TRF("$4Stim_OptionsBack", "Back to {}", parent ? Text(parent->description) : TR("$4Stim_TabUtility", "Utility")),
-				"4Stim/symbols/return", "ff0000" });
+			auto       parentName = parent ? Text(parent->description) : TR("$4Stim_TabUtility", "Utility");
+			// A per-actor parent page ("{actor}"): that page's actor.
+			int parentActor = -1;
+			for (std::size_t i = 0; i + 1 < g_path.size(); ++i) {
+				if (g_path[i].actor >= 0) {
+					parentActor = g_path[i].actor;
+				}
+			}
+			if (parentActor >= 0 && static_cast<std::size_t>(parentActor) < a_actors.size()) {
+				Replace(parentName, "{actor}", ActorName(a_actors[parentActor], false));
+			}
+			rows.push_back({ std::string(OPTION_PREFIX) + ":back", TRF("$4Stim_OptionsBack", "Back to {}", parentName), "4Stim/symbols/return", "ff0000" });
 		}
 		// Pages under this one (one per actor where it repeats).
 		for (const auto& page : g_pages) {

@@ -20,3 +20,9 @@ the dildo along ZeX's Penis_00-05 chain, writes every TWB slider
 (`sliders.tsv`, from TWB's slider set) conformed from the nearest TWB vertex,
 and the `.osp` slider set (output `meshes\4Stim\EquipObjects\OStimStrapOn`).
 `tools/make-equip-plugin.py` writes the plugin with its armor.
+
+`build_tongues.cpp` converts OStim's tongues (`build_tongues <OStim tongues
+folder> <output folder> <ZeX skeleton.nif>`): moved from Skyrim's head to
+Fallout 4's and weighted rigidly to HEAD, with HEAD's bind transform read
+from the skeleton (rotation included: a translation-only bind put the
+tongue out of the right cheek).

@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <cctype>
+#include <cstring>
 #include <filesystem>
 #include <format>
 #include <fstream>
@@ -92,19 +93,115 @@ namespace SceneRegistry
 		std::unordered_map<std::string, RE::TESIdleForm*> g_idlesByEditorID;
 		bool                                              g_idlesIndexed = false;
 
+		// The Idles a plugin file itself adds (not its overrides of its
+		// masters'), editor ID -> its form in game. Fallout 4 doesn't keep
+		// Idles' editor IDs once loaded (a tester's log: 0 found), so they're
+		// read from the plugin files in Data\, as the game would: top-level
+		// groups' headers only, and the IDLE group's records (compressed ones
+		// are skipped).
+		std::size_t ReadIdleEditorIDs(const RE::TESFile* a_file, std::size_t& a_compressed)
+		{
+			std::ifstream in(std::filesystem::path("Data") / std::string(a_file->GetFilename()), std::ios::binary);
+			if (!in) {
+				return 0;
+			}
+			auto readU32 = [&](const char* a_at) {
+				std::uint32_t v;
+				std::memcpy(&v, a_at, 4);
+				return v;
+			};
+			char header[24];
+			if (!in.read(header, 24) || std::string_view(header, 4) != "TES4") {
+				return 0;
+			}
+			// The file header: its masters (MAST), for telling its own records
+			// from overrides (a record's top byte is its master's index).
+			std::string fields(readU32(header + 4), '\0');
+			if (!in.read(fields.data(), fields.size())) {
+				return 0;
+			}
+			std::uint32_t masters = 0;
+			for (std::size_t field = 0; field + 6 <= fields.size();) {
+				std::uint16_t length;
+				std::memcpy(&length, fields.data() + field + 4, 2);
+				if (std::string_view(fields.data() + field, 4) == "MAST") {
+					++masters;
+				}
+				field += 6 + length;
+			}
+			std::size_t found = 0;
+			while (in.read(header, 24)) {
+				const auto size = readU32(header + 4);
+				if (std::string_view(header, 4) != "GRUP" || size < 24) {
+					break;
+				}
+				if (std::string_view(header + 8, 4) != "IDLE") {
+					in.seekg(size - 24, std::ios::cur);
+					continue;
+				}
+				std::string group(size - 24, '\0');
+				if (!in.read(group.data(), group.size())) {
+					break;
+				}
+				for (std::size_t at = 0; at + 24 <= group.size();) {
+					const char* record = group.data() + at;
+					const auto  dataSize = readU32(record + 4);
+					const auto  flags = readU32(record + 8);
+					const auto  formID = readU32(record + 12);
+					const auto  next = at + 24 + dataSize;
+					if (std::string_view(record, 4) == "IDLE" && next <= group.size()) {
+						// A record of this file (not an override of a master's).
+						if ((formID >> 24) >= masters) {
+							if (flags & 0x00040000) {
+								++a_compressed;
+							} else {
+								for (std::size_t field = 24; field + 6 <= 24 + dataSize;) {
+									std::uint16_t length;
+									std::memcpy(&length, record + field + 4, 2);
+									if (std::string_view(record + field, 4) == "EDID" && length > 1 && field + 6 + length <= 24 + dataSize) {
+										const auto runtimeID = a_file->IsLight() ?
+										                           0xFE000000u | (static_cast<std::uint32_t>(a_file->GetSmallFileCompileIndex()) << 12) | (formID & 0xFFF) :
+										                           (static_cast<std::uint32_t>(a_file->GetCompileIndex()) << 24) | (formID & 0xFFFFFF);
+										if (const auto idle = RE::TESForm::GetFormByID<RE::TESIdleForm>(runtimeID)) {
+											g_idlesByEditorID.try_emplace(Lower(std::string(record + field + 6, length - 1)), idle);
+											++found;
+										}
+										break;
+									}
+									field += 6 + length;
+								}
+							}
+						}
+					}
+					at = std::string_view(record, 4) == "GRUP" ? at + 24 : next;  // a subgroup: step into it
+				}
+			}
+			return found;
+		}
+
 		RE::TESIdleForm* IdleByEditorID(const std::string& a_editorID)
 		{
 			if (!g_idlesIndexed) {
 				g_idlesIndexed = true;
 				g_idlesByEditorID.clear();
+				std::size_t fromGame = 0, fromFiles = 0, compressed = 0;
 				if (const auto handler = RE::TESDataHandler::GetSingleton()) {
 					for (const auto idle : handler->GetFormArray<RE::TESIdleForm>()) {
 						if (idle && !idle->formEditorID.empty()) {
 							g_idlesByEditorID[Lower(idle->formEditorID.c_str())] = idle;
+							++fromGame;
+						}
+					}
+					for (const auto* list : { &handler->compiledFileCollection.files, &handler->compiledFileCollection.smallFiles }) {
+						for (const auto file : *list) {
+							if (file) {
+								fromFiles += ReadIdleEditorIDs(file, compressed);
+							}
 						}
 					}
 				}
-				REX::INFO("Scenes: {} Idle(s) with an editor ID, for OStim-style \"animation\" names", g_idlesByEditorID.size());
+				REX::INFO("Scenes: {} Idle editor ID(s) for OStim-style \"animation\" names ({} from the game, {} read from plugin files{})",
+					g_idlesByEditorID.size(), fromGame, fromFiles, compressed ? std::format(", {} compressed record(s) skipped", compressed) : std::string{});
 			}
 			const auto it = g_idlesByEditorID.find(Lower(a_editorID));
 			return it != g_idlesByEditorID.end() ? it->second : nullptr;

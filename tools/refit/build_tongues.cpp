@@ -2,11 +2,15 @@
 // equip objects: each shape moved from Skyrim's head to Fallout 4's (the
 // two skeletons' heads are 0.67 apart forward and 0.5 up) and weighted
 // rigidly to HEAD. OStim's SMP bones aren't kept (no tongue physics yet).
+// HEAD's bind transform is read from the skeleton, rotation included:
+// Fallout 4's HEAD is turned about 90 degrees, and a translation-only bind
+// (the first version) put the tongue out of the right cheek in game.
 //
-//   build_tongues <OStim meshes\OStim\tongues folder> <output folder>
+//   build_tongues <OStim meshes\OStim\tongues folder> <output folder> <ZeX skeleton.nif>
 #include "NifFile.hpp"
 #include <cstdio>
 #include <filesystem>
+#include <functional>
 
 using namespace nifly;
 
@@ -14,9 +18,32 @@ int main(int argc, char** argv)
 {
 	const std::filesystem::path in = argv[1], out = argv[2];
 	std::filesystem::create_directories(out);
-	// HEAD in Fallout 4's (ZeX) skeleton.
+	// HEAD in Fallout 4's (ZeX) skeleton, as bound: its global transform.
 	MatTransform head;
-	head.translation = Vector3(0.0f, -0.88f, 120.84f);
+	{
+		NifFile skeleton;
+		if (skeleton.Load(argv[3])) {
+			printf("can't read the skeleton\n");
+			return 1;
+		}
+		std::function<bool(NiNode*, MatTransform)> find = [&](NiNode* a_node, MatTransform a_parent) {
+			const auto global = a_parent.ComposeTransforms(a_node->GetTransformToParent());
+			if (a_node->name.get() == "HEAD") {
+				head = global;
+				return true;
+			}
+			for (auto& child : a_node->childRefs) {
+				if (auto* node = skeleton.GetHeader().GetBlock<NiNode>(child); node && find(node, global)) {
+					return true;
+				}
+			}
+			return false;
+		};
+		if (!find(skeleton.GetRootNode(), MatTransform())) {
+			printf("no HEAD in the skeleton\n");
+			return 1;
+		}
+	}
 	const Vector3 shift(0.0f, 0.67f, 0.5f);  // Skyrim's NPC Head (y -1.55, z 120.34) to Fallout 4's HEAD
 	int count = 0;
 	for (const auto& entry : std::filesystem::directory_iterator(in)) {
