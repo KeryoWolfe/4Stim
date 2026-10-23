@@ -2699,6 +2699,7 @@ namespace
 			bool                   forceReplay = false;
 			for (const auto id : active.actors) {
 				const auto actor = RE::TESForm::GetFormByID<RE::Actor>(id);
+				Undress::Enforce(actor);  // what came off stays off (the player too)
 				if (!actor || IsPlayer(actor)) {
 					continue;
 				}

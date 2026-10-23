@@ -13,6 +13,15 @@ Scene actors take off their clothes and armor during a scene and put them back o
 
 Weapons are always put away when a scene starts.
 
+## Staying undressed
+
+Fallout 4's NPCs put their outfit back on by themselves, and other mods equip things too, so clothes could come back on mid-scene. Two things keep them off until the scene ends:
+
+- An NPC's items are taken off with Papyrus's `UnequipItem(item, abPreventEquip = true)`, so their AI doesn't put them back on (redressing equips them by script, which it allows). The player's aren't locked this way: it would keep you from putting them on yourself, and the player doesn't re-equip on their own. (Departure from OStim, which doesn't lock them: Skyrim's NPCs don't re-equip that way.)
+- Four times a second, the scene guard checks everyone in a scene, the player included, for anything 4Stim took off that's back on, and takes it off again (`Undress: ... back on mid-scene` in `4Stim.log`).
+
+When something stays on through a full undress, `4Stim.log` names it and its slots (`Undress: ... keeps ... on (slots ...)`), once per actor and scene. That's usually an outfit mod using a slot outside `sUndressSlots`, often one of the accessory slots 54 to 58: add those slots to `sUndressSlots` if your outfits use them for clothes rather than body parts.
+
 ## One piece at a time
 
 Clothes come off and go back on all at once, as in OStim, or one item at a time with `fUndressItemDelay` seconds between them (a 4Stim setting; 0 by default).

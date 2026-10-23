@@ -4,6 +4,7 @@
 
 OStim parity: everything on the roadmap's "OStim parity" list is in.
 
+- **Fixed:** clothes coming back on mid-scene, so actors kept armor on or outfits came off only sometimes: NPCs no longer put their outfit back on by themselves, and anything 4Stim took off that's back on is taken off again within a second (docs/UNDRESS.md). What a full undress leaves on is logged with its slots.
 - **Fixed:** the HUD's options (strap-on, tongue, undress, mute, and other mods' options files) did nothing: the actor never reached the option's script. Options now go through `FourStimOptions.Run` with the actor's form ID.
 - **Toy slots:** the actions have OStim's `toySlot`s (genital, anus, nipples, scrotum), so sex toys get used in scenes; the log says when a scene has none.
 - **Other game versions (experimental):** CommonLibF4RD's resolver is built in: with [Runtime Database](https://www.nexusmods.com/fallout4/mods/108394) installed, the same 4Stim.dll runs on 1.10.163, 1.10.984 and other 1.11.x versions, finding the game's code at startup (docs/OLDGEN.md). 1.11.240 still uses the Address Library. On 1.10.163, the 20 addresses the database can't find there come from their OG IDs (12) or are done another way (8; one, taking NPCs out of furniture, is lost).

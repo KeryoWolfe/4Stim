@@ -11,6 +11,10 @@ Function Strip(int aiActorID, int[] aiItemIDs, float afDelay = 0.0) Global
 	if akActor == None || aiItemIDs == None
 		return
 	endif
+	; NPCs: kept from putting it back on themselves (Fallout 4's NPCs re-equip
+	; their outfit), until Redress equips it. The player can't be kept from
+	; it this way without locking the item for them, and doesn't re-equip.
+	bool bKeepOff = akActor != Game.GetPlayer()
 	int i = 0
 	while i < aiItemIDs.Length
 		Form akItem = Game.GetForm(aiItemIDs[i])
@@ -18,7 +22,7 @@ Function Strip(int aiActorID, int[] aiItemIDs, float afDelay = 0.0) Global
 			if i > 0 && afDelay > 0.0
 				Utility.Wait(afDelay)
 			endif
-			akActor.UnequipItem(akItem, false, true)
+			akActor.UnequipItem(akItem, bKeepOff, true)
 		endif
 		i += 1
 	endwhile

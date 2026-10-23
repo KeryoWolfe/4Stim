@@ -3,6 +3,8 @@
 
 #include <algorithm>
 #include <array>
+#include <chrono>
+#include <string>
 #include <optional>
 #include <mutex>
 #include <unordered_map>
@@ -22,6 +24,7 @@ namespace Undress
 		{
 			std::uint64_t              handled = 0;  // bit (slot - 30): already taken off (or asked to)
 			std::vector<std::uint32_t> items;        // what was taken off, to put back on
+			bool                       leftoversLogged = false;  // what a full undress left on, logged once
 		};
 
 		// A scene's animated undressing step, waiting for its time.
@@ -133,6 +136,43 @@ namespace Undress
 			return items;
 		}
 
+		std::string SlotList(std::uint32_t a_mask)
+		{
+			std::string out;
+			for (int slot = 30; slot <= 61; ++slot) {
+				if (a_mask & (1u << (slot - 30))) {
+					out += (out.empty() ? "" : ", ") + std::to_string(slot);
+				}
+			}
+			return out;
+		}
+
+		// After a full undress: what's still on (armor in slots outside
+		// sUndressSlots, mods' clothes in the accessory slots 54-58 say),
+		// once per actor and scene, so a report of "armor left on" can be
+		// read in the log. Main thread.
+		void LogLeftovers(RE::Actor* a_actor, const std::vector<std::uint32_t>& a_takingOff)
+		{
+			{
+				std::scoped_lock lock(g_lock);
+				auto& state = g_states[a_actor->GetFormID()];
+				if (state.leftoversLogged) {
+					return;
+				}
+				state.leftoversLogged = true;
+			}
+			for (const auto id : WornIn(a_actor, 0xFFFFFFFF)) {
+				if (std::ranges::find(a_takingOff, id) != a_takingOff.end() || EquipObjects::IsObjectItem(id)) {
+					continue;
+				}
+				const auto item = RE::TESForm::GetFormByID(id);
+				const auto armor = item ? item->As<RE::TESObjectARMO>() : nullptr;
+				const char* name = armor ? armor->GetFullName() : nullptr;
+				REX::INFO("Undress: {:08X} keeps {:08X} \"{}\" on (slots {}; only slots in sUndressSlots come off)", a_actor->GetFormID(), id,
+					name ? name : "", SlotList(armor ? armor->GetFilledSlots() : 0));
+			}
+		}
+
 		// Takes off what's in a_slots (those not taken off yet): finds the
 		// items here, Papyrus unequips them. Any thread.
 		void Strip(std::uint32_t a_id, const std::vector<int>& a_slots, bool a_byHand = false)
@@ -164,7 +204,8 @@ namespace Undress
 			if (!mask) {
 				return;
 			}
-			F4SE::GetTaskInterface()->AddTask([a_id, mask]() {
+			const bool full = a_slots == g_config.slots;
+			F4SE::GetTaskInterface()->AddTask([a_id, mask, full]() {
 				const auto actor = RE::TESForm::GetFormByID<RE::Actor>(a_id);
 				if (!actor) {
 					return;
@@ -172,6 +213,9 @@ namespace Undress
 				auto items = WornIn(actor, mask);
 				std::erase_if(items, [](std::uint32_t a_item) { return EquipObjects::IsObjectItem(a_item); });  // 4Stim's own strap-ons and such stay on
 				REX::INFO("Undress: {:08X}, slots 0x{:08X}: {} item(s) to take off", a_id, mask, items.size());
+				if (full) {
+					LogLeftovers(actor, items);
+				}
 				if (items.empty()) {
 					return;
 				}
@@ -253,6 +297,44 @@ namespace Undress
 		for (const auto& t : due) {
 			REX::INFO("Undress: {:08X}, animated step ({} slot(s))", t.actor, t.slots.size());
 			Strip(t.actor, t.slots);
+		}
+	}
+
+	void Enforce(RE::Actor* a_actor)
+	{
+		if (!a_actor) {
+			return;
+		}
+		const auto id = a_actor->GetFormID();
+		std::vector<std::uint32_t> stripped;
+		{
+			std::scoped_lock lock(g_lock);
+			const auto it = g_states.find(id);
+			if (it == g_states.end() || it->second.items.empty()) {
+				return;
+			}
+			stripped = it->second.items;
+		}
+		static std::unordered_map<std::uint32_t, std::chrono::steady_clock::time_point> last;  // main thread
+		const auto now = std::chrono::steady_clock::now();
+		if (auto& when = last[id]; now - when < std::chrono::seconds(1)) {
+			return;
+		} else {
+			when = now;
+		}
+		std::vector<std::int32_t> again;
+		for (const auto worn : WornIn(a_actor, 0xFFFFFFFF)) {
+			if (std::ranges::find(stripped, worn) != stripped.end()) {
+				again.push_back(static_cast<std::int32_t>(worn));
+			}
+		}
+		if (again.empty()) {
+			return;
+		}
+		REX::INFO("Undress: {:08X} has {} item(s) back on mid-scene (the game put them back on): taking them off again", id, again.size());
+		if (const auto vm = FourStim::GetVM()) {
+			RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
+			Compat::DispatchStaticCall(vm, "FourStimUndress"sv, "Strip"sv, callback, static_cast<std::int32_t>(id), again, 0.0F);
 		}
 	}
 

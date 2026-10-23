@@ -34,6 +34,12 @@ namespace Undress
 	// a_seconds, taking off what's due. Main thread (the scene clock).
 	void Tick(float a_seconds);
 
+	// What 4Stim took off a_actor that's back on (NPCs' AI puts outfit
+	// pieces back on; other mods equip things): taken off again. Checked by
+	// the scene guard while they're in a scene, at most once a second per
+	// actor. Main thread.
+	void Enforce(RE::Actor* a_actor);
+
 	// Takes off every undress slot of a_id. a_byHand: asked for by the
 	// player (the HUD), so it also undresses the player with
 	// bUndressPlayer=0. Any thread.
