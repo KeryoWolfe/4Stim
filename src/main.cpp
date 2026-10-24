@@ -1335,6 +1335,8 @@ namespace
 		}
 	}
 	std::vector<ActiveScene> g_activeScenes;
+	// Each scene actor's last visibility summary and when it was checked (LogVisibility).
+	std::unordered_map<std::uint32_t, std::pair<std::string, std::chrono::steady_clock::time_point>> g_visibilityLast;
 
 	// Picker IDs of sequences (vs scenes) start with this.
 	constexpr std::string_view SEQUENCE_PREFIX = "seq:"sv;
@@ -1443,6 +1445,7 @@ namespace
 	void TrackSceneStart(std::vector<std::uint32_t> a_actors, const std::string& a_sceneID)
 	{
 		for (const auto id : a_actors) {
+			g_visibilityLast.erase(id);  // the visibility check logs them afresh
 			if (!IsPlayer(RE::TESForm::GetFormByID<RE::Actor>(id))) {
 				ScenePackage::Add(id);  // scenes resumed from a save, too (SuppressInteraction adds the rest earlier)
 			}
@@ -2729,6 +2732,86 @@ namespace
 		}
 	}
 
+	// ---- Visibility check (diagnostic) ----
+	// Testers and the owner have had an actor placed and animated in a scene
+	// (the log says so) but not drawn: the player once, an NPC on 1.10.163.
+	// Every 2 s the scene guard looks at each scene actor's 3D and logs it at
+	// the start and whenever it changes, with a warning when something would
+	// hide them: no 3D, the root culled, faded out, no geometry or all of it
+	// culled, or the 3D somewhere other than the actor. Logging only.
+	struct Visibility
+	{
+		bool  has3D = false;
+		bool  rootCulled = false;
+		float fade = 1.0F;  // the root fade node's, 1 = fully shown
+		int   geometry = 0;
+		int   culledGeometry = 0;
+		float offset = 0.0F;  // the 3D's distance from the actor's position
+	};
+
+	void CountGeometry(RE::NiAVObject* a_object, Visibility& a_out, int a_depth, bool a_culled)
+	{
+		if (!a_object) {
+			return;
+		}
+		const bool culled = a_culled || a_object->GetAppCulled();
+		if (a_object->IsGeometry()) {
+			++a_out.geometry;
+			if (culled) {
+				++a_out.culledGeometry;
+			}
+			return;
+		}
+		if (const auto node = a_depth > 0 ? a_object->IsNode() : nullptr) {
+			for (const auto& child : node->children) {
+				CountGeometry(child.get(), a_out, a_depth - 1, culled);
+			}
+		}
+	}
+
+	Visibility CheckVisibility(RE::Actor* a_actor)
+	{
+		Visibility v;
+		const auto root = IsPlayer(a_actor) ? a_actor->Get3D(false) : a_actor->Get3D();  // the player's third-person 3D
+		if (!root) {
+			return v;
+		}
+		v.has3D = true;
+		v.rootCulled = root->GetAppCulled();
+		if (const auto fade = root->IsFadeNode()) {
+			v.fade = fade->currentFade;
+		}
+		CountGeometry(root, v, 64, false);
+		v.offset = root->GetWorldTranslate().GetDistance(a_actor->data.location);
+		return v;
+	}
+
+	void LogVisibility(RE::Actor* a_actor, const std::string& a_sceneID)
+	{
+		const auto id = a_actor->GetFormID();
+		const auto now = std::chrono::steady_clock::now();
+		auto& last = g_visibilityLast[id];
+		if (!last.first.empty() && now - last.second < std::chrono::seconds(2)) {
+			return;
+		}
+		last.second = now;
+		const auto v = CheckVisibility(a_actor);
+		const bool hidden = !v.has3D || v.rootCulled || v.fade < 0.1F || v.geometry == 0 || v.culledGeometry == v.geometry || v.offset > 100.0F;
+		// What's compared for "changed": rounded, so a fade or a sway doesn't log every time.
+		const auto summary = !v.has3D ? std::string("no 3D") :
+		                                std::format("root {}, fade {:.1f}, {} geometry ({} culled), 3D {} the actor", v.rootCulled ? "CULLED" : "shown", v.fade,
+											v.geometry, v.culledGeometry, v.offset > 100.0F ? std::format("{:.0f} units from", v.offset) : std::string("at"));
+		if (summary == last.first) {
+			return;
+		}
+		last.first = summary;
+		if (hidden) {
+			REX::WARN("Visibility: {:08X} in \"{}\" may not be drawn: {}", id, a_sceneID, summary);
+		} else {
+			REX::INFO("Visibility: {:08X} in \"{}\": {}", id, a_sceneID, summary);
+		}
+	}
+
 	// Fallout 4 only (OStim has nothing like it): the player in a scene but
 	// not drawn. In first person the game culls the player's third-person 3D;
 	// a scene started from first person forces third person and the free
@@ -2769,6 +2852,9 @@ namespace
 			for (const auto id : active.actors) {
 				const auto actor = RE::TESForm::GetFormByID<RE::Actor>(id);
 				Undress::Enforce(actor);  // what came off stays off (the player too)
+				if (actor) {
+					LogVisibility(actor, active.sceneID);
+				}
 				if (IsPlayer(actor)) {
 					ShowPlayerBody(actor, active.sceneID);
 				}
