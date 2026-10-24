@@ -2729,6 +2729,26 @@ namespace
 		}
 	}
 
+	// Fallout 4 only (OStim has nothing like it): the player in a scene but
+	// not drawn. In first person the game culls the player's third-person 3D;
+	// a scene started from first person forces third person and the free
+	// camera, and a first-person body mod (True First Person, in the owner's
+	// log: "First-person body OFF", "Third person forced by the engine") can
+	// leave it culled, so the player was in the scene, animated, and invisible
+	// ("the player character is missing"). Shown again. Main thread.
+	void ShowPlayerBody(RE::Actor* a_player, const std::string& a_sceneID)
+	{
+		static int shown = 0;
+		const auto body = a_player ? a_player->Get3D(false) : nullptr;  // third person
+		if (!body || !body->GetAppCulled()) {
+			return;
+		}
+		body->SetAppCulled(false);
+		if (++shown <= 5) {
+			REX::INFO("Scene guard: the player's body was hidden in \"{}\" (third-person 3D culled, as first person leaves it): shown again", a_sceneID);
+		}
+	}
+
 	void GuardScenes(float a_seconds)
 	{
 		static float clock = 0.0F;
@@ -2749,6 +2769,9 @@ namespace
 			for (const auto id : active.actors) {
 				const auto actor = RE::TESForm::GetFormByID<RE::Actor>(id);
 				Undress::Enforce(actor);  // what came off stays off (the player too)
+				if (IsPlayer(actor)) {
+					ShowPlayerBody(actor, active.sceneID);
+				}
 				if (!actor || IsPlayer(actor)) {
 					continue;
 				}

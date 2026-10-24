@@ -4,6 +4,7 @@
 
 OStim parity: everything on the roadmap's "OStim parity" list is in.
 
+- **Fixed:** the player could be in a scene but invisible: started from first person, a first-person body mod (True First Person) could leave the player's third-person body hidden after the scene camera switched to third person. The scene guard now shows it again (`Scene guard: the player's body was hidden` in `4Stim.log`).
 - **Fixed:** NPCs' own AI could pull them out of a scene: a settler went back to her work spot three times in one scene, and each snap blew up her body's physics (stretched spikes) until a later scene. As OStim does, an NPC in a scene now gets a do-nothing scene package from the game's alias-package check, which comes before their own packages (settler jobs, sandboxing, work spots, follow and dialogue packages), until the scene ends. A real attack should still break a scene, as before (the package doesn't ignore combat), but that's untested.
 - **Fixed:** tongues stuck out of the right cheek: their meshes were bound to Fallout 4's HEAD bone without its rotation (4Stim Equip Objects).
 - **Fixed:** OStim-style scene files naming their Idles by editor ID ("animation") found none in game, since Fallout 4 drops Idles' editor IDs when it loads them: 4Stim now reads them from the plugin files.
