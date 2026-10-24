@@ -1445,6 +1445,7 @@ namespace
 
 	void TrackSceneStart(std::vector<std::uint32_t> a_actors, const std::string& a_sceneID)
 	{
+		PenisBend::NoteRestPose(a_actors);  // before the scene's animation poses them
 		for (const auto id : a_actors) {
 			g_visibilityLast.erase(id);  // the visibility check logs them afresh
 			if (!IsPlayer(RE::TESForm::GetFormByID<RE::Actor>(id))) {
@@ -1472,6 +1473,7 @@ namespace
 				Lights::Leave(left);
 				EquipObjects::Leave(left);
 				PenisBend::Leave(left);
+				PenisBend::RestoreRestPose(left);
 				EyeLook::Leave(left);
 				UnlockActors(left);
 				RestoreScales(a_scene);
@@ -1663,6 +1665,7 @@ namespace
 		Lights::Leave(ended.actors);
 		EquipObjects::Leave(ended.actors);
 		PenisBend::Leave(ended.actors);
+		PenisBend::RestoreRestPose(ended.actors);
 		EyeLook::Leave(ended.actors);
 		for (const auto id : ended.actors) {
 			Undress::Redress(id, false, true);
@@ -2835,6 +2838,30 @@ namespace
 		}
 	}
 
+	// Fallout 4 only (OStim has nothing like it): an actor in a scene drawn
+	// fully faded out. The third-person camera fades the player (and an NPC it
+	// comes close to) out as it closes in on them, as it does against a wall;
+	// once the scene switches to the free camera nothing fades them back in,
+	// so the player was in the scene, animated, and invisible (the owner's
+	// log, a wall scene: "fade 0.0" on the player's 3D, 1.0 in the next
+	// scene). Faded back in. Main thread.
+	void RestoreFade(RE::Actor* a_actor, const std::string& a_sceneID)
+	{
+		const auto root = IsPlayer(a_actor) ? a_actor->Get3D(false) : a_actor->Get3D();
+		const auto fade = root ? root->IsFadeNode() : nullptr;
+		if (!fade || fade->currentFade >= 0.99F) {
+			return;
+		}
+		static std::unordered_map<std::uint32_t, std::string> logged;  // once per actor and scene
+		if (auto& last = logged[a_actor->GetFormID()]; last != a_sceneID) {
+			last = a_sceneID;
+			REX::INFO("Scene guard: {:08X} in \"{}\" was faded out ({:.2f}, the camera's fade as it closed in): faded back in", a_actor->GetFormID(), a_sceneID,
+				fade->currentFade);
+		}
+		fade->currentFade = 1.0F;
+		fade->currentDecalFade = 1.0F;
+	}
+
 	void GuardScenes(float a_seconds)
 	{
 		static float clock = 0.0F;
@@ -2865,6 +2892,7 @@ namespace
 				Undress::Enforce(actor);  // what came off stays off (the player too)
 				if (actor) {
 					LogVisibility(actor, active.sceneID);
+					RestoreFade(actor, active.sceneID);
 				}
 				if (IsPlayer(actor)) {
 					ShowPlayerBody(actor, active.sceneID);
@@ -2884,7 +2912,9 @@ namespace
 					const bool talking = actor->IsTalking();
 					const auto what = std::format("idle {:08X}{}, {}talking, weapon {}", idle ? idle->GetFormID() : 0, ours ? " (the scene's)" : idle ? " (NOT the scene's)" : " (none)",
 						talking ? "" : "not ", actor->GetWeaponMagicDrawn() ? "out" : "away");
-					if (!ours || talking) {
+					// No current idle is normal: the process doesn't keep one for
+					// idles played this way (every check in the owner's log).
+					if ((idle && !ours) || talking) {
 						REX::WARN("Scene check: {:08X} in \"{}\" a second after it played: {}", id, active.sceneID, what);
 					} else {
 						REX::INFO("Scene check: {:08X} in \"{}\": {}", id, active.sceneID, what);

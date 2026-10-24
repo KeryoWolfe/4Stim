@@ -39,6 +39,13 @@ namespace PenisBend
 	// The actors left their scene: the nodes back as they were.
 	void Leave(const std::vector<std::uint32_t>& a_ids);
 
+	// ZeX's genital bones (Penis*, Vagina*, Anus*, Clit*): their pose before
+	// the actor's first scene this game is noted, and put back when a scene
+	// ends (the game's behaviors never animate them, so a scene's last pose
+	// stayed). Main thread.
+	void NoteRestPose(const std::vector<std::uint32_t>& a_ids);
+	void RestoreRestPose(const std::vector<std::uint32_t>& a_ids);
+
 	// A game is loading: forget everyone.
 	void Clear();
 }

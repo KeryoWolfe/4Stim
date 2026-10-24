@@ -4,6 +4,8 @@
 
 OStim parity: everything on the roadmap's "OStim parity" list is in.
 
+- **Fixed:** the player (or an NPC) in a scene but invisible: the third-person camera fades an actor out as it closes in on them, as it does against a wall, and once the scene switched to the free camera nothing faded them back in (`Visibility: ... fade 0.0` on the player in a wall scene). The scene guard fades scene actors back in (`Scene guard: ... was faded out` in `4Stim.log`).
+- **Fixed:** the penis left at an odd angle after a scene, and its physics swinging about after: Fallout 4's own animations never move ZeX's genital bones, so the last pose a scene's animation gave them (AAF packs' animations key them) stayed. Their pose from before the actor's first scene is noted and put back when each scene ends, before the physics swap back and rebuild (`Genital bones:` in `4Stim.log`). The penis bend now also goes on top of the node's own angle and puts that back.
 - **Navigation groups** (4Stim's; OStim's lists are flat): another pack's scenes linked into a scene are listed under one row named after the pack (its `modpack`), which opens a list of just those, with Back at the top, so a pack such as Atomic Lust no longer fills the bottom of the list. A navigation's own `group` names a group by hand (docs/SCENES.md).
 - **Fixed:** the scene restarting every second when an NPC's weapon counted as drawn whatever was done (a companion, in a tester's log): the scene guard puts a weapon away at most three times a scene, then leaves it.
 - **Diagnostics:** a second after each scene change, what each NPC is doing (`Scene check:` in `4Stim.log`, a warning when they're not on one of the scene's idles or are talking), for the reports of an NPC not following scene changes.
