@@ -1,5 +1,6 @@
 -- include subprojects
 includes("lib/commonlibf4")
+includes("PapyrusOverdrive")  -- a separate plugin, built alongside (PapyrusOverdrive/README.md)
 
 -- set project constants
 set_project("4Stim")
