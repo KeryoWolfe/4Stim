@@ -243,7 +243,8 @@ namespace SceneRegistry
 
 		// A navigation object: 4Stim's {"to", "label", "icon"} or OStim's
 		// {"destination", "origin", "description", "icon", "border",
-		// "priority", "noWarnings"}. a_self is the scene it's written in.
+		// "priority", "noWarnings"}, and 4Stim's "group". a_self is the scene
+		// it's written in.
 		std::optional<RawNavigation> ReadNavigation(const nlohmann::json& a_value, const std::string& a_self, const std::string& a_file)
 		{
 			if (!a_value.is_object()) {
@@ -263,6 +264,7 @@ namespace SceneRegistry
 				raw.nav.priority = it->get<int>();
 			}
 			raw.nav.noWarnings = a_value.value("noWarnings", false);
+			raw.nav.group = a_value.value("group", std::string{});
 			return raw;
 		}
 
@@ -604,7 +606,7 @@ namespace SceneRegistry
 			if (scene.IsTransition()) {
 				if (const auto origin = entry.find("origin"); origin != entry.end() && origin->is_string()) {
 					nlohmann::json nav = { { "origin", origin->get<std::string>() }, { "destination", id } };
-					for (const auto key : { "description", "icon", "border", "priority", "noWarnings" }) {
+					for (const auto key : { "description", "icon", "border", "priority", "noWarnings", "group" }) {
 						if (const auto it = entry.find(key); it != entry.end()) {
 							nav[key] = *it;
 						}

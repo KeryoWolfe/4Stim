@@ -10,6 +10,10 @@
 #include <cmath>
 #include <cctype>
 #include <set>
+#include <cstring>
+#include <memory>
+#include <unordered_map>
+#include <vector>
 
 #include <nlohmann/json.hpp>
 
@@ -39,6 +43,18 @@ namespace HUD
 		constexpr auto STRIP_PREFIX = "__strip:"sv;  // + the actor's form ID in hex
 		constexpr auto DRESS_PREFIX = "__dress:"sv;  // main.cpp handles it in NavigateFocused
 		constexpr auto FURNITURE_ID = "__furniture"sv;  // built in: move the scene onto other furniture
+		// Navigation groups (4Stim's; OStim lists every navigation in one
+		// list): a row that opens a sub-list. "__group:" + its name opens it,
+		// "__group:" alone goes back up (Navigate, handled here).
+		constexpr auto GROUP_PREFIX = "__group:"sv;
+		// Another pack's navigations are grouped by that pack once there are
+		// this many from it.
+		constexpr std::size_t PACK_GROUP_MIN = 2;
+
+		// The open group, and the scene it was opened in (a new scene closes it).
+		std::mutex  g_navGroupLock;
+		std::string g_navGroup;
+		std::string g_navGroupScene;
 
 		// The built-in "Color" theme. Every theme is laid over this, so a
 		// theme file only needs the fields it changes. Kept in step with
@@ -538,7 +554,16 @@ namespace HUD
 					SendAll();
 					break;
 				case 1:  // Navigate(id)
-					if (const auto id = string0(); !id.empty()) {
+					if (const auto id = string0(); id.starts_with(GROUP_PREFIX)) {
+						// A navigation group: open it (or back up), no scene change.
+						{
+							std::scoped_lock lock(g_navGroupLock);
+							g_navGroup = id.substr(GROUP_PREFIX.size());
+						}
+						const auto focused = FourStim::GetFocusedScene();
+						const auto scene = focused.Active() ? SceneRegistry::Find(focused.sceneID) : nullptr;
+						SendNavigation(focused, scene ? SceneRegistry::Settled(scene).get() : nullptr);
+					} else if (!id.empty()) {
 						FourStim::NavigateFocused(id);
 					}
 					break;
@@ -1008,13 +1033,77 @@ namespace HUD
 				GValue list;
 				uiMovie->CreateArray(&list);
 				if (a_scene) {
+					// The scene's navigations it can play, each with its group: the
+					// navigation's own "group", or the destination's modpack when it's
+					// another pack's and there are PACK_GROUP_MIN or more from it.
+					struct Row
+					{
+						const SceneRegistry::Navigation*          nav;
+						std::shared_ptr<const SceneRegistry::Scene> dest;
+						std::string                               group;
+					};
+					std::vector<Row>                             rows;
+					std::unordered_map<std::string, std::size_t> perPack;
 					for (const auto& nav : a_scene->navigations) {
-						const auto dest = SceneRegistry::Find(nav.to);
+						auto dest = SceneRegistry::Find(nav.to);
 						if (dest && !FourStim::FocusedCanPlay(*dest)) {
 							continue;
 						}
-						const auto icon = IconPath(!nav.icon.empty() ? nav.icon : dest ? dest->icon : std::string{});
-						AddEntry(list, nav.to, FourStim::FormatLabel(nav.label, a_focused), icon, "scene", nav.border);
+						std::string group = nav.group;
+						if (group.empty() && dest && !dest->modpack.empty() && dest->modpack != a_scene->modpack) {
+							group = dest->modpack;
+							++perPack[group];
+						}
+						rows.push_back({ &nav, std::move(dest), std::move(group) });
+					}
+					for (auto& row : rows) {
+						if (row.nav->group.empty() && !row.group.empty() && perPack[row.group] < PACK_GROUP_MIN) {
+							row.group.clear();
+						}
+					}
+
+					// The open group, if it's still one of this scene's.
+					std::string open;
+					{
+						std::scoped_lock lock(g_navGroupLock);
+						if (g_navGroupScene != a_scene->id) {
+							g_navGroup.clear();
+							g_navGroupScene = a_scene->id;
+						}
+						if (!g_navGroup.empty() && std::ranges::none_of(rows, [&](const Row& r) { return r.group == g_navGroup; })) {
+							g_navGroup.clear();
+						}
+						open = g_navGroup;
+					}
+
+					const auto iconOf = [](const Row& a_row) {
+						return IconPath(!a_row.nav->icon.empty() ? a_row.nav->icon : a_row.dest ? a_row.dest->icon : std::string{});
+					};
+					if (open.empty()) {
+						// Ungrouped rows, and one row per group where its first one was.
+						std::vector<std::string> shown;
+						for (const auto& row : rows) {
+							if (row.group.empty()) {
+								AddEntry(list, row.nav->to, FourStim::FormatLabel(row.nav->label, a_focused), iconOf(row), "scene", row.nav->border);
+							} else if (std::ranges::find(shown, row.group) == shown.end()) {
+								shown.push_back(row.group);
+								AddEntry(list, std::string(GROUP_PREFIX) + row.group, row.group + "...", iconOf(row), "scene");
+							}
+						}
+					} else {
+						// The group: back up, then its rows, without a "(Group) " in front.
+						AddEntry(list, std::string(GROUP_PREFIX), TR("$4Stim_GroupBack", "Back"), IconPath("4Stim/symbols/arrow_up"), "scene");
+						const auto prefix = "(" + open + ") ";
+						for (const auto& row : rows) {
+							if (row.group != open) {
+								continue;
+							}
+							auto label = FourStim::FormatLabel(row.nav->label, a_focused);
+							if (label.size() > prefix.size() && _strnicmp(label.c_str(), prefix.c_str(), prefix.size()) == 0) {
+								label.erase(0, prefix.size());
+							}
+							AddEntry(list, row.nav->to, label, iconOf(row), "scene", row.nav->border);
+						}
 					}
 				}
 				// OStim's speed buttons, under its options: here, list rows

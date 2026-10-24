@@ -91,7 +91,10 @@ function Write-Zip([string] $zipPath, $entries) {
 # ---- 4Stim (the framework) ----
 $core = New-List
 
-$dll = Need (Join-Path $Repo "build\windows\x64\release\4Stim.dll") "the plugin (run xmake build -r)"
+# releasedbg is the default build mode (xmake.lua); an older "release" build is used if that's all there is.
+$dllPath = Join-Path $Repo "build\windows\x64\releasedbg\4Stim.dll"
+if (-not (Test-Path -LiteralPath $dllPath)) { $dllPath = Join-Path $Repo "build\windows\x64\release\4Stim.dll" }
+$dll = Need $dllPath "the plugin (run xmake build -r)"
 Add-File $core $dll "F4SE/Plugins/4Stim.dll"
 if (Test-Path -LiteralPath $dll) {
     $built = (Get-Item -LiteralPath $dll).LastWriteTime

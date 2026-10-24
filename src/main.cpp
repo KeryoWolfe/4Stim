@@ -93,7 +93,7 @@ namespace
 		int                                   count = 0;
 	};
 	std::unordered_map<std::uint32_t, GuardKicks> g_guardKicks;
-	std::unordered_map<std::uint32_t, std::chrono::steady_clock::time_point> g_holsterKicks;  // the scene guard's last weapon put away, per actor
+	std::unordered_map<std::uint32_t, GuardKicks> g_holsterKicks;  // the scene guard's weapons put away, per actor, this scene
 
 	// Papyrus-facing script name. Must be "FourStim", not "4Stim" -- Papyrus
 	// identifiers can't start with a digit. The plugin/project itself is
@@ -1276,6 +1276,7 @@ namespace
 		// When its idles were last played (the scene guard leaves it alone
 		// for a moment after).
 		std::chrono::steady_clock::time_point lastPlayed = std::chrono::steady_clock::now();
+		bool                                  checkedAfterPlay = false;  // the scene guard's check a second after each play (GuardScenes)
 		// The scene's spot: where its animations are played around (every
 		// actor of a paired animation shares it), and the heading they face.
 		// Each actor is locked there for the whole scene (see "Scene lock").
@@ -1686,6 +1687,7 @@ namespace
 		scene->sceneID = a_sceneID;
 		scene->speed = a_speed;
 		scene->lastPlayed = std::chrono::steady_clock::now();
+		scene->checkedAfterPlay = false;
 		RefreshExcitement(*scene);
 		if (const auto entered = moved ? SceneRegistry::Find(a_sceneID) : nullptr) {
 			Undress::SceneEntered(scene->actors, *entered, false);
@@ -1771,6 +1773,7 @@ namespace
 		a_active.sceneID = scene->id;
 		a_active.speed = speed;
 		a_active.lastPlayed = std::chrono::steady_clock::now();
+		a_active.checkedAfterPlay = false;
 		RefreshExcitement(a_active);
 		if (_stricmp(previous.c_str(), scene->id.c_str()) != 0) {
 			Undress::SceneEntered(a_active.actors, *scene, false);
@@ -2849,6 +2852,14 @@ namespace
 			const RE::TESIdleForm* intruder = nullptr;
 			std::uint32_t          intruded = 0;
 			bool                   forceReplay = false;
+			// For the "an NPC didn't follow the scene change" reports: a second
+			// after each play, what each NPC is doing, once (a WARN when it
+			// isn't on one of the scene's idles or is talking: a companion's
+			// comment can hold its graph in a dialogue animation).
+			const bool checkNow = !active.checkedAfterPlay && now - active.lastPlayed > std::chrono::seconds(1);
+			if (checkNow) {
+				active.checkedAfterPlay = true;
+			}
 			for (const auto id : active.actors) {
 				const auto actor = RE::TESForm::GetFormByID<RE::Actor>(id);
 				Undress::Enforce(actor);  // what came off stays off (the player too)
@@ -2867,6 +2878,18 @@ namespace
 					continue;
 				}
 				data->packageIdleTimer = 30.0F;  // no package idle for a while; renewed every check
+				if (checkNow) {
+					const auto idle = data->currentIdle;
+					const bool ours = idle && std::ranges::any_of(scene->speeds, [&](const auto& a_idles) { return std::ranges::find(a_idles, idle) != a_idles.end(); });
+					const bool talking = actor->IsTalking();
+					const auto what = std::format("idle {:08X}{}, {}talking, weapon {}", idle ? idle->GetFormID() : 0, ours ? " (the scene's)" : idle ? " (NOT the scene's)" : " (none)",
+						talking ? "" : "not ", actor->GetWeaponMagicDrawn() ? "out" : "away");
+					if (!ours || talking) {
+						REX::WARN("Scene check: {:08X} in \"{}\" a second after it played: {}", id, active.sceneID, what);
+					} else {
+						REX::INFO("Scene check: {:08X} in \"{}\": {}", id, active.sceneID, what);
+					}
+				}
 				// Scene lock watchdog: moved off the spot (or turned) anyway?
 				if (g_lockScenes && now - active.lastRelock > std::chrono::seconds(1)) {
 					const auto  role = static_cast<std::size_t>(std::ranges::find(active.actors, id) - active.actors.begin());
@@ -2886,10 +2909,16 @@ namespace
 				// alarm or a threat that's gone): put away and the scene played
 				// again. In real combat (an attack on the scene), it's left to
 				// the game: a scene can be broken by an attack.
-				if (actor->GetWeaponMagicDrawn() && !actor->IsInCombat()) {
-					auto& last = g_holsterKicks[id];
-					if (now - last > std::chrono::seconds(1)) {
-						last = now;
+				// At most 3 tries a scene, 3 s apart: an actor whose weapon stays
+				// "drawn" whatever is done (a companion's graph mid-scene, in the
+				// owner's log) was put away and the scene replayed every second,
+				// restarting its animation each time.
+				if (auto& kicks = g_holsterKicks[id]; kicks.count < 3 && actor->GetWeaponMagicDrawn() && !actor->IsInCombat()) {
+					if (now - kicks.last > std::chrono::seconds(3)) {
+						kicks.last = now;
+						if (++kicks.count == 3) {
+							REX::WARN("Scene guard: {:08X} still has a weapon out after 3 tries; leaving it be for this scene", id);
+						}
 						REX::INFO("Scene guard: {:08X} in \"{}\" drew a weapon (not in combat): putting it away", id, active.sceneID);
 						if (g_vm) {
 							RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
@@ -3586,6 +3615,7 @@ namespace
 		// EvaluatePackage hands them back their routine).
 		F4SE::GetTaskInterface()->AddTask([id = a_actor->GetFormID()]() {
 			g_guardKicks.erase(id);  // a new scene: the guard starts over
+			g_holsterKicks.erase(id);
 			const auto actor = RE::TESForm::GetFormByID<RE::Actor>(id);
 			if (!actor || IsPlayer(actor)) {
 				return;

@@ -132,6 +132,10 @@ namespace SceneRegistry
 		std::string border;  // OStim's icon border color (hex, "ffffff" = none given)
 		int         priority = 0;  // lower first, as OStim sorts them
 		bool        noWarnings = false;  // OStim's: no warning if the scene it links to isn't there
+		// 4Stim's (OStim has none): the HUD group it's listed under, a
+		// sub-list opened from one row. Empty = by the destination's modpack
+		// when that's another pack's (HUD.cpp, SendNavigation).
+		std::string group;
 	};
 
 	// One speed of a scene.

@@ -10,6 +10,9 @@ set_warnings("allextra")
 
 -- add common rules
 add_rules("mode.debug", "mode.releasedbg")
+-- releasedbg unless `xmake f -m` says otherwise: optimized, with a .pdb
+-- (plain "release" isn't one of the modes here and builds without one).
+set_defaultmode("releasedbg")
 add_rules("plugin.vsxmake.autoupdate")
 
 -- third-party packages (fetched by xmake on first build)
