@@ -4,6 +4,7 @@
 
 OStim parity: everything on the roadmap's "OStim parity" list is in.
 
+- **Fixed:** NPCs' own AI could pull them out of a scene: a settler went back to her work spot three times in one scene, and each snap blew up her body's physics (stretched spikes) until a later scene. As OStim does, an NPC in a scene now gets a do-nothing scene package from the game's alias-package check, which comes before their own packages (settler jobs, sandboxing, work spots, follow and dialogue packages), until the scene ends. A real attack should still break a scene, as before (the package doesn't ignore combat), but that's untested.
 - **Fixed:** tongues stuck out of the right cheek: their meshes were bound to Fallout 4's HEAD bone without its rotation (4Stim Equip Objects).
 - **Fixed:** OStim-style scene files naming their Idles by editor ID ("animation") found none in game, since Fallout 4 drops Idles' editor IDs when it loads them: 4Stim now reads them from the plugin files.
 - **Fixed:** the options' "Back to {actor}" row now shows the actor's name.

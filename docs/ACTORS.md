@@ -128,6 +128,14 @@ Everything put on is taken off and away when the scene ends (also from a save lo
 
 Departures from OStim: lights are 4Stim's own (`LIGHTS.md`), not equip objects, since they'd need armors with lights in their meshes. Which object of a type an actor wears can be chosen in the HUD's options (each actor's page, OPTIONS.md) or with `FourStim.SetEquipObjectID`, until a game is loaded; otherwise it's the default one, or random. There's no MCM setting for it per race or sex.
 
+## NPCs in a scene
+
+As in OStim, an NPC in a scene does nothing but the scene. OStim hooks Skyrim's alias-package check and answers it with its own do-nothing package (OStim.esp's `OStimScenePackage`); 4Stim hooks Fallout 4's (`TESObjectREFR::CheckForCurrentAliasPackage`, Actor's vtable slot 0x5B) the same way. The game asks that before the NPC's own packages, and before starting dialogue or follow packages, so nothing their AI would do (a settler's job, sandboxing, a work spot, a chair) takes them out of the scene. When the scene ends they're handed back their own packages (`EvaluatePackage`). The player isn't touched.
+
+4Stim has no plugin file, so the package isn't a record: it's made the way the game makes its own do-nothing package (`Actor::InitiateDoNothingPackage`: procedure type 0x1B, must complete). Where the game version's functions for that aren't found (1.10.163, possibly), it's Fallout4.esm's `MQ101VaultTecRepDoNothingScene` (a "Wait" with StopMovement, as OStim's). The package doesn't ignore combat: a real attack can still break a scene.
+
+`4Stim.log` says which package is used (`Scene package: ...` at load) and who gets it. The scene guard (`bGuardScenes`) still takes anyone out of furniture or an idle marker as a fallback.
+
 ## Papyrus
 
 In `FourStim.psc` (OStim's `OActor` functions):

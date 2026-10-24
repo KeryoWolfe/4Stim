@@ -60,6 +60,7 @@ New since 0.2.x, and the least tested:
 - **Scene sounds** staying where the scene is (walk away from an NPC scene: they should fade).
 - **Playback speed:** scenes whose speeds set OStim's `playbackSpeed` should play faster or slower (`bUsePlaybackSpeed`).
 - **MCM pages:** every page shows, changes apply at once, and the hotkey pages show the keys.
+- **NPCs staying in their scene:** settlers and NPCs with jobs, sandboxing or a chair nearby shouldn't wander off or snap back to their work spot mid-scene, and should go back to what they were doing when it ends (`Scene package:` in `4Stim.log`). On 1.10.163, the log line at load says which package is used.
 - **Saving and loading** mid-scene, and the strap-on / tongue you chose for someone staying chosen after a load.
 
 Still worth checking from before: NPCs who were busy (sitting, working) dropping it for a scene; beds against walls; excitement and climax; auto mode; several scenes at once; the Align tab; your body and outfit mods.

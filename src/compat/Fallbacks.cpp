@@ -186,9 +186,12 @@ namespace Compat
 		Have<2267064>();
 		Have<2269259>();
 		Have<2295298>();
+		Have<2211661>();
+		Have<2211735>();
 	}
 
 	bool CanStopInteractingQuick() { return Have<2231227>(); }
 	bool CanSetSoundPosition() { return Have<2267064>(); }
 	bool CanAddTranslations() { return Have<2295298>(); }
+	bool CanMakePackages() { return Have<2211661>() && Have<2211735>(); }
 }

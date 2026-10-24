@@ -16,6 +16,7 @@
 #include "compat/Fallbacks.h"
 #include "Excitement.h"
 #include "Undress.h"
+#include "ScenePackage.h"
 #include "Alignment.h"
 #include "Scaling.h"
 #include "Expressions.h"
@@ -1441,6 +1442,11 @@ namespace
 
 	void TrackSceneStart(std::vector<std::uint32_t> a_actors, const std::string& a_sceneID)
 	{
+		for (const auto id : a_actors) {
+			if (!IsPlayer(RE::TESForm::GetFormByID<RE::Actor>(id))) {
+				ScenePackage::Add(id);  // scenes resumed from a save, too (SuppressInteraction adds the rest earlier)
+			}
+		}
 		// An actor can only be in one scene: a new scene replaces an old one
 		// (which leaves its furniture first).
 		for (auto& old : g_activeScenes) {
@@ -2564,6 +2570,7 @@ namespace
 
 	void UnlockActors(const std::vector<std::uint32_t>& a_ids)
 	{
+		ScenePackage::Remove(a_ids);  // before ReleaseFromScene's EvaluatePackage hands them back their routine
 		if (!g_vm) {
 			return;
 		}
@@ -2701,6 +2708,26 @@ namespace
 		return furniture != nullptr;
 	}
 
+
+	// Once a second: anyone still on the scene package who isn't in a scene
+	// any more (ScenePackage::Prune) gets their own packages back now.
+	void PruneScenePackage(float a_seconds)
+	{
+		static float clock = 0.0F;
+		if ((clock += a_seconds) < 1.0F) {
+			return;
+		}
+		clock = 0.0F;
+		std::vector<std::uint32_t> inScenes;
+		for (const auto& active : g_activeScenes) {
+			inScenes.insert(inScenes.end(), active.actors.begin(), active.actors.end());
+		}
+		for (const auto id : ScenePackage::Prune(inScenes)) {
+			if (const auto actor = RE::TESForm::GetFormByID<RE::Actor>(id)) {
+				CallActorMethod(actor, "Actor"sv, "EvaluatePackage"sv, false);
+			}
+		}
+	}
 
 	void GuardScenes(float a_seconds)
 	{
@@ -3181,6 +3208,7 @@ namespace
 			Expressions::Tick(elapsed);
 			UpdateClimaxShake();
 			GuardScenes(elapsed);
+			PruneScenePackage(elapsed);
 			Undress::Tick(elapsed);
 			EquipObjects::Tick(elapsed);
 			for (auto& active : g_activeScenes) {
@@ -3450,9 +3478,18 @@ namespace
 		F4SE::GetTaskInterface()->AddTask([id = a_actor->GetFormID()]() {
 			g_guardKicks.erase(id);  // a new scene: the guard starts over
 			const auto actor = RE::TESForm::GetFormByID<RE::Actor>(id);
-			if (actor && !IsPlayer(actor) && LeaveFurniture(actor, true)) {
+			if (!actor || IsPlayer(actor)) {
+				return;
+			}
+			if (LeaveFurniture(actor, true)) {
 				REX::INFO("SuppressInteraction: {:08X} was in furniture or an idle marker, taken out", id);
 			}
+			// OStim's scene package (ScenePackage.h): their AI picks nothing
+			// else until the scene ends, so a settler's job, a sandbox or a
+			// work spot can't pull them out of it. EvaluatePackage, as
+			// OStim's Thread::AddActor, for them to switch to it now.
+			ScenePackage::Add(id);
+			CallActorMethod(actor, "Actor"sv, "EvaluatePackage"sv, false);
 		});
 	}
 
@@ -8633,6 +8670,7 @@ namespace
 				}
 				PenisBend::Clear();
 				EyeLook::Clear();
+				ScenePackage::Clear();
 			});
 			{
 				std::scoped_lock lock(g_pendingSequenceLock);
@@ -8669,6 +8707,8 @@ namespace
 					translated = true;
 				}
 				HUD::LoadConfig();
+				ScenePackage::Prepare();  // forms are loaded by now
+				ScenePackage::Clear();
 				// A loaded save starts with no scene running.
 				HUD::Reset();
 				g_activeScenes.clear();
@@ -8937,6 +8977,7 @@ F4SE_PLUGIN_LOAD(const F4SE::LoadInterface* a_f4se)
 	LoadSettings();
 	InputHook::Install();
 	PlaybackSpeed::Install();
+	ScenePackage::Install();
 	F4SE::GetMessagingInterface()->RegisterListener(OnMessage);
 	F4SE::GetPapyrusInterface()->Register(RegisterPapyrusFunctions);
 	if (const auto serialization = F4SE::GetSerializationInterface()) {

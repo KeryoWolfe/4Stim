@@ -39,6 +39,8 @@ namespace Compat
 		{ 2202924, "ID::TESWorldSpace::GetSkyCell" },
 		{ 2204287, "ID::Script::CompileAndRun" },
 		{ 2207107, "ID::TESNPC::GetSex" },  // compat/Fallbacks.cpp, for Actor::GetSex
+		{ 2211661, "TESPackage::CreatePackageByType" },  // ScenePackage.cpp (not named by CommonLibF4)
+		{ 2211735, "TESPackage::InitPackageProcedure" },  // ScenePackage.cpp (not named by CommonLibF4)
 		{ 2211989, "ID::TESCondition::IsTrue" },
 		{ 2214742, "ID::PlayerCamera::SetState" },
 		{ 2229625, "ID::Actor::SetHeading" },

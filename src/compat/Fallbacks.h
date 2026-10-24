@@ -25,6 +25,8 @@ namespace Compat
 		{ 2267064, "4Stim's sounds follow the actor without a start position" },
 		{ 2269259, "4Stim works out sound files' resource IDs itself" },
 		{ 2295298, "MCM texts are added to the game's translator by 4Stim itself" },
+		{ 2211661, "the scene package is Fallout4.esm's MQ101VaultTecRepDoNothingScene, not one made by 4Stim" },
+		{ 2211735, "the scene package is Fallout4.esm's MQ101VaultTecRepDoNothingScene, not one made by 4Stim" },
 	};
 
 	// Looks the addresses above up now (at load), not mid-game: a miss in
@@ -63,4 +65,5 @@ namespace Compat
 	bool CanStopInteractingQuick();  // Actor::StopInteractingQuick
 	bool CanSetSoundPosition();      // BSSoundHandle::SetPosition
 	bool CanAddTranslations();       // BSScaleformTranslator::AddTranslations
+	bool CanMakePackages();          // TESPackage::CreatePackageByType and its procedure's set-up (ScenePackage.cpp)
 }
