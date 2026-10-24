@@ -19,16 +19,32 @@ int Function Swap(int aiActorID, String asFrom1, String asTo1, String asFrom2, S
 	if !DynamicHDT.HasPhysicsSystem(akActor)
 		return 0
 	endif
-	if DynamicHDT.SwapPhysicsFile(akActor, asFrom1, asTo1, true, true)
+	; verbose_log off: FSMP's verbose log for a swap is long, and written while
+	; the game waits on the rebuild. An empty pair is skipped (the plugin
+	; passes only the spelling that worked last time).
+	if DynamicHDT.SwapPhysicsFile(akActor, asFrom1, asTo1, true, false)
 		return 1
 	endif
-	if DynamicHDT.SwapPhysicsFile(akActor, asFrom2, asTo2, true, true)
+	if asFrom2 != "" && DynamicHDT.SwapPhysicsFile(akActor, asFrom2, asTo2, true, false)
 		return 2
 	endif
-	if DynamicHDT.SwapPhysicsFile(akActor, asFrom3, asTo3, true, true)
+	if asFrom3 != "" && DynamicHDT.SwapPhysicsFile(akActor, asFrom3, asTo3, true, false)
 		return 3
 	endif
 	return -1
+EndFunction
+
+; A scene started: afDelay seconds later (the plugin staggers its actors, so
+; FSMP's rebuilds don't all land in the scene's first frame with everything
+; else), the swap, if they're still in a scene. Returns what Swap returns, or
+; -5 if the scene was over by then.
+int Function SwapLater(int aiActorID, String asFrom1, String asTo1, String asFrom2, String asTo2, String asFrom3, String asTo3, float afDelay) Global
+	Utility.Wait(afDelay)
+	Actor akActor = Game.GetForm(aiActorID) as Actor
+	if akActor && !FourStim.IsInScene(akActor)
+		return -5
+	endif
+	return Swap(aiActorID, asFrom1, asTo1, asFrom2, asTo2, asFrom3, asTo3)
 EndFunction
 
 ; A scene ended: afDelay seconds later (out of the scene's pose, in their own
@@ -44,7 +60,7 @@ int Function SwapAfterScene(int aiActorID, String asFrom1, String asTo1, String 
 		return -4
 	endif
 	int result = Swap(aiActorID, asFrom1, asTo1, asFrom2, asTo2, asFrom3, asTo3)
-	Utility.Wait(0.2)
+	Utility.Wait(1.0)  ; the swap's rebuild done before the next one starts
 	ResetNow(aiActorID)
 	return result
 EndFunction

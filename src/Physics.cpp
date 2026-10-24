@@ -2,8 +2,10 @@
 #include "compat/ScrapFunction.h"
 
 #include <algorithm>
+#include <array>
 #include <cctype>
 #include <filesystem>
+#include <format>
 #include <fstream>
 #include <mutex>
 #include <unordered_map>
@@ -50,6 +52,7 @@ namespace Physics
 			std::string giving;       // the swap's "to"
 			std::string receiving;    // its "toReceiving" ("" = giving)
 			bool        pendingBack = false;  // its scene ended: swapping back AFTER_SCENE_DELAY later
+			bool        pendingStart = false; // the scene's swap is still to come (SWAP_DELAY): no giving / receiving switch until it answers
 		};
 
 		// Whether role a_role is on the receiving end in a_scene: the target
@@ -81,6 +84,20 @@ namespace Physics
 		std::vector<Swap>                         g_swaps;
 		bool                                      g_loaded = false;
 		std::unordered_map<std::uint32_t, Applied> g_applied;  // actor -> what's swapped in
+		// "from|to" (lowercase) -> the spelling pair FSMP took for it, so the
+		// next swap of those files makes one SwapPhysicsFile call, not up to three.
+		std::unordered_map<std::string, std::pair<std::string, std::string>> g_spelling;
+
+		// FSMP rebuilds an actor's physics on the game's main thread for every
+		// swap and reset, and the game waits: several at once were long freezes
+		// and, in two crash logs, a crash inside the rebuild. So they're spread
+		// out: a scene's swaps start SWAP_DELAY after it does (out of its
+		// busiest frames), one actor every STAGGER, and the swaps back and
+		// rebuilds after a scene go one actor every STAGGER too.
+		constexpr float SWAP_DELAY = 1.0F;
+		constexpr float STAGGER = 1.0F;
+
+		using Pairs = std::array<std::pair<std::string, std::string>, 3>;
 
 		std::string Lower(std::string_view a_str)
 		{
@@ -254,8 +271,8 @@ namespace Physics
 		class SwapResult : public RE::BSScript::IStackCallbackFunctor
 		{
 		public:
-			SwapResult(std::uint32_t a_actor, std::string a_from, std::string a_to, bool a_afterScene = false) :
-				_actor(a_actor), _from(std::move(a_from)), _to(std::move(a_to)), _afterScene(a_afterScene) {}
+			SwapResult(std::uint32_t a_actor, std::string a_from, std::string a_to, bool a_afterScene, bool a_start, std::string a_key, Pairs a_pairs) :
+				_actor(a_actor), _from(std::move(a_from)), _to(std::move(a_to)), _afterScene(a_afterScene), _start(a_start), _key(std::move(a_key)), _pairs(std::move(a_pairs)) {}
 
 			void CallQueued() override {}
 			void CallCanceled() override { REX::WARN("Physics: {:08X} swap to \"{}\" canceled", _actor, _to); }
@@ -272,7 +289,21 @@ namespace Physics
 						g_applied.erase(it);
 					}
 				}
+				{
+					std::scoped_lock lock(g_lock);
+					if (code >= 1 && code <= 3 && !_pairs[code - 1].first.empty()) {
+						g_spelling[_key] = _pairs[code - 1];
+					}
+					if (_start) {
+						if (const auto it = g_applied.find(_actor); it != g_applied.end()) {
+							it->second.pendingStart = false;
+						}
+					}
+				}
 				switch (code) {
+				case -5:
+					REX::INFO("Physics: {:08X} not swapped to \"{}\": the scene was over first", _actor, _to);
+					break;
 				case -4:
 					REX::INFO("Physics: {:08X} kept \"{}\": in a new scene before its swap back", _actor, _from);
 					break;
@@ -301,19 +332,29 @@ namespace Physics
 			std::string   _from;
 			std::string   _to;
 			bool          _afterScene;
+			bool          _start;
+			std::string   _key;
+			Pairs         _pairs;
 		};
 
 		// How long after a scene ends its actors' physics are put back: by
 		// then they're out of the scene's pose and in their own idle.
 		constexpr float AFTER_SCENE_DELAY = 2.0F;
 
-		// a_afterScene: the swap back at a scene's end, AFTER_SCENE_DELAY
-		// later and followed by a full physics rebuild (FourStimPhysics.
-		// SwapAfterScene). Swapping back while the body was still in the
-		// scene's last pose (and the penis bend just undone) could rebuild the
-		// floppy physics around that pose, leaving the penis stretched and
-		// stuck at an angle afterwards.
-		bool CallSwap(RE::Actor* a_actor, const std::string& a_from, const std::string& a_to, bool a_afterScene = false)
+		enum class When
+		{
+			kNow,         // mid-scene (giving / receiving changes)
+			kLater,       // a scene's start: a_delay later, if still in a scene (FourStimPhysics.SwapLater)
+			kAfterScene,  // the swap back: a_delay later, then a full rebuild (FourStimPhysics.SwapAfterScene)
+		};
+
+		// kAfterScene: the swap back at a scene's end, a_delay (from
+		// AFTER_SCENE_DELAY) later and followed by a full physics rebuild.
+		// Swapping back while the body was still in the scene's last pose (and
+		// the penis bend just undone) could rebuild the floppy physics around
+		// that pose, leaving the penis stretched and stuck at an angle
+		// afterwards. g_lock held.
+		bool CallSwap(RE::Actor* a_actor, const std::string& a_from, const std::string& a_to, When a_when = When::kNow, float a_delay = 0.0F)
 		{
 			const auto vm = FourStim::GetVM();
 			if (!vm || !a_actor) {
@@ -322,19 +363,37 @@ namespace Physics
 			// FourStimPhysics.Swap(int, String, String) wraps FSMP's
 			// DynamicHDT.SwapPhysicsFile: an Actor passed straight from here
 			// arrived as a "type mismatch for argument 1".
-			RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback{ new SwapResult(a_actor->GetFormID(), a_from, a_to, a_afterScene) };
 			// The same paths spelled three ways: as given, with "Meshes\" and
-			// without the "meshes\" prefix.
+			// without the "meshes\" prefix; once one has worked for these
+			// files, only that one.
 			auto bare = [](const std::string& a_path) {
 				return Lower(a_path).starts_with("meshes\\") ? a_path.substr(7) : a_path;
 			};
 			const auto fromBare = bare(a_from), toBare = bare(a_to);
-			const bool ok = a_afterScene ?
-			                    Compat::DispatchStaticCall(vm, "FourStimPhysics"sv, "SwapAfterScene"sv, callback, static_cast<std::int32_t>(a_actor->GetFormID()),
-									a_from, a_to, "Meshes\\" + fromBare, "Meshes\\" + toBare, fromBare, toBare, AFTER_SCENE_DELAY) :
-			                    Compat::DispatchStaticCall(vm, "FourStimPhysics"sv, "Swap"sv, callback, static_cast<std::int32_t>(a_actor->GetFormID()),
-									a_from, a_to, "Meshes\\" + fromBare, "Meshes\\" + toBare, fromBare, toBare);
-			REX::INFO("Physics: {:08X} \"{}\" -> \"{}\" (dispatch={})", a_actor->GetFormID(), a_from, a_to, ok);
+			const auto key = Lower(a_from) + "|" + Lower(a_to);
+			Pairs      pairs{ { { a_from, a_to }, { "Meshes\\" + fromBare, "Meshes\\" + toBare }, { fromBare, toBare } } };
+			if (const auto known = g_spelling.find(key); known != g_spelling.end()) {
+				pairs = { { known->second, { "", "" }, { "", "" } } };
+			}
+			RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback{ new SwapResult(a_actor->GetFormID(), a_from, a_to, a_when == When::kAfterScene, a_when == When::kLater, key, pairs) };
+			const auto id = static_cast<std::int32_t>(a_actor->GetFormID());
+			bool       ok = false;
+			switch (a_when) {
+			case When::kNow:
+				ok = Compat::DispatchStaticCall(vm, "FourStimPhysics"sv, "Swap"sv, callback, id, pairs[0].first, pairs[0].second, pairs[1].first, pairs[1].second,
+					pairs[2].first, pairs[2].second);
+				break;
+			case When::kLater:
+				ok = Compat::DispatchStaticCall(vm, "FourStimPhysics"sv, "SwapLater"sv, callback, id, pairs[0].first, pairs[0].second, pairs[1].first,
+					pairs[1].second, pairs[2].first, pairs[2].second, a_delay);
+				break;
+			case When::kAfterScene:
+				ok = Compat::DispatchStaticCall(vm, "FourStimPhysics"sv, "SwapAfterScene"sv, callback, id, pairs[0].first, pairs[0].second, pairs[1].first,
+					pairs[1].second, pairs[2].first, pairs[2].second, a_delay);
+				break;
+			}
+			REX::INFO("Physics: {:08X} \"{}\" -> \"{}\"{} (dispatch={})", a_actor->GetFormID(), a_from, a_to,
+				a_when == When::kNow ? std::string{} : std::format(" in {:.1f}s", a_delay), ok);
 			if (!ok) {
 				REX::WARN("Physics: couldn't call FourStimPhysics.Swap: is FourStimPhysics.pex installed (and FO4 Faster HDT-SMP)?");
 			}
@@ -347,7 +406,7 @@ namespace Physics
 			const auto scene = SceneRegistry::Find(a_sceneID);
 			for (std::size_t role = 0; role < a_actors.size(); ++role) {
 				const auto it = g_applied.find(a_actors[role]);
-				if (it == g_applied.end() || it->second.receiving.empty() || it->second.pendingBack) {
+				if (it == g_applied.end() || it->second.receiving.empty() || it->second.pendingBack || it->second.pendingStart) {
 					continue;
 				}
 				auto&       applied = it->second;
@@ -372,6 +431,7 @@ namespace Physics
 			return;
 		}
 		const auto scene = SceneRegistry::Find(a_sceneID);
+		float      delay = SWAP_DELAY;
 		for (std::size_t role = 0; role < a_actors.size(); ++role) {
 			const auto id = a_actors[role];
 			if (const auto it = g_applied.find(id); it != g_applied.end()) {
@@ -403,8 +463,10 @@ namespace Physics
 					continue;  // a suffix swap with no file for this body: the next swap may fit
 				}
 				const auto& to = Receiving(scene.get(), role) && !resolved.toReceiving.empty() ? resolved.toReceiving : resolved.to;
-				if (CallSwap(actor, resolved.from, to)) {
+				if (CallSwap(actor, resolved.from, to, When::kLater, delay)) {
 					g_applied[id] = { resolved.from, to, resolved.to, resolved.toReceiving };
+					g_applied[id].pendingStart = true;
+					delay += STAGGER;
 				}
 				break;  // one swap per actor
 			}
@@ -422,6 +484,7 @@ namespace Physics
 	{
 		std::scoped_lock lock(g_lock);
 		std::vector<std::uint32_t> unswapped;
+		float                      delay = AFTER_SCENE_DELAY;
 		for (const auto id : a_actors) {
 			const auto it = g_applied.find(id);
 			if (it == g_applied.end()) {
@@ -429,8 +492,9 @@ namespace Physics
 				continue;
 			}
 			const auto actor = RE::TESForm::GetFormByID<RE::Actor>(id);
-			if (actor && CallSwap(actor, it->second.to, it->second.from, true)) {
+			if (actor && CallSwap(actor, it->second.to, it->second.from, When::kAfterScene, delay)) {
 				it->second.pendingBack = true;  // forgotten when the swap back answers
+				delay += STAGGER + 1.0F;          // the swap back, then its rebuild 1 s later
 			} else {
 				g_applied.erase(it);
 			}
@@ -440,7 +504,8 @@ namespace Physics
 		if (const auto vm = FourStim::GetVM()) {
 			for (const auto id : unswapped) {
 				RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
-				Compat::DispatchStaticCall(vm, "FourStimPhysics"sv, "ResetAfterScene"sv, callback, static_cast<std::int32_t>(id), AFTER_SCENE_DELAY);
+				Compat::DispatchStaticCall(vm, "FourStimPhysics"sv, "ResetAfterScene"sv, callback, static_cast<std::int32_t>(id), delay);
+				delay += STAGGER;  // one rebuild at a time
 			}
 		}
 	}
