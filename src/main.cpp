@@ -78,6 +78,25 @@ namespace
 		}
 	}
 
+	// A drawn weapon put away, as OStim's lock does for the player
+	// (sheatheWeaponry: "rae WeaponSheathe"), here for every scene actor: the
+	// game's own sheathe (what Skyrim's Actor.SheatheWeapon calls; Fallout
+	// 4's Papyrus has no SheatheWeapon). Taking the weapon off isn't enough:
+	// an NPC who drew stays in the drawn state with bare fists, and that
+	// state's arm and body pose shows over the scene's animations (the
+	// owner's log: both scenes where an actor "barely responded" and was
+	// turned 90 degrees in a chair had her weapon out the whole time, put
+	// away by unequipping three times to no effect). Main thread.
+	bool SheatheNow(RE::Actor* a_actor, std::string_view a_why)
+	{
+		if (!a_actor || !a_actor->GetWeaponMagicDrawn()) {
+			return false;
+		}
+		a_actor->DrawWeaponMagicHands(false);
+		REX::INFO("Weapons: {:08X} puts their weapon away ({})", a_actor->GetFormID(), a_why);
+		return true;
+	}
+
 	bool g_guardScenes = true;  // bGuardScenes: see GuardScenes
 
 	// 4Stim's own fade to black (SetUseFades) is up: the scene camera doesn't
@@ -1400,12 +1419,146 @@ namespace
 	void WatchAnimEvents(const std::vector<std::uint32_t>& a_actors, const std::string& a_sceneID);
 	bool PlayOnActiveScene(ActiveScene& a_active, const std::string& a_sceneID, int a_speed);
 
+	// ---- Scene furniture out of the actors' way ----
+	// Not in OStim, which has no collision handling: Fallout 4 forces it.
+	// The scene lock (a TranslateTo, as OStim's lockAtPosition) moves an
+	// actor's character controller, which collides with what's around it. A
+	// chair scene stands its actors on the chair's own spot, inside the
+	// chair's collision: the controller pushing them out and the lock pulling
+	// them back in made them shake (the owner's chair-by-a-desk tests). So
+	// for the scene, the scene's furniture and any other furniture right by
+	// it join the actors' collision group (as IgnorePairCollision has the
+	// actors share one): they no longer collide with the scene's actors, and
+	// still do with everyone else. Furniture only: a static near the spot
+	// can be the floor, and precombined pieces (walls, most desks) have no 3D
+	// of their own. With bLockScenes.
+	RE::bhkCharacterController* GetCharController(RE::Actor* a_actor);
+
+	struct SavedBody
+	{
+		RE::NiPointer<RE::bhkNPCollisionObject> object;
+		std::uint32_t                           filter = 0;
+		std::uint32_t                           ref = 0;
+	};
+	std::mutex                                                g_furnitureFiltersLock;
+	std::unordered_map<std::uint32_t, std::vector<SavedBody>> g_furnitureFilters;  // scene furniture -> bodies changed for it
+
+	constexpr float FURNITURE_CLEAR_RADIUS = 120.0F;  // other furniture this close to the scene's joins too
+
+	void CollectBodies(RE::NiAVObject* a_object, std::vector<RE::bhkNPCollisionObject*>& a_out, int a_depth)
+	{
+		if (!a_object) {
+			return;
+		}
+		if (const auto object = netimmerse_cast<RE::bhkNPCollisionObject*>(a_object->collisionObject.get())) {
+			a_out.push_back(object);
+		}
+		if (const auto node = a_depth > 0 ? a_object->IsNode() : nullptr) {
+			for (const auto& child : node->children) {
+				CollectBodies(child.get(), a_out, a_depth - 1);
+			}
+		}
+	}
+
+	void IgnoreFurnitureCollision(std::uint32_t a_furniture, std::vector<std::uint32_t> a_actors)
+	{
+		if (!a_furniture || !g_lockScenes) {
+			return;
+		}
+		// A task after IgnorePairCollision's (queued earlier): the actors
+		// already share their group.
+		F4SE::GetTaskInterface()->AddTask([a_furniture, a_actors]() {
+			const auto furniture = RE::TESForm::GetFormByID<RE::TESObjectREFR>(a_furniture);
+			if (!furniture) {
+				return;
+			}
+			std::uint32_t group = 0;
+			for (const auto id : a_actors) {
+				const auto controller = GetCharController(RE::TESForm::GetFormByID<RE::Actor>(id));
+				const auto body = controller ? controller->GetBodyImpl() : nullptr;
+				if (body) {
+					RE::CFilter filter{};
+					filter.filter = body->m_collisionFilterInfo;
+					group = filter.GetSystemGroup();
+					break;
+				}
+			}
+			if (group == 0) {
+				REX::INFO("Furniture collision: the actors on {:08X} have no collision group; left as it is", a_furniture);
+				return;
+			}
+			std::vector<RE::TESObjectREFR*> pieces{ furniture };
+			Compat::ForEachReferenceInRange(furniture->data.location, FURNITURE_CLEAR_RADIUS, [&](RE::TESObjectREFR* a_ref) {
+				const auto base = a_ref ? a_ref->GetObjectReference() : nullptr;
+				if (a_ref != furniture && base && base->GetFormType() == RE::ENUM_FORM_ID::kFURN && !a_ref->IsDisabled() && !a_ref->IsDeleted() && a_ref->Get3D()) {
+					pieces.push_back(a_ref);
+				}
+				return pieces.size() < 8 ? RE::BSContainer::ForEachResult::kContinue : RE::BSContainer::ForEachResult::kStop;
+			});
+			std::scoped_lock lock(g_furnitureFiltersLock);
+			auto&            saved = g_furnitureFilters[a_furniture];
+			for (const auto piece : pieces) {
+				std::vector<RE::bhkNPCollisionObject*> objects;
+				CollectBodies(piece->Get3D(), objects, 16);
+				std::size_t changed = 0;
+				for (const auto object : objects) {
+					const auto body = object->GetBody();
+					if (!body) {
+						continue;
+					}
+					const auto own = body->m_collisionFilterInfo;
+					if (std::ranges::any_of(saved, [&](const SavedBody& a_saved) { return a_saved.object.get() == object; })) {
+						continue;  // already done (a scene change on the same furniture)
+					}
+					RE::CFilter filter{};
+					filter.filter = own;
+					filter.SetSystemGroup(group);
+					if (object->SetCollisionFilterInfo(filter)) {
+						saved.push_back({ RE::NiPointer<RE::bhkNPCollisionObject>(object), own, piece->GetFormID() });
+						++changed;
+					}
+				}
+				REX::INFO("Furniture collision: {:08X}{} out of the scene actors' way ({} of {} collision bodies, group {:04X})", piece->GetFormID(),
+					piece == furniture ? " (the scene's)" : " (next to it)", changed, objects.size(), group);
+			}
+		});
+	}
+
+	void RestoreFurnitureCollision(std::uint32_t a_furniture)
+	{
+		if (!a_furniture) {
+			return;
+		}
+		F4SE::GetTaskInterface()->AddTask([a_furniture]() {
+			std::vector<SavedBody> bodies;
+			{
+				std::scoped_lock lock(g_furnitureFiltersLock);
+				const auto       it = g_furnitureFilters.find(a_furniture);
+				if (it == g_furnitureFilters.end()) {
+					return;
+				}
+				bodies = std::move(it->second);
+				g_furnitureFilters.erase(it);
+			}
+			std::size_t restored = 0;
+			for (const auto& body : bodies) {
+				RE::CFilter filter{};
+				filter.filter = body.filter;
+				if (body.object && body.object->SetCollisionFilterInfo(filter)) {
+					++restored;
+				}
+			}
+			REX::INFO("Furniture collision: {:08X} and what was next to it collide with the actors again ({} of {} bodies)", a_furniture, restored, bodies.size());
+		});
+	}
+
 	// A scene leaves its furniture (it ends, or moves to other furniture):
 	// the furniture free to use again and, with SetResetClutter, the loose
 	// items around it back where they lay (as OStim's changeFurniture and
 	// thread end). Main thread.
 	void FreeFurniture(ActiveScene& a_scene)
 	{
+		RestoreFurnitureCollision(a_scene.furnitureRef);
 		UnblockFurniture(a_scene.furnitureRef);
 		if (!a_scene.clutter.empty()) {
 			if (g_settings.resetClutter) {
@@ -1521,6 +1674,7 @@ namespace
 				g_pendingClutter.reset();
 			}
 			BlockFurniture(furniture->ref);
+			IgnoreFurnitureCollision(furniture->ref, a_actors);
 			auto sorted = a_actors;
 			std::ranges::sort(sorted);
 			if (g_furnitureSpots && g_furnitureSpots->actors == sorted) {
@@ -2495,6 +2649,7 @@ namespace
 		a_active.center = spot.position;
 		a_active.heading = spot.heading;
 		BlockFurniture(a_piece.ref);
+		IgnoreFurnitureCollision(a_piece.ref, a_active.actors);
 
 		auto focused = GetPlayerScene();
 		if (focused.Active() && focused.role0 == a_active.actors.front()) {
@@ -2852,14 +3007,46 @@ namespace
 		if (!fade || fade->currentFade >= 0.99F) {
 			return;
 		}
-		static std::unordered_map<std::uint32_t, std::string> logged;  // once per actor and scene
-		if (auto& last = logged[a_actor->GetFormID()]; last != a_sceneID) {
-			last = a_sceneID;
+		// Logged once per actor and scene, then how many times it came back:
+		// in the owner's log a single fade-in wasn't enough (the player was
+		// still missing), so it's now done on every tick of the scene clock,
+		// and the count says whether the game keeps fading them out.
+		struct Seen
+		{
+			std::string                           scene;
+			int                                   again = 0;
+			std::chrono::steady_clock::time_point lastLog{};
+		};
+		static std::unordered_map<std::uint32_t, Seen> seen;
+		auto&      entry = seen[a_actor->GetFormID()];
+		const auto now = std::chrono::steady_clock::now();
+		if (entry.scene != a_sceneID) {
+			entry = { a_sceneID, 0, now };
 			REX::INFO("Scene guard: {:08X} in \"{}\" was faded out ({:.2f}, the camera's fade as it closed in): faded back in", a_actor->GetFormID(), a_sceneID,
 				fade->currentFade);
+		} else if (++entry.again; now - entry.lastLog > std::chrono::seconds(5)) {
+			entry.lastLog = now;
+			REX::WARN("Scene guard: {:08X} in \"{}\" keeps being faded out ({} times so far, now {:.2f}): fading them back in each tick", a_actor->GetFormID(),
+				a_sceneID, entry.again, fade->currentFade);
 		}
 		fade->currentFade = 1.0F;
 		fade->currentDecalFade = 1.0F;
+	}
+
+	// Every tick of the scene clock (not the guard's quarter second): keeps
+	// every scene actor faded in.
+	void KeepFadedIn()
+	{
+		if (!g_guardScenes) {
+			return;
+		}
+		for (const auto& active : g_activeScenes) {
+			for (const auto id : active.actors) {
+				if (const auto actor = RE::TESForm::GetFormByID<RE::Actor>(id)) {
+					RestoreFade(actor, active.sceneID);
+				}
+			}
+		}
 	}
 
 	void GuardScenes(float a_seconds)
@@ -2892,10 +3079,18 @@ namespace
 				Undress::Enforce(actor);  // what came off stays off (the player too)
 				if (actor) {
 					LogVisibility(actor, active.sceneID);
-					RestoreFade(actor, active.sceneID);
 				}
 				if (IsPlayer(actor)) {
 					ShowPlayerBody(actor, active.sceneID);
+					// As OStim's lock: the player's weapon put away. Not in
+					// combat only, as for NPCs below.
+					if (auto& kicks = g_holsterKicks[id]; kicks.count < 3 && actor->GetWeaponMagicDrawn() && !actor->IsInCombat() && now - kicks.last > std::chrono::seconds(3)) {
+						kicks.last = now;
+						++kicks.count;
+						if (SheatheNow(actor, "scene guard")) {
+							forceReplay = true;
+						}
+					}
 				}
 				if (!actor || IsPlayer(actor)) {
 					continue;
@@ -2950,6 +3145,7 @@ namespace
 							REX::WARN("Scene guard: {:08X} still has a weapon out after 3 tries; leaving it be for this scene", id);
 						}
 						REX::INFO("Scene guard: {:08X} in \"{}\" drew a weapon (not in combat): putting it away", id, active.sceneID);
+						SheatheNow(actor, "scene guard");
 						if (g_vm) {
 							RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
 							Compat::DispatchStaticCall(g_vm, "FourStimScene"sv, "PutWeaponAwayByID"sv, callback, static_cast<std::int32_t>(id));
@@ -3375,6 +3571,7 @@ namespace
 			SexToys::Tick(elapsed);
 			Expressions::Tick(elapsed);
 			UpdateClimaxShake();
+			KeepFadedIn();
 			GuardScenes(elapsed);
 			PruneScenePackage(elapsed);
 			Undress::Tick(elapsed);
@@ -4458,9 +4655,9 @@ namespace
 
 	// ---- The weapon an actor held before their scene ----
 	// FourStimScene.HolsterForScene notes it as it takes it off, and
-	// ReleaseFromScene puts it back on (OStim doesn't take weapons off; a
-	// drawn weapon's arm pose shows over Fallout 4's scene animations). Kept
-	// in the save with the scene.
+	// ReleaseFromScene puts it back on, as OStim's SetRemoveWeaponsAtStart
+	// (on by default: ThreadActor::removeWeapons, given back at the end).
+	// Kept in the save with the scene.
 	std::mutex                                   g_sceneWeaponsLock;
 	std::unordered_map<std::uint32_t, std::uint32_t> g_sceneWeapons;  // actor -> weapon form
 
@@ -4479,6 +4676,15 @@ namespace
 		std::scoped_lock lock(g_sceneWeaponsLock);
 		const auto it = g_sceneWeapons.find(a_actor);
 		return it != g_sceneWeapons.end() ? it->second : 0;
+	}
+
+	// FourStim.SheatheForScene: HolsterForScene puts a drawn weapon away
+	// before taking it off (see SheatheNow).
+	void SheatheForScene(std::monostate, RE::Actor* a_actor)
+	{
+		if (a_actor) {
+			F4SE::GetTaskInterface()->AddTask([id = a_actor->GetFormID()]() { SheatheNow(RE::TESForm::GetFormByID<RE::Actor>(id), "scene start"); });
+		}
 	}
 
 	void RememberSceneWeapon(std::monostate, RE::Actor* a_actor, RE::TESForm* a_weapon)
@@ -8292,6 +8498,7 @@ namespace
 		a_vm->BindNativeMethod(SCRIPT_NAME, "Unmute"sv, Unmute);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "IsMuted"sv, IsMuted);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "RememberSceneWeapon"sv, RememberSceneWeapon);
+		a_vm->BindNativeMethod(SCRIPT_NAME, "SheatheForScene"sv, SheatheForScene);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "TakeSceneWeapon"sv, TakeSceneWeapon);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "SetEquipObjectID"sv, SetEquipObjectID);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "GetEquipObjectID"sv, GetEquipObjectID);

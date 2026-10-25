@@ -102,6 +102,10 @@ bool Function IsMuted(Actor akActor) Global Native
 ; and puts back on when the scene ends: noted, and taken back (None if none;
 ; forgotten once taken). Kept in the save with the scene.
 Function RememberSceneWeapon(Actor akActor, Form akWeapon) Global Native
+
+; A drawn weapon put away (the game's own sheathe; Fallout 4's Papyrus has
+; none). Called by FourStimScene.HolsterForScene.
+Function SheatheForScene(Actor akActor) Global Native
 Form Function TakeSceneWeapon(Actor akActor) Global Native
 
 ; Tells the plugin aiActorID's clothes changed (4Stim's undressing calls it

@@ -64,6 +64,7 @@ EndFunction
 ; RearmAfterScene puts it back on when the scene ends (NPCs didn't always
 ; re-arm on their own, and the player never did).
 Function HolsterForScene(Actor akActor) Global
+	FourStim.SheatheForScene(akActor)  ; drawn: put away first (else they stay drawn, bare-fisted)
 	Weapon akWeapon = akActor.GetEquippedWeapon()
 	if akWeapon
 		FourStim.RememberSceneWeapon(akActor, akWeapon)
@@ -132,6 +133,13 @@ Function PrepareActor(Actor akActor) Global
 EndFunction
 
 Function LockForScene(Actor akActor) Global
+	; As OStim's GameActor::lock: no foot IK (it bends the legs to the ground
+	; under the scene's poses) and no head tracking (it turns the head to
+	; look at someone, off the animation: kisses missing, faces off).
+	; Fallout 4 has OStim's bHumanoidFootIKDisable; its head tracking is
+	; Actor.SetHeadTracking rather than Skyrim's bHeadTracking variables.
+	akActor.SetAnimationVariableBool("bHumanoidFootIKDisable", true)
+	akActor.SetHeadTracking(false)
 	if IsPlayer(akActor)
 		; No SetRestrained on the player: it also freezes look/move input,
 		; which the free camera and first-person look need. The input layer
@@ -143,6 +151,8 @@ Function LockForScene(Actor akActor) Global
 EndFunction
 
 Function ReleaseFromScene(Actor akActor) Global
+	akActor.SetAnimationVariableBool("bHumanoidFootIKDisable", false)  ; as OStim's unlock
+	akActor.SetHeadTracking(true)
 	if IsPlayer(akActor)
 		FourStim.UnlockPlayerControls()
 	else
