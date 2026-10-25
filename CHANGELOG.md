@@ -4,6 +4,8 @@
 
 OStim parity: everything on the roadmap's "OStim parity" list is in.
 
+- **Physics swaps, diagnostics:** a swap that finds no piece using its file (the owner's A-Body player, whose body names `MaleBody.xml`) now logs what FSMP actually has on each worn piece, whether it has the physics soft suspended, and what the meshes name. A body already on the swap's file (FSMP keeps swaps, saves included) counts as swapped. Needs FourStimPhysics.psc recompiled.
+
 - **Collision watch** (for the player still shaking in a chair in a corner, with the chair out of the way): the scene guard checks what each scene actor's character controller touches. Each thing is logged once a scene, and anything but what they stand on, the ground and other actors joins the scene's collision group; if they still touch it, it collides with nothing until the scene ends. It also logs when the controller or the drawn body is away from the actor's spot (`Collision watch:` in `4Stim.log`). Walls done this way let other NPCs through them for the scene.
 
 - **Fixed:** an actor barely following a scene, or turned 90 degrees in a chair scene: she had drawn her weapon before the scene, and taking the weapon off left her in the drawn state with bare fists, whose pose shows over the scene's animations (both such scenes in the owner's log, `weapon out` on every `Scene check`). As OStim's lock does, a drawn weapon is now put away with the game's own sheathe at scene start and by the scene guard, the player's too (`Weapons: ... puts their weapon away` in `4Stim.log`). Needs FourStim.psc and FourStimScene.psc recompiled.

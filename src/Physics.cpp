@@ -266,6 +266,36 @@ namespace Physics
 			return {};
 		}
 
+		// FourStimPhysics.Describe's answer, logged with the files the
+		// actor's meshes name: for a swap that found no piece using its file
+		// (the owner's A-Body player, whose body names that very file).
+		class DescribeResult : public RE::BSScript::IStackCallbackFunctor
+		{
+		public:
+			DescribeResult(std::uint32_t a_actor, std::string a_from) :
+				_actor(a_actor), _from(std::move(a_from)) {}
+
+			void CallQueued() override {}
+			void CallCanceled() override {}
+			void StartMultiDispatch() override {}
+			void EndMultiDispatch() override {}
+			void operator()(RE::BSScript::Variable a_result) override
+			{
+				const std::string live = a_result.is<RE::BSFixedString>() ? std::string(RE::BSScript::get<RE::BSFixedString>(a_result).c_str()) : std::string("(no answer: old FourStimPhysics.pex?)");
+				F4SE::GetTaskInterface()->AddTask([actor = _actor, from = _from, live]() {
+					std::string named;
+					for (const auto& file : PhysicsFilesOf(RE::TESForm::GetFormByID<RE::Actor>(actor))) {
+						named += (named.empty() ? "" : "; ") + file;
+					}
+					REX::WARN("Physics: {:08X} has no piece using \"{}\". FSMP has: {}. The meshes name: {}", actor, from, live, named.empty() ? "none" : named);
+				});
+			}
+
+		private:
+			std::uint32_t _actor;
+			std::string   _from;
+		};
+
 		// Logs what SwapPhysicsFile returned: false means FSMP found no active
 		// physics system on the actor using that file.
 		class SwapResult : public RE::BSScript::IStackCallbackFunctor
@@ -316,7 +346,16 @@ namespace Physics
 					REX::WARN("Physics: {:08X} not swapped: FSMP has no active physics on it (not loaded, or beyond maxActiveActors in FSMP's configs.xml)", _actor);
 					break;
 				case -1:
-					REX::WARN("Physics: {:08X} not swapped: it has physics, but none using \"{}\" (wrong file for this body?)", _actor, _from);
+					REX::WARN("Physics: {:08X} not swapped: it has physics, but none using \"{}\"; asking FSMP what it has", _actor, _from);
+					if (const auto vm = FourStim::GetVM()) {
+						RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback{ new DescribeResult(_actor, _from) };
+						Compat::DispatchStaticCall(vm, "FourStimPhysics"sv, "Describe"sv, callback, static_cast<std::int32_t>(_actor));
+					}
+					break;
+				case -6:
+					// persist=true: FSMP keeps a swap (in the save, too), so one
+					// not undone before a save is still there after loading it.
+					REX::INFO("Physics: {:08X} already uses \"{}\" (a swap FSMP kept, from a save?)", _actor, _to);
 					break;
 				case -2:
 					REX::WARN("Physics: {:08X} not swapped: actor not found", _actor);

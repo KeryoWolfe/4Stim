@@ -11,6 +11,7 @@ script needs DynamicHDT.psc (from FO4 Faster HDT-SMP's Scripts\Source).}
 ;   0          the actor has no active physics at all (not loaded, or beyond FSMP's maxActiveActors)
 ;  -1          it has physics, but none using the file under any spelling
 ;  -2          no such actor
+;  -6          none using asFrom, but one already uses asTo (a swap FSMP kept, e.g. in a save)
 int Function Swap(int aiActorID, String asFrom1, String asTo1, String asFrom2, String asTo2, String asFrom3, String asTo3) Global
 	Actor akActor = Game.GetForm(aiActorID) as Actor
 	if akActor == None
@@ -31,7 +32,66 @@ int Function Swap(int aiActorID, String asFrom1, String asTo1, String asFrom2, S
 	if asFrom3 != "" && DynamicHDT.SwapPhysicsFile(akActor, asFrom3, asTo3, true, false)
 		return 3
 	endif
+	; Already on asTo? (Papyrus compares strings without case.)
+	String[] sFiles = CurrentFiles(akActor, false)
+	int i = 0
+	while i < sFiles.Length
+		if sFiles[i] == asTo1 || (asTo2 != "" && sFiles[i] == asTo2) || (asTo3 != "" && sFiles[i] == asTo3)
+			return -6
+		endif
+		i += 1
+	endwhile
 	return -1
+EndFunction
+
+; The physics file FSMP has on each worn piece of aiActorID (F4SE's
+; GetWornItem, FSMP's QueryCurrentPhysicsFile): the live state, not what the
+; meshes name.
+String[] Function CurrentFiles(Actor akActor, bool abLabels) Global
+	String[] sFiles = new String[0]
+	ArmorAddon[] akDone = new ArmorAddon[0]
+	int i = 0
+	while i < 44
+		Actor:WornItem worn = akActor.GetWornItem(i)
+		ArmorAddon akAddon = None
+		if worn
+			akAddon = worn.model as ArmorAddon
+		endif
+		if akAddon && akDone.Find(akAddon) < 0
+			akDone.Add(akAddon)
+			String sFile = DynamicHDT.QueryCurrentPhysicsFile(akActor, akAddon, false)
+			if sFile != "" && abLabels
+				sFiles.Add("slot " + (i + 30) + ": " + sFile)
+			elseif sFile != ""
+				sFiles.Add(sFile)
+			endif
+		endif
+		i += 1
+	endwhile
+	return sFiles
+EndFunction
+
+; For the plugin's log when a swap finds no piece using its file: what each
+; worn piece uses, and whether FSMP has the physics soft suspended.
+String Function Describe(int aiActorID) Global
+	Actor akActor = Game.GetForm(aiActorID) as Actor
+	if akActor == None
+		return "no such actor"
+	endif
+	String sOut = ""
+	if DynamicHDT.IsSoftSuspended(akActor)
+		sOut = "physics soft suspended; "
+	endif
+	String[] sFiles = CurrentFiles(akActor, true)
+	if sFiles.Length == 0
+		return sOut + "no worn piece has a physics file"
+	endif
+	int i = 0
+	while i < sFiles.Length
+		sOut += sFiles[i] + "; "
+		i += 1
+	endwhile
+	return sOut
 EndFunction
 
 ; A scene started: afDelay seconds later (the plugin staggers its actors, so
