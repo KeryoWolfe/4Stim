@@ -266,8 +266,8 @@ namespace Physics
 			return {};
 		}
 
-		// FourStimPhysics.Describe's answer, logged with the files the
-		// actor's meshes name: for a swap that found no piece using its file
+		// FourStimPhysics.Describe's answer (FSMP's state), logged with the
+		// files the actor's meshes name: for a swap that found no piece using its file
 		// (the owner's A-Body player, whose body names that very file).
 		class DescribeResult : public RE::BSScript::IStackCallbackFunctor
 		{
@@ -287,7 +287,7 @@ namespace Physics
 					for (const auto& file : PhysicsFilesOf(RE::TESForm::GetFormByID<RE::Actor>(actor))) {
 						named += (named.empty() ? "" : "; ") + file;
 					}
-					REX::WARN("Physics: {:08X} has no piece using \"{}\". FSMP has: {}. The meshes name: {}", actor, from, live, named.empty() ? "none" : named);
+					REX::WARN("Physics: {:08X} has no piece using \"{}\". FSMP: {}. The meshes name: {}", actor, from, live, named.empty() ? "none" : named);
 				});
 			}
 
