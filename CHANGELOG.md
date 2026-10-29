@@ -4,6 +4,8 @@
 
 OStim parity: everything on the roadmap's "OStim parity" list is in.
 
+- **1.10.163:** the furniture collision and collision watch need two game functions the Runtime Database has no 1.10.163 entry for; where they aren't found, 4Stim now leaves both off (logged at load) instead of failing on first use mid-scene (docs/OLDGEN.md).
+
 - **Physics swaps, diagnostics:** a swap that finds no piece using its file (the owner's A-Body player, whose body names `MaleBody.xml`) now logs whether FSMP has the physics active or soft suspended, and what the meshes name. A body already on the swap's file (FSMP keeps swaps, saves included) counts as swapped. FourStimPhysics.psc uses no F4SE script types, so it compiles with the game's own sources. Needs FourStimPhysics.psc recompiled.
 
 - **Collision watch** (for the player still shaking in a chair in a corner, with the chair out of the way): the scene guard checks what each scene actor's character controller touches. Each thing is logged once a scene, and anything but what they stand on, the ground and other actors joins the scene's collision group; if they still touch it, it collides with nothing until the scene ends. It also logs when the controller or the drawn body is away from the actor's spot (`Collision watch:` in `4Stim.log`). Walls done this way let other NPCs through them for the scene.

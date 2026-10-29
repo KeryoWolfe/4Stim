@@ -27,6 +27,8 @@ namespace Compat
 		{ 2295298, "MCM texts are added to the game's translator by 4Stim itself" },
 		{ 2211661, "the scene package is Fallout4.esm's MQ101VaultTecRepDoNothingScene, not one made by 4Stim" },
 		{ 2211735, "the scene package is Fallout4.esm's MQ101VaultTecRepDoNothingScene, not one made by 4Stim" },
+		{ 2277919, "furniture stays solid for scene actors, and the collision watch is off" },
+		{ 2277926, "furniture stays solid for scene actors, and the collision watch is off" },
 	};
 
 	// Looks the addresses above up now (at load), not mid-game: a miss in
@@ -66,4 +68,5 @@ namespace Compat
 	bool CanSetSoundPosition();      // BSSoundHandle::SetPosition
 	bool CanAddTranslations();       // BSScaleformTranslator::AddTranslations
 	bool CanMakePackages();          // TESPackage::CreatePackageByType and its procedure's set-up (ScenePackage.cpp)
+	bool CanReadCollisionBodies();   // bhkNPCollisionObject::Getbhk and GetBody (main.cpp's furniture collision and collision watch)
 }

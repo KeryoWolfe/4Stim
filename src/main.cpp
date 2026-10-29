@@ -1462,8 +1462,8 @@ namespace
 
 	void IgnoreFurnitureCollision(std::uint32_t a_furniture, std::vector<std::uint32_t> a_actors)
 	{
-		if (!a_furniture || !g_lockScenes) {
-			return;
+		if (!a_furniture || !g_lockScenes || !Compat::CanReadCollisionBodies()) {
+			return;  // without Getbhk / GetBody (1.10.163 if the Runtime Database lacks them): left solid
 		}
 		// A task after IgnorePairCollision's (queued earlier): the actors
 		// already share their group.
@@ -1574,6 +1574,9 @@ namespace
 
 	void WatchCollisions(RE::Actor* a_actor, const std::string& a_sceneID)
 	{
+		if (!Compat::CanReadCollisionBodies()) {
+			return;  // 1.10.163 without Getbhk / GetBody: no watch (compat/Fallbacks.h)
+		}
 		const auto controller = GetCharController(a_actor);
 		const auto world = controller ? controller->GetWorldImpl() : nullptr;
 		const auto own = controller ? controller->GetBodyImpl() : nullptr;
