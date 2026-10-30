@@ -1408,6 +1408,7 @@ namespace
 	void ArmAutoplay(ActiveScene& a_scene);
 	void EndActiveScene(const ActiveScene& a_scene, std::string_view a_why);
 	void ForgetActorMeta(const std::vector<std::uint32_t>& a_ids);
+	void SetCameraFadeOff(bool a_off);  // the camera's actor fade, off while scenes run
 	std::thread::id g_mainThread;  // the game's main thread (set at kGameLoaded)
 	void StartAutoMode(ActiveScene& a_active);
 	void StopAutoMode(ActiveScene& a_active);
@@ -1607,12 +1608,17 @@ namespace
 				const RE::NiPoint3 controllerAt{ at[0] * HAVOK_TO_GAME, at[1] * HAVOK_TO_GAME, at[2] * HAVOK_TO_GAME };
 				const auto         root = a_actor->Get3D();
 				const auto         drawnAt = root ? root->world.translate : a_actor->data.location;
-				const float        offController = controllerAt.GetDistance(a_actor->data.location);
+				// The controller's position is its capsule's middle, about half
+				// the actor's height up (64-71 units in a tester's log): only
+				// across the ground counts.
+				const auto         dx = controllerAt.x - a_actor->data.location.x;
+				const auto         dy = controllerAt.y - a_actor->data.location.y;
+				const float        offController = std::sqrt(dx * dx + dy * dy);
 				const float        offDrawn = drawnAt.GetDistance(a_actor->data.location);
 				if (offController > 4.0F || offDrawn > 4.0F) {
 					entry.last = now;
 					++entry.count;
-					REX::INFO("Collision watch: {:08X} in \"{}\" at ({:.1f}, {:.1f}, {:.1f}); controller at ({:.1f}, {:.1f}, {:.1f}) ({:.1f} off), body drawn at ({:.1f}, {:.1f}, {:.1f}) ({:.1f} off)",
+					REX::INFO("Collision watch: {:08X} in \"{}\" at ({:.1f}, {:.1f}, {:.1f}); controller at ({:.1f}, {:.1f}, {:.1f}) ({:.1f} off across the ground), body drawn at ({:.1f}, {:.1f}, {:.1f}) ({:.1f} off)",
 						a_actor->GetFormID(), a_sceneID, a_actor->data.location.x, a_actor->data.location.y, a_actor->data.location.z, controllerAt.x, controllerAt.y,
 						controllerAt.z, offController, drawnAt.x, drawnAt.y, drawnAt.z, offDrawn);
 				}
@@ -1966,6 +1972,9 @@ namespace
 		}
 		auto ended = std::move(*it);
 		g_activeScenes.erase(it);
+		if (g_activeScenes.empty()) {
+			SetCameraFadeOff(false);
+		}
 		for (const auto id : ended.actors) {
 			Undress::Block(id, false);
 		}
@@ -3199,8 +3208,56 @@ namespace
 
 	// Every tick of the scene clock (not the guard's quarter second): keeps
 	// every scene actor faded in.
+	// ---- No camera fade on scene actors ----
+	// Not in OStim (Skyrim's camera doesn't fade actors this way). Fallout
+	// 4's camera finds what's between it and the player with a shape cast
+	// (ID 2214659 on 1.11.240) and hands back the actor it's inside or
+	// near, for the game to fade out: within fActorFadeOutLimit:Camera, plus
+	// the actor's bound up to fActorFadeOutBoundMax:Camera. A scene's free
+	// camera sits right by the actors, so one of them was faded out every
+	// frame, faster than the scene guard could fade them back in (a 1.10.163
+	// tester's log: "keeps being faded out", 586 times in 10 seconds, and
+	// the male actor never seen). With both at 0 the cast's distance check
+	// never passes, so nothing is faded: set while any scene runs, the
+	// player's own values back when the last one ends.
+	struct CameraFadeSetting
+	{
+		const char* name;
+		float       own = 0.0F;
+	};
+	CameraFadeSetting g_cameraFade[]{ { "fActorFadeOutLimit:Camera" }, { "fActorFadeOutBoundMax:Camera" } };
+	bool              g_cameraFadeOff = false;
+
+	void SetCameraFadeOff(bool a_off)
+	{
+		if (a_off == g_cameraFadeOff) {
+			return;
+		}
+		const auto ini = RE::INISettingCollection::GetSingleton();
+		if (!ini) {
+			return;
+		}
+		for (auto& setting : g_cameraFade) {
+			const auto found = ini->GetSetting(setting.name);
+			if (!found || found->GetType() != RE::Setting::SETTING_TYPE::kFloat) {
+				REX::WARN("Scene camera: {} not found; the camera may still fade scene actors", setting.name);
+				continue;
+			}
+			if (a_off) {
+				setting.own = found->GetFloat();
+				found->SetFloat(0.0F);
+			} else {
+				found->SetFloat(setting.own);
+			}
+		}
+		g_cameraFadeOff = a_off;
+		REX::INFO("Scene camera: actor fade {} ({} {:.0f}, {} {:.0f})", a_off ? "off while scenes run" : "back on", g_cameraFade[0].name, g_cameraFade[0].own,
+			g_cameraFade[1].name, g_cameraFade[1].own);
+	}
+
 	void KeepFadedIn()
 	{
+		SetCameraFadeOff(!g_activeScenes.empty());
 		if (!g_guardScenes) {
 			return;
 		}
@@ -9190,6 +9247,7 @@ namespace
 			// Running scenes and their timers end with the old game.
 			F4SE::GetTaskInterface()->AddTask([]() {
 				g_activeScenes.clear();
+				SetCameraFadeOff(false);
 				{
 					std::scoped_lock lock(g_blockedFurnitureLock);
 					g_blockedFurniture.clear();  // the world comes from the save (version 4 says what was blocked)
