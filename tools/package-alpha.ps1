@@ -4,6 +4,8 @@ Packages a 4Stim test build for private testers: two mod-manager archives
   4Stim-<version>.zip            the framework (plugin, settings, data, HUD,
                                  icons, sounds, scripts)
   4Stim-TestAnims-<version>.zip  the test animation pack
+  4Stim-EquipObjects-<version>.zip  the optional strap-ons and tongues
+                                 (Optional\4Stim Equip Objects in this repository)
 
 plus the testers' read-me (docs\ALPHA.md) beside them, in .\release\.
 
@@ -149,6 +151,12 @@ Add-File $anims (Need (Join-Path $TestAnimsMod "4StimTestAnims.esp") "4StimTestA
 Add-File $anims (Need (Join-Path $Repo "Data\F4SE\Plugins\4Stim\Scenes\4StimTestAnims.json") "the test scene file") "F4SE/Plugins/4Stim/Scenes/4StimTestAnims.json"
 Add-Tree $anims (Join-Path $TestAnimsMod "meshes") "meshes" @("*.bak")
 
+# ---- 4Stim Equip Objects (optional add-on) ----
+$equip = New-List
+$equipRoot = Join-Path $Repo "Optional\4Stim Equip Objects"
+Need (Join-Path $equipRoot "4Stim - Equip Objects.esp") "the Equip Objects plugin" | Out-Null
+Add-Tree $equip $equipRoot "" @("*.bak")
+
 if ($problems) {
     Write-Host "Not packaged, missing:" -ForegroundColor Red
     $problems | ForEach-Object { Write-Host "  $_" -ForegroundColor Red }
@@ -159,6 +167,7 @@ New-Item -ItemType Directory -Force -Path $Out | Out-Null
 Write-Host "4Stim $tag"
 Write-Zip (Join-Path $Out "4Stim-$tag.zip") $core
 Write-Zip (Join-Path $Out "4Stim-TestAnims-$tag.zip") $anims
+Write-Zip (Join-Path $Out "4Stim-EquipObjects-$tag.zip") $equip
 Copy-Item -LiteralPath (Join-Path $Repo "docs\ALPHA.md") -Destination (Join-Path $Out "4Stim-$tag-ReadMe.md") -Force
 Write-Host "Read-me: 4Stim-$tag-ReadMe.md"
 Write-Host "In: $Out"
