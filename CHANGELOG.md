@@ -11,7 +11,7 @@ Needs the plugin rebuilt and FourStimErection.psc compiled (with LooksMenu's Bod
 
 ### Undressing
 - **Fixed:** the HUD's Undress did nothing for slots a scene had already undressed, so clothes an earlier strip missed (or the game put back on) stayed on. Undressing by hand now takes off everything worn in the undress slots again. The log names each item taken off (`Undress: ... to take off: <id> "<name>"`).
-- A 1.10.163 tester's report of clothes not coming off: his log shows every strip done and nothing put back on, in OStim's default way (only what each position needs, as the scene gets there: gloves for groping, everything for the blowjob and the doggy scene). No code change; the tester's guide now says how it works and where **Undress at the start** is. Waiting on what he saw.
+- **Fixed (needs testing):** a female player who stayed dressed all scene while the NPC undressed (a 1.10.163 tester). The log showed her one outfit item taken off and never put back on, yet her body drew the same 27 shapes all scene: the game had the clothes off but never redrew her. Two seconds after each strip, 4Stim now checks whether the items are off and whether the body drawn changed (`Undress check:` in `4Stim.log`), and redraws a player whose clothes are off but still drawn (`Actor::Reset3D`, as F4SE's `Actor.QueueUpdate`).
 
 ## 0.4.0 alpha (October 2026)
 

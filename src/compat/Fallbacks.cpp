@@ -190,6 +190,7 @@ namespace Compat
 		Have<2211735>();
 		Have<2277919>();
 		Have<2277926>();
+		Have<2229913>();
 	}
 
 	bool CanStopInteractingQuick() { return Have<2231227>(); }
@@ -197,4 +198,5 @@ namespace Compat
 	bool CanAddTranslations() { return Have<2295298>(); }
 	bool CanMakePackages() { return Have<2211661>() && Have<2211735>(); }
 	bool CanReadCollisionBodies() { return Have<2277919>() && Have<2277926>(); }
+	bool CanReset3D() { return Have<2229913>(); }
 }

@@ -84,6 +84,7 @@ namespace Compat
 		{ 2277770, "ID::bhkPickData::HasHit" },
 		{ 2277919, "ID::bhkNPCollisionObject::Getbhk" },   // main.cpp's collision watch (optional, compat/Fallbacks.h)
 		{ 2277926, "ID::bhkNPCollisionObject::GetBody" },  // main.cpp's furniture collision and collision watch (optional)
+		{ 2229913, "ID::Actor::Reset3D" },                 // Undress.cpp's redraw of the player (optional)
 		{ 2277771, "ID::bhkPickData::GetHitFraction" },
 		{ 2284766, "ID::UI::RegisterMenu" },
 		{ 2284929, "ID::UIMessageQueue::AddMessage" },

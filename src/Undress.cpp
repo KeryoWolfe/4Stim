@@ -1,10 +1,12 @@
 #include "Undress.h"
 #include "compat/ScrapFunction.h"
+#include "compat/Fallbacks.h"
 
 #include <algorithm>
 #include <array>
 #include <cctype>
 #include <chrono>
+#include <thread>
 #include <format>
 #include <string>
 #include <optional>
@@ -190,6 +192,69 @@ namespace Undress
 			}
 		}
 
+		// The geometry a_actor's 3D draws now (third person), to tell whether
+		// a strip changed it. Main thread.
+		void Geometry(RE::NiAVObject* a_object, std::vector<RE::NiAVObject*>& a_out, int a_depth)
+		{
+			if (!a_object) {
+				return;
+			}
+			if (a_object->IsGeometry()) {
+				a_out.push_back(a_object);
+				return;
+			}
+			if (const auto node = a_depth > 0 ? a_object->IsNode() : nullptr) {
+				for (const auto& child : node->children) {
+					Geometry(child.get(), a_out, a_depth - 1);
+				}
+			}
+		}
+
+		std::vector<RE::NiAVObject*> GeometryOf(std::uint32_t a_id)
+		{
+			std::vector<RE::NiAVObject*> out;
+			if (const auto actor = RE::TESForm::GetFormByID<RE::Actor>(a_id)) {
+				Geometry(actor->Get3D(false), out, 32);
+			}
+			std::ranges::sort(out);
+			return out;
+		}
+
+		// Two seconds after a strip: whether the items are off, and whether
+		// the body drawn changed. A 1.10.163 tester's female player stayed
+		// dressed while the game had her clothes off (her 3D drew the same
+		// 27 shapes all scene, and nothing was put back on). A player whose
+		// items are off but whose 3D is unchanged is redrawn, as F4SE's
+		// Actor.QueueUpdate does. Any thread.
+		void CheckStrip(std::uint32_t a_id, std::vector<std::uint32_t> a_items, std::vector<RE::NiAVObject*> a_before)
+		{
+			std::thread([a_id, items = std::move(a_items), before = std::move(a_before)]() {
+				std::this_thread::sleep_for(std::chrono::seconds(2));
+				F4SE::GetTaskInterface()->AddTask([a_id, items, before]() {
+					const auto actor = RE::TESForm::GetFormByID<RE::Actor>(a_id);
+					if (!actor || !actor->Get3D(false)) {
+						return;
+					}
+					std::size_t on = 0;
+					for (const auto worn : WornIn(actor, 0xFFFFFFFF)) {
+						on += std::ranges::count(items, worn);
+					}
+					const auto after = GeometryOf(a_id);
+					const bool same = after == before;
+					REX::INFO("Undress check: {:08X}: {} of {} item(s) still on; drawn {} -> {} shape(s){}", a_id, on, items.size(), before.size(), after.size(),
+						same ? ", unchanged" : "");
+					if (on == 0 && same && IsPlayer(a_id)) {
+						if (Compat::CanReset3D()) {
+							REX::WARN("Undress check: the player's clothes are off but still drawn: redrawing them");
+							actor->Reset3D(true, 0, true, 0xC);
+						} else {
+							REX::WARN("Undress check: the player's clothes are off but still drawn (no Actor::Reset3D on this game version to redraw them)");
+						}
+					}
+				});
+			}).detach();
+		}
+
 		// Takes off what's in a_slots (those not taken off yet): finds the
 		// items here, Papyrus unequips them. Any thread.
 		void Strip(std::uint32_t a_id, const std::vector<int>& a_slots, bool a_byHand = false)
@@ -251,6 +316,7 @@ namespace Undress
 					return;
 				}
 				NoteStripped(a_id, items);
+				CheckStrip(a_id, items, GeometryOf(a_id));
 				if (const auto vm = FourStim::GetVM()) {
 					std::vector<std::int32_t> ids(items.begin(), items.end());
 					RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
