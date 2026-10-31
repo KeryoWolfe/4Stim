@@ -49,6 +49,8 @@ Claude writes the fix; the owner builds and tests; the result goes into TEST_RES
 | 2.12 | 1.10.163 (OG) tester: NPC stayed in a chair, player didn't follow, dialogue opened | Needs the current build and logs from the tester | Owner: send the tester the new build. |
 | 2.13 | Save loads taking 8+ minutes | External: ModSwitchFramework_NG (confirmed by the owner) | None for 4Stim; worth a report to its author. |
 | 2.14 | Crash at Tenpines Bluff (pathfinding) | External: navmesh, A Forest.esp / PRP | None for 4Stim. |
+| 2.15 | No erections on non-SMP bodies (BodyTalk, Atomic Muscle); SMP bodies rigid all scene | Built, untested (0.4.1, docs/ERECTION.md) | Owner / testers: a scene with each body; look for `Erection: ... body:`; bend -10 on the Align tab. |
+| 2.16 | Clothes not coming off (1.10.163 tester) | The log shows every strip done, OStim's way (what each position needs) | Tester: say which clothes stayed on in which position, or try Undress at the start. |
 
 ## Phase 3: beta (0.4.0)
 
