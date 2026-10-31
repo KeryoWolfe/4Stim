@@ -59,7 +59,7 @@ Claude writes the fix; the owner builds and tests; the result goes into TEST_RES
 | 3.1 | Run TEST_PLAN.md on 1.11.240 in a separate MO2 profile, with backups. | Every row Pass, Fail (with an issue) or Not tested (with a reason). |
 | 3.2 | At least one run in a small load order (4Stim and its requirements only). | Shows which problems come from 4Stim and which from other mods. |
 | 3.3 | Beta tester guide (docs/BETA.md, from ALPHA.md): install, uninstall, requirements with versions, what to test, how to report. | Reviewed by the owner. |
-| 3.4 | Package with tools/package-alpha.ps1 (renamed for beta), checking the zip against the provenance list. | Nothing unlicensed in the zip; nothing from Skyrim. |
+| 3.4 | Package with tools/package-alpha.ps1 (renamed for beta), checking the zip against the provenance list: OStim's base animations only, without the vampire and tailjob ones (see Decided). | Nothing unlicensed in the zip; no other pack's animations; nothing from Skyrim. |
 | 3.5 | Merge `dev` into `main`, tag `v0.4.0-beta`. | Owner's go-ahead. |
 
 ## Phase 4: first public release (1.0)
@@ -96,11 +96,15 @@ From docs/TODO.md, unchanged: automatic body-mesh detection, in-game HUD editor,
 2. **Fallout 4's collision fights the scene lock** (2.3); OStim has nothing for this, since Skyrim's lock ignores collision. The fix is new ground.
 3. **Large load orders hide 4Stim's problems behind other mods'** (2.13, 2.14); hence 3.2.
 4. **Other runtimes are untested** (2.12); the release must say so.
-5. **Content provenance**: scene data and animations from other authors need permission before a public release (1.9).
+5. **Content provenance**: only OStim's base animations have permission (see Decided); other packs stay out of every package (1.9, 3.4).
 
 ## Decisions needed from the owner
 
 - `dev` branch from now on (1.1)?
 - Does 0.4 test first person (2.11)?
 - Which dependency versions are supported: the ones in the owner's profile, or ranges?
-- Permission status for the animation packs linked into the test pack (Atomic Lust and others).
+
+## Decided by the owner
+
+- **Animations (31 October 2026):** 4Stim has permission for OStim's base animations only. The other packs converted for testing (Atomic Lust and others) are test material: they are not packaged in the beta or release builds. Anyone who wants them converts them from their own copies.
+- **Base pack trimmed (31 October 2026):** the vampire and tailjob animations come out of the base pack, since they make no sense in Fallout 4. The action types for them (`tailjob`, `analtailsex`, `vaginaltailsex`, `pullingtail`, `strokingtail`, `massagingtail`) stay in Actions/Default.json, as OStim's, for other packs; only the scenes and animations go.
