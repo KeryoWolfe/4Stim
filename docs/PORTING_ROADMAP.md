@@ -100,6 +100,7 @@ From docs/TODO.md, unchanged: automatic body-mesh detection, in-game HUD editor,
 
 ## Decisions needed from the owner
 
+None open.
 
 ## Decided by the owner
 
