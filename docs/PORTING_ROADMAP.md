@@ -73,6 +73,19 @@ The instructions' definition of done:
 - Install and removal instructions; known limitations; untested compatibility labelled as such (1.10.163 stays experimental until a tester confirms it).
 - Release package validated (3.4).
 
+## Support after release: working without logs
+
+Once 4Stim is public, most reports will come with no logs: a sentence, maybe a screenshot or a clip. The release has to be ready to work from that. Planned before 1.0:
+
+| # | Task | Done when |
+|---|---|---|
+| 4.1 | **Symptom index** (docs/TROUBLESHOOTING.md): each symptom the alpha found (invisible actor, not undressing, shaking, no menu, `$` labels, freezes, penis angle...) with its causes, the question that tells them apart, and the fix. Written from the alpha's reports and fixes as they happen. | Every fixed alpha bug has an entry. |
+| 4.2 | **Diagnostics page in the MCM**: game version, address source, what was found missing at load, the dependencies 4Stim found (F4SE, MCM, LooksMenu, FSMP, HHS, ZeX), the last scene's actors and what each got (body, erection, physics, undress check), the last warning. One screenshot answers most first questions. | Shows every item. |
+| 4.3 | **Short codes in the game's own messages** for known failures (e.g. "4Stim [UND-2]: clothes off but still drawn"), each one an entry in TROUBLESHOOTING.md, so a screenshot or a pasted line is enough to find it. | Every WARN a player would notice has a code. |
+| 4.4 | **One-file report**: an MCM button that writes `4Stim-Report.txt` (versions, settings that differ from the defaults, the dependencies, the last scenes' lines from 4Stim.log), so asking for "the report" is one file, not three logs. | Written and read back once. |
+| 4.5 | **Reproduction profiles**: MO2 profiles with the common combinations (A-Body, BodyTalk, Atomic Muscle, CBBE; ZeX or not; 1.11.240 and 1.10.163), to reproduce a described symptom without the reporter's files. | Each profile starts a scene. |
+| 4.6 | **Bug report template** for Nexus and Discord: game version, body and skeleton, what happened, what scene, and where the report file is. A crash logger (Buffout 4) recommended, since crash logs are what users share most. | On the mod page. |
+
 ## Later (after 1.0)
 
 From docs/TODO.md, unchanged: automatic body-mesh detection, in-game HUD editor, YAML scene files, NPC greetings, race filtering, claim registry, first-person camera. Separate projects: the animation converter rebuild (which also fixes 2.7), the Sim Settlements 2 furniture module, placeable scene markers.
