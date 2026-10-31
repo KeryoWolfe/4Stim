@@ -5,6 +5,7 @@
 #include <array>
 #include <cctype>
 #include <chrono>
+#include <format>
 #include <string>
 #include <optional>
 #include <mutex>
@@ -211,7 +212,9 @@ namespace Undress
 						continue;
 					}
 					const auto bit = std::uint64_t{ 1 } << (slot - 30);
-					if (!(state.handled & bit)) {
+					// By hand (the HUD's undress): every slot again, so what an
+					// earlier strip missed or the game put back on comes off.
+					if (a_byHand || !(state.handled & bit)) {
 						state.handled |= bit;
 						mask |= static_cast<std::uint32_t>(bit);
 					}
@@ -234,7 +237,13 @@ namespace Undress
 					const auto armor = RE::TESForm::GetFormByID<RE::TESObjectARMO>(a_item);
 					return armor && NoStrip(armor);
 				});
-				REX::INFO("Undress: {:08X}, slots 0x{:08X}: {} item(s) to take off", a_id, mask, items.size());
+				std::string names;
+				for (const auto item : items) {
+					const auto armor = RE::TESForm::GetFormByID<RE::TESObjectARMO>(item);
+					const char* name = armor ? armor->GetFullName() : nullptr;
+					names += std::format("{}{:08X} \"{}\"", names.empty() ? "" : ", ", item, name ? name : "");
+				}
+				REX::INFO("Undress: {:08X}, slots 0x{:08X}: {} item(s) to take off{}{}", a_id, mask, items.size(), names.empty() ? "" : ": ", names);
 				if (full) {
 					LogLeftovers(actor, items);
 				}

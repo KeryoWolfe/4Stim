@@ -10,6 +10,7 @@ Needs the plugin rebuilt and FourStimErection.psc compiled (with LooksMenu's Bod
 - Saves made mid-scene: the erection morphs and a bodysuit 4Stim gave are removed when the save is loaded (save data version 6).
 
 ### Undressing
+- **Fixed:** the HUD's Undress did nothing for slots a scene had already undressed, so clothes an earlier strip missed (or the game put back on) stayed on. Undressing by hand now takes off everything worn in the undress slots again. The log names each item taken off (`Undress: ... to take off: <id> "<name>"`).
 - A 1.10.163 tester's report of clothes not coming off: his log shows every strip done and nothing put back on, in OStim's default way (only what each position needs, as the scene gets there: gloves for groping, everything for the blowjob and the doggy scene). No code change; the tester's guide now says how it works and where **Undress at the start** is. Waiting on what he saw.
 
 ## 0.4.0 alpha (October 2026)
