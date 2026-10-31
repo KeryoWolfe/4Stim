@@ -54,18 +54,7 @@ namespace Physics
 			std::string receiving;    // its "toReceiving" ("" = giving)
 			bool        pendingBack = false;  // its scene ended: swapping back AFTER_SCENE_DELAY later
 			bool        pendingStart = false; // the scene's swap is still to come (SWAP_DELAY): no giving / receiving switch until it answers
-			bool        receivingNow = false; // on the receiving end in the scene now
-			bool        flaccid = false;      // Erection.h: the body's own file for now (a bend of -10)
 		};
-
-		// The file a_applied should use now. g_lock held.
-		const std::string& Wanted(const Applied& a_applied)
-		{
-			if (a_applied.flaccid) {
-				return a_applied.from;
-			}
-			return a_applied.receivingNow && !a_applied.receiving.empty() ? a_applied.receiving : a_applied.giving;
-		}
 
 		// Whether role a_role is on the receiving end in a_scene: the target
 		// of someone else's action that needs their anus or vagina (anal or
@@ -284,8 +273,6 @@ namespace Physics
 			return {};
 		}
 
-		void FixUp(std::uint32_t a_actor);
-
 		// FourStimPhysics.Describe's answer (FSMP's state), logged with the
 		// files the actor's meshes name: for a swap that found no piece using its file
 		// (the owner's A-Body player, whose body names that very file).
@@ -331,7 +318,6 @@ namespace Physics
 			void operator()(RE::BSScript::Variable a_result) override
 			{
 				const int code = a_result.is<std::int32_t>() ? RE::BSScript::get<std::int32_t>(a_result) : -3;
-				std::uint32_t pendingFix = 0;
 				if (_afterScene) {
 					// The swap back is done (or failed): forget it, unless a new
 					// scene took the actor first (-4: still swapped, theirs now).
@@ -348,11 +334,6 @@ namespace Physics
 					if (_start) {
 						if (const auto it = g_applied.find(_actor); it != g_applied.end()) {
 							it->second.pendingStart = false;
-							// Gone flaccid (or giving / receiving changed) while the
-							// swap was on its way: the file it should have now.
-							if (code != -5 && !it->second.pendingBack && Wanted(it->second) != it->second.to) {
-								pendingFix = _actor;
-							}
 						}
 					}
 				}
@@ -389,9 +370,6 @@ namespace Physics
 				default:
 					REX::WARN("Physics: {:08X} not swapped: no answer from FourStimPhysics.Swap (old FourStimPhysics.pex?)", _actor);
 					break;
-				}
-				if (pendingFix) {
-					F4SE::GetTaskInterface()->AddTask([id = pendingFix]() { FixUp(id); });
 				}
 			}
 
@@ -474,40 +452,15 @@ namespace Physics
 			const auto scene = SceneRegistry::Find(a_sceneID);
 			for (std::size_t role = 0; role < a_actors.size(); ++role) {
 				const auto it = g_applied.find(a_actors[role]);
-				if (it == g_applied.end()) {
+				if (it == g_applied.end() || it->second.receiving.empty() || it->second.pendingBack || it->second.pendingStart) {
 					continue;
 				}
-				auto& applied = it->second;
-				applied.receivingNow = Receiving(scene.get(), role);
-				if (applied.pendingBack || applied.pendingStart) {
-					continue;
-				}
-				const auto want = Wanted(applied);
+				auto&       applied = it->second;
+				const auto& want = Receiving(scene.get(), role) ? applied.receiving : applied.giving;
 				if (want == applied.to) {
 					continue;
 				}
 				if (const auto actor = RE::TESForm::GetFormByID<RE::Actor>(a_actors[role]); actor && CallSwap(actor, applied.to, want)) {
-					applied.to = want;
-				}
-			}
-		}
-	}
-
-	namespace
-	{
-		// After a swap answered: the file it should have now, if that changed
-		// meanwhile (flaccid). Main thread.
-		void FixUp(std::uint32_t a_actor)
-		{
-			std::scoped_lock lock(g_lock);
-			const auto       it = g_applied.find(a_actor);
-			if (it == g_applied.end() || it->second.pendingBack || it->second.pendingStart) {
-				return;
-			}
-			auto&      applied = it->second;
-			const auto want = Wanted(applied);
-			if (want != applied.to) {
-				if (const auto actor = RE::TESForm::GetFormByID<RE::Actor>(a_actor); actor && CallSwap(actor, applied.to, want)) {
 					applied.to = want;
 				}
 			}
@@ -519,28 +472,6 @@ namespace Physics
 		std::scoped_lock lock(g_lock);
 		const auto       it = g_applied.find(a_actor);
 		return it != g_applied.end() && !it->second.pendingBack;
-	}
-
-	void SetFlaccid(std::uint32_t a_actor, bool a_flaccid)
-	{
-		std::scoped_lock lock(g_lock);
-		const auto       it = g_applied.find(a_actor);
-		if (it == g_applied.end() || it->second.flaccid == a_flaccid) {
-			return;
-		}
-		auto& applied = it->second;
-		applied.flaccid = a_flaccid;
-		if (applied.pendingBack || applied.pendingStart) {
-			return;  // the start swap's answer does it (FixUp)
-		}
-		const auto want = Wanted(applied);
-		if (want == applied.to) {
-			return;
-		}
-		if (const auto actor = RE::TESForm::GetFormByID<RE::Actor>(a_actor); actor && CallSwap(actor, applied.to, want)) {
-			REX::INFO("Physics: {:08X} {}: \"{}\"", a_actor, a_flaccid ? "flaccid, back to their own physics" : "erect again", want);
-			applied.to = want;
-		}
 	}
 
 	void SceneStarted(const std::vector<std::uint32_t>& a_actors, const std::string& a_sceneID)
@@ -561,7 +492,6 @@ namespace Physics
 				// (which then leaves it alone); SceneChanged picks giving or
 				// receiving for this scene below.
 				it->second.pendingBack = false;
-				it->second.flaccid = false;  // erect again (Erection.h starts afresh)
 				continue;
 			}
 			const auto actor = RE::TESForm::GetFormByID<RE::Actor>(id);
@@ -596,7 +526,6 @@ namespace Physics
 				if (CallSwap(actor, resolved.from, to, When::kLater, delay)) {
 					g_applied[id] = { resolved.from, to, resolved.to, resolved.toReceiving };
 					g_applied[id].pendingStart = true;
-					g_applied[id].receivingNow = Receiving(scene.get(), role);
 					delay += STAGGER;
 				}
 				break;  // one swap per actor
@@ -619,12 +548,6 @@ namespace Physics
 		for (const auto id : a_actors) {
 			const auto it = g_applied.find(id);
 			if (it == g_applied.end()) {
-				unswapped.push_back(id);
-				continue;
-			}
-			if (!it->second.pendingStart && it->second.to == it->second.from) {
-				// Flaccid (Erection.h): on the body's own file already.
-				g_applied.erase(it);
 				unswapped.push_back(id);
 				continue;
 			}

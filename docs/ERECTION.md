@@ -11,9 +11,9 @@ Fallout 4 has no Schlongs of Skyrim. Each male body has its own way to be erect,
 | Body | How it gets erect | Flaccid |
 |---|---|---|
 | A body whose `.tri` has an `Erection` morph: **BodyTalk**, **Atomic Muscle** installed with `.tri` morphs | LooksMenu's BodyGen sets `Erection` to 1 (as AAF's morph sets do). Without the penis bend's skeleton node (no ZeX), `Erection Up` / `Erection Down` follow the bend. | The morphs are removed. |
-| An **SMP** body 4Stim swaps to rigid physics: **A-Body** (PHYSICS.md) | The swap to `MaleBodyHard.xml` / `MaleBodyHardBottom.xml` is the erection: A-Body's penis is rigid and erect in its mesh, and its own physics file is what makes it hang. | Swapped back to the body's own file (`MaleBody.xml`). |
+| An **SMP** body 4Stim swaps to rigid physics: **A-Body** (PHYSICS.md) | Nothing to do: A-Body's penis is always rigid in its mesh, and `MaleBody.xml`'s physics are what make it hang. The scene's swap to `MaleBodyHard.xml` / `MaleBodyHardBottom.xml` turns them off, so it's erect for the scene; 4Stim only bends it, as for every body. | A bend of -10 bends it as far down as it goes (-9). After the scene, the swap back. |
 | A separate erect body armor: **Atomic Muscle** installed with the bodysuit | The bodysuit (`AMBodyErect`) goes on once the actor is naked (nothing else in the body slot, 33), and back on if it comes off. Undressing leaves it alone. | Taken off, and away if 4Stim gave it (one the actor already had stays theirs; one they wore before the scene is left as it was). |
-| Anything else | The penis bend only. | |
+| Anything else | The penis bend only. | -10 is the furthest bend down (-9). |
 
 The order: a physics swap first, then a body with the morph (the meshes' `.tri`, else the files' `triFiles`), then a bodysuit once the actor is naked. A dressed actor whose body can't be seen yet is worked out again every half second, until their clothes come off. The log says what each actor got: `Erection: 00000014's body: LooksMenu morphs`.
 
@@ -59,4 +59,4 @@ A save made mid-scene keeps LooksMenu's morphs (LooksMenu saves them) and a body
 
 ## Not tested yet
 
-Everything on this page is built, not yet seen in the game: BodyTalk 4 (the owner's `MaleBody.tri` has `Erection`, `Erection Up`, `Erection Down`), Atomic Muscle both ways, A-Body's flaccid swap at -10, a save made mid-scene.
+Everything on this page is built, not yet seen in the game: BodyTalk 4 (the owner's `MaleBody.tri` has `Erection`, `Erection Up`, `Erection Down`), Atomic Muscle both ways, A-Body's bend at -10, a save made mid-scene.

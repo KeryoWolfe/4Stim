@@ -12,8 +12,9 @@
 //
 // - a body whose .tri has an "Erection" morph (BodyTalk, Atomic Muscle's
 //   .tri install): LooksMenu's BodyGen morphs (FourStimErection.psc);
-// - an SMP body 4Stim swaps to a rigid physics file (Physics.h, A-Body): the
-//   swap is the erection; flaccid swaps back to the body's own file;
+// - an SMP body 4Stim swaps to its rigid physics file (Physics.h, A-Body):
+//   nothing. A-Body's penis is rigid in its mesh; its own physics file is
+//   what makes it hang, and the swap turns that off. It only gets the bend;
 // - a body that is a separate erect bodysuit armor (Atomic Muscle's
 //   bodysuit install): the bodysuit goes on while they're naked;
 // - anything else: the penis bend only.
@@ -36,6 +37,10 @@ namespace Erection
 	// The penis bend in steps (PenisBend.h, after the annotations' offset):
 	// -10 is flaccid, as OStim's SOSFlaccid; the rest, erect. Any thread.
 	void SetBend(std::uint32_t a_id, int a_steps);
+
+	// Whether a_id's body can go flaccid (morphs, a bodysuit). Those that
+	// can't (A-Body, other bodies) get -10 as the furthest bend down.
+	[[nodiscard]] bool CanGoFlaccid(std::uint32_t a_id);
 
 	// Works out each actor's body, keeps the bodysuits on while they're
 	// naked and the morphs set. Main thread (the scene clock).

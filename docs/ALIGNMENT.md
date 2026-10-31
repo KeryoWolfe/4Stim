@@ -70,7 +70,7 @@ OStim plays SoS's bend animations; Fallout 4 has none, so 4Stim turns a node of 
 
 The bend goes back to none when the scene ends. Actors without the node (women, other skeletons) are left alone.
 
-**-10 is flaccid**, as OStim's (it sends SoS's `SOSFlaccid` there): the node goes back to its own angle and the body goes flaccid the way it got erect (ERECTION.md). Erect again from -9 up.
+**-10 is flaccid**, as OStim's (it sends SoS's `SOSFlaccid` there): a body that can go flaccid (morphs, a bodysuit: ERECTION.md) does, and the node goes back to its own angle. A body that can't (A-Body, rigid while its physics are off for the scene) is bent as far down as it goes, -9. Erect again from -9 up.
 
 ## Still to come
 

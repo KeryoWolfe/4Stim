@@ -67,7 +67,7 @@ namespace Erection
 			case Method::kMorph:
 				return "LooksMenu morphs";
 			case Method::kPhysics:
-				return "the physics swap";
+				return "rigid physics swap (penis bend only)";
 			case Method::kBodysuit:
 				return "the erect bodysuit";
 			case Method::kNone:
@@ -90,7 +90,6 @@ namespace Erection
 			bool          suitTheirs = false;  // they had one before the scene: not taken away
 			bool          suitBefore = false;  // they wore it before the scene: left alone
 			bool          suitOn = false;      // 4Stim put it on
-			bool          physicsFlaccid = false;
 			std::chrono::steady_clock::time_point next{};
 		};
 
@@ -421,12 +420,6 @@ namespace Erection
 					}
 				}
 				break;
-			case Method::kPhysics:
-				if (a_state.physicsFlaccid != a_state.flaccid) {
-					a_state.physicsFlaccid = a_state.flaccid;
-					Physics::SetFlaccid(a_id, a_state.flaccid);
-				}
-				break;
 			case Method::kBodysuit:
 				{
 					if (a_state.suitBefore) {
@@ -469,7 +462,7 @@ namespace Erection
 				}
 				break;
 			default:
-				break;  // the physics swap goes back with the scene (Physics.h)
+				break;  // a physics swap goes back with the scene (Physics.h)
 			}
 		}
 	}
@@ -497,8 +490,7 @@ namespace Erection
 			const auto actor = RE::TESForm::GetFormByID<RE::Actor>(id);
 			if (const auto it = g_states.find(id); it != g_states.end()) {
 				// Still erect from a scene just before (a new scene took them
-				// over): the physics swap starts afresh, erect.
-				it->second.physicsFlaccid = false;
+				// over).
 				it->second.flaccid = false;
 				continue;
 			}
@@ -565,6 +557,13 @@ namespace Erection
 				g_states.erase(it);
 			}
 		}
+	}
+
+	bool CanGoFlaccid(std::uint32_t a_id)
+	{
+		std::scoped_lock lock(g_lock);
+		const auto       it = g_states.find(a_id);
+		return it != g_states.end() && (it->second.method == Method::kMorph || it->second.method == Method::kBodysuit);
 	}
 
 	bool IsErectionItem(std::uint32_t a_formID)

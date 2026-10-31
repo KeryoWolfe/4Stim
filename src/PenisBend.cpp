@@ -150,12 +150,14 @@ namespace PenisBend
 		}
 		for (auto& [id, state] : g_states) {
 			// As OStim's bendSchlong: -10 to +9, where -10 is SoS's flaccid
-			// state (OStim's SOSFlaccid): Erection.h makes the body flaccid,
-			// and the node goes back to its own angle.
+			// state (OStim's SOSFlaccid). A body that can go flaccid
+			// (Erection.h: morphs, a bodysuit) does, and the node goes back
+			// to its own angle; one that can't (A-Body's rigid penis with its
+			// physics off) is bent as far down as it goes, -9.
 			float total = std::clamp(std::round(state.steps + static_cast<float>(state.offset)), -10.0F, 9.0F);
 			Erection::SetBend(id, static_cast<int>(total));
 			if (total <= -10.0F) {
-				total = 0.0F;
+				total = Erection::CanGoFlaccid(id) ? 0.0F : -9.0F;
 			}
 			if (total == 0.0F && !state.applied) {
 				continue;  // never touched: leave the node alone
