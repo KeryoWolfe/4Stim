@@ -9,6 +9,7 @@
 #include <fstream>
 #include <mutex>
 #include <unordered_map>
+#include <unordered_set>
 
 #include <nlohmann/json.hpp>
 
@@ -84,6 +85,12 @@ namespace Physics
 		std::vector<Swap>                         g_swaps;
 		bool                                      g_loaded = false;
 		std::unordered_map<std::uint32_t, Applied> g_applied;  // actor -> what's swapped in
+		// Scene actors whose meshes name no physics file (a body without SMP,
+		// such as BodyTalk, or no FSMP at all): nothing of FSMP's is called
+		// for them, so a game without FSMP gets no "Cannot open store for
+		// class dynamichdt" errors at every scene start and end (a 1.10.163
+		// tester's Papyrus log). Worked out at scene start.
+		std::unordered_set<std::uint32_t>          g_noPhysics;
 		// "from|to" (lowercase) -> the spelling pair FSMP took for it, so the
 		// next swap of those files makes one SwapPhysicsFile call, not up to three.
 		std::unordered_map<std::string, std::pair<std::string, std::string>> g_spelling;
@@ -484,6 +491,13 @@ namespace Physics
 			if (!actor) {
 				continue;
 			}
+			if (PhysicsFilesOf(actor).empty()) {
+				if (g_noPhysics.insert(id).second) {
+					REX::INFO("Physics: {:08X}'s meshes name no physics file (no SMP body, or no FSMP): no swaps or rebuilds for them", id);
+				}
+				continue;
+			}
+			g_noPhysics.erase(id);
 			const auto sex = SceneRegistry::SexOf(actor);
 			for (const auto& swap : g_swaps) {
 				if (swap.sex != SceneRegistry::Sex::kAny && swap.sex != sex) {
@@ -542,6 +556,9 @@ namespace Physics
 		// (a penis bend undone, breasts tangled in a pose).
 		if (const auto vm = FourStim::GetVM()) {
 			for (const auto id : unswapped) {
+				if (g_noPhysics.contains(id)) {
+					continue;
+				}
 				RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
 				Compat::DispatchStaticCall(vm, "FourStimPhysics"sv, "ResetAfterScene"sv, callback, static_cast<std::int32_t>(id), delay);
 				delay += STAGGER;  // one rebuild at a time

@@ -101,7 +101,11 @@ EndFunction
 ; The weapon HolsterForScene took off, back on (if they still have it and
 ; aren't holding another).
 Function RearmAfterScene(Actor akActor) Global
-	Weapon akWeapon = FourStim.TakeSceneWeapon(akActor) as Weapon
+	Weapon akWeapon = None
+	int iWeaponID = FourStim.TakeSceneWeaponID(akActor)
+	if iWeaponID != 0
+		akWeapon = Game.GetForm(iWeaponID) as Weapon
+	endif
 	if akWeapon && akActor.GetItemCount(akWeapon) > 0 && akActor.GetEquippedWeapon() == None
 		akActor.EquipItem(akWeapon, false, true)
 	endif

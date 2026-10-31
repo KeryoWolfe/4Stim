@@ -3173,8 +3173,49 @@ namespace
 	// so the player was in the scene, animated, and invisible (the owner's
 	// log, a wall scene: "fade 0.0" on the player's 3D, 1.0 in the next
 	// scene). Faded back in. Main thread.
+	// The actor's own fade, below the 3D's: Actor::UpdateAlpha (vtable slot
+	// 0xFB) sets the 3D's fade every update from the high process's
+	// fadeAlpha (its fade-in / fade-out / teleport-fade state, ID 2231941
+	// steps it), times middleHigh's alphaMult (Papyrus SetAlpha), times
+	// what Invisibility leaves. So an actor left in a fade-out
+	// (kOut, alpha 0) is pushed back to invisible every frame, whatever the
+	// scene guard does to the 3D: a 1.10.163 tester's male NPCs, "keeps
+	// being faded out" 57 times a second even with the camera's fade off.
+	// A plain fade-out on a scene actor is turned into a fade-in (the game
+	// then brings them back itself), and an alphaMult below 1 is put back to
+	// 1; each logged once a scene. Teleport fades (a MoveTo with a fade) and
+	// fades before disabling or deleting are the game's and left alone.
+	// Both fields are where AE has them on 1.10.163 too (checked against its
+	// executable: the same fade functions write the same offsets).
+	void RestoreActorFade(RE::Actor* a_actor, const std::string& a_sceneID)
+	{
+		const auto process = a_actor ? a_actor->currentProcess : nullptr;
+		if (!process) {
+			return;
+		}
+		static std::unordered_map<std::uint32_t, std::string> logged;
+		const auto log = [&](const std::string& a_what) {
+			if (auto& last = logged[a_actor->GetFormID()]; last != a_sceneID + a_what) {
+				last = a_sceneID + a_what;
+				REX::INFO("Scene guard: {:08X} in \"{}\" {}", a_actor->GetFormID(), a_sceneID, a_what);
+			}
+		};
+		if (const auto high = process->high) {
+			using FADE = RE::HighProcessData::FADE_STATE;
+			if (high->fadeState.get() == FADE::kOut) {
+				log(std::format("was fading out (the game's own actor fade, alpha {:.2f}): fading them in again", high->fadeAlpha));
+				high->fadeState = FADE::kIn;
+			}
+		}
+		if (const auto middle = process->middleHigh; middle && middle->alphaMult < 0.99F) {
+			log(std::format("had alpha {:.2f} (SetAlpha, by a script or another mod): back to 1", middle->alphaMult));
+			middle->alphaMult = 1.0F;
+		}
+	}
+
 	void RestoreFade(RE::Actor* a_actor, const std::string& a_sceneID)
 	{
+		RestoreActorFade(a_actor, a_sceneID);
 		const auto root = IsPlayer(a_actor) ? a_actor->Get3D(false) : a_actor->Get3D();
 		const auto fade = root ? root->IsFadeNode() : nullptr;
 		if (!fade || fade->currentFade >= 0.99F) {
@@ -3199,8 +3240,14 @@ namespace
 				fade->currentFade);
 		} else if (++entry.again; now - entry.lastLog > std::chrono::seconds(5)) {
 			entry.lastLog = now;
-			REX::WARN("Scene guard: {:08X} in \"{}\" keeps being faded out ({} times so far, now {:.2f}): fading them back in each tick", a_actor->GetFormID(),
-				a_sceneID, entry.again, fade->currentFade);
+			// What the game's alpha is made of (Actor::UpdateAlpha): if these
+			// are all 1, it's Invisibility or something else.
+			const auto process = a_actor->currentProcess;
+			const auto high = process ? process->high : nullptr;
+			const auto middle = process ? process->middleHigh : nullptr;
+			REX::WARN("Scene guard: {:08X} in \"{}\" keeps being faded out ({} times so far, now {:.2f}; actor fade state {}, alpha {:.2f}, alpha mult {:.2f}): fading them back in each tick",
+				a_actor->GetFormID(), a_sceneID, entry.again, fade->currentFade, high ? static_cast<int>(std::to_underlying(high->fadeState.get())) : -1,
+				high ? high->fadeAlpha : -1.0F, middle ? middle->alphaMult : -1.0F);
 		}
 		fade->currentFade = 1.0F;
 		fade->currentDecalFade = 1.0F;
@@ -4919,15 +4966,19 @@ namespace
 		}
 	}
 
-	// The weapon to put back on, forgotten (None: nothing was taken off).
-	RE::TESForm* TakeSceneWeapon(std::monostate, RE::Actor* a_actor)
+	// The weapon to put back on, by form ID (0: nothing was taken off), and
+	// forgotten. A form ID, not the Form: a Form returned from here arrived
+	// in Papyrus as "Mismatched types assigning to variable" (a 1.10.163
+	// tester's Papyrus log, every scene end), as Actors passed from native
+	// code do (FourStimPhysics), so weapons were never put back.
+	std::int32_t TakeSceneWeaponID(std::monostate, RE::Actor* a_actor)
 	{
 		if (!a_actor) {
-			return nullptr;
+			return 0;
 		}
 		const auto id = SceneWeaponOf(a_actor->GetFormID());
 		NoteSceneWeapon(a_actor->GetFormID(), 0);
-		return id ? RE::TESForm::GetFormByID(id) : nullptr;
+		return static_cast<std::int32_t>(id);
 	}
 
 	bool IsMuted(std::monostate, RE::Actor* a_actor)
@@ -8724,7 +8775,7 @@ namespace
 		a_vm->BindNativeMethod(SCRIPT_NAME, "IsMuted"sv, IsMuted);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "RememberSceneWeapon"sv, RememberSceneWeapon);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "SheatheForScene"sv, SheatheForScene);
-		a_vm->BindNativeMethod(SCRIPT_NAME, "TakeSceneWeapon"sv, TakeSceneWeapon);
+		a_vm->BindNativeMethod(SCRIPT_NAME, "TakeSceneWeaponID"sv, TakeSceneWeaponID);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "SetEquipObjectID"sv, SetEquipObjectID);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "GetEquipObjectID"sv, GetEquipObjectID);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "RegisterForSceneEvents"sv, RegisterForSceneEvents);

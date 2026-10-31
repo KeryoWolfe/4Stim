@@ -106,7 +106,7 @@ Function RememberSceneWeapon(Actor akActor, Form akWeapon) Global Native
 ; A drawn weapon put away (the game's own sheathe; Fallout 4's Papyrus has
 ; none). Called by FourStimScene.HolsterForScene.
 Function SheatheForScene(Actor akActor) Global Native
-Form Function TakeSceneWeapon(Actor akActor) Global Native
+int Function TakeSceneWeaponID(Actor akActor) Global Native  ; a form ID (a Form returned from the plugin arrived as the wrong type)
 
 ; Tells the plugin aiActorID's clothes changed (4Stim's undressing calls it
 ; after taking things off or putting them on): heels are measured again and
