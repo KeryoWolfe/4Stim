@@ -19,7 +19,7 @@ No code changes. Claude does this; the owner reviews.
 
 | # | Task | Done when |
 |---|---|---|
-| 1.1 | `dev` branch for all work; `main` only takes what the owner has tested. | Branch pushed; the owner agrees. |
+| 1.1 | From release: `dev` branch for all work; `main` only takes what the owner has tested. Until release, work goes on `main` (see Decided). | Switched at release. |
 | 1.2 | **PORTING_STATUS.md**: every feature in docs/TODO.md marked Tested / Built, untested / Open, with the log line that shows it. | Every "Done" in TODO.md has a status. |
 | 1.3 | **TEST_PLAN.md**: the instructions' matrix (installation, dependencies, loading, Papyrus, actors, start, animation, end, cancel, save/load, cells, UI, compatibility, performance, packaging), with steps and expected log lines for each. | Each row has steps a tester can follow. |
 | 1.4 | **TEST_RESULTS.md**, started from the 23–25 October tests (see Phase 2), in the instructions' format: setup and versions, steps, expected, actual, logs, status. | This week's tests recorded. |
@@ -107,7 +107,7 @@ None open.
 - **Dependency versions (31 October 2026):** none declared. 4Stim is built and tested against the latest version of each, so the release lists what's required and what's optional. If a dependency's update breaks 4Stim, the mod page says to stay on the version before it until 4Stim is fixed.
 - **Crash logger (31 October 2026):** Addictol is the recommended one (not Buffout 4).
 
-- **Branches (31 October 2026):** the `dev` / `main` split (1.1) starts at release; until then work goes on as now.
+- **Branches (31 October 2026):** work goes on `main` until release; from release, on `dev` (1.1). `main` was brought up to `dev` on 31 October.
 - **First person (31 October 2026):** not tested in 0.4; it waits until the 0.4.1 features and fixes are confirmed working (2.11).
 
 - **Animations (31 October 2026):** 4Stim has permission for OStim's base animations only. The other packs converted for testing (Atomic Lust and others) are test material: they are not packaged in the beta or release builds. Anyone who wants them converts them from their own copies.
