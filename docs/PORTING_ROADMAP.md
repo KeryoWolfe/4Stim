@@ -100,11 +100,12 @@ From docs/TODO.md, unchanged: automatic body-mesh detection, in-game HUD editor,
 
 ## Decisions needed from the owner
 
-- `dev` branch from now on (1.1)?
-- Does 0.4 test first person (2.11)?
 - Which dependency versions are supported: the ones in the owner's profile, or ranges?
 
 ## Decided by the owner
+
+- **Branches (31 October 2026):** the `dev` / `main` split (1.1) starts at release; until then work goes on as now.
+- **First person (31 October 2026):** not tested in 0.4; it waits until the 0.4.1 features and fixes are confirmed working (2.11).
 
 - **Animations (31 October 2026):** 4Stim has permission for OStim's base animations only. The other packs converted for testing (Atomic Lust and others) are test material: they are not packaged in the beta or release builds. Anyone who wants them converts them from their own copies.
 - **Base pack trimmed (31 October 2026):** the vampire and tailjob animations come out of the base pack, since they make no sense in Fallout 4. The action types for them (`tailjob`, `analtailsex`, `vaginaltailsex`, `pullingtail`, `strokingtail`, `massagingtail`) stay in Actions/Default.json, as OStim's, for other packs; only the scenes and animations go.
