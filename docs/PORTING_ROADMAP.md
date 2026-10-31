@@ -23,7 +23,7 @@ No code changes. Claude does this; the owner reviews.
 | 1.2 | **PORTING_STATUS.md**: every feature in docs/TODO.md marked Tested / Built, untested / Open, with the log line that shows it. | Every "Done" in TODO.md has a status. |
 | 1.3 | **TEST_PLAN.md**: the instructions' matrix (installation, dependencies, loading, Papyrus, actors, start, animation, end, cancel, save/load, cells, UI, compatibility, performance, packaging), with steps and expected log lines for each. | Each row has steps a tester can follow. |
 | 1.4 | **TEST_RESULTS.md**, started from the 23–25 October tests (see Phase 2), in the instructions' format: setup and versions, steps, expected, actual, logs, status. | This week's tests recorded. |
-| 1.5 | **DEPENDENCY_MATRIX.md**: F4SE, Address Library / Runtime Database, MCM, FSMP, HHS, ZeX, A-Body, Equip Objects add-on, Intiface; purpose, licence, required or optional, version tested. | The versions come from the owner's MO2 profile. |
+| 1.5 | **DEPENDENCY_MATRIX.md**: F4SE, Address Library / Runtime Database, MCM, LooksMenu, FSMP, HHS, ZeX, A-Body, BodyTalk, Atomic Muscle, Equip Objects add-on, Intiface, Addictol (recommended); purpose, licence, required or optional. No versions (see Decided). | Every dependency listed. |
 | 1.6 | **SOURCE_AUDIT.md**: OStim NG's structure and what 4Stim took from it (designs, file formats, action types, scene data), classed Reusable / Adapted / Rewritten / Unresolved. | Each OStim subsystem classed. |
 | 1.7 | **ARCHITECTURE.md**: the plugin's modules (src/), the Papyrus scripts, the HUD, and how a scene's data and events move between them, with a diagram. | Matches the code. |
 | 1.8 | **DECISIONS.md**: the departures from OStim and why (Idle forms instead of behavior files, the scene lock and collision, sheathing, physics swaps, Runtime Database...), gathered from code comments and commits. | One entry per departure. |
@@ -84,7 +84,7 @@ Once 4Stim is public, most reports will come with no logs: a sentence, maybe a s
 | 4.3 | **Short codes in the game's own messages** for known failures (e.g. "4Stim [UND-2]: clothes off but still drawn"), each one an entry in TROUBLESHOOTING.md, so a screenshot or a pasted line is enough to find it. | Every WARN a player would notice has a code. |
 | 4.4 | **One-file report**: an MCM button that writes `4Stim-Report.txt` (versions, settings that differ from the defaults, the dependencies, the last scenes' lines from 4Stim.log), so asking for "the report" is one file, not three logs. | Written and read back once. |
 | 4.5 | **Reproduction profiles**: MO2 profiles with the common combinations (A-Body, BodyTalk, Atomic Muscle, CBBE; ZeX or not; 1.11.240 and 1.10.163), to reproduce a described symptom without the reporter's files. | Each profile starts a scene. |
-| 4.6 | **Bug report template** for Nexus and Discord: game version, body and skeleton, what happened, what scene, and where the report file is. A crash logger (Buffout 4) recommended, since crash logs are what users share most. | On the mod page. |
+| 4.6 | **Bug report template** for Nexus and Discord: game version, body and skeleton, what happened, what scene, and where the report file is. Addictol recommended for its crash logs, since crash logs are what users share most. | On the mod page. |
 
 ## Later (after 1.0)
 
@@ -100,9 +100,11 @@ From docs/TODO.md, unchanged: automatic body-mesh detection, in-game HUD editor,
 
 ## Decisions needed from the owner
 
-- Which dependency versions are supported: the ones in the owner's profile, or ranges?
 
 ## Decided by the owner
+
+- **Dependency versions (31 October 2026):** none declared. 4Stim is built and tested against the latest version of each, so the release lists what's required and what's optional. If a dependency's update breaks 4Stim, the mod page says to stay on the version before it until 4Stim is fixed.
+- **Crash logger (31 October 2026):** Addictol is the recommended one (not Buffout 4).
 
 - **Branches (31 October 2026):** the `dev` / `main` split (1.1) starts at release; until then work goes on as now.
 - **First person (31 October 2026):** not tested in 0.4; it waits until the 0.4.1 features and fixes are confirmed working (2.11).

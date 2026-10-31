@@ -107,4 +107,4 @@ For each problem, send:
    - `Documents\My Games\Fallout4\Logs\Script\Papyrus.0.log`. If it isn't there, set `bEnableLogging=1` and `bEnableTrace=1` under `[Papyrus]` in `Fallout4Custom.ini`.
 4. **Your load order** (or at least the body, physics, animation and AI mods you use).
 
-If the game crashes, also send the newest crash log from your crash logger (Buffout 4, Addictol or similar).
+If the game crashes, also send the newest crash log from your crash logger (Addictol, or another if you use one).
