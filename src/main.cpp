@@ -31,6 +31,7 @@
 #include "SceneRegistry.h"
 #include "ActorProperties.h"
 #include "EquipObjects.h"
+#include "Erection.h"
 #include "PenisBend.h"
 #include "EyeLook.h"
 #include "Translations.h"
@@ -654,6 +655,8 @@ namespace
 					PenisBend::Settings().node = value;
 				} else if (key == "ipenisbendaxis") {
 					PenisBend::Settings().axis = std::clamp(std::stoi(value), 0, 2);
+				} else if (key == "berections") {
+					Erection::Settings().enabled = std::stoi(value) != 0;
 				} else if (key == "unequipstraponifnotneeded") {
 					EquipObjects::Settings().unequipStrapOnIfNotNeeded = std::stoi(value) != 0;
 				} else if (key == "bloganimevents") {
@@ -860,7 +863,8 @@ namespace
 		HUD::SetNavigationKeys({ g_settings.navUpKey, g_settings.navDownKey, g_settings.navLeftKey, g_settings.navRightKey,
 			g_settings.navYesKey, g_settings.navToggleKey });
 		const auto& pb = PenisBend::Settings();
-		REX::INFO("Settings: penis bend {}, {} degree(s) per step around {} axis {}", pb.disabled ? "off" : "on", pb.stepDegrees, pb.node, "xyz"[pb.axis]);
+		REX::INFO("Settings: penis bend {}, {} degree(s) per step around {} axis {}; erections {}", pb.disabled ? "off" : "on", pb.stepDegrees, pb.node, "xyz"[pb.axis],
+			Erection::Settings().enabled ? "on" : "off");
 		const auto& eyes = EyeLook::Settings();
 		REX::INFO("Settings: eye directions {}, {} degree(s) sideways, {} up / down, bones {} / {}", eyes.disabled ? "off" : "on", eyes.maxSide, eyes.maxUp,
 			eyes.leftEye, eyes.rightEye);
@@ -1797,6 +1801,7 @@ namespace
 				EquipObjects::Leave(left);
 				PenisBend::Leave(left);
 				PenisBend::RestoreRestPose(left);
+				Erection::Leave(left);
 				EyeLook::Leave(left);
 				UnlockActors(left);
 				RestoreScales(a_scene);
@@ -1909,6 +1914,7 @@ namespace
 		g_activeScenes.push_back(std::move(scene));
 		LockScene(g_activeScenes.back());
 		SceneEvents::SceneStarted(a_actors, a_sceneID);
+		Erection::SceneStarted(a_actors);  // after the physics swaps (SceneEvents): a swapped body's erection is its swap
 		WatchAnimEvents(a_actors, a_sceneID);
 		auto& added = g_activeScenes.back();
 		RefreshExcitement(added);
@@ -1993,6 +1999,7 @@ namespace
 		EquipObjects::Leave(ended.actors);
 		PenisBend::Leave(ended.actors);
 		PenisBend::RestoreRestPose(ended.actors);
+		Erection::Leave(ended.actors);  // before dressing: a bodysuit comes off first
 		EyeLook::Leave(ended.actors);
 		for (const auto id : ended.actors) {
 			Undress::Redress(id, false, true);
@@ -3876,6 +3883,7 @@ namespace
 		}
 		Lights::Tick();  // lights follow their bones, paused or not
 		PenisBend::Tick();
+		Erection::Tick();
 		EyeLook::Tick();
 		const bool waiting = !g_activeScenes.empty();  // faces and voices run as long as any scene does
 		if (!waiting && !g_climaxShake.active) {
@@ -8880,7 +8888,7 @@ namespace
 	constexpr std::uint32_t SCENES_RECORD = 'SCNS';
 	constexpr std::uint32_t CHOICES_RECORD = 'EQCH';  // each actor's chosen equip objects (OStim saves them in its actor data)
 	constexpr std::uint32_t CHOICES_VERSION = 1;
-	constexpr std::uint32_t SCENES_VERSION = 5;  // 2: each actor's own scale (alignment scales them); 3: equip objects given; 4: wall spot, furniture blocked, clutter; 5: weapon taken off
+	constexpr std::uint32_t SCENES_VERSION = 6;  // 2: each actor's own scale (alignment scales them); 3: equip objects given; 4: wall spot, furniture blocked, clutter; 5: weapon taken off; 6: erect bodysuit given
 
 	struct SavedScene
 	{
@@ -8898,6 +8906,7 @@ namespace
 		bool                                    furnitureBlocked = false;  // 4Stim blocked the furniture (version 4)
 		std::vector<Furniture::ClutterItem>     clutter;             // version 4
 		std::vector<std::uint32_t>              weapons;             // per actor: the weapon taken off, 0 = none (version 5)
+		std::vector<std::uint32_t>              suits;               // per actor: the erect bodysuit 4Stim gave, 0 = none (version 6)
 	};
 	std::mutex              g_savedLock;
 	std::vector<SavedScene> g_loadedScenes;  // read from the save being loaded
@@ -8945,6 +8954,7 @@ namespace
 					a_intfc->WriteRecordData(item);
 				}
 				a_intfc->WriteRecordData(SceneWeaponOf(id));  // version 5
+				a_intfc->WriteRecordData(Erection::Given(id));  // version 6
 			}
 			WriteString(a_intfc, active.sceneID);
 			a_intfc->WriteRecordData(static_cast<std::int32_t>(active.speed));
@@ -9073,6 +9083,12 @@ namespace
 						weapon = weapon ? resolve(weapon) : 0;
 					}
 					saved.weapons.push_back(weapon);
+					std::uint32_t suit = 0;
+					if (version >= 6) {
+						a_intfc->ReadRecordData(suit);
+						suit = suit ? resolve(suit) : 0;
+					}
+					saved.suits.push_back(suit);
 					saved.given.push_back(std::move(given));
 					saved.actors.push_back(resolve(id));  // 0 if its plugin is gone
 					saved.excitement.push_back(excitement);
@@ -9186,6 +9202,14 @@ namespace
 	// Starts a saved scene again (or lets its actors go). Main thread.
 	void ResumeSavedScene(const SavedScene& a_saved)
 	{
+		// Erections from before the save go first (LooksMenu keeps morphs in
+		// its own save data, and a bodysuit 4Stim gave is still in the
+		// inventory); the scene, if it starts again, puts them back.
+		for (std::size_t i = 0; i < a_saved.actors.size(); ++i) {
+			if (a_saved.actors[i] && RE::TESForm::GetFormByID<RE::Actor>(a_saved.actors[i])) {
+				Erection::AfterLoad(a_saved.actors[i], i < a_saved.suits.size() ? a_saved.suits[i] : 0);
+			}
+		}
 		const auto scene = SceneRegistry::Find(a_saved.sceneID);
 		bool       everyone = true;
 		bool       free = true;
@@ -9322,6 +9346,7 @@ namespace
 					g_sceneWeapons.clear();
 				}
 				PenisBend::Clear();
+				Erection::Clear();
 				EyeLook::Clear();
 				ScenePackage::Clear();
 			});
@@ -9380,6 +9405,7 @@ namespace
 					g_sceneWeapons.clear();
 				}
 				PenisBend::Clear();
+				Erection::Clear();
 				EyeLook::Clear();
 				g_focusNextScene = false;
 				SetPlayerScene({});
@@ -9567,7 +9593,7 @@ extern "C" __declspec(dllexport) bool F4SEPlugin_Query(const F4SE::QueryInterfac
 	if (a_info) {
 		a_info->infoVersion = F4SE::PluginInfo::kVersion;
 		a_info->name = "4Stim";
-		a_info->version = FOURSTIM_VERSION_MAJOR * 10000 + FOURSTIM_VERSION_MINOR * 100 + FOURSTIM_VERSION_PATCH;  // xmake.lua's version (0.4.0: 400)
+		a_info->version = FOURSTIM_VERSION_MAJOR * 10000 + FOURSTIM_VERSION_MINOR * 100 + FOURSTIM_VERSION_PATCH;  // xmake.lua's version (0.4.1: 401)
 	}
 	return a_f4se && !a_f4se->IsEditor();
 }

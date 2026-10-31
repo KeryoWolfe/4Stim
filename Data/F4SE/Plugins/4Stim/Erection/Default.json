@@ -1,0 +1,15 @@
+{
+	"_comment": "Erections (docs/ERECTION.md): how 4Stim makes scene actors' penises erect, per body. Morph bodies (BodyTalk, Atomic Muscle's .tri install): a body whose .tri has the 'detect' morph gets 'erection' set to 'value' through LooksMenu, under 'keyword' (4Stim has no plugin of its own: a vanilla test keyword nothing else uses), and the 'up' / 'down' morphs follow the penis bend when the skeleton has no bend node. 'triFiles' are tried when the actor's meshes name no .tri. Bodysuits (Atomic Muscle's bodysuit install): an erect body armor put on while the actor is naked. SMP bodies (A-Body) are their physics swap (Physics/A-Body.json).",
+	"keyword": { "mod": "Fallout4.esm", "formid": "035E9B" },
+	"morphs": {
+		"detect": "Erection",
+		"erection": "Erection",
+		"up": "Erection Up",
+		"down": "Erection Down",
+		"value": 1.0,
+		"triFiles": [ "actors\\character\\characterassets\\MaleBody.tri" ]
+	},
+	"bodysuits": [
+		{ "id": "Atomic Muscle", "mod": "Atomic Muscle.esp", "formid": "000803", "sex": "male" }
+	]
+}

@@ -15,6 +15,7 @@
 #include "ActorProperties.h"
 #include "Bridge.h"
 #include "EquipObjects.h"
+#include "Erection.h"
 #include "HUD.h"
 
 namespace Undress
@@ -177,7 +178,7 @@ namespace Undress
 				state.leftoversLogged = true;
 			}
 			for (const auto id : WornIn(a_actor, 0xFFFFFFFF)) {
-				if (std::ranges::find(a_takingOff, id) != a_takingOff.end() || EquipObjects::IsObjectItem(id)) {
+				if (std::ranges::find(a_takingOff, id) != a_takingOff.end() || EquipObjects::IsObjectItem(id) || Erection::IsErectionItem(id)) {
 					continue;
 				}
 				const auto item = RE::TESForm::GetFormByID(id);
@@ -227,8 +228,8 @@ namespace Undress
 				}
 				auto items = WornIn(actor, mask);
 				std::erase_if(items, [](std::uint32_t a_item) {
-					if (EquipObjects::IsObjectItem(a_item)) {
-						return true;  // 4Stim's own strap-ons and such stay on
+					if (EquipObjects::IsObjectItem(a_item) || Erection::IsErectionItem(a_item)) {
+						return true;  // 4Stim's own strap-ons, erect bodysuits and such stay on
 					}
 					const auto armor = RE::TESForm::GetFormByID<RE::TESObjectARMO>(a_item);
 					return armor && NoStrip(armor);

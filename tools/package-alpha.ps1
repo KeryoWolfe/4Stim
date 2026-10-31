@@ -42,7 +42,7 @@ if (-not $Out) { $Out = Join-Path $Repo "release" }
 
 $version = (Select-String -Path (Join-Path $Repo "xmake.lua") -Pattern 'set_version\("([^"]+)"\)').Matches[0].Groups[1].Value
 $tag = "$version-alpha"
-$Scripts = @("FourStim", "FourStimScene", "FourStimMenu", "FourStimUndress", "FourStimPhysics", "FourStimFurniture",
+$Scripts = @("FourStim", "FourStimScene", "FourStimMenu", "FourStimUndress", "FourStimPhysics", "FourStimErection", "FourStimFurniture",
     "FourStimMCM", "FourStimOptions",
     # OStim's API scripts (docs\API.md)
     "FourThread", "FourThreadBuilder", "FourLibrary", "FourMetadata", "FourActor", "FourFurniture")

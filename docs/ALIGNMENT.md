@@ -26,7 +26,7 @@ In a scene, give the HUD the keys (the hotkey), then go to the **Align** tab (Le
 | **Down / up** | moves them up (+) or down | |
 | **Turn** | turns them (degrees, clockwise +) | |
 | **Size** | scales them, by the step / 100 (0.5 to 2) | |
-| **Penis bend** | bends their penis up (+) or down, one step at a time (-9 to +9; below) | |
+| **Penis bend** | bends their penis up (+) or down, one step at a time (-9 to +9, and -10 for flaccid; below) | |
 | **Step < 1 >** | the step: 0.5, 1, 2, 5 or 10 units (or degrees) | the next step |
 | **Reset _name_** | | back to no offset, and the scene's own penis bend |
 
@@ -69,6 +69,8 @@ OStim plays SoS's bend animations; Fallout 4 has none, so 4Stim turns a node of 
 | `iPenisBendAxis` | 2 | The node's own axis it turns around: 0 x, 1 y, 2 z (ZeX's shaft runs along x and bends around z). |
 
 The bend goes back to none when the scene ends. Actors without the node (women, other skeletons) are left alone.
+
+**-10 is flaccid**, as OStim's (it sends SoS's `SOSFlaccid` there): the node goes back to its own angle and the body goes flaccid the way it got erect (ERECTION.md). Erect again from -9 up.
 
 ## Still to come
 

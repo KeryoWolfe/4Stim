@@ -779,7 +779,7 @@ namespace HUD
 				} else if (a_field == "scale") {
 					offset.scale = std::clamp(snap(offset.scale + step / 100.0F, 0.005F), 0.5F, 2.0F);
 				} else if (a_field == "bend") {
-					offset.bend = std::clamp(std::round(offset.bend) + a_dir, -9.0F, 9.0F);  // as OStim: one SoS step a press
+					offset.bend = std::clamp(std::round(offset.bend) + a_dir, -10.0F, 9.0F);  // as OStim: one SoS step a press (-10: flaccid)
 				} else {
 					return;
 				}

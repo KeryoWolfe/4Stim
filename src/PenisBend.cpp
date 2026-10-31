@@ -1,5 +1,7 @@
 #include "PenisBend.h"
 
+#include "Erection.h"
+
 #include <algorithm>
 #include <cmath>
 #include <mutex>
@@ -147,9 +149,14 @@ namespace PenisBend
 			return;
 		}
 		for (auto& [id, state] : g_states) {
-			// As OStim's bendSchlong: -9 to +9 (its -10, SoS's flaccid
-			// state, has no Fallout 4 counterpart).
-			const float total = std::clamp(state.steps + static_cast<float>(state.offset), -9.0F, 9.0F);
+			// As OStim's bendSchlong: -10 to +9, where -10 is SoS's flaccid
+			// state (OStim's SOSFlaccid): Erection.h makes the body flaccid,
+			// and the node goes back to its own angle.
+			float total = std::clamp(std::round(state.steps + static_cast<float>(state.offset)), -10.0F, 9.0F);
+			Erection::SetBend(id, static_cast<int>(total));
+			if (total <= -10.0F) {
+				total = 0.0F;
+			}
 			if (total == 0.0F && !state.applied) {
 				continue;  // never touched: leave the node alone
 			}

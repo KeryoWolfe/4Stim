@@ -734,6 +734,21 @@
 					}
 				},
 				{
+					"id": "bErections:Alignment",
+					"text": "$4Stim_MCM_bErections",
+					"help": "$4Stim_MCM_bErections_Help",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "switcher",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
 					"id": "fPenisBendStep:Alignment",
 					"text": "$4Stim_MCM_fPenisBendStep",
 					"help": "$4Stim_MCM_fPenisBendStep_Help",

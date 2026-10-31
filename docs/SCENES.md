@@ -100,7 +100,7 @@ The first scene has two speeds and one navigation option. The second uses the si
 | `modpack` | scene | no | OStim's: the pack the scene comes from, shown in the picker. 4Stim also groups the HUD's navigations into another pack's scenes by it (`navigations`, `group`). |
 | `fadeOnEntry` | scene | no | OStim's: in a scene with the player, fade to black when auto mode moves to this scene (as `SetUseAutoFades` does for every scene, `AUTOMODE.md`). |
 | `scale`, `scaleHeight`, `feetOnGround` | actor | no | OStim's actor scaling and heels: the scale the role is played at, the height the animation was made for, and whether heels stay on (`SCALING.md`). |
-| `penisBend` | actor | no | The penis bend for this role, in SoS steps from -9 to +9 (OStim's `sosBend` and `tngBend`, also read): the default until an alignment sets one (`ALIGNMENT.md`, Penis bend). |
+| `penisBend` | actor | no | The penis bend for this role, in SoS steps from -9 to +9, or -10 for flaccid (OStim's `sosBend` and `tngBend`, also read): the default until an alignment sets one (`ALIGNMENT.md`, Penis bend). |
 | `noStrip` | scene or actor | no | `true` on the scene: no one undresses in this scene, whatever its actions (UNDRESS.md). Scenes after it still undress as usual. On an actor (OStim's): that role's actions don't undress them (undressing at the start still does). |
 | `lookUp` / `lookDown`, `lookLeft` / `lookRight` | actor | no | OStim's eye directions, 0-100 (negative looks the other way; `lookUp` wins over `lookDown`, `lookLeft` over `lookRight`). Fallout 4's face has no look morphs, so 4Stim turns the face skeleton's eye bones (EXPRESSIONS.md, Eye directions). |
 | `singleSpeed` | actor | no | OStim's: `true` plays this role's slowest animation at every speed. |

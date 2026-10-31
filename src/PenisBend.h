@@ -6,7 +6,7 @@
 
 // Penis bend (docs/ALIGNMENT.md), as OStim's sosBend: each role of a scene
 // can have the penis bent up or down, in Schlongs of Skyrim's steps (-9 to
-// +9), from the scene file (penisBend, or OStim's sosBend / tngBend), the
+// +9, and -10 for flaccid: Erection.h), from the scene file (penisBend, or OStim's sosBend / tngBend), the
 // Align tab, and the animation's 4StimBendSoS annotations (OStim's
 // OStimBendSoS, an offset on top).
 //

@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.4.1 alpha (in progress)
+
+Needs the plugin rebuilt and FourStimErection.psc compiled (with LooksMenu's BodyGen.psc in the compiler's sources).
+
+### New
+- **Erections** (docs/ERECTION.md): men are erect during their scenes and flaccid after, the way their body does it, where OStim leaves it to Schlongs of Skyrim. BodyTalk and Atomic Muscle's `.tri` install get the body's `Erection` morph through LooksMenu (and `Erection Up` / `Down` follow the penis bend on skeletons without ZeX's bend node); A-Body's erection is its rigid physics swap, as before; Atomic Muscle's bodysuit install gets its erect bodysuit while the man is naked, which undressing leaves alone. The log says what each actor's body got (`Erection: ... body:`). MCM: Alignment page, **Erections** (`bErections`).
+- **A penis bend of -10 is flaccid**, as OStim's (`SOSFlaccid`): the morphs go to 0, the bodysuit comes off, A-Body swaps back to its own physics (its penis is rigid in the mesh, so hanging is the physics' doing), and the bend node goes back to its own angle. The Align tab now goes down to -10.
+- Saves made mid-scene: the erection morphs and a bodysuit 4Stim gave are removed when the save is loaded (save data version 6).
+
+### Undressing
+- A 1.10.163 tester's report of clothes not coming off: his log shows every strip done and nothing put back on, in OStim's default way (only what each position needs, as the scene gets there: gloves for groping, everything for the blowjob and the doggy scene). No code change; the tester's guide now says how it works and where **Undress at the start** is. Waiting on what he saw.
+
 ## 0.4.0 alpha (October 2026)
 
 Everything since the 0.3.0 alpha and its two 1.10.163 hotfixes, from the alpha testers' reports. Needs every script recompiled (FourStim, FourStimScene, FourStimPhysics, FourStimUndress) and a clean install: delete the old 4Stim files first (docs/ALPHA.md).

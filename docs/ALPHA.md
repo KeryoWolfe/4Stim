@@ -1,4 +1,4 @@
-# 4Stim 0.4.0 alpha: tester's guide
+# 4Stim 0.4.1 alpha: tester's guide
 
 Thanks for testing. 4Stim is an OStim-style scene framework for Fallout 4: you pick someone (or several people), pick where, and a scene starts; from there you move between positions on a HUD, or let auto mode run it. This alpha fixes what the 0.3.0 testers found (below). The next build is the beta, so this round is about confirming those fixes and finding what still breaks. What you report decides what gets fixed first.
 
@@ -11,6 +11,7 @@ Thanks for testing. 4Stim is an OStim-style scene framework for Fallout 4: you p
 - A mod manager (Mod Organizer 2 or Vortex).
 - [Mod Configuration Menu](https://www.nexusmods.com/fallout4/mods/21497), for the settings pages (optional: everything is also in `4Stim.ini`).
 - Optional: A-Body (male) with FO4 Faster HDT-SMP. 4Stim swaps to the erect physics during scenes (and the receiving one for a man on the bottom).
+- Optional: [LooksMenu](https://www.nexusmods.com/fallout4/mods/12631), for erections on BodyTalk and on Atomic Muscle's `.tri` install (morphs). Atomic Muscle's bodysuit install and A-Body need nothing more.
 - Optional: the High Heels System. Actors in heels are scaled or lowered to fit the animation.
 - Optional: [Intiface Central](https://intiface.com/central/) and a supported toy, for sex toys (below).
 
@@ -22,9 +23,9 @@ Thanks for testing. 4Stim is an OStim-style scene framework for Fallout 4: you p
 
 Then install the archives with your mod manager, one mod each:
 
-1. **`4Stim-0.4.0-alpha.zip`**: the framework (plugin, settings, MCM page, HUD, icons, sounds, compiled scripts).
-2. **`4Stim-TestAnims-0.4.0-alpha.zip`**: the test animations and their scene file. Enable **`4StimTestAnims.esp`**.
-3. Optional, **`4Stim-EquipObjects-0.4.0-alpha.zip`**: strap-ons and tongues. Enable **`4Stim - Equip Objects.esp`**, then build **4Stim OStim Strap-On (TWB)** in BodySlide (the tongues need no building).
+1. **`4Stim-0.4.1-alpha.zip`**: the framework (plugin, settings, MCM page, HUD, icons, sounds, compiled scripts).
+2. **`4Stim-TestAnims-0.4.1-alpha.zip`**: the test animations and their scene file. Enable **`4StimTestAnims.esp`**.
+3. Optional, **`4Stim-EquipObjects-0.4.1-alpha.zip`**: strap-ons and tongues. Enable **`4Stim - Equip Objects.esp`**, then build **4Stim OStim Strap-On (TWB)** in BodySlide (the tongues need no building).
 
 Take the new `4Stim.ini` (don't keep your old one): the undressing slots moved to their own section. Settings you changed in the MCM stay.
 
@@ -32,7 +33,7 @@ Take the new `4Stim.ini` (don't keep your old one): the undressing slots moved t
 
 The top of `Documents\My Games\Fallout4\F4SE\4Stim.log` says:
 
-- `4Stim v0.4.0.0`. If it says `v0.3.0.0`, an old `4Stim.dll` is still being loaded.
+- `4Stim v0.4.1.0`. If it says `v0.4.0.0` or `v0.3.0.0`, an old `4Stim.dll` is still being loaded.
 - On 1.10.163 and the other versions: the places it looked for the Runtime Database (`Addresses: Runtime Database at ...`), then `Addresses: ... found, the other ... done without`. A list of red `[E] ... not found` lines ending in `of 107 missing` is the old build.
 - `4Stim loaded`. If the log stops before it, send the log.
 
@@ -71,6 +72,8 @@ Fixed in this build, each from a tester's report. Please check whether it's gone
 - **Clothes coming back on mid-scene**: whatever came off should stay off until the scene ends. The undressing slots are now OStim's, on the MCM's Undressing page.
 - **Animation packs in the scene list**: another pack's scenes (Atomic Lust, for example) now show as one row named after the pack, which opens just those.
 - **A-Body erect physics**: if a man's physics doesn't change in a scene, send the log (`Physics:` lines).
+- **Erections (new in 0.4.1)**: men should be erect during scenes and flaccid after, on BodyTalk (with LooksMenu), Atomic Muscle (either install) and A-Body. The log says what each man's body got (`Erection: ... body:`); send it if one stays flaccid or stays erect after the scene. Setting the Align tab's penis bend to -10 should make him flaccid mid-scene.
+- **Clothes not coming off**: 4Stim undresses the way OStim does by default: only what each position needs, as the scene gets there (gloves for groping, everything for sex). To have everyone undress when the scene starts, turn on **Undress at the start** on the MCM's Undressing page. If something stays on that should come off, say which position and which clothes (`Undress:` lines in the log).
 
 Still worth checking from 0.3.0: sex toys with Intiface Central, the Utility tab's actor pages (undress, mute, strap-on, tongue), weapons coming back after a scene, saving and loading mid-scene, several scenes at once, the Align tab, and your own body and outfit mods.
 

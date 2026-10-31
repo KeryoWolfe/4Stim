@@ -31,7 +31,7 @@ namespace Alignment
 		float z = 0.0F;      // offsetZ: up
 		float rot = 0.0F;    // rotation: degrees, clockwise seen from above
 		float scale = 1.0F;  // times the actor's own scale
-		float bend = 0.0F;   // sosBend: penis bend in SoS steps, -9 to +9 (PenisBend.h)
+		float bend = 0.0F;   // sosBend: penis bend in SoS steps, -9 to +9, -10 flaccid (PenisBend.h)
 
 		[[nodiscard]] bool IsZero() const { return x == 0.0F && y == 0.0F && z == 0.0F && rot == 0.0F && scale == 1.0F && bend == 0.0F; }
 	};
