@@ -1471,10 +1471,18 @@ namespace
 		}
 	}
 
-	void IgnoreFurnitureCollision(std::uint32_t a_furniture, std::vector<std::uint32_t> a_actors)
+	void IgnoreFurnitureCollision(std::uint32_t a_furniture, std::vector<std::uint32_t> a_actors, const std::string& a_type)
 	{
 		if (!a_furniture || !g_lockScenes || !g_settings.furnitureOutOfWay || !Compat::CanReadCollisionBodies()) {
 			return;  // without Getbhk / GetBody (1.10.163 if the Runtime Database lacks them): left solid
+		}
+		// Beds stay solid: scenes lie on them, and without the bed under him
+		// the owner's player sank through it (drawn inside the bed, his head
+		// at the rail) while the NPC, held more firmly, lay on top. Solid,
+		// both lay on it (1 November).
+		if (!a_type.empty() && Furniture::IsA(a_type, "bed")) {
+			REX::INFO("Furniture collision: {:08X} is a bed: it stays solid for the scene's actors", a_furniture);
+			return;
 		}
 		// A task after IgnorePairCollision's (queued earlier): the actors
 		// already share their group.
@@ -1855,7 +1863,7 @@ namespace
 				g_pendingClutter.reset();
 			}
 			BlockFurniture(furniture->ref);
-			IgnoreFurnitureCollision(furniture->ref, a_actors);
+			IgnoreFurnitureCollision(furniture->ref, a_actors, furniture->type);
 			auto sorted = a_actors;
 			std::ranges::sort(sorted);
 			if (g_furnitureSpots && g_furnitureSpots->actors == sorted) {
@@ -2835,7 +2843,7 @@ namespace
 		a_active.center = spot.position;
 		a_active.heading = spot.heading;
 		BlockFurniture(a_piece.ref);
-		IgnoreFurnitureCollision(a_piece.ref, a_active.actors);
+		IgnoreFurnitureCollision(a_piece.ref, a_active.actors, a_piece.type);
 
 		auto focused = GetPlayerScene();
 		if (focused.Active() && focused.role0 == a_active.actors.front()) {

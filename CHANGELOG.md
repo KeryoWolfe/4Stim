@@ -12,9 +12,11 @@ Needs the plugin rebuilt and FourStimErection.psc compiled (with LooksMenu's Bod
 ### Fixed
 - **Fixed:** a crash on a scene's first second (the owner's game, 1.11.240): the collision watch read the physics world from the scene clock, which runs alongside the physics step, and the game's own read check crashed inside `bhkNPCollisionObject::Getbhk`. The collision watch is now off unless `bCollisionWatch=1` in `4Stim.ini` (only for chasing a shake). The furniture collision at scene start is unchanged.
 
-- **Diagnostics:** `bFurnitureOutOfTheWay` (default 1) turns off the furniture collision change of 0.4.0, to test whether it lets an actor sink into a bed (the owner's player in a bed scene: drawn inside the bed, the NPC fine).
+- **Diagnostics:** `bFurnitureOutOfTheWay` (default 1) turns off the furniture collision change of 0.4.0 for all furniture.
 
 - **Fixed (needs testing):** lying scenes on a bed put heads at the foot (the owner's vault bed: heads through the foot rail, pillows at the other end). With no furniture markers to go by, a scene lying lengthwise on a bed faced the end farther from the player; it now faces the end with the bed model's pillows, and only falls back to the far end when the model has none (`Furniture: ... pillow(s)` in `4Stim.log`, or the model's parts when it has none). Furniture markers are also looked for deeper in a model.
+
+- **Fixed (needs testing):** the player sinking through a bed in lying scenes, drawn inside it with the head at the rail, while the NPC lay on top: the bed's collision was off for the scene's actors (the chair-shaking fix of 0.4.0). Beds now stay solid (`Furniture collision: ... is a bed` in `4Stim.log`); chairs and other furniture are as before. Confirmed by the owner with the bed left solid by hand.
 
 ### Undressing
 - **Fixed:** the HUD's Undress did nothing for slots a scene had already undressed, so clothes an earlier strip missed (or the game put back on) stayed on. Undressing by hand now takes off everything worn in the undress slots again. The log names each item taken off (`Undress: ... to take off: <id> "<name>"`).
