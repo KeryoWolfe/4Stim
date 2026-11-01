@@ -59,13 +59,14 @@ As in OStim, alignments are saved per **set of actors**, scene and role, to `Doc
 
 As OStim's schlong bending: each role can have the penis bent up or down, in Schlongs of Skyrim's steps from -9 to +9, so it lines up with the partner. The bend comes from the Align tab (saved as `sosBend`), else the scene file (`penisBend`, or OStim's `sosBend` / `tngBend`), and an animation can add to it for a moment with the `4StimBendSoS.<steps>` annotation (OStim's `OStimBendSoS`; `4StimResetSoS` ends it, and so does the next scene).
 
-OStim plays SoS's bend animations; Fallout 4 has none, so 4Stim turns a node of the skeleton: by default ZeX's `Penis_01_Offset`, which bends the shaft from its base. ZeX's `_Offset` nodes aren't animated, so the animation doesn't undo the bend, and A-Body's SMP genitals follow the skeleton's penis bones (rigidly with `MaleBodyHard.xml`, springing with the others). In `4Stim.ini`, `[Alignment]`:
+OStim plays SoS's bend animations (`SOSBend<n>`); TNG answers them with its own poses, `TngBendUp` and `TngBendDown` blended with `TngErect`, which curve the whole shaft rather than hinge it at the base. Read from TNG's clips: up, `Genitals01` 43 degrees, `02` 9, `03` 9, `04` 4; down, `01` 53, `02` 3, `04` 3.5, `05` 4. Fallout 4 has neither, so 4Stim turns ZeX's matching segment pivots, `Penis_01_Offset` to `Penis_05_Offset`, each its share of the bend (TNG's proportions). ZeX's `_Offset` nodes aren't animated, so the animation doesn't undo the bend, and A-Body's SMP genitals follow the skeleton's penis bones (rigidly with `MaleBodyHard.xml`, springing with the others). In `4Stim.ini`, `[Alignment]`:
 
 | Setting | Default | Meaning |
 |---|---|---|
 | `SetSchlongBending` | 0 | 1 = no bending (OStim's setting, the same way round). |
-| `fPenisBendStep` | 5 | Degrees per step. Negative if + bends it down. |
-| `sPenisBendNode` | `Penis_01_Offset` | The skeleton node turned (another skeleton's, or ZeX's `Penis_Offset` to turn the whole package). |
+| `fPenisBendStep` | 7.2 | The whole bend per step, in degrees (TNG's full bend is about 65 degrees at 9). Negative if + bends it down. |
+| `sPenisBendNode` | `Penis_01_Offset` to `Penis_05_Offset` | The skeleton nodes turned, base first, as a comma list (another skeleton's; one node, such as ZeX's `Penis_Offset` for the whole package, takes the whole bend). |
+| `sPenisBendUp` / `sPenisBendDown` | `0.657,0.139,0.136,0.067,0` / `0.834,0.049,0,0.055,0.062` | Each node's share of a bend up / down. |
 | `iPenisBendAxis` | 2 | The node's own axis it turns around: 0 x, 1 y, 2 z (ZeX's shaft runs along x and bends around z). |
 
 The bend goes back to none when the scene ends. Actors without the node (women, other skeletons) are left alone.

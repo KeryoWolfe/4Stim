@@ -10,19 +10,28 @@
 // Align tab, and the animation's 4StimBendSoS annotations (OStim's
 // OStimBendSoS, an offset on top).
 //
-// OStim plays SoS's bend animations. Fallout 4 has none: 4Stim turns a node
-// of the actor's skeleton instead, by default ZeX's Penis_01_Offset (the
-// shaft from its base; ZeX's _Offset nodes aren't animated, so the
-// animation doesn't undo it, and A-Body's SMP genitals follow the skeleton's
-// penis bones). Each step is fPenisBendStep degrees around the node's axis.
+// OStim plays SoS's bend animations; TNG answers them with its own poses
+// (auxbones\TNG: TngBendUp / TngBendDown, blended with TngErect by the step),
+// which curve the whole shaft: up, Genitals01 43 degrees, 02 9, 03 9, 04 4;
+// down, 01 53, 02 3, 04 3.5, 05 4 (read from TNG's clips, 1 November 2026).
+// Fallout 4 has neither: 4Stim turns ZeX's segment pivots the same way,
+// Penis_01_Offset to Penis_05_Offset (the shaft from its base onward; ZeX's
+// _Offset nodes aren't animated, so the animation doesn't undo them, and
+// A-Body's SMP genitals follow the skeleton's penis bones), each its share
+// of the bend (TNG's). Each step is fPenisBendStep degrees in all.
 namespace PenisBend
 {
 	struct Config
 	{
 		bool        disabled = false;            // OStim's SetSchlongBending: 1 = no bending
-		float       stepDegrees = 5.0F;          // 4Stim: fPenisBendStep (negative bends the other way)
-		std::string node = "Penis_01_Offset";    // 4Stim: sPenisBendNode
-		int         axis = 2;                    // 4Stim: iPenisBendAxis, the node's own x (0), y (1) or z (2)
+		float       stepDegrees = 7.2F;          // 4Stim: fPenisBendStep, the whole bend per step (TNG's full bend, about 65 degrees, over 9 steps; negative bends the other way)
+		// 4Stim: sPenisBendNode, the nodes turned, base first (a comma list);
+		// sPenisBendUp / sPenisBendDown, each node's share of the bend up /
+		// down (TNG's; a missing share is 0, one node alone takes it all).
+		std::vector<std::string> nodes{ "Penis_01_Offset", "Penis_02_Offset", "Penis_03_Offset", "Penis_04_Offset", "Penis_05_Offset" };
+		std::vector<float>       shareUp{ 0.657F, 0.139F, 0.136F, 0.067F, 0.0F };
+		std::vector<float>       shareDown{ 0.834F, 0.049F, 0.0F, 0.055F, 0.062F };
+		int                      axis = 2;       // 4Stim: iPenisBendAxis, the nodes' own x (0), y (1) or z (2)
 	};
 	Config& Settings();
 

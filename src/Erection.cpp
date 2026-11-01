@@ -543,7 +543,8 @@ namespace Erection
 					REX::INFO("Erection: {:08X}'s body: {}", id, MethodName(state.method));
 				}
 			}
-			state.hasNode = root->GetObjectByName(RE::BSFixedString(PenisBend::Settings().node)) != nullptr;
+			const auto& bendNodes = PenisBend::Settings().nodes;
+			state.hasNode = !bendNodes.empty() && root->GetObjectByName(RE::BSFixedString(bendNodes.front())) != nullptr;
 			Apply(id, actor, state);
 		}
 	}

@@ -654,8 +654,34 @@ namespace
 					PenisBend::Settings().disabled = std::stoi(value) != 0;
 				} else if (key == "fpenisbendstep") {
 					PenisBend::Settings().stepDegrees = std::clamp(std::stof(value), -45.0F, 45.0F);
-				} else if (key == "spenisbendnode") {
-					PenisBend::Settings().node = value;
+				} else if (key == "spenisbendnode" || key == "spenisbendup" || key == "spenisbenddown") {
+					// Comma lists: nodes, base first; their shares of a bend up / down.
+					std::vector<std::string> parts;
+					for (std::size_t from = 0; from <= value.size();) {
+						const auto to = std::min(value.find(',', from), value.size());
+						std::string part = value.substr(from, to - from);
+						std::erase_if(part, [](unsigned char c) { return std::isspace(c); });
+						if (!part.empty()) {
+							parts.push_back(std::move(part));
+						}
+						from = to + 1;
+					}
+					auto& pb = PenisBend::Settings();
+					if (key == "spenisbendnode") {
+						if (!parts.empty()) {
+							pb.nodes = parts;
+						}
+					} else {
+						std::vector<float> shares;
+						for (const auto& part : parts) {
+							try {
+								shares.push_back(std::stof(part));
+							} catch (...) {
+								shares.push_back(0.0F);
+							}
+						}
+						(key == "spenisbendup" ? pb.shareUp : pb.shareDown) = std::move(shares);
+					}
 				} else if (key == "ipenisbendaxis") {
 					PenisBend::Settings().axis = std::clamp(std::stoi(value), 0, 2);
 				} else if (key == "berections") {
@@ -870,7 +896,8 @@ namespace
 		HUD::SetNavigationKeys({ g_settings.navUpKey, g_settings.navDownKey, g_settings.navLeftKey, g_settings.navRightKey,
 			g_settings.navYesKey, g_settings.navToggleKey });
 		const auto& pb = PenisBend::Settings();
-		REX::INFO("Settings: penis bend {}, {} degree(s) per step around {} axis {}; erections {}", pb.disabled ? "off" : "on", pb.stepDegrees, pb.node, "xyz"[pb.axis],
+		REX::INFO("Settings: penis bend {}, {} degree(s) per step over {} node(s) from {}, axis {}; erections {}", pb.disabled ? "off" : "on", pb.stepDegrees, pb.nodes.size(),
+			pb.nodes.empty() ? std::string{} : pb.nodes.front(), "xyz"[pb.axis],
 			Erection::Settings().enabled ? "on" : "off");
 		const auto& eyes = EyeLook::Settings();
 		REX::INFO("Settings: eye directions {}, {} degree(s) sideways, {} up / down, bones {} / {}", eyes.disabled ? "off" : "on", eyes.maxSide, eyes.maxUp,

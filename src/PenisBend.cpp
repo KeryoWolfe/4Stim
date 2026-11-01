@@ -21,9 +21,9 @@ namespace PenisBend
 			int   offset = 0;     // the annotation's
 			bool  applied = false;
 			bool  warned = false;  // said once that the node isn't there
-			// The node's own turn before 4Stim touched it: bends go on top of
+			// Each node's own turn before 4Stim touched it: bends go on top of
 			// it, and it's put back when the scene ends.
-			std::optional<RE::NiMatrix3> original;
+			std::vector<std::optional<RE::NiMatrix3>> original;
 		};
 
 		// ZeX's genital bones as they were before the actor's first scene this
@@ -84,10 +84,19 @@ namespace PenisBend
 		std::mutex                               g_lock;
 		std::unordered_map<std::uint32_t, State> g_states;
 
-		RE::NiAVObject* Node(RE::Actor* a_actor)
+		RE::NiAVObject* Node(RE::Actor* a_actor, std::size_t a_index)
 		{
 			const auto root = a_actor ? a_actor->Get3D(false) : nullptr;
-			return root ? root->GetObjectByName(RE::BSFixedString(g_config.node)) : nullptr;
+			return root && a_index < g_config.nodes.size() ? root->GetObjectByName(RE::BSFixedString(g_config.nodes[a_index])) : nullptr;
+		}
+
+		float Share(std::size_t a_index, bool a_up)
+		{
+			if (g_config.nodes.size() == 1) {
+				return 1.0F;
+			}
+			const auto& shares = a_up ? g_config.shareUp : g_config.shareDown;
+			return a_index < shares.size() ? shares[a_index] : 0.0F;
 		}
 
 		// A turn of a_degrees around the node's own axis.
@@ -112,10 +121,13 @@ namespace PenisBend
 		// it swung about (testers' reports).
 		void Reset(std::uint32_t a_id, const State& a_state)
 		{
-			if (const auto node = Node(RE::TESForm::GetFormByID<RE::Actor>(a_id))) {
-				node->SetLocalRotate(a_state.original.value_or(RE::NiMatrix3::IDENTITY));
-				REX::INFO("Penis bend: {:08X} back to its own angle", a_id);
+			const auto actor = RE::TESForm::GetFormByID<RE::Actor>(a_id);
+			for (std::size_t i = 0; i < a_state.original.size(); ++i) {
+				if (const auto node = a_state.original[i] ? Node(actor, i) : nullptr) {
+					node->SetLocalRotate(*a_state.original[i]);
+				}
 			}
+			REX::INFO("Penis bend: {:08X} back to its own angle", a_id);
 		}
 	}
 
@@ -163,18 +175,30 @@ namespace PenisBend
 				continue;  // never touched: leave the node alone
 			}
 			const auto actor = RE::TESForm::GetFormByID<RE::Actor>(id);
-			if (const auto node = Node(actor)) {
+			state.original.resize(g_config.nodes.size());
+			const bool up = total * g_config.stepDegrees >= 0.0F;
+			int        turned = 0;
+			for (std::size_t i = 0; i < g_config.nodes.size(); ++i) {
+				const auto node = Node(actor, i);
+				if (!node) {
+					continue;
+				}
+				if (!state.original[i]) {
+					state.original[i] = node->GetLocalRotate();
+				}
+				node->SetLocalRotate(*state.original[i] * Turn(total * g_config.stepDegrees * Share(i, up)));
+				++turned;
+			}
+			if (turned) {
 				if (!state.applied && total != 0.0F) {
-					REX::INFO("Penis bend: {:08X} bent {} step(s) ({} degrees) at {}", id, total, total * g_config.stepDegrees, g_config.node);
+					REX::INFO("Penis bend: {:08X} bent {} step(s) ({} degrees over {} node(s), from {})", id, total, total * g_config.stepDegrees, turned,
+						g_config.nodes.empty() ? std::string{} : g_config.nodes.front());
 				}
-				if (!state.original) {
-					state.original = node->GetLocalRotate();
-				}
-				node->SetLocalRotate(*state.original * Turn(total * g_config.stepDegrees));
 				state.applied = total != 0.0F;
 			} else if (actor && actor->Get3D(false) && !state.warned) {
 				state.warned = true;
-				REX::INFO("Penis bend: {:08X} has no \"{}\" node in their skeleton (not ZeX, or no penis): not bent", id, g_config.node);
+				REX::INFO("Penis bend: {:08X} has none of the bend nodes ({}...) in their skeleton (not ZeX, or no penis): not bent", id,
+					g_config.nodes.empty() ? std::string{} : g_config.nodes.front());
 			}
 		}
 	}
@@ -232,7 +256,7 @@ namespace PenisBend
 		std::scoped_lock lock(g_lock);
 		for (const auto id : a_ids) {
 			if (const auto it = g_states.find(id); it != g_states.end()) {
-				if (it->second.original) {
+				if (std::ranges::any_of(it->second.original, [](const auto& a_o) { return a_o.has_value(); })) {
 					Reset(id, it->second);
 				}
 				g_states.erase(it);
