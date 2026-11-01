@@ -408,8 +408,7 @@ namespace Furniture
 		// on a_ref: toward its pillows' end if its model has pillows (the
 		// owner's vault bed: heads through the foot rail, pillows at the
 		// other end), else toward the end farther from the player (a_near*:
-		// the player in the furniture's frame). A heading points to the head
-		// end, as before.
+		// the player in the furniture's frame), as before.
 		float LengthwiseHeading(RE::TESObjectREFR* a_ref, bool a_alongX, float a_midX, float a_midY, float a_scale, float a_nearX, float a_nearY)
 		{
 			std::vector<RE::NiPoint3> pillows;
@@ -426,11 +425,14 @@ namespace Furniture
 				const float px = sum.x / pillows.size() - origin.x, py = sum.y / pillows.size() - origin.y;
 				const float pillowX = px * c0 - py * s0;
 				const float pillowY = px * s0 + py * c0;
+				// A lying scene's heading points to the feet: facing the
+				// pillows' end put heads at the foot rail (the owner's second
+				// try on the vault bed). So it faces away from the pillows.
 				REX::INFO("Furniture: {:08X}: {} pillow(s) in its model; heads toward that end", a_ref->GetFormID(), pillows.size());
 				if (a_alongX) {
-					return pillowX >= a_midX * a_scale ? 3.14159265F * 0.5F : -3.14159265F * 0.5F;
+					return pillowX >= a_midX * a_scale ? -3.14159265F * 0.5F : 3.14159265F * 0.5F;
 				}
-				return pillowY >= a_midY * a_scale ? 0.0F : 3.14159265F;
+				return pillowY >= a_midY * a_scale ? 3.14159265F : 0.0F;
 			}
 			std::string list;
 			for (const auto& n : names) {
