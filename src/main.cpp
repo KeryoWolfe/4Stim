@@ -180,6 +180,7 @@ namespace
 		bool          hudColumns = false;     // sHUDControls=Columns: OStim's control scheme (Left / Right between the list and the tab buttons)
 		bool          logAnimEvents = false;  // log scene actors' animation events (for authors)
 		bool          collisionWatch = false; // bCollisionWatch: the guard's look at what scene actors touch (off: it crashed the game)
+		bool          furnitureOutOfWay = true; // bFurnitureOutOfTheWay: scene furniture doesn't collide with the scene's actors
 		float         transitionLead = 0.0F;   // seconds before a transition's length to move on (see 4Stim.ini)
 		bool          matchSex = true;         // SetOnlyGayAnimsInGayScenes (OStim's intended sex only): a role's sex must be the actor's
 		// Who the player is in a scene for two (OStim's): always the first
@@ -660,6 +661,8 @@ namespace
 					Erection::Settings().enabled = std::stoi(value) != 0;
 				} else if (key == "unequipstraponifnotneeded") {
 					EquipObjects::Settings().unequipStrapOnIfNotNeeded = std::stoi(value) != 0;
+				} else if (key == "bfurnitureoutoftheway") {
+					g_settings.furnitureOutOfWay = std::stoi(value) != 0;
 				} else if (key == "bcollisionwatch") {
 					g_settings.collisionWatch = std::stoi(value) != 0;
 				} else if (key == "bloganimevents") {
@@ -1470,7 +1473,7 @@ namespace
 
 	void IgnoreFurnitureCollision(std::uint32_t a_furniture, std::vector<std::uint32_t> a_actors)
 	{
-		if (!a_furniture || !g_lockScenes || !Compat::CanReadCollisionBodies()) {
+		if (!a_furniture || !g_lockScenes || !g_settings.furnitureOutOfWay || !Compat::CanReadCollisionBodies()) {
 			return;  // without Getbhk / GetBody (1.10.163 if the Runtime Database lacks them): left solid
 		}
 		// A task after IgnorePairCollision's (queued earlier): the actors
