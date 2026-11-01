@@ -396,7 +396,7 @@ namespace Furniture
 			}
 			std::ranges::transform(name, name.begin(), [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
 			if (name.find("pillow") != std::string::npos) {
-				a_out.push_back(a_object->world.translate);
+				a_out.push_back(a_object->worldBound.center);  // its shape's middle: a shape's own origin is the bed's (the owner's vault bed)
 				return;
 			}
 			if (const auto node = a_depth > 0 ? a_object->IsNode() : nullptr) {
@@ -427,14 +427,15 @@ namespace Furniture
 				const float px = sum.x / pillows.size() - origin.x, py = sum.y / pillows.size() - origin.y;
 				const float pillowX = px * c0 - py * s0;
 				const float pillowY = px * s0 + py * c0;
-				// A lying scene's heading points to the feet: facing the
-				// pillows' end put heads at the foot rail (the owner's second
-				// try on the vault bed). So it faces away from the pillows.
-				REX::INFO("Furniture: {:08X}: {} pillow(s) in its model; heads toward that end", a_ref->GetFormID(), pillows.size());
+				// A lying scene's heading points to the heads (the owner's
+				// vault bed: heading toward the pillows put heads there, and
+				// moving along the heading pushed them past the head rail).
+				REX::INFO("Furniture: {:08X}: {} pillow(s) in its model, at local ({:.0f}, {:.0f}); heads toward that end", a_ref->GetFormID(), pillows.size(),
+					pillowX, pillowY);
 				if (a_alongX) {
-					return pillowX >= a_midX * a_scale ? -3.14159265F * 0.5F : 3.14159265F * 0.5F;
+					return pillowX >= a_midX * a_scale ? 3.14159265F * 0.5F : -3.14159265F * 0.5F;
 				}
-				return pillowY >= a_midY * a_scale ? 3.14159265F : 0.0F;
+				return pillowY >= a_midY * a_scale ? 0.0F : 3.14159265F;
 			}
 			std::string list;
 			for (const auto& n : names) {
@@ -902,10 +903,11 @@ namespace Furniture
 			const float nearY = dx * s0 + dy * c0;
 			local = { midX, midY, type.onFloor ? static_cast<float>(b.boundMin.z) : 0.0F };
 			localHeading = LengthwiseHeading(a_ref, alongX, midX, midY, scale, nearX, nearY);
-			// Toward the feet (where the heading points): the middle of the
-			// bed put the owner's heads into the head rail, not on the pillows.
-			local.x += type.lyingShift * std::sin(localHeading);
-			local.y += type.lyingShift * std::cos(localHeading);
+			// Toward the feet (away from where the heading points): the
+			// middle of the bed put the owner's heads into the head rail, not
+			// on the pillows.
+			local.x -= type.lyingShift * std::sin(localHeading);
+			local.y -= type.lyingShift * std::cos(localHeading);
 			if (type.markerHeight && !markers.empty()) {
 				local.z = markers[std::clamp(type.markerIndex, 0, static_cast<int>(markers.size()) - 1)].position.z;
 				zFromMarker = true;
