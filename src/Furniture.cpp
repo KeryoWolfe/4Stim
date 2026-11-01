@@ -60,6 +60,7 @@ namespace Furniture
 			bool                           edgeFacingOut = true;
 			float                          edgeInset = 0.0F;     // toward the middle; negative = outside
 			float                          lyingShift = 0.0F;    // 4Stim: a floor scene on it moves this far toward the feet (heads onto a bed's pillows)
+			float                          lyingRaise = 0.0F;    // 4Stim: and this far up (heads over the pillows, not in them)
 			bool                           checkWalls = true;    // edge: avoid a side with a wall right outside
 			bool                           markerHeight = false; // edge: at the marker's height, if it has one
 			bool                           onFloor = false;      // edge: at the bottom of its bounds (where it stands)
@@ -211,6 +212,7 @@ namespace Furniture
 			type.edgeFacingOut = Lower(entry.value("facing", std::string{ "out" })) != "in";
 			type.edgeInset = entry.value("edgeInset", 0.0F);
 			type.lyingShift = entry.value("lyingShift", 0.0F);
+			type.lyingRaise = entry.value("lyingRaise", 0.0F);
 			type.checkWalls = entry.value("checkWalls", true);
 			type.markerHeight = entry.value("markerHeight", false);
 			type.onFloor = entry.value("onFloor", false);
@@ -912,6 +914,7 @@ namespace Furniture
 				local.z = markers[std::clamp(type.markerIndex, 0, static_cast<int>(markers.size()) - 1)].position.z;
 				zFromMarker = true;
 			}
+			local.z += type.lyingRaise;  // the owner's heads sank into the pillows
 			REX::INFO("Furniture: {:08X} bounds ({}, {}, {}) to ({}, {}, {}); a floor scene: center, along {}", a_ref->GetFormID(),
 				b.boundMin.x, b.boundMin.y, b.boundMin.z, b.boundMax.x, b.boundMax.y, b.boundMax.z, alongX ? "x" : "y");
 		} else if (type.edge && bound) {
