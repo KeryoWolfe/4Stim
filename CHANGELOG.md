@@ -9,6 +9,9 @@ Needs the plugin rebuilt and FourStimErection.psc compiled (with LooksMenu's Bod
 - **A penis bend of -10 is flaccid**, as OStim's (`SOSFlaccid`): the morphs go to 0 and the bodysuit comes off, and the bend node goes back to its own angle. Bodies that can't go flaccid (A-Body during a scene, others) are bent as far down as they go (-9) instead. The Align tab now goes down to -10.
 - Saves made mid-scene: the erection morphs and a bodysuit 4Stim gave are removed when the save is loaded (save data version 6).
 
+### Fixed
+- **Fixed:** a crash on a scene's first second (the owner's game, 1.11.240): the collision watch read the physics world from the scene clock, which runs alongside the physics step, and the game's own read check crashed inside `bhkNPCollisionObject::Getbhk`. The collision watch is now off unless `bCollisionWatch=1` in `4Stim.ini` (only for chasing a shake). The furniture collision at scene start is unchanged.
+
 ### Undressing
 - **Fixed:** the HUD's Undress did nothing for slots a scene had already undressed, so clothes an earlier strip missed (or the game put back on) stayed on. Undressing by hand now takes off everything worn in the undress slots again. The log names each item taken off (`Undress: ... to take off: <id> "<name>"`).
 - **Fixed (needs testing):** a female player who stayed dressed all scene while the NPC undressed (a 1.10.163 tester). The log showed her one outfit item taken off and never put back on, yet her body drew the same 27 shapes all scene: the game had the clothes off but never redrew her. Two seconds after each strip, 4Stim now checks whether the items are off and whether the body drawn changed (`Undress check:` in `4Stim.log`), and redraws a player whose clothes are off but still drawn (`Actor::Reset3D`, as F4SE's `Actor.QueueUpdate`).

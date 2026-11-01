@@ -179,6 +179,7 @@ namespace
 		bool          hudEnabled = true;
 		bool          hudColumns = false;     // sHUDControls=Columns: OStim's control scheme (Left / Right between the list and the tab buttons)
 		bool          logAnimEvents = false;  // log scene actors' animation events (for authors)
+		bool          collisionWatch = false; // bCollisionWatch: the guard's look at what scene actors touch (off: it crashed the game)
 		float         transitionLead = 0.0F;   // seconds before a transition's length to move on (see 4Stim.ini)
 		bool          matchSex = true;         // SetOnlyGayAnimsInGayScenes (OStim's intended sex only): a role's sex must be the actor's
 		// Who the player is in a scene for two (OStim's): always the first
@@ -659,6 +660,8 @@ namespace
 					Erection::Settings().enabled = std::stoi(value) != 0;
 				} else if (key == "unequipstraponifnotneeded") {
 					EquipObjects::Settings().unequipStrapOnIfNotNeeded = std::stoi(value) != 0;
+				} else if (key == "bcollisionwatch") {
+					g_settings.collisionWatch = std::stoi(value) != 0;
 				} else if (key == "bloganimevents") {
 					g_settings.logAnimEvents = std::stoi(value) != 0;
 				} else if (key == "benableexcitement") {
@@ -3367,7 +3370,11 @@ namespace
 						}
 					}
 				}
-				if (actor && settled) {
+				// Off by default: it reads the Havok world from the scene clock,
+				// which runs in a job alongside the physics step, and it crashed
+				// the owner's game there (1 November: Getbhk's read-access check,
+				// on the scene's first settled tick).
+				if (actor && settled && g_settings.collisionWatch) {
 					WatchCollisions(actor, active.sceneID);
 				}
 				if (!actor || IsPlayer(actor)) {
