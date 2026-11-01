@@ -90,6 +90,8 @@ Once 4Stim is public, most reports will come with no logs: a sentence, maybe a s
 
 From docs/TODO.md, unchanged: automatic body-mesh detection, in-game HUD editor, YAML scene files, NPC greetings, race filtering, claim registry, first-person camera. Separate projects: the animation converter rebuild (which also fixes 2.7), the Sim Settlements 2 furniture module, placeable scene markers.
 
+Pinned by the owner (1 November 2026): **an A-Body patch on 4Stim's events** instead of AAF's (A-Body's own swap script, listening to `FourStim_OnSceneStart` / `End`), after beta. Needs first: the scene events' actor arrays checked (2.9); 4Stim's own A-Body swap skipped when the patch is there; the receiving end and the undress redraw handled by the patch; a plugin (4Stim has none) or A-Body's author's permission to replace their script.
+
 ## Risks
 
 1. **Scene animations are the limit on alignment.** Clipping and missed kisses mostly come from the converted animations (2.6, 2.7); the plugin can only correct them per scene.
