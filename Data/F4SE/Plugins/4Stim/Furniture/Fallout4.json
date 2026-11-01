@@ -4,6 +4,7 @@
 		{
 			"id": "bed",
 			"name": "Bed",
+			"lyingShift": 20,
 			"forms": [
 				"FURN"
 			],

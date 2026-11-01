@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <array>
+#include <chrono>
 #include <cctype>
 #include <filesystem>
 #include <format>
@@ -467,6 +468,71 @@ namespace Physics
 		}
 	}
 
+	namespace
+	{
+		struct Waiting
+		{
+			std::string sceneID;
+			std::size_t role = 0;
+		};
+		std::unordered_map<std::uint32_t, Waiting> g_waiting;  // scene actors whose physics file isn't loaded yet
+
+		// The first swap that fits a_actor, a_delay from now. g_lock held.
+		bool StartSwap(RE::Actor* a_actor, const SceneRegistry::Scene* a_scene, std::size_t a_role, float a_delay)
+		{
+			const auto id = a_actor->GetFormID();
+			const auto sex = SceneRegistry::SexOf(a_actor);
+			for (const auto& swap : g_swaps) {
+				if (swap.sex != SceneRegistry::Sex::kAny && swap.sex != sex) {
+					continue;
+				}
+				if (!swap.sceneTags.empty()) {
+					const bool tagged = a_scene && std::ranges::any_of(a_scene->tags, [&](const std::string& tag) {
+						return std::ranges::find(swap.sceneTags, Lower(tag)) != swap.sceneTags.end();
+					});
+					if (!tagged) {
+						continue;
+					}
+				}
+				const auto resolved = Resolve(swap, a_actor);
+				if (resolved.from.empty()) {
+					continue;  // a suffix swap with no file for this body: the next swap may fit
+				}
+				const auto& to = Receiving(a_scene, a_role) && !resolved.toReceiving.empty() ? resolved.toReceiving : resolved.to;
+				if (CallSwap(a_actor, resolved.from, to, When::kLater, a_delay)) {
+					g_applied[id] = { resolved.from, to, resolved.to, resolved.toReceiving };
+					g_applied[id].pendingStart = true;
+					return true;
+				}
+				return false;  // one swap per actor
+			}
+			return false;
+		}
+	}
+
+	void Tick()
+	{
+		static auto next = std::chrono::steady_clock::now();
+		const auto  now = std::chrono::steady_clock::now();
+		if (now < next) {
+			return;
+		}
+		next = now + std::chrono::seconds(1);
+		std::scoped_lock lock(g_lock);
+		for (auto it = g_waiting.begin(); it != g_waiting.end();) {
+			const auto actor = RE::TESForm::GetFormByID<RE::Actor>(it->first);
+			if (!actor || !actor->Get3D(false) || PhysicsFilesOf(actor).empty()) {
+				++it;
+				continue;
+			}
+			REX::INFO("Physics: {:08X}'s meshes name a physics file now (undressed): swapping", it->first);
+			const auto scene = SceneRegistry::Find(it->second.sceneID);
+			g_noPhysics.erase(it->first);
+			StartSwap(actor, scene.get(), it->second.role, SWAP_DELAY);
+			it = g_waiting.erase(it);
+		}
+	}
+
 	bool IsSwapped(std::uint32_t a_actor)
 	{
 		std::scoped_lock lock(g_lock);
@@ -499,36 +565,19 @@ namespace Physics
 				continue;
 			}
 			if (PhysicsFilesOf(actor).empty()) {
-				if (g_noPhysics.insert(id).second) {
-					REX::INFO("Physics: {:08X}'s meshes name no physics file (no SMP body, or no FSMP): no swaps or rebuilds for them", id);
-				}
+				// Dressed, the naked body (whose mesh names the physics file)
+				// isn't loaded: the owner's A-Body player in his Silver Shroud
+				// outfit got no swap all scene. Looked for again as they
+				// undress (Tick).
+				g_noPhysics.insert(id);
+				g_waiting[id] = { a_sceneID, role };
+				REX::INFO("Physics: {:08X}'s meshes name no physics file yet (dressed, no SMP body, or no FSMP): looking again as the scene goes on", id);
 				continue;
 			}
 			g_noPhysics.erase(id);
-			const auto sex = SceneRegistry::SexOf(actor);
-			for (const auto& swap : g_swaps) {
-				if (swap.sex != SceneRegistry::Sex::kAny && swap.sex != sex) {
-					continue;
-				}
-				if (!swap.sceneTags.empty()) {
-					const bool tagged = scene && std::ranges::any_of(scene->tags, [&](const std::string& tag) {
-						return std::ranges::find(swap.sceneTags, Lower(tag)) != swap.sceneTags.end();
-					});
-					if (!tagged) {
-						continue;
-					}
-				}
-				const auto resolved = Resolve(swap, actor);
-				if (resolved.from.empty()) {
-					continue;  // a suffix swap with no file for this body: the next swap may fit
-				}
-				const auto& to = Receiving(scene.get(), role) && !resolved.toReceiving.empty() ? resolved.toReceiving : resolved.to;
-				if (CallSwap(actor, resolved.from, to, When::kLater, delay)) {
-					g_applied[id] = { resolved.from, to, resolved.to, resolved.toReceiving };
-					g_applied[id].pendingStart = true;
-					delay += STAGGER;
-				}
-				break;  // one swap per actor
+			g_waiting.erase(id);
+			if (StartSwap(actor, scene.get(), role, delay)) {
+				delay += STAGGER;
 			}
 		}
 		SwitchForScene(a_actors, a_sceneID);  // those still swapped from a scene just before
@@ -537,6 +586,11 @@ namespace Physics
 	void SceneChanged(const std::vector<std::uint32_t>& a_actors, const std::string& a_sceneID)
 	{
 		std::scoped_lock lock(g_lock);
+		for (std::size_t role = 0; role < a_actors.size(); ++role) {
+			if (const auto it = g_waiting.find(a_actors[role]); it != g_waiting.end()) {
+				it->second = { a_sceneID, role };
+			}
+		}
 		SwitchForScene(a_actors, a_sceneID);
 	}
 
@@ -546,6 +600,7 @@ namespace Physics
 		std::vector<std::uint32_t> unswapped;
 		float                      delay = AFTER_SCENE_DELAY;
 		for (const auto id : a_actors) {
+			g_waiting.erase(id);  // never undressed: nothing was swapped (g_noPhysics: no rebuild either)
 			const auto it = g_applied.find(id);
 			if (it == g_applied.end()) {
 				unswapped.push_back(id);

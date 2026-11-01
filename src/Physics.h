@@ -18,6 +18,11 @@ namespace Physics
 	void SceneChanged(const std::vector<std::uint32_t>& a_actors, const std::string& a_sceneID);
 	void SceneEnded(const std::vector<std::uint32_t>& a_actors);
 
+	// Scene actors dressed when their scene started (their naked body, whose
+	// mesh names the physics file, not loaded): swapped once it is. Main
+	// thread (the scene clock); at most once a second.
+	void Tick();
+
 	// Whether a_actor has a swap for their scene (Erection.h: such a body
 	// needs no erection, only the penis bend).
 	[[nodiscard]] bool IsSwapped(std::uint32_t a_actor);

@@ -33,6 +33,7 @@
 #include "EquipObjects.h"
 #include "Erection.h"
 #include "PenisBend.h"
+#include "Physics.h"
 #include "EyeLook.h"
 #include "Translations.h"
 #include "MCM.h"
@@ -3902,6 +3903,7 @@ namespace
 		Lights::Tick();  // lights follow their bones, paused or not
 		PenisBend::Tick();
 		Erection::Tick();
+		Physics::Tick();
 		EyeLook::Tick();
 		const bool waiting = !g_activeScenes.empty();  // faces and voices run as long as any scene does
 		if (!waiting && !g_climaxShake.active) {

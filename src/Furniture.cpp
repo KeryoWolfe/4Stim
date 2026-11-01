@@ -59,6 +59,7 @@ namespace Furniture
 			bool                           edgeLong = true;      // a long side (else a short one)
 			bool                           edgeFacingOut = true;
 			float                          edgeInset = 0.0F;     // toward the middle; negative = outside
+			float                          lyingShift = 0.0F;    // 4Stim: a floor scene on it moves this far toward the feet (heads onto a bed's pillows)
 			bool                           checkWalls = true;    // edge: avoid a side with a wall right outside
 			bool                           markerHeight = false; // edge: at the marker's height, if it has one
 			bool                           onFloor = false;      // edge: at the bottom of its bounds (where it stands)
@@ -209,6 +210,7 @@ namespace Furniture
 			type.edgeLong = Lower(entry.value("edgeSide", std::string{ "long" })) != "short";
 			type.edgeFacingOut = Lower(entry.value("facing", std::string{ "out" })) != "in";
 			type.edgeInset = entry.value("edgeInset", 0.0F);
+			type.lyingShift = entry.value("lyingShift", 0.0F);
 			type.checkWalls = entry.value("checkWalls", true);
 			type.markerHeight = entry.value("markerHeight", false);
 			type.onFloor = entry.value("onFloor", false);
@@ -900,6 +902,10 @@ namespace Furniture
 			const float nearY = dx * s0 + dy * c0;
 			local = { midX, midY, type.onFloor ? static_cast<float>(b.boundMin.z) : 0.0F };
 			localHeading = LengthwiseHeading(a_ref, alongX, midX, midY, scale, nearX, nearY);
+			// Toward the feet (where the heading points): the middle of the
+			// bed put the owner's heads into the head rail, not on the pillows.
+			local.x += type.lyingShift * std::sin(localHeading);
+			local.y += type.lyingShift * std::cos(localHeading);
 			if (type.markerHeight && !markers.empty()) {
 				local.z = markers[std::clamp(type.markerIndex, 0, static_cast<int>(markers.size()) - 1)].position.z;
 				zFromMarker = true;
