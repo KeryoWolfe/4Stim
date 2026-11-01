@@ -379,6 +379,70 @@ namespace Furniture
 			return nullptr;
 		}
 
+		// Where a bed's pillows are, in the world: every node or shape of its
+		// model named "...pillow...". A bed with no furniture markers (the
+		// owner's vault bed in a settlement) says nothing else about which
+		// end is the head. a_names: the model's first parts, for the log.
+		void CollectPillows(RE::NiAVObject* a_object, int a_depth, std::vector<RE::NiPoint3>& a_out, std::vector<std::string>& a_names)
+		{
+			if (!a_object) {
+				return;
+			}
+			std::string name = a_object->name.c_str();
+			if (a_names.size() < 24 && !name.empty()) {
+				a_names.push_back(name);
+			}
+			std::ranges::transform(name, name.begin(), [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+			if (name.find("pillow") != std::string::npos) {
+				a_out.push_back(a_object->world.translate);
+				return;
+			}
+			if (const auto node = a_depth > 0 ? a_object->IsNode() : nullptr) {
+				for (const auto& child : node->children) {
+					CollectPillows(child.get(), a_depth - 1, a_out, a_names);
+				}
+			}
+		}
+
+		// The heading (in the furniture's frame) of a scene lying lengthwise
+		// on a_ref: toward its pillows' end if its model has pillows (the
+		// owner's vault bed: heads through the foot rail, pillows at the
+		// other end), else toward the end farther from the player (a_near*:
+		// the player in the furniture's frame). A heading points to the head
+		// end, as before.
+		float LengthwiseHeading(RE::TESObjectREFR* a_ref, bool a_alongX, float a_midX, float a_midY, float a_scale, float a_nearX, float a_nearY)
+		{
+			std::vector<RE::NiPoint3> pillows;
+			std::vector<std::string>  names;
+			CollectPillows(a_ref->Get3D(), 8, pillows, names);
+			if (!pillows.empty()) {
+				RE::NiPoint3 sum{};
+				for (const auto& p : pillows) {
+					sum += p;
+				}
+				const auto  origin = a_ref->GetPosition();
+				const float yaw = a_ref->data.angle.z;
+				const float c0 = std::cos(yaw), s0 = std::sin(yaw);
+				const float px = sum.x / pillows.size() - origin.x, py = sum.y / pillows.size() - origin.y;
+				const float pillowX = px * c0 - py * s0;
+				const float pillowY = px * s0 + py * c0;
+				REX::INFO("Furniture: {:08X}: {} pillow(s) in its model; heads toward that end", a_ref->GetFormID(), pillows.size());
+				if (a_alongX) {
+					return pillowX >= a_midX * a_scale ? 3.14159265F * 0.5F : -3.14159265F * 0.5F;
+				}
+				return pillowY >= a_midY * a_scale ? 0.0F : 3.14159265F;
+			}
+			std::string list;
+			for (const auto& n : names) {
+				list += (list.empty() ? "" : ", ") + n;
+			}
+			REX::INFO("Furniture: {:08X}: no pillows in its model; heads toward the end farther from the player (its parts: {})", a_ref->GetFormID(), list);
+			if (a_alongX) {
+				return a_nearX >= a_midX * a_scale ? -3.14159265F * 0.5F : 3.14159265F * 0.5F;
+			}
+			return a_nearY >= a_midY * a_scale ? 3.14159265F : 0.0F;
+		}
+
 		std::vector<RE::BSFurnitureMarker> MarkersOf(RE::TESObjectREFR* a_ref)
 		{
 			std::vector<RE::BSFurnitureMarker> out;
@@ -387,7 +451,7 @@ namespace Furniture
 				REX::INFO("Furniture: {:08X}: no loaded model", a_ref ? a_ref->GetFormID() : 0);
 				return out;
 			}
-			const auto node = FindMarkerNode(root, 2);
+			const auto node = FindMarkerNode(root, 6);
 			if (!node) {
 				REX::INFO("Furniture: {:08X}: no furniture markers in its model (root \"{}\")", a_ref->GetFormID(), root->GetName().c_str());
 				return out;
@@ -833,11 +897,7 @@ namespace Furniture
 			const float nearX = dx * c0 - dy * s0;
 			const float nearY = dx * s0 + dy * c0;
 			local = { midX, midY, type.onFloor ? static_cast<float>(b.boundMin.z) : 0.0F };
-			if (alongX) {
-				localHeading = nearX >= midX * scale ? -3.14159265F * 0.5F : 3.14159265F * 0.5F;
-			} else {
-				localHeading = nearY >= midY * scale ? 3.14159265F : 0.0F;
-			}
+			localHeading = LengthwiseHeading(a_ref, alongX, midX, midY, scale, nearX, nearY);
 			if (type.markerHeight && !markers.empty()) {
 				local.z = markers[std::clamp(type.markerIndex, 0, static_cast<int>(markers.size()) - 1)].position.z;
 				zFromMarker = true;
@@ -927,11 +987,7 @@ namespace Furniture
 			const float nearX = dx * c0 - dy * s0;
 			const float nearY = dx * s0 + dy * c0;
 			local = { midX, midY, static_cast<float>(type.onFloor ? b.boundMin.z : b.boundMax.z) };
-			if (alongX) {
-				localHeading = nearX >= midX * scale ? -3.14159265F * 0.5F : 3.14159265F * 0.5F;
-			} else {
-				localHeading = nearY >= midY * scale ? 3.14159265F : 0.0F;
-			}
+			localHeading = LengthwiseHeading(a_ref, alongX, midX, midY, scale, nearX, nearY);
 			if (type.markerHeight && !markers.empty()) {
 				local.z = markers[std::clamp(type.markerIndex, 0, static_cast<int>(markers.size()) - 1)].position.z;
 				zFromMarker = true;

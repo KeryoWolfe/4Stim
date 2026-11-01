@@ -14,6 +14,8 @@ Needs the plugin rebuilt and FourStimErection.psc compiled (with LooksMenu's Bod
 
 - **Diagnostics:** `bFurnitureOutOfTheWay` (default 1) turns off the furniture collision change of 0.4.0, to test whether it lets an actor sink into a bed (the owner's player in a bed scene: drawn inside the bed, the NPC fine).
 
+- **Fixed (needs testing):** lying scenes on a bed put heads at the foot (the owner's vault bed: heads through the foot rail, pillows at the other end). With no furniture markers to go by, a scene lying lengthwise on a bed faced the end farther from the player; it now faces the end with the bed model's pillows, and only falls back to the far end when the model has none (`Furniture: ... pillow(s)` in `4Stim.log`, or the model's parts when it has none). Furniture markers are also looked for deeper in a model.
+
 ### Undressing
 - **Fixed:** the HUD's Undress did nothing for slots a scene had already undressed, so clothes an earlier strip missed (or the game put back on) stayed on. Undressing by hand now takes off everything worn in the undress slots again. The log names each item taken off (`Undress: ... to take off: <id> "<name>"`).
 - **Fixed (needs testing):** a female player who stayed dressed all scene while the NPC undressed (a 1.10.163 tester). The log showed her one outfit item taken off and never put back on, yet her body drew the same 27 shapes all scene: the game had the clothes off but never redrew her. Two seconds after each strip, 4Stim now checks whether the items are off and whether the body drawn changed (`Undress check:` in `4Stim.log`), and redraws a player whose clothes are off but still drawn (`Actor::Reset3D`, as F4SE's `Actor.QueueUpdate`).
