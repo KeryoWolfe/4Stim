@@ -548,6 +548,20 @@ namespace Physics
 		}
 	}
 
+	void Reapply(std::uint32_t a_actor)
+	{
+		std::scoped_lock lock(g_lock);
+		const auto       it = g_applied.find(a_actor);
+		if (it == g_applied.end() || it->second.pendingBack) {
+			return;
+		}
+		const auto actor = RE::TESForm::GetFormByID<RE::Actor>(a_actor);
+		if (actor && CallSwap(actor, it->second.from, it->second.to, When::kLater, 1.5F)) {
+			REX::INFO("Physics: {:08X}'s 3D was rebuilt: \"{}\" again", a_actor, it->second.to);
+			it->second.pendingStart = true;
+		}
+	}
+
 	bool IsSwapped(std::uint32_t a_actor)
 	{
 		std::scoped_lock lock(g_lock);

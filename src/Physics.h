@@ -18,6 +18,11 @@ namespace Physics
 	void SceneChanged(const std::vector<std::uint32_t>& a_actors, const std::string& a_sceneID);
 	void SceneEnded(const std::vector<std::uint32_t>& a_actors);
 
+	// a_actor's 3D was rebuilt mid-scene (Undress's redraw of the player):
+	// FSMP built their physics again from the mesh's own file, so the
+	// scene's swap goes in again, a moment later. Any thread.
+	void Reapply(std::uint32_t a_actor);
+
 	// Scene actors dressed when their scene started (their naked body, whose
 	// mesh names the physics file, not loaded): swapped once it is. Main
 	// thread (the scene clock); at most once a second.

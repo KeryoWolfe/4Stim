@@ -19,6 +19,7 @@
 #include "Bridge.h"
 #include "EquipObjects.h"
 #include "Erection.h"
+#include "Physics.h"
 #include "HUD.h"
 
 namespace Undress
@@ -247,6 +248,10 @@ namespace Undress
 						if (Compat::CanReset3D()) {
 							REX::WARN("Undress check: the player's clothes are off but still drawn: redrawing them");
 							actor->Reset3D(true, 0, true, 0xC);
+							// The rebuild takes FSMP back to the mesh's own physics
+							// file: the owner's A-Body swap went rigid for a moment,
+							// then flaccid again (1 November, cot scene).
+							Physics::Reapply(a_id);
 						} else {
 							REX::WARN("Undress check: the player's clothes are off but still drawn (no Actor::Reset3D on this game version to redraw them)");
 						}
