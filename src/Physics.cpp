@@ -9,6 +9,7 @@
 #include <format>
 #include <fstream>
 #include <mutex>
+#include <optional>
 #include <unordered_map>
 #include <unordered_set>
 
@@ -20,6 +21,7 @@
 
 #include "RE/B/BSResourceNiBinaryStream.h"
 #include "RE/N/NiStringExtraData.h"
+#include "RE/B/BSScript_ObjectTypeInfo.h"
 
 // CommonLibF4 declares this but doesn't define it; needed to derive a
 // callback (the game never calls it on its own functors through us).
@@ -477,6 +479,19 @@ namespace Physics
 		};
 		std::unordered_map<std::uint32_t, Waiting> g_waiting;  // scene actors whose physics file isn't loaded yet
 
+		// FSMP's Papyrus script (DynamicHDT) is installed. Main thread.
+		bool HasFSMP()
+		{
+			static std::optional<bool> has;
+			if (!has) {
+				const auto vm = FourStim::GetVM();
+				RE::BSTSmartPointer<RE::BSScript::ObjectTypeInfo> type;
+				has = vm && vm->GetScriptObjectType(RE::BSFixedString("DynamicHDT"), type) && type;
+				REX::INFO("Physics: FSMP's DynamicHDT script {}", *has ? "found" : "not found: no physics swaps");
+			}
+			return *has;
+		}
+
 		// The first swap that fits a_actor, a_delay from now. g_lock held.
 		bool StartSwap(RE::Actor* a_actor, const SceneRegistry::Scene* a_scene, std::size_t a_role, float a_delay)
 		{
@@ -565,11 +580,25 @@ namespace Physics
 				continue;
 			}
 			if (PhysicsFilesOf(actor).empty()) {
-				// Dressed, the naked body (whose mesh names the physics file)
-				// isn't loaded: the owner's A-Body player in his Silver Shroud
-				// outfit got no swap all scene. Looked for again as they
-				// undress (Tick).
-				g_noPhysics.insert(id);
+				// The meshes name no physics file. The owner's A-Body player,
+				// naked but for a helmet, scarf and gloves, showed none either
+				// (FSMP may not keep the mesh's string where 4Stim looks), so
+				// with FSMP installed a swap that names its own files is
+				// tried anyway: FSMP answers whether the body uses it.
+				// Without FSMP: nothing, no "Cannot open store for class
+				// dynamichdt" (a 1.10.163 tester's log). Either way the
+				// actor is looked at again as the scene goes on (dressed, the
+				// naked body isn't loaded).
+				if (HasFSMP() && StartSwap(actor, scene.get(), role, delay)) {
+					REX::INFO("Physics: {:08X}'s meshes name no physics file, but FSMP is installed: the swap's own files tried", id);
+					g_noPhysics.erase(id);
+					g_waiting.erase(id);
+					delay += STAGGER;
+					continue;
+				}
+				if (!HasFSMP()) {
+					g_noPhysics.insert(id);
+				}
 				g_waiting[id] = { a_sceneID, role };
 				REX::INFO("Physics: {:08X}'s meshes name no physics file yet (dressed, no SMP body, or no FSMP): looking again as the scene goes on", id);
 				continue;
