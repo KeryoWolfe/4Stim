@@ -41,7 +41,7 @@ Claude writes the fix; the owner builds and tests; the result goes into TEST_RES
 | 2.4 | A-Body erect physics not swapping on the player | Diagnostics built, untested | Owner: send the `Physics: ... has no piece using` or `already uses` line. |
 | 2.5 | Penis left at an odd angle after scenes | Built, untested | Owner: three scenes in a row, check after each. |
 | 2.6 | Alignment: kisses missing, tongue on the top lip, hands clipping | Head tracking and foot IK now off (built, untested); tongue mesh open | Owner: kiss scenes. Claude: tongue position in the Equip Objects add-on. |
-| 2.7 | Penis clipping through bodies and faces | Open: animation-level. The converter keys only the first 95 bones of ZeX's skeleton, so converted animations never move the penis. | Fix in the animation converter (separate project); until then, the per-scene bend and alignment. |
+| 2.7 | Penis clipping through bodies and faces | Open: animation-level. Checked 1 November against the reconverted test pack (AnimBridge, 946 files): animations carry all 128 ZeX tracks; the male role animates `Penis_00` (the base) and nothing further along: `Penis_01`–`05` and the balls hold one pose. | The converter: carry the source's segment motion over to `Penis_01`–`05`, if the OStim originals have it; until then, the per-scene bend and alignment. |
 | 2.8 | NPCs talk during scenes | Open | Claude: silence scene actors and bystanders' greetings for the scene. |
 | 2.9 | Scene events pass `Actor[]` from native code (may arrive broken) | Open | Claude: test with a listening script; pass form IDs if broken. |
 | 2.10 | Short hitch when a transition starts | Open | Claude: measure from the log; preload transition clips. |
