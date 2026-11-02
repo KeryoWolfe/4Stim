@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.4.3 alpha (in progress)
+## 0.5.0 alpha (in progress)
 
 Needs the plugin rebuilt and FourModEvents.psc and FourJSON.psc compiled.
 

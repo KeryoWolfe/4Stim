@@ -9685,7 +9685,7 @@ extern "C" __declspec(dllexport) bool F4SEPlugin_Query(const F4SE::QueryInterfac
 	if (a_info) {
 		a_info->infoVersion = F4SE::PluginInfo::kVersion;
 		a_info->name = "4Stim";
-		a_info->version = FOURSTIM_VERSION_MAJOR * 10000 + FOURSTIM_VERSION_MINOR * 100 + FOURSTIM_VERSION_PATCH;  // xmake.lua's version (0.4.2: 402)
+		a_info->version = FOURSTIM_VERSION_MAJOR * 10000 + FOURSTIM_VERSION_MINOR * 100 + FOURSTIM_VERSION_PATCH;  // xmake.lua's version (0.5.0: 500)
 	}
 	return a_f4se && !a_f4se->IsEditor();
 }
