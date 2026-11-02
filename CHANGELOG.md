@@ -1,28 +1,18 @@
 # Changelog
 
-## 0.4.1 alpha (in progress)
+## 0.4.2 alpha (1 November 2026)
 
-Needs the plugin rebuilt and FourStimErection.psc compiled (with LooksMenu's BodyGen.psc in the compiler's sources).
+Everything since the 0.4.1 package: beds, A-Body's physics swap, the penis bend, OStim's scene text, the flat navigation list and YAML scene files. Needs the plugin rebuilt (`xmake build -r`; the first build fetches yaml-cpp). No script or HUD changes since 0.4.1. Take the new `4Stim.ini`: the penis bend settings changed.
 
-### New
-- **Erections** (docs/ERECTION.md): men are erect during their scenes and flaccid after, the way their body does it, where OStim leaves it to Schlongs of Skyrim. BodyTalk and Atomic Muscle's `.tri` install get the body's `Erection` morph through LooksMenu (and `Erection Up` / `Down` follow the penis bend on skeletons without ZeX's bend node); A-Body needs nothing (its penis is rigid in the mesh, and the scene's physics swap already turns off what makes it hang), only the bend; Atomic Muscle's bodysuit install gets its erect bodysuit while the man is naked, which undressing leaves alone. The log says what each actor's body got (`Erection: ... body:`). MCM: Alignment page, **Erections** (`bErections`).
-- **A penis bend of -10 is flaccid**, as OStim's (`SOSFlaccid`): the morphs go to 0 and the bodysuit comes off, and the bend node goes back to its own angle. Bodies that can't go flaccid (A-Body during a scene, others) are bent as far down as they go (-9) instead. The Align tab now goes down to -10.
-- Saves made mid-scene: the erection morphs and a bodysuit 4Stim gave are removed when the save is loaded (save data version 6).
-
-### Fixed
-- **Fixed:** a crash on a scene's first second (the owner's game, 1.11.240): the collision watch read the physics world from the scene clock, which runs alongside the physics step, and the game's own read check crashed inside `bhkNPCollisionObject::Getbhk`. The collision watch is now off unless `bCollisionWatch=1` in `4Stim.ini` (only for chasing a shake). The furniture collision at scene start is unchanged.
-
-- **Diagnostics:** `bFurnitureOutOfTheWay` (default 1) turns off the furniture collision change of 0.4.0 for all furniture.
-
+### Beds and physics
 - **Fixed (needs testing):** lying scenes on a bed put heads at the foot (the owner's vault bed: heads through the foot rail, pillows at the other end). With no furniture markers to go by, a scene lying lengthwise on a bed faced the end farther from the player; it now faces the end with the bed model's pillows, and only falls back to the far end when the model has none (`Furniture: ... pillow(s)` in `4Stim.log`, or the model's parts when it has none). Furniture markers are also looked for deeper in a model.
-
 - **Fixed (needs testing):** the player sinking through a bed in lying scenes, drawn inside it with the head at the rail, while the NPC lay on top: the bed's collision was off for the scene's actors (the chair-shaking fix of 0.4.0). Beds now stay solid (`Furniture collision: ... is a bed` in `4Stim.log`); chairs and other furniture are as before. Confirmed by the owner with the bed left solid by hand.
-
 - **Fixed (needs testing):** A-Body's physics swap never happening for an actor dressed when the scene started (the owner's player in the Silver Shroud outfit): 0.4.0 looked once, at the start, for the physics file the body's mesh names, and the naked body isn't loaded under clothes. An actor with no physics file yet is now looked at again every second, and swapped once the clothes come off (`Physics: ... a physics file now (undressed): swapping`). The owner was in fact naked (helmet, scarf and gloves only) and his body still named no physics file to 4Stim, so with FSMP installed (its `DynamicHDT` script) a swap that names its own files, as A-Body's does, is now tried anyway and FSMP answers whether the body uses it; without FSMP nothing is called, as in 0.4.0.
 - **Lying scenes on beds sit 30 units toward the feet and 10 up** (the bed type's new `lyingShift` and `lyingRaise`, docs/FURNITURE.md): from the middle of the owner's vault bed, heads went into the head rail instead of onto the pillows. The pillows are found by their shapes' middles (a shape's own origin is the bed's, which made the first tries guess the end at random).
-
 - **Fixed (needs testing):** A-Body's rigid swap going back to flaccid a moment after it took (the owner's cot scene): the undress check's redraw of the player rebuilds his 3D, and FSMP builds the physics again from the mesh's own `MaleBody.xml`. After a redraw, the scene's swap is now put in again 1.5 s later (`Physics: ...'s 3D was rebuilt`).
+- **Diagnostics:** `bFurnitureOutOfTheWay` (default 1) turns off the furniture collision change of 0.4.0 for all furniture.
 
+### Penis bend
 - **The penis bend curves the shaft, as TNG's does** (docs/ALIGNMENT.md): OStim's `SOSBend` steps are answered in Skyrim by TNG's bend poses, which turn four segments (read from its clips: up 43/9/9/4 degrees along `Genitals01`-`04`, down 53/3/0/3.5/4 along `01`-`05`). 4Stim turned one hinge at the base; it now turns ZeX's `Penis_01_Offset` to `Penis_05_Offset`, each TNG's share, and a step is 7.2 degrees in all (TNG's full bend, about 65 degrees, at 9). New `sPenisBendUp` / `sPenisBendDown`; `sPenisBendNode` takes a list. Step n is n/9 of the pose, as TNG's and SoS's behavior graphs blend them (checked in both). At -10, a body that can't go flaccid (A-Body) takes TNG's flaccid pose (`sPenisFlaccid`, 50 and 15 degrees down) instead of the -9 bend.
 
 ### Scene text
@@ -35,6 +25,21 @@ Needs the plugin rebuilt and FourStimErection.psc compiled (with LooksMenu's Bod
 ### Navigation
 - **The HUD lists a scene's navigations in one list again, as OStim does** (`SceneMenu::BuildMenuData`). 0.4.0's navigation groups are gone: a scene's own `group` and the automatic group per pack (`modpack`). OStim's packs keep the list short with hub scenes, and 4Stim's packs do the same (docs/SCENES.md, "Hubs").
 - **`tools/make-hubs.py`** gives a converted pack hub scenes: one per shared scene its scenes hook into, with the pack's rows moved into it. The Atomic Lust test pack has them.
+
+### Docs
+- **OStim parity audit** (docs/PARITY_AUDIT.md, docs/audit/): what 4Stim is missing or does differently from OStim NG, ranked. Nothing in it is fixed in this build.
+
+## 0.4.1 alpha (31 October 2026)
+
+Needs the plugin rebuilt and FourStimErection.psc compiled (with LooksMenu's BodyGen.psc in the compiler's sources).
+
+### New
+- **Erections** (docs/ERECTION.md): men are erect during their scenes and flaccid after, the way their body does it, where OStim leaves it to Schlongs of Skyrim. BodyTalk and Atomic Muscle's `.tri` install get the body's `Erection` morph through LooksMenu (and `Erection Up` / `Down` follow the penis bend on skeletons without ZeX's bend node); A-Body needs nothing (its penis is rigid in the mesh, and the scene's physics swap already turns off what makes it hang), only the bend; Atomic Muscle's bodysuit install gets its erect bodysuit while the man is naked, which undressing leaves alone. The log says what each actor's body got (`Erection: ... body:`). MCM: Alignment page, **Erections** (`bErections`).
+- **A penis bend of -10 is flaccid**, as OStim's (`SOSFlaccid`): the morphs go to 0 and the bodysuit comes off, and the bend node goes back to its own angle. Bodies that can't go flaccid (A-Body during a scene, others) are bent as far down as they go (-9) instead. The Align tab now goes down to -10.
+- Saves made mid-scene: the erection morphs and a bodysuit 4Stim gave are removed when the save is loaded (save data version 6).
+
+### Fixed
+- **Fixed:** a crash on a scene's first second (the owner's game, 1.11.240): the collision watch read the physics world from the scene clock, which runs alongside the physics step, and the game's own read check crashed inside `bhkNPCollisionObject::Getbhk`. The collision watch is now off unless `bCollisionWatch=1` in `4Stim.ini` (only for chasing a shake). The furniture collision at scene start is unchanged.
 
 ### Undressing
 - **Fixed:** the HUD's Undress did nothing for slots a scene had already undressed, so clothes an earlier strip missed (or the game put back on) stayed on. Undressing by hand now takes off everything worn in the undress slots again. The log names each item taken off (`Undress: ... to take off: <id> "<name>"`).

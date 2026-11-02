@@ -149,7 +149,10 @@ foreach ($s in $Scripts) {
 $anims = New-List
 Add-File $anims (Need (Join-Path $TestAnimsMod "4StimTestAnims.esp") "4StimTestAnims.esp") "4StimTestAnims.esp"
 Add-File $anims (Need (Join-Path $Repo "Data\F4SE\Plugins\4Stim\Scenes\4StimTestAnims.json") "the test scene file") "F4SE/Plugins/4Stim/Scenes/4StimTestAnims.json"
-Add-Tree $anims (Join-Path $TestAnimsMod "meshes") "meshes" @("*.bak")
+# Only the animations 4StimTestAnims.esp plays (meshes\...\animations\OStim);
+# the folder also holds AnimBridge's reconverted test files, which go with the
+# other plugin ("4Stim Test Anims.esp") and aren't part of the test pack.
+Add-Tree $anims (Join-Path $TestAnimsMod "meshes\actors\character\animations\OStim") "meshes/actors/character/animations/OStim" @("*.bak")
 
 # ---- 4Stim Equip Objects (optional add-on) ----
 $equip = New-List
