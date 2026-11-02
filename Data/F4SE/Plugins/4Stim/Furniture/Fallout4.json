@@ -5,7 +5,7 @@
 			"id": "bed",
 			"name": "Bed",
 			"lyingShift": 30,
-			"lyingRaise": 6,
+			"lyingRaise": 10,
 			"forms": [
 				"FURN"
 			],
