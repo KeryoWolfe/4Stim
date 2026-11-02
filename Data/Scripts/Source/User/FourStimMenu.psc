@@ -50,6 +50,19 @@ Function EndSceneOf(int[] aiActorIDs) Global
 	FourStimScene.EndGroupScene(akActors, false)
 EndFunction
 
+; Called by the plugin when a scene couldn't start after the actors were
+; prepared (no such scene, or the game refused every animation): the start is
+; undone the way a scene ends, camera and controls included.
+Function ReleaseFailedStart(int[] aiActorIDs) Global
+	Actor[] akActors = new Actor[aiActorIDs.Length]
+	int i = 0
+	while i < aiActorIDs.Length
+		akActors[i] = Game.GetForm(aiActorIDs[i]) as Actor
+		i += 1
+	endwhile
+	FourStimScene.EndGroupScene(akActors, true)
+EndFunction
+
 ; A climax the player sees: the parts done through Papyrus. The plugin
 ; shakes the free camera itself (the game's shake doesn't move it) and does
 ; the blur and glow; this shakes a normal camera (afShake > 0) and rumbles.

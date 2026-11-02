@@ -2,7 +2,7 @@
 
 ## 0.5.0 alpha (in progress)
 
-Needs the plugin rebuilt and FourModEvents.psc and FourJSON.psc compiled.
+Needs the plugin rebuilt and FourModEvents.psc, FourJSON.psc and FourStimMenu.psc compiled.
 
 ### Scenes ending, failing and loading (parity audit, tier 1 items 1 to 3)
 - **Scenes end when someone in them dies or is in combat, and NPC scenes end when the player isn't in their cell**, as OStim's (docs/ACTORS.md, "When a scene ends by itself"). Before, a scene went on around a corpse or through a fight, and NPC scenes left behind stayed until their timer ran out.
