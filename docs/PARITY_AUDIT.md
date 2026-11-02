@@ -1,0 +1,137 @@
+# OStim parity audit (1 November 2026)
+
+A line-by-line comparison of OStim NG (github.com/VersuchDrei/OStimNG, local copy at `2c98cb2`) with 4Stim at `479fbc5`, made to find what the port is missing, what it does differently without saying so, and what it never considered. Six reviewers each took one part of OStim and followed its code into 4Stim's; every finding cites file and line in both codebases. Their full reports are in `docs/audit/` (1 to 6). The most serious findings were checked again by hand (marked **checked** below).
+
+Nothing was built or run in game: these are differences in code, not test results.
+
+## What it found
+
+114 findings, about 85 once the overlaps between areas are merged. By area:
+
+| Area | Report | Findings | High |
+|---|---|---|---|
+| Scene lifecycle: start, roles, furniture, camera, auto mode, end, save/load | audit/1-thread.md | 20 | 5 |
+| Per-actor: undress, excitement, climax, expressions, eyes, bend, scaling, equip objects | audit/2-actors.md | 21 | 1 |
+| Scene graph, actions, furniture, data formats | audit/3-graph.md | 17 | 2 |
+| Sound, voice sets, toys, lights | audit/4-sound.md | 14 | 2 |
+| Settings, MCM, menus | audit/5-settings.md | 21 | 0 |
+| Scripting API, mod events, plugin interface | audit/6-api.md | 21 | 6 |
+
+The short answer to "are we missing anything": yes, and it falls into five patterns rather than random gaps.
+
+1. **Failure and save/load paths were never ported.** OStim ends scenes on death, combat and cell change, and resets everything on load; 4Stim was built and tested on the happy path.
+2. **OStim content doesn't load as written.** The base scenes have other ids, two of OStim's furniture types don't exist, action aliases and unknown action types are handled differently. Each one alone is small; together they mean an unmodified OStim pack doesn't work.
+3. **The API is asynchronous where OStim's is immediate.** A scene doesn't exist until it's placed, setters apply a frame later, and the end event comes after the data is gone. Mods written for OStim assume the opposite.
+4. **No plugin file.** OStim's API factions, stat lists and keywords need forms; 4Stim has none, so condition-based and dialogue add-ons have nothing to read.
+5. **"As OStim" in the docs is sometimes wrong.** About a dozen doc lines describe 4Stim's own behaviour as OStim's (speed, auto mode, sound timing, furniture, events). These are the ones that led to redoing work.
+
+## Tier 1: breaks play or OStim content (fix before beta)
+
+| # | Finding | OStim | 4Stim | Report |
+|---|---|---|---|---|
+| 1 | **Scenes never end when an actor dies or enters combat, or when an NPC scene is left behind in another cell.** **Checked.** | `Core/Thread.cpp:413-423`, every update | Nothing: `IsDead` / `IsInCombat` are only checked when a scene starts (`main.cpp:6087`, `7464`). ACTORS.md:135 says it's "left to the game". | 1 §1 |
+| 2 | **Loading a save from inside a player scene leaves the player locked**: the input layer, the scene FOV, free-camera speed, slow motion and camera flags are only reset at `kGameLoaded`, which F4SE sends once per launch (**checked**: F4SE PluginAPI.h, "only sent once"). | Reset on every load | `main.cpp:9416-9468`; `kPreLoadGame` (`main.cpp:9364`) doesn't do it | 1 §2 |
+| 3 | **A failed start leaves actors half-locked** (collision off, scene package on, interaction blocked). | Thread never created | No release path when placement fails | 1 §14 |
+| 4 | **The base scenes ship under different ids** (`4StimTest_OStim2PStandingApartMF`), so OStim packs' `origin` / `destination` / `autoTransitions` into base scenes are dropped, silently with `noWarnings`. The hub example in SCENES.md depends on this. **Checked.** Your local reconverted pack (`4Stim Test Anims\...\OStim2PStandingApartMF.json`) does use OStim's ids, but the packaged `4StimTestAnims.json` doesn't. | File name = id, `OStim` prefix reserved | `Data/.../Scenes/4StimTestAnims.json`, packaged by `package-alpha.ps1:151` | 3 §1 |
+| 5 | **OStim's `singlebed` and `doublebed` furniture types are missing** (40 base scenes use them), and a scene naming an unknown type is never offered, where OStim plays it as a floor scene. **Checked.** | `furniture types/singlebed.json`, `doublebed.json` | `Furniture/Fallout4.json` has bed, mattress, chair, bench, table, cookingpot, shelf, wall | 3 §2 |
+| 6 | **An unknown action type is dropped, shifting every later action's index**, so `4StimPeak.N`, `expressionAction` and index-based API calls point at the wrong action. OStim keeps it as its `default` action. | `default` action | Dropped with a warning (SCENES.md) | 3 §3 |
+| 7 | **OStim's own expression files name actions by alias** (`cunnilingus`, `lickingpenis`, `ticklingfeet`...), so those faces never show. **Checked.** | Aliases resolved at load (`Trait/TraitTable.cpp:52,58`) | Raw name lookup (`Expressions.cpp:297-302`) | 2 §1 |
+| 8 | **Voice-set entries: 4Stim picks a fitting entry at random; OStim takes the first that fits** (packs are ordered specific-first, catch-all last). OStim's perk `condition` is ignored without a log line, so conditional sounds always play. **Checked.** | `Sound/SoundUtil.cpp:4-12` | `Sounds.cpp` | 4 §2 |
+| 9 | **Voice-set choice**: no player / NPC choice (OStim has it in the MCM and the save), no race step or race default voice, creatures get human sounds. | `SoundTable.cpp:104-150` | `Sounds.cpp:258-279` | 4 §1 |
+| 10 | **Muting an actor, or an event with nothing to play, leaves the moan face stuck** for the rest of the scene. A bug, not a design choice. | n/a | `Sounds.cpp` stop paths | 4 §8 |
+
+## Tier 2: what add-ons rely on (fix before add-on authors start porting)
+
+| # | Finding | Report |
+|---|---|---|
+| 11 | **Two starts before the first is placed overwrite each other**: one global "pending" slot holds the thread ID, metadata, options and furniture. Found independently by two reviewers. | 1 §3, 6 F1 |
+| 12 | **Thread calls right after `Start` are dropped, and setters apply a frame later** (`AddMetadata` then `HasMetadata` is false). OStim's NPC threads exist when `Start` returns and setters apply in the call. | 6 F2, F3 |
+| 13 | **The end event fires after the scene and its metadata are erased, and before the actors are released**: no thread ID, metadata or reason, and a scene chained on it can be undone by the release. | 1 §10, 6 F4 |
+| 14 | **Mod events**: API.md says Fallout 4's Papyrus has none. F4SE's `RegisterForExternalEvent` exists (**checked**), but F4SE only fires those from Scaleform (`f4se.SendExternalEvent`), so 4Stim would send them from its HUD movie. Event names differ, there are no thread IDs, 8 of OStim's events are missing, and API.md lists two "OStim" events OStim doesn't have. | 6 F5, F17 |
+| 15 | **No API factions, stat form lists or action factions** (`OStimExcitementFaction`, times climaxed, actor count, in water...), because 4Stim has no plugin file. Dialogue, condition and voice-set add-ons read these. Needs a decision on a small `4Stim.esl`. | 1 §18, 2 §10, 4 §14, 6 F7 |
+| 16 | **Starting scenes**: given a starting scene, 4Stim still reorders the actors and fails instead of falling back to a random start; `AddStartingAnimation` without a duration skips the scene at once (OStim uses its length); `navigateTo` is ignored. | 1 §4-5, 6 F11 |
+| 17 | **Coverage**: `FourMetadata` has 22 of OMetadata's 282 functions, `FourLibrary` 37 of 97; `OActorUtil`, `OSequence`, `OJSON` have no counterpart; `PlayExpression` returns bool not float and `IsClimaxStalled` lacks `CheckThread`, so renamed calls don't compile; `VerifyActors` accepts children. | 6 F14-F16 |
+| 18 | **OStim's second C++ API (`OstimNG-API`)**, used by external UIs (OStim Prism) and companion plugins, is missing; the header wrongly says OStim has no alignment API. | 5 §8, 6 F13 |
+| 19 | **Climax stall**: thread and actor stalls are merged, `Climax(act, true)` permanently unstalls, a stalled climax is dropped instead of queued. | 2 §6, 6 F8-F9 |
+
+## Tier 3: behaviour that differs from OStim (Medium)
+
+**Speed and auto mode**
+- `defaultSpeed` and speed carry-over work the other way round: OStim starts at `defaultSpeed` and maps speed proportionally between scenes; 4Stim starts at the slowest and keeps the absolute speed (1 §9, 3 §6).
+- Auto speed control only runs in auto mode; OStim's also runs in every NPC scene and in manual player scenes (1 §7). Speed events fire at other moments, and `FourThread.SetSpeed` sends none (6 F6). The speed display ignores `displaySpeed` (5 §21).
+- `NoAutoMode` is only honoured at start; `NoPlayerControl` turns auto mode on (1 §6). `SetForceAIForMasturbation` and `SetForceAIInConsensualScenes` are missing (1 §8, 5 §5).
+
+**Scenes and transitions**
+- A transition uses its destination's per-role values (scale, heels, look, penis bend, offset), not its own (2 §2).
+- Nine annotations are missing: Undress, Redress, UndressPartial, RedressPartial, RemoveWeapons, AddWeapons, SetLooking, UnsetLooking, ResetLooking (2 §3, 3 §12).
+- During a sequence navigation stays available (OStim hides it); `fadeOnEntry` is ignored on manual navigation; sequences only check the first scene's roles; `EndAfterSequence` isn't honoured when interrupted (3 §7-8, 1 §17).
+- Navigation building: no duplicate removal, no furniture check on the destination, transition chains checked one step only; `NavigateTo` doesn't route through the graph (3 §15, 6 F10).
+- Actor conditions are cached and only refreshed by the picker, so a mid-scene change (a worn penis) doesn't reach navigation (2 §5).
+
+**Actions**
+- Action tags aren't implemented (no `action tags` files, no inverted `-tag`), action custom data (`ints`, `floats`, `strings`, used by OCum and OEndurance) isn't read, and `Default.json` drifted from OStim's data (male masturbation peaks inverted, bathing lost its water requirement...) (3 §4-5, §13).
+- Per-actor action stimulation overrides (OData) are missing (2 §9).
+
+**Climax**
+- A climax and event reactions cut the current moan off; OStim waits for it to end (2 §8, 4 §6). SOUND.md calls the cut-in "as OStim's".
+- NPC-only scenes ignore `SetEndOnOrgasm` and friends (2 §7, 1 §15). The climax blur plays for anyone's climax, OStim's only for the player's (2 §12, 5 §15). Climax doesn't drain stamina (2 §13).
+- Climax comments (`climaxCommentSelf` / `Other`, including the sound-only kind) are missing (4 §4). Dialogue / `talk` isn't in (4 §5, documented).
+
+**Furniture**
+- OStim's furniture `rotation` is radians; 4Stim reads degrees, so 180° becomes about 3° (3 §10).
+- `listIndividually` means something else, and furniture isn't grouped by list type (3 §9). Conditions are partly skipped, multiple `anykeyword` are ORed (3 §11). Occupied furniture and the `NoStim` keyword aren't excluded (3 §14).
+- The player isn't put back after a furniture scene, though ALIGNMENT.md says the player is never moved (1 §11).
+
+**Sound**
+- OStim's old voice-set syntax (used by its own `defaultmale.json`) and single-object entries load as empty sets with nothing logged (4 §3).
+- Sound forms play through Papyrus `Sound.Play`: no volume, can't be stopped, 2-second guess; CommonLibF4 can play them natively (4 §7).
+
+**Start flow and eligibility**
+- Script-started player scenes skip OStim's start flow: waiting for dialogue to close, adding actors, role choice, `PlayerAlways`, furniture choice (1 §12, 6 F18). Builder eligibility is weaker than OStim's `isEligible` (1 §13).
+
+**Settings and menus**
+- The search menu has no text search (5 §1). The scene key does something else in and out of a scene, undocumented, without OStim's hold-for-solo (5 §2).
+- `SetUseScreenShake` isn't read and shake is on by default; OStim's is off (5 §3).
+- OStim's four excitement bar settings are missing, and the meters fade with the HUD where OStim's stay (5 §4).
+- OStim's per-actor and per-sex defaults (Actors page) are mostly missing (5 §6). OStim's add-on `settings` folder isn't read (5 §7).
+- Undressing: no `SetRemoveWeaponsAtStart`, no wig handling, no Papyrus override hook; `SetUndressingSlotMask` takes Fallout 4 slot bits (5 §14, 2 §15).
+
+## Tier 4: small differences (Low)
+
+The Low findings, each a line or two, are in the reports: the Align tab's steps and keys (5 §9), export / import layout (5 §10), MCM volume sliders going to 2 while the plugin clamps to 1 (5 §11), the Toggle key (5 §12), the NPC scene key's 0 (5 §13), settings per install rather than per save (5 §16), the HUD not waking on a scene change (5 §17), `addActorsAtStart` (5 §18), options' `asState` (5 §20), the camera after a scene and other small lifecycle items (1 §20), equip object choices per reference (2 §16), actor property `sex` (2 §17), expression fall-through and parsing (2 §18-19), post-climax excitement rule (2 §14), toy scaling formulas (4 §11), lights and the equip-object API (4 §12), default voice set contents (4 §9), climax expression without a sound (4 §10), CallEvent defaults and return values (6 F19-F21), graph lookups for the API (3 §16), smaller OStim file fields (3 §17), released actors after a load (1 §19), NPC height (2 §21, unverified).
+
+## Docs that say the wrong thing
+
+These lines describe 4Stim as OStim, or are out of date. Each is a one-line fix and they're where the "redo" cycles came from:
+
+- SOUND.md:67 "cutting in over a moan... as OStim's" (OStim waits).
+- AUTOMODE.md: speed control, the standing/bed rule, pull-out "as OStim" (1 §7, §16).
+- SCENES.md: `fadeOnEntry` described as OStim's behaviour; the Hubs example needs OStim's ids (3 §1, §7).
+- FURNITURE.md: `listIndividually`'s meaning (3 §9).
+- API.md: "Fallout 4's Papyrus has no mod events" (6 F5); two events attributed to OStim (6 F17); sex toy formulas "as OStim's" (4 §11); `FindRandomScene` "covers" the missing lookups (3 §16).
+- UNDRESS.md: OStim leaves weapons alone (it doesn't; 5 §14).
+- ACTORS.md:129, OPTIONS.md:53, TODO.md:45: equip-object choices aren't saved (they are). EXCITEMENT.md: excitement isn't saved (it is) (2 §20, 5 §19).
+- SETTINGS.md:10 says OStim's other keys ship unbound (they ship bound); MCM.md and SETTINGS.md miss several ini-only settings (5 §19).
+- ALIGNMENT.md: the player is never moved (1 §11); the plugin API header says OStim has no alignment API (6 F13).
+
+## What the port never considered
+
+Beyond single findings, five things were never treated as requirements:
+
+1. **Running OStim content unmodified as a test.** A load of OStim NG's own `data` folder (scenes, actions, furniture types, expressions, voice sets) with a log line for every field 4Stim skips would have caught tier 1 items 4 to 9 at once. This is the cheapest guard against more "redo" cycles.
+2. **Failure paths.** Death, combat, cell change, failed starts, loading a save mid-scene, actors released after a load. OStim handles each; 4Stim handles almost none.
+3. **The API's timing model.** OStim's API is synchronous; 4Stim's is not, and nothing tells script authors.
+4. **A plugin file.** Factions, form lists and keywords are part of OStim's API, not extras.
+5. **Other UIs and companion plugins.** OStim's external-UI interface (Prism) and second C++ API.
+
+## Suggested order
+
+1. Tier 1 items 1 to 3 (failure and load paths): small, contained, and the most likely to hit testers.
+2. Tier 1 items 4 to 7 (content loading), with the "OStim data unmodified" load check from the section above.
+3. Tier 1 items 8 to 10 (sound) and the doc fixes.
+4. Tier 2 as one piece of work: a synchronous thread record created at `Start` fixes 11, 12, 13 and most of 16 together; then decide on `4Stim.esl` (15) and external events (14).
+5. Tier 3 by area, speed first (it's in every scene).
+
+## What matched
+
+Each report ends with a "Checked and matching" list: what was compared and found equivalent (scene loading and most scene fields, navigation priority and origin links, start-scene selection, excitement rates and decay, alignment keying, expressions' structure, undress slot logic, the options menu format, most settings names and defaults). Read those before assuming an area is untouched.
