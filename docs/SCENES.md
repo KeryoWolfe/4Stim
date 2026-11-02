@@ -84,7 +84,7 @@ The first scene has two speeds and one navigation option. The second uses the si
 | `requirements` | actor | no | Body parts the actor in this role needs besides what the scene's actions ask for (`ACTIONS.md`, Requirements), e.g. `["penis"]`. |
 | `type` | actor | no | OStim's actor type: only actors of this type take the role (`ACTORS.md`). Default `"npc"` (people); `"supermutant"` for super mutants. |
 | `idle` | actor | one of `speeds` or actor `idle` | Single-speed shorthand: the Idle form ID for this role. |
-| `navigations` | scene | no | Scenes the player can move to from this one, in display order. Each has `to` (destination scene ID; OStim's `destination` also works) and `label` (OStim's `description`; the destination's name if none). In a label, `{0}`, `{1}` and so on are replaced by the name of the actor in that role. OStim's fields work too: `origin` (offer it in that scene instead, linking it to this one), `priority` (lower first; links are sorted by it, as OStim does), `icon`, `border` (a ring of that color, `rrggbb`, around the option's icon in the HUD; OStim's default white draws none) and `noWarnings` (no warning in the log when the scene it links to isn't loaded: a link into another pack that may not be installed). A transition's own `navigations` don't count, as in OStim: give it an `origin` instead. 4Stim adds `group` (OStim has none): the HUD lists the navigation in a group, one row named after it that opens a list of its navigations (with Back at the top). Without a `group`, navigations to another pack's scenes are grouped by that pack's `modpack` once there are two or more from it, so a pack that links all its scenes into a shared hub shows up as one row; a leading `(Pack) ` in their labels is dropped inside the group. |
+| `navigations` | scene | no | Scenes the player can move to from this one, in display order. Each has `to` (destination scene ID; OStim's `destination` also works) and `label` (OStim's `description`; the destination's name if none). In a label, `{0}`, `{1}` and so on are replaced by the name of the actor in that role. OStim's fields work too: `origin` (offer it in that scene instead, linking it to this one), `priority` (lower first; links are sorted by it, as OStim does), `icon`, `border` (a ring of that color, `rrggbb`, around the option's icon in the HUD; OStim's default white draws none) and `noWarnings` (no warning in the log when the scene it links to isn't loaded: a link into another pack that may not be installed). A transition's own `navigations` don't count, as in OStim: give it an `origin` instead. The HUD lists a scene's navigations in one list, as OStim does; a pack keeps it short with a hub ("Hubs" below). |
 | `actions` | scene | no | What the actors do to each other: a list of `{"type": "vaginalsex", "actor": 0, "target": 1}`. `type` is an action type id or alias (`ACTIONS.md`); `actor` is the role doing it, `target` the role it's done to (default: the actor, for things done to oneself), and `performer` the role moving (default: the actor; in cowgirl the target is the performer). Unknown types are skipped with a warning. With `SetOnlyGayAnimsInGayScenes=1` a role's actions must also fit its actor: a role that receives `vaginalsex` needs a vagina, so only women take it (`ACTIONS.md`, Requirements). The picker shows a scene's actions under its name. Each action can also say OStim's `muted` (no sounds from it here), `doPeaks` and `peaksAnnotated` (`EVENTS.md`). Excitement, undressing, sounds, expressions and peaks build on them. |
 | `tags` | scene | no | Free-form tags. As OStim, every transition also gets `transition`, and a scene of two or more men `gay`, of two or more women `lesbian`. Two have a meaning, as in OStim: **`intro`** and **`idle`** mark scenes a new scene can start with. After the player picks who and where, 4Stim starts a random `intro` scene that fits them (`SetUseIntroScenes`, on by default), else an `idle` one; a scene without the player starts with any fitting scene. Off furniture it must have someone standing (an actor tag `standing`), on a bed no one standing. Transitions and `noRandomSelection` scenes are never picked. Where OStim would find nothing, 4Stim falls back: `intro`, then `idle`, then any scene, then without the standing rule. Tag your neutral standing, sitting or lying poses `idle`, and the ones a scene should open with `intro`. |
 | `icon` | scene or navigation | no | HUD icon: a `.dds` (or `.swf`) under `Data\Interface\4Stim\Icons\`, extension optional, so `"4Stim/positional/standup_f"` is `Icons\4Stim\positional\standup_f.dds` (see `HUD_API.md`). On a navigation entry it overrides the destination scene's icon. |
@@ -97,7 +97,7 @@ The first scene has two speeds and one navigation option. The second uses the si
 | `defaultSpeed` | scene | no | The speed auto mode starts this scene at, 0 = slowest (OStim's convention; sequences count from 1). Navigating by hand keeps the current speed. |
 | `noRandomSelection` | scene | no | `true`: auto mode never picks this scene at random (it can still walk through it). For scenes that only make sense from a particular other one. |
 | `offset` | scene or actor | no | OStim's `{"x", "y", "z", "r"}`: moves an actor from the scene's spot (x right, y forward, z up, r degrees clockwise), before alignment. A scene's offset moves every actor, on top of each one's own. |
-| `modpack` | scene | no | OStim's: the pack the scene comes from, shown in the picker. 4Stim also groups the HUD's navigations into another pack's scenes by it (`navigations`, `group`). |
+| `modpack` | scene | no | OStim's: the pack the scene comes from, shown in the picker. |
 | `fadeOnEntry` | scene | no | OStim's: in a scene with the player, fade to black when auto mode moves to this scene (as `SetUseAutoFades` does for every scene, `AUTOMODE.md`). |
 | `scale`, `scaleHeight`, `feetOnGround` | actor | no | OStim's actor scaling and heels: the scale the role is played at, the height the animation was made for, and whether heels stay on (`SCALING.md`). |
 | `penisBend` | actor | no | The penis bend for this role, in SoS steps from -9 to +9, or -10 for flaccid (OStim's `sosBend` and `tngBend`, also read): the default until an alignment sets one (`ALIGNMENT.md`, Penis bend). |
@@ -120,6 +120,28 @@ Every field of OStim NG's scene files is read and used. `playbackSpeed`: OStim s
 ## Speeds and navigation in game
 
 During a scene, the speed keys (`=` and `-` by default, set in `4Stim.ini`) step through the scene's speeds, and the 4Stim hotkey gives the in-scene HUD input focus: its Navigation tab lists the scene's navigation links, plus "End scene". The HUD's speed meter shows one segment per speed. Moving to another scene keeps everyone in their roles and keeps the current speed if the destination has that many. A navigation link only works between scenes with the same number of actors; links to scenes that don't exist or don't match are dropped with a warning in the log.
+
+## Hubs
+
+OStim shows every navigation of a scene in one list, and so does 4Stim. Packs keep the shared scenes' lists short themselves, with a hub: a scene of their own that plays the shared scene's animation, puts one row into its list, and links to the pack's scenes from there. OStim's packs all do it this way: FlufyFox's `FlufyFoxCOREFmHub.json` plays `OStim2PStandingApartMF` with these navigations, and is the "FlufyFox MF Hub" row in OStim's standing scene:
+
+```json
+"navigations": [
+	{ "origin": "OStim2PStandingApartMF", "description": "FlufyFox MF Hub", "icon": "OStim/FlufyFox" },
+	{ "destination": "OStim2PStandingApartMF", "description": "Return", "icon": "OStim/symbols/return", "priority": -1000 }
+],
+"noRandomSelection": true
+```
+
+The pack's scenes then give the hub as their `origin` (and go back to it). A big pack can nest hubs (FlufyFox's `page1`, `page2`).
+
+A converted pack that hooks each of its scenes into the shared scene instead adds a row per scene there. `tools/make-hubs.py` gives such a pack its hubs: one per shared scene it hooks into, copied from that scene (its actors and animation), labelled with the pack's `modpack`, with the pack's rows moved into it.
+
+```
+python tools/make-hubs.py "Atomic Lust.json" "<4Stim's scenes: a file, or an OStim-layout folder>"
+```
+
+It keeps the pack file's old version as `.bak` and changes nothing when run again.
 
 ## Transitions
 
