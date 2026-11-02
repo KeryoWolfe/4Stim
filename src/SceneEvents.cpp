@@ -3,6 +3,7 @@
 
 #include "Bridge.h"
 #include "compat/ScrapFunction.h"
+#include "ModEvents.h"
 #include "Physics.h"
 #include "SceneEvents.h"
 
@@ -105,7 +106,7 @@ namespace SceneEvents
 		g_receivers.clear();
 	}
 
-	void SceneStarted(const std::vector<std::uint32_t>& a_actors, const std::string& a_sceneID)
+	void SceneStarted(const std::vector<std::uint32_t>& a_actors, const std::string& a_sceneID, std::int32_t a_threadID, int a_speed)
 	{
 		Physics::SceneStarted(a_actors, a_sceneID);
 		Native(Kind::kStart, a_actors);
@@ -113,23 +114,26 @@ namespace SceneEvents
 		if (WithoutPlayer(a_actors)) {
 			Send("FourStim_OnNPCSceneStart"sv, FourStim::ResolveActors(a_actors), a_sceneID);
 		}
+		ModEvents::ThreadStarted(a_threadID, a_sceneID, a_speed);
 	}
 
-	void SceneChanged(const std::vector<std::uint32_t>& a_actors, const std::string& a_oldID, const std::string& a_newID)
+	void SceneChanged(const std::vector<std::uint32_t>& a_actors, const std::string& a_oldID, const std::string& a_newID, std::int32_t a_threadID, int a_speed)
 	{
 		Physics::SceneChanged(a_actors, a_newID);
 		Native(Kind::kChange, a_actors);
 		Send("FourStim_OnSceneChange"sv, FourStim::ResolveActors(a_actors), a_oldID, a_newID);
+		ModEvents::SceneChanged(a_threadID, a_newID, a_speed);
 	}
 
-	void SpeedChanged(const std::vector<std::uint32_t>& a_actors, const std::string& a_sceneID, int a_level, int a_count)
+	void SpeedChanged(const std::vector<std::uint32_t>& a_actors, const std::string& a_sceneID, int a_level, int a_count, std::int32_t a_threadID)
 	{
 		Native(Kind::kSpeed, a_actors);
 		Send("FourStim_OnSpeedChange"sv, FourStim::ResolveActors(a_actors), a_sceneID,
 			static_cast<std::int32_t>(a_level), static_cast<std::int32_t>(a_count));
+		ModEvents::SpeedChanged(a_threadID, a_sceneID, a_level);
 	}
 
-	void SceneEnded(const std::vector<std::uint32_t>& a_actors, const std::string& a_sceneID)
+	void SceneEnded(const std::vector<std::uint32_t>& a_actors, const std::string& a_sceneID, std::int32_t a_threadID, const std::vector<std::string>& a_metadata)
 	{
 		Physics::SceneEnded(a_actors);
 		Native(Kind::kEnd, a_actors);
@@ -137,30 +141,36 @@ namespace SceneEvents
 		if (WithoutPlayer(a_actors)) {
 			Send("FourStim_OnNPCSceneEnd"sv, FourStim::ResolveActors(a_actors), a_sceneID);
 		}
+		ModEvents::ThreadEnded(a_threadID, a_sceneID, a_actors, a_metadata, "normal");
 	}
 
-	void SequenceEnded(const std::vector<std::uint32_t>& a_actors, const std::string& a_sequenceID)
+	void SequenceEnded(const std::vector<std::uint32_t>& a_actors, const std::string& a_sequenceID, std::int32_t a_threadID)
 	{
 		Send("FourStim_OnSequenceEnd"sv, FourStim::ResolveActors(a_actors), a_sequenceID);
+		ModEvents::SequenceEnded(a_threadID, a_sequenceID);
 	}
 
-	void FurnitureChanged(const std::vector<std::uint32_t>& a_actors, std::uint32_t a_furniture, const std::string& a_type, const std::string& a_sceneID)
+	void FurnitureChanged(const std::vector<std::uint32_t>& a_actors, std::uint32_t a_furniture, const std::string& a_type, const std::string& a_sceneID, std::int32_t a_threadID)
 	{
 		const auto furniture = a_furniture ? RE::TESForm::GetFormByID<RE::TESObjectREFR>(a_furniture) : nullptr;
 		Send("FourStim_OnFurnitureChange"sv, FourStim::ResolveActors(a_actors), furniture, a_type, a_sceneID);
+		ModEvents::FurnitureChanged(a_threadID, a_furniture, a_type);
 	}
 
-	void Climaxed(std::uint32_t a_actor, const std::vector<std::uint32_t>& a_actors, const std::string& a_sceneID, int a_times)
+	void Climaxed(std::uint32_t a_actor, const std::vector<std::uint32_t>& a_actors, const std::string& a_sceneID, int a_times, std::int32_t a_threadID)
 	{
 		Native(Kind::kClimax, a_actors, a_actor);
 		const auto who = FourStim::ResolveActors({ a_actor });
 		Send("FourStim_OnClimax"sv, who.front(), FourStim::ResolveActors(a_actors), a_sceneID, a_times);
+		const auto index = std::ranges::find(a_actors, a_actor) - a_actors.begin();
+		ModEvents::ActorClimaxed(a_threadID, a_sceneID, static_cast<int>(index), a_actor);
 	}
 
 	void EventFired(const std::string& a_event, std::uint32_t a_actor, std::uint32_t a_target, std::uint32_t a_performer,
-		const std::vector<std::uint32_t>& a_actors, const std::string& a_sceneID)
+		const std::vector<std::uint32_t>& a_actors, const std::string& a_sceneID, std::int32_t a_threadID)
 	{
 		const auto who = FourStim::ResolveActors({ a_actor, a_target, a_performer });
 		Send("FourStim_OnEvent"sv, a_event, who[0], who[1], who[2], FourStim::ResolveActors(a_actors), a_sceneID);
+		ModEvents::EventFired(a_threadID, a_event, a_actor, a_target, a_performer);
 	}
 }

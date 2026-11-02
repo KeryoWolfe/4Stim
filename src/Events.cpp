@@ -170,6 +170,23 @@ namespace Events
 		return ids;
 	}
 
+	bool IsChildOf(const std::string& a_event, const std::string& a_parent)
+	{
+		std::scoped_lock lock(g_lock);
+		if (!g_loaded) {
+			LoadLocked();
+		}
+		const auto it = g_events.find(Lower(a_event));
+		if (it == g_events.end()) {
+			return false;
+		}
+		const auto parent = Lower(a_parent);
+		return std::ranges::any_of(Chain(&it->second), [&](const Event* a_link) {
+			const auto found = std::ranges::find_if(g_events, [&](const auto& a_entry) { return &a_entry.second == a_link; });
+			return found != g_events.end() && found->first == parent;
+		});
+	}
+
 	Effects Fire(const std::string& a_event, const std::vector<std::uint32_t>& a_actors, int a_actor, int a_target, int a_performer)
 	{
 		std::unique_lock lock(g_lock);

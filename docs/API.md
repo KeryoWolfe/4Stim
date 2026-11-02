@@ -69,9 +69,62 @@ The equip object chosen for an actor (`SetEquipObjectID`, or the HUD's options) 
 
 `FindFurniture(actorCount, centerRef, radius = 0, sameFloor = 0)`: the furniture around `centerRef` a scene for that many actors could go on, nearest first (0 = any count; radius 0 = `SetFurnitureSearchDistance`, sameFloor 0 = `fFurnitureHeight`); furniture in use or blocked is left out. `FindFurnitureOfType(type, centerRef, radius, sameFloor)`: the nearest of a type (or a kind of it), or None. `GetFurnitureType(ref)`, `IsChildOf(superType, subType)`. (Walls aren't objects, so these don't return them.)
 
-## Scene events
+## Mod events
 
-A script on a quest or reference registers with `FourStim.RegisterForSceneEvents(self)` (again on every game load: registrations aren't saved). 4Stim then calls these functions on its scripts if they have them:
+OStim sends its events as SKSE mod events (`RegisterForModEvent` / `SendModEvent`, through SKSE's `ModCallbackEvent` in OStim's `GameAPI/GameUtil.cpp`). Fallout 4's Papyrus and F4SE have none, so 4Stim's plugin keeps the registrations itself and calls the callbacks through the script engine, the way SKSE does. The events are OStim's, with "ostim_" renamed "4stim_", and carry OStim's arguments. This is 4Stim's own system for now: 4Stim sends its events through it and its add-ons can use it; a version shared by other mods may come later.
+
+```papyrus
+; on a quest or reference script
+FourModEvents.RegisterForModEvent(self, "4stim_thread_start", "OnThreadStart")
+
+Function OnThreadStart(string asEventName, string asStrArg, float afNumArg, Form akSender)
+	int threadID = afNumArg as int
+EndFunction
+```
+
+The differences from OStim's, all forced by Fallout 4:
+
+- Register through `FourModEvents.RegisterForModEvent(self, ...)` instead of `RegisterForModEvent(...)`: a plugin can't add functions to Fallout 4's base script without replacing F4SE's `ScriptObject.psc`.
+- The callback is a `Function`, not an `Event`: Fallout 4 only allows the game's own events as `Event`s. It takes the same arguments.
+- The sender of thread events is None where OStim's is its main quest: 4Stim has no plugin file.
+
+As with SKSE's, registrations last until a game is loaded; register again after each load (for example from the player's `OnPlayerLoadGame`, through `RegisterForRemoteEvent`). Every script on the registered form that has the callback gets it. `UnregisterForModEvent(self, name)`, `UnregisterForAllModEvents(self)`, and `SendModEvent(name, strArg, numArg, sender)` for add-ons to send their own.
+
+| Event | strArg | numArg | sender | OStim's |
+|---|---|---|---|---|
+| `4stim_thread_start` | | thread ID | None | `ostim_thread_start` |
+| `4stim_thread_scenechanged` | scene ID | thread ID | None | `ostim_thread_scenechanged` |
+| `4stim_thread_speedchanged` | the speed's index (0 = slowest), as text | thread ID | None | `ostim_thread_speedchanged` |
+| `4stim_thread_end` | JSON (FourJSON) | thread ID | None | `ostim_thread_end` |
+| `4stim_actor_orgasm` | scene ID | thread ID | the actor | `ostim_actor_orgasm` |
+| `4stim_furniturechanged` | furniture type | thread ID | the furniture (None for a wall) | `ostim_furniturechanged` |
+| `4stim_event` | see below | | | `ostim_event` |
+| `4stim_thread_sequenceend` | sequence ID | thread ID | None | 4Stim's own: a sequence played to its end |
+
+The player's scene is thread 0, as OStim's main thread, and also gets OStim's older main-thread events: `4stim_prestart` and `4stim_start`; `4stim_scenechanged` (scene ID) and `4stim_scenechanged_<sceneID>`; `4stim_animationchanged` (scene ID, speed index); `4stim_orgasm` (scene ID, the actor's index, sender the actor); `4stim_end` (JSON, -1) and `4stim_totalend`; `4stim_spank` (sender the target, for any event that is a spank or a kind of one).
+
+The order is OStim's (`Thread.cpp`): a start sends `4stim_thread_start`, then the first scene's speed and scene events; a scene change sends the speed event, then the scene event; every speed change sends the speed event, whoever made it (the player, auto mode, a climax, `FourThread.SetSpeed`).
+
+`4stim_event` (an event of docs/EVENTS.md, from an annotation or `FourThread.CallEvent`) has OStim's `ostim_event` arguments instead of the four:
+
+```papyrus
+FourModEvents.RegisterForModEvent(self, "4stim_event", "OnEvent")
+Function OnEvent(int aiThreadID, string asType, Form akActor, Form akTarget, Form akPerformer)
+```
+
+The end events' JSON is OStim's: `{"scene", "actors": [{"mod", "formid"}], "metadata", "originator"}` (the originator is always "normal": 4Stim's threads don't change actors yet). `FourJSON` reads it, as OStim's `OJSON`:
+
+```papyrus
+Function OnThreadEnd(string asEventName, string asJson, float afThreadID, Form akSender)
+	Actor[] actors = FourJSON.GetActors(asJson)
+	string sceneID = FourJSON.GetScene(asJson)
+	string[] metadata = FourJSON.GetMetadata(asJson)
+EndFunction
+```
+
+### Scene events (4Stim's older way)
+
+Before mod events, 4Stim called fixed functions on registered scripts, and still does. A script on a quest or reference registers with `FourStim.RegisterForSceneEvents(self)` (again on every game load), and 4Stim calls these functions on its scripts if they have them:
 
 ```papyrus
 Function FourStim_OnSceneStart(Actor[] akActors, String asSceneID)
@@ -86,7 +139,7 @@ Function FourStim_OnClimax(Actor akActor, Actor[] akActors, String asSceneID, in
 Function FourStim_OnEvent(String asEvent, Actor akActor, Actor akTarget, Actor akPerformer, Actor[] akActors, String asSceneID)
 ```
 
-These are OStim's mod events (`ostim_thread_start`, `ostim_thread_end`, `ostim_npcscene_start`, `ostim_thread_sequenceend`...) as calls on the registered scripts: Fallout 4's Papyrus has no mod events. `FourThread` / `FourActor.GetThreadID` turn the actors into a thread ID.
+These are 4Stim's own, not OStim's (OStim has no NPC-scene or sequence events); they carry the actors instead of a thread ID (`FourActor.GetThreadID` turns an actor into one). For anything ported from OStim, use the mod events.
 
 ## C++: the plugin interface
 

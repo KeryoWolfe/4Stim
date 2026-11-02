@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.4.3 alpha (in progress)
+
+Needs the plugin rebuilt and FourModEvents.psc and FourJSON.psc compiled.
+
+### Mod events
+- **Mod events, as OStim's** (docs/API.md, "Mod events"): OStim sends its events as SKSE mod events, which Fallout 4 doesn't have, so 4Stim's plugin now keeps mod event registrations itself. A script registers by name (`FourModEvents.RegisterForModEvent(self, "4stim_thread_start", "OnThreadStart")`) and gets OStim's four arguments, with the thread ID. All of OStim's events are sent, renamed "4stim_": the thread events (start, scene changed, speed changed, end with OStim's JSON, actor orgasm, furniture changed, event) and the player thread's older ones (start, scenechanged, scenechanged_<id>, animationchanged, orgasm, end, totalend, spank), in OStim's order. `FourJSON` reads the end events' JSON, as OStim's `OJSON`. Add-ons can send their own with `FourModEvents.SendModEvent`. For 4Stim and its add-ons for now. 4Stim's own `FourStim_On...` scene events still work.
+- **Every speed change now sends the speed event**, whoever made it (auto mode, a climax, `FourThread.SetSpeed`); before, some didn't.
+
 ## 0.4.2 alpha (1 November 2026)
 
 Everything since the 0.4.1 package: beds, A-Body's physics swap, the penis bend, OStim's scene text, the flat navigation list and YAML scene files. Needs the plugin rebuilt (`xmake build -r`; the first build fetches yaml-cpp). No script or HUD changes since 0.4.1. Take the new `4Stim.ini`: the penis bend settings changed.

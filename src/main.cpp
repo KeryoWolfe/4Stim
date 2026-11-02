@@ -27,6 +27,7 @@
 #include "Bridge.h"
 #include "HUD.h"
 #include "SceneEvents.h"
+#include "ModEvents.h"
 #include "Furniture.h"
 #include "SceneRegistry.h"
 #include "ActorProperties.h"
@@ -1445,6 +1446,7 @@ namespace
 	void MoveApart(const ActiveScene& a_ended);
 	void ArmAutoplay(ActiveScene& a_scene);
 	void EndActiveScene(const ActiveScene& a_scene, std::string_view a_why);
+	std::int32_t ThreadIDOf(std::uint32_t a_actorID);
 	void ForgetActorMeta(const std::vector<std::uint32_t>& a_ids);
 	void SetCameraFadeOff(bool a_off);  // the camera's actor fade, off while scenes run
 	std::thread::id g_mainThread;  // the game's main thread (set at kGameLoaded)
@@ -1955,7 +1957,7 @@ namespace
 		// LockScene (below) reads heels and builds the alignment key.
 		g_activeScenes.push_back(std::move(scene));
 		LockScene(g_activeScenes.back());
-		SceneEvents::SceneStarted(a_actors, a_sceneID);
+		SceneEvents::SceneStarted(a_actors, a_sceneID, g_activeScenes.back().threadID, g_activeScenes.back().speed);
 		Erection::SceneStarted(a_actors);  // after the physics swaps (SceneEvents): a swapped body's erection is its swap
 		WatchAnimEvents(a_actors, a_sceneID);
 		auto& added = g_activeScenes.back();
@@ -2046,7 +2048,7 @@ namespace
 		for (const auto id : ended.actors) {
 			Undress::Redress(id, false, true);
 		}
-		SceneEvents::SceneEnded(ended.actors, ended.sceneID);
+		SceneEvents::SceneEnded(ended.actors, ended.sceneID, ended.threadID, ended.metadata);
 	}
 
 	// A scene moved on by someone else (navigation, a speed key). Leaving
@@ -2148,6 +2150,7 @@ namespace
 		REX::INFO("Autoplay: \"{}\" speed {}: PlayIdle {}", scene->id, speed + 1, results);
 		WatchAnimEvents(a_active.actors, scene->id);
 		const auto previous = a_active.sceneID;
+		const int  previousSpeed = a_active.speed;
 		NoteCarrySpeed(a_active, scene->id);
 		a_active.sceneID = scene->id;
 		a_active.speed = speed;
@@ -2170,7 +2173,11 @@ namespace
 			SetPlayerScene(focused);
 		}
 		if (_stricmp(previous.c_str(), scene->id.c_str()) != 0) {
-			SceneEvents::SceneChanged(a_active.actors, previous, scene->id);
+			SceneEvents::SceneChanged(a_active.actors, previous, scene->id, a_active.threadID, speed);
+		} else if (speed != previousSpeed) {
+			// Every speed change, whoever made it (auto mode, a climax,
+			// FourThread.SetSpeed), as OStim's Thread::SetSpeed sends its event.
+			SceneEvents::SpeedChanged(a_active.actors, scene->id, speed, static_cast<int>(scene->speeds.size()), a_active.threadID);
 		}
 		return true;
 	}
@@ -2206,7 +2213,7 @@ namespace
 			}
 			REX::INFO("Sequence \"{}\": finished on \"{}\"", sequence->id, a_active.sceneID);
 			a_active.sequence.reset();
-			SceneEvents::SequenceEnded(a_active.actors, sequence->id);
+			SceneEvents::SequenceEnded(a_active.actors, sequence->id, a_active.threadID);
 			if (a_active.endAfterSequence) {
 				EndActiveScene(a_active, "its sequence ended (EndAfterSequence)");
 				a_active.remaining = -1.0F;
@@ -2550,8 +2557,8 @@ namespace
 			const float span = std::max(g_autoConfig.speedExcitementMax - g_autoConfig.speedExcitementMin, 1.0F);
 			const int   chance = static_cast<int>(std::clamp((excitement - g_autoConfig.speedExcitementMin) * 100.0F / span, 0.0F, 100.0F));
 			const int   count = static_cast<int>(scene->speeds.size());
-			if (a_active.speed + 1 < count && AutoChance(chance) && PlayOnActiveScene(a_active, scene->id, a_active.speed + 1)) {
-				SceneEvents::SpeedChanged(a_active.actors, scene->id, a_active.speed, count);
+			if (a_active.speed + 1 < count && AutoChance(chance)) {
+				PlayOnActiveScene(a_active, scene->id, a_active.speed + 1);  // sends the speed event
 			}
 		}
 
@@ -2903,7 +2910,7 @@ namespace
 		if (a_active.autoMode.on) {
 			a_active.autoMode.cooldown = std::max(a_active.autoMode.cooldown, g_autoConfig.sceneMin);
 		}
-		SceneEvents::FurnitureChanged(a_active.actors, a_piece.ref, a_piece.type, a_active.sceneID);
+		SceneEvents::FurnitureChanged(a_active.actors, a_piece.ref, a_piece.type, a_active.sceneID, a_active.threadID);
 		return true;
 	}
 
@@ -3689,7 +3696,7 @@ namespace
 		auto role = [&](int a_index) {
 			return a_index >= 0 && static_cast<std::size_t>(a_index) < a_active.actors.size() ? a_active.actors[static_cast<std::size_t>(a_index)] : 0u;
 		};
-		SceneEvents::EventFired(a_event, role(a_actor), role(a_target), role(a_performer), a_active.actors, a_active.sceneID);
+		SceneEvents::EventFired(a_event, role(a_actor), role(a_target), role(a_performer), a_active.actors, a_active.sceneID, a_active.threadID);
 		return true;
 	}
 
@@ -3777,12 +3784,12 @@ namespace
 		if (penis && scene) {
 			if (scene->IsTransition()) {
 				a_active.carrySpeed = 0;
-			} else if (a_active.speed > 0 && PlayOnActiveScene(a_active, a_active.sceneID, 0)) {
-				SceneEvents::SpeedChanged(a_active.actors, a_active.sceneID, 0, static_cast<int>(scene->speeds.size()));
+			} else if (a_active.speed > 0) {
+				PlayOnActiveScene(a_active, a_active.sceneID, 0);  // sends the speed event
 			}
 		}
 
-		SceneEvents::Climaxed(a_actorID, a_active.actors, a_active.sceneID, times);
+		SceneEvents::Climaxed(a_actorID, a_active.actors, a_active.sceneID, times, a_active.threadID);
 		Sounds::Climax(a_actorID);  // OStim's playClimaxSound, with the climax expression
 
 		const bool withPlayer = std::ranges::any_of(a_active.actors, [](std::uint32_t id) { return IsPlayer(RE::TESForm::GetFormByID<RE::Actor>(id)); });
@@ -5150,6 +5157,32 @@ namespace
 		SceneEvents::Unregister(a_receiver);
 	}
 
+	// ---- Mod events (FourModEvents, ModEvents.h): SKSE's for Fallout 4 ----
+	bool ME_Register(std::monostate, RE::TESForm* a_receiver, std::string a_eventName, std::string a_callback)
+	{
+		return ModEvents::Register(a_receiver, a_eventName, a_callback);
+	}
+
+	void ME_Unregister(std::monostate, RE::TESForm* a_receiver, std::string a_eventName)
+	{
+		ModEvents::Unregister(a_receiver, a_eventName);
+	}
+
+	void ME_UnregisterAll(std::monostate, RE::TESForm* a_receiver)
+	{
+		ModEvents::UnregisterAll(a_receiver);
+	}
+
+	void ME_Send(std::monostate, std::string a_eventName, std::string a_strArg, float a_numArg, RE::TESForm* a_sender)
+	{
+		ModEvents::Send(a_eventName, a_strArg, a_numArg, a_sender);
+	}
+
+	// FourJSON (OStim's OJSON): the end event's JSON.
+	std::vector<RE::Actor*> J_GetActors(std::monostate, std::string a_json) { return ModEvents::JSONActors(a_json); }
+	std::string             J_GetScene(std::monostate, std::string a_json) { return ModEvents::JSONScene(a_json); }
+	std::vector<std::string> J_GetMetadata(std::monostate, std::string a_json) { return ModEvents::JSONMetadata(a_json); }
+
 	// Clears both actors' poses in the same task (same frame), mirroring
 	// PlaySceneIdles, so the pair releases together.
 	void StopPair(std::monostate, RE::Actor* a_actor0, RE::Actor* a_actor1)
@@ -5662,9 +5695,9 @@ namespace
 			REX::INFO("Player scene: \"{}\" speed {}: PlayIdle {}", next.sceneID, next.speed + 1, results);
 			TrackSceneChange(next.role0, next.sceneID, next.speed);
 			if (next.sceneID != previous.sceneID) {
-				SceneEvents::SceneChanged(next.ActorIDs(), previous.sceneID, next.sceneID);
+				SceneEvents::SceneChanged(next.ActorIDs(), previous.sceneID, next.sceneID, ThreadIDOf(next.role0), next.speed);
 			} else if (next.speed != previous.speed) {
-				SceneEvents::SpeedChanged(next.ActorIDs(), next.sceneID, next.speed, count);
+				SceneEvents::SpeedChanged(next.ActorIDs(), next.sceneID, next.speed, count, ThreadIDOf(next.role0));
 			}
 		});
 	}
@@ -8922,6 +8955,15 @@ namespace
 		constexpr auto FURNITURE = "FourFurniture"sv;
 		a_vm->BindNativeMethod(FURNITURE, "FindFurniture"sv, F_FindFurniture);
 		a_vm->BindNativeMethod(FURNITURE, "FindFurnitureOfType"sv, F_FindFurnitureOfType);
+		constexpr auto MOD_EVENTS = "FourModEvents"sv;
+		a_vm->BindNativeMethod(MOD_EVENTS, "RegisterForModEvent"sv, ME_Register);
+		a_vm->BindNativeMethod(MOD_EVENTS, "UnregisterForModEvent"sv, ME_Unregister);
+		a_vm->BindNativeMethod(MOD_EVENTS, "UnregisterForAllModEvents"sv, ME_UnregisterAll);
+		a_vm->BindNativeMethod(MOD_EVENTS, "SendModEvent"sv, ME_Send);
+		constexpr auto JSON = "FourJSON"sv;
+		a_vm->BindNativeMethod(JSON, "GetActors"sv, J_GetActors);
+		a_vm->BindNativeMethod(JSON, "GetScene"sv, J_GetScene);
+		a_vm->BindNativeMethod(JSON, "GetMetadata"sv, J_GetMetadata);
 		REX::INFO("Papyrus functions bound");
 		return true;
 	}
@@ -9366,6 +9408,7 @@ namespace
 			// Scene-event registrations aren't saved: scripts register again on
 			// load. Scenes don't survive loading either, so the HUD goes too.
 			SceneEvents::Clear();
+			ModEvents::Clear();  // as SKSE's: scripts register again after a load
 			SetPlayerScene({});
 			HUD::Reset();
 			// Running scenes and their timers end with the old game.

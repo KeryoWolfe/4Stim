@@ -21,6 +21,10 @@ namespace Events
 	// The ids of all loaded events (lowercase).
 	std::vector<std::string> List();
 
+	// Whether a_event is a_parent or has it among its supertypes
+	// (OStim's Event::isChildOf). Case-insensitive.
+	bool IsChildOf(const std::string& a_event, const std::string& a_parent);
+
 	// What the player should feel, for main.cpp to play (only in a scene
 	// the player is in or watching).
 	struct Effects

@@ -21,6 +21,9 @@
 //
 // Registrations aren't saved yet: they're cleared when a game loads, and
 // scripts register again on load.
+//
+// The same events also go out as OStim-style mod events, by name, with the
+// thread ID (ModEvents.h; docs/API.md, "Mod events").
 namespace SceneEvents
 {
 	// The same events for C++ (the plugin interface's listeners, main.cpp),
@@ -40,17 +43,20 @@ namespace SceneEvents
 	void Unregister(RE::TESForm* a_receiver);
 	void Clear();
 
-	void SceneStarted(const std::vector<std::uint32_t>& a_actors, const std::string& a_sceneID);
-	void SceneChanged(const std::vector<std::uint32_t>& a_actors, const std::string& a_oldID, const std::string& a_newID);
-	void SpeedChanged(const std::vector<std::uint32_t>& a_actors, const std::string& a_sceneID, int a_level, int a_count);
-	void SceneEnded(const std::vector<std::uint32_t>& a_actors, const std::string& a_sceneID);
+	// Each also sends the scene's mod events (ModEvents.h), with its thread
+	// ID (a_threadID: 0 = the player's scene, as OStim's main thread).
+	void SceneStarted(const std::vector<std::uint32_t>& a_actors, const std::string& a_sceneID, std::int32_t a_threadID, int a_speed);
+	void SceneChanged(const std::vector<std::uint32_t>& a_actors, const std::string& a_oldID, const std::string& a_newID, std::int32_t a_threadID, int a_speed);
+	void SpeedChanged(const std::vector<std::uint32_t>& a_actors, const std::string& a_sceneID, int a_level, int a_count, std::int32_t a_threadID);
+	// a_metadata: the thread's, for the end event's JSON.
+	void SceneEnded(const std::vector<std::uint32_t>& a_actors, const std::string& a_sceneID, std::int32_t a_threadID, const std::vector<std::string>& a_metadata);
 	// A sequence played to its end (the scene goes on, on its last scene).
-	void SequenceEnded(const std::vector<std::uint32_t>& a_actors, const std::string& a_sequenceID);
+	void SequenceEnded(const std::vector<std::uint32_t>& a_actors, const std::string& a_sequenceID, std::int32_t a_threadID);
 	// The scene moved to other furniture (OStim's ostim_thread_furniturechanged):
 	// a_furniture 0 (None) for a wall, which is no object; then a_type says.
-	void FurnitureChanged(const std::vector<std::uint32_t>& a_actors, std::uint32_t a_furniture, const std::string& a_type, const std::string& a_sceneID);
-	void Climaxed(std::uint32_t a_actor, const std::vector<std::uint32_t>& a_actors, const std::string& a_sceneID, int a_times);
+	void FurnitureChanged(const std::vector<std::uint32_t>& a_actors, std::uint32_t a_furniture, const std::string& a_type, const std::string& a_sceneID, std::int32_t a_threadID);
+	void Climaxed(std::uint32_t a_actor, const std::vector<std::uint32_t>& a_actors, const std::string& a_sceneID, int a_times, std::int32_t a_threadID);
 	// An event (docs/EVENTS.md) fired; 0 = no one in that part (None).
 	void EventFired(const std::string& a_event, std::uint32_t a_actor, std::uint32_t a_target, std::uint32_t a_performer,
-		const std::vector<std::uint32_t>& a_actors, const std::string& a_sceneID);
+		const std::vector<std::uint32_t>& a_actors, const std::string& a_sceneID, std::int32_t a_threadID);
 }
