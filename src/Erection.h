@@ -39,7 +39,7 @@ namespace Erection
 	void SetBend(std::uint32_t a_id, int a_steps);
 
 	// Whether a_id's body can go flaccid (morphs, a bodysuit). Those that
-	// can't (A-Body, other bodies) get -10 as the furthest bend down.
+	// can't (A-Body, other bodies) get TNG's flaccid pose at -10.
 	[[nodiscard]] bool CanGoFlaccid(std::uint32_t a_id);
 
 	// Works out each actor's body, keeps the bodysuits on while they're

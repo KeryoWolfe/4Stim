@@ -654,7 +654,7 @@ namespace
 					PenisBend::Settings().disabled = std::stoi(value) != 0;
 				} else if (key == "fpenisbendstep") {
 					PenisBend::Settings().stepDegrees = std::clamp(std::stof(value), -45.0F, 45.0F);
-				} else if (key == "spenisbendnode" || key == "spenisbendup" || key == "spenisbenddown") {
+				} else if (key == "spenisbendnode" || key == "spenisbendup" || key == "spenisbenddown" || key == "spenisflaccid") {
 					// Comma lists: nodes, base first; their shares of a bend up / down.
 					std::vector<std::string> parts;
 					for (std::size_t from = 0; from <= value.size();) {
@@ -680,7 +680,7 @@ namespace
 								shares.push_back(0.0F);
 							}
 						}
-						(key == "spenisbendup" ? pb.shareUp : pb.shareDown) = std::move(shares);
+						(key == "spenisbendup" ? pb.shareUp : key == "spenisbenddown" ? pb.shareDown : pb.flaccid) = std::move(shares);
 					}
 				} else if (key == "ipenisbendaxis") {
 					PenisBend::Settings().axis = std::clamp(std::stoi(value), 0, 2);

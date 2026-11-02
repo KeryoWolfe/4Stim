@@ -163,13 +163,15 @@ namespace PenisBend
 		for (auto& [id, state] : g_states) {
 			// As OStim's bendSchlong: -10 to +9, where -10 is SoS's flaccid
 			// state (OStim's SOSFlaccid). A body that can go flaccid
-			// (Erection.h: morphs, a bodysuit) does, and the node goes back
-			// to its own angle; one that can't (A-Body's rigid penis with its
-			// physics off) is bent as far down as it goes, -9.
+			// (Erection.h: morphs, a bodysuit) does, and the nodes go back
+			// to their own angle; one that can't (A-Body's rigid penis with
+			// its physics off) takes TNG's flaccid pose (sPenisFlaccid).
 			float total = std::clamp(std::round(state.steps + static_cast<float>(state.offset)), -10.0F, 9.0F);
 			Erection::SetBend(id, static_cast<int>(total));
+			bool flaccidPose = false;
 			if (total <= -10.0F) {
-				total = Erection::CanGoFlaccid(id) ? 0.0F : -9.0F;
+				flaccidPose = !Erection::CanGoFlaccid(id) && !g_config.flaccid.empty();
+				total = flaccidPose ? -10.0F : 0.0F;
 			}
 			if (total == 0.0F && !state.applied) {
 				continue;  // never touched: leave the node alone
@@ -186,7 +188,11 @@ namespace PenisBend
 				if (!state.original[i]) {
 					state.original[i] = node->GetLocalRotate();
 				}
-				node->SetLocalRotate(*state.original[i] * Turn(total * g_config.stepDegrees * Share(i, up)));
+				// The flaccid pose's degrees hang it down: the way a negative
+				// step bends it.
+				const float degrees = flaccidPose ? (i < g_config.flaccid.size() ? -g_config.flaccid[i] * (g_config.stepDegrees < 0.0F ? -1.0F : 1.0F) : 0.0F) :
+				                                    total * g_config.stepDegrees * Share(i, up);
+				node->SetLocalRotate(*state.original[i] * Turn(degrees));
 				++turned;
 			}
 			if (turned) {

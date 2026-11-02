@@ -18,7 +18,11 @@
 // Penis_01_Offset to Penis_05_Offset (the shaft from its base onward; ZeX's
 // _Offset nodes aren't animated, so the animation doesn't undo them, and
 // A-Body's SMP genitals follow the skeleton's penis bones), each its share
-// of the bend (TNG's). Each step is fPenisBendStep degrees in all.
+// of the bend (TNG's). Each step is fPenisBendStep degrees in all. Step n
+// is n/9 of the full pose, as in SoS's and TNG's behavior graphs (their bend
+// clips are additive, blended at weights 0.111 to 1.0; checked 1 November
+// 2026). SoS's own poses, for comparison: up 50 then 5 on each of
+// Genitals02-06, down 55 then 5 each, flaccid 60/10/5/5/5.
 namespace PenisBend
 {
 	struct Config
@@ -31,6 +35,9 @@ namespace PenisBend
 		std::vector<std::string> nodes{ "Penis_01_Offset", "Penis_02_Offset", "Penis_03_Offset", "Penis_04_Offset", "Penis_05_Offset" };
 		std::vector<float>       shareUp{ 0.657F, 0.139F, 0.136F, 0.067F, 0.0F };
 		std::vector<float>       shareDown{ 0.834F, 0.049F, 0.0F, 0.055F, 0.062F };
+		// 4Stim: sPenisFlaccid, degrees down for each node at a bend of -10 on
+		// a body that can't go flaccid itself (A-Body): TNG's TngFlaccid pose.
+		std::vector<float>       flaccid{ 50.1F, 15.1F, 0.0F, 0.0F, 0.0F };
 		int                      axis = 2;       // 4Stim: iPenisBendAxis, the nodes' own x (0), y (1) or z (2)
 	};
 	Config& Settings();
