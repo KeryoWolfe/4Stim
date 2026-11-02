@@ -249,9 +249,9 @@ namespace Undress
 							REX::WARN("Undress check: the player's clothes are off but still drawn: redrawing them");
 							actor->Reset3D(true, 0, true, 0xC);
 							// The rebuild takes FSMP back to the mesh's own physics
-							// file: the owner's A-Body swap went rigid for a moment,
-							// then flaccid again (1 November, cot scene).
-							Physics::Reapply(a_id);
+							// file (the owner's A-Body swap went rigid for a moment,
+							// then flaccid again, 1 November): Actor3D notices the
+							// new 3D and puts the swap back, as for any rebuild.
 						} else {
 							REX::WARN("Undress check: the player's clothes are off but still drawn (no Actor::Reset3D on this game version to redraw them)");
 						}

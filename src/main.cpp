@@ -28,6 +28,7 @@
 #include "HUD.h"
 #include "SceneEvents.h"
 #include "ModEvents.h"
+#include "Actor3D.h"
 #include "Furniture.h"
 #include "SceneRegistry.h"
 #include "ActorProperties.h"
@@ -1382,6 +1383,10 @@ namespace
 		bool                                         noPlayerControl = false;
 		bool                                         noUndress = false;
 		bool                                         endAfterSequence = false;
+
+		// Asked to end by the scene clock (EndBrokenScenes); the end goes
+		// through Papyrus, which removes the scene a moment later.
+		bool ending = false;
 	};
 
 	// Remembers the outgoing speed when a scene enters a transition.
@@ -1447,6 +1452,7 @@ namespace
 	void ArmAutoplay(ActiveScene& a_scene);
 	void EndActiveScene(const ActiveScene& a_scene, std::string_view a_why);
 	std::int32_t ThreadIDOf(std::uint32_t a_actorID);
+	void EndBrokenScenes(float a_seconds);
 	void ForgetActorMeta(const std::vector<std::uint32_t>& a_ids);
 	void SetCameraFadeOff(bool a_off);  // the camera's actor fade, off while scenes run
 	std::thread::id g_mainThread;  // the game's main thread (set at kGameLoaded)
@@ -2044,6 +2050,7 @@ namespace
 		PenisBend::Leave(ended.actors);
 		PenisBend::RestoreRestPose(ended.actors);
 		Erection::Leave(ended.actors);  // before dressing: a bodysuit comes off first
+		Actor3D::Leave(ended.actors);
 		EyeLook::Leave(ended.actors);
 		for (const auto id : ended.actors) {
 			Undress::Redress(id, false, true);
@@ -3910,6 +3917,7 @@ namespace
 			for (auto& active : g_activeScenes) {
 				AutoModeTick(active, elapsed);
 			}
+			EndBrokenScenes(elapsed);
 			// Scenes ending after a climax, or NPC scenes whose time is up
 			// (OStim's NPCSceneDuration). Ending goes through Papyrus, which
 			// removes the scene later (TrackSceneStop).
@@ -3939,9 +3947,61 @@ namespace
 		Erection::Tick();
 		Physics::Tick();
 		EyeLook::Tick();
+		{
+			std::vector<std::uint32_t> everyone;
+			for (const auto& active : g_activeScenes) {
+				everyone.insert(everyone.end(), active.actors.begin(), active.actors.end());
+			}
+			Actor3D::Tick(everyone);  // a rebuilt actor gets the scene's changes back
+		}
 		const bool waiting = !g_activeScenes.empty();  // faces and voices run as long as any scene does
 		if (!waiting && !g_climaxShake.active) {
 			g_autoplayTicking = false;
+		}
+	}
+
+	// As OStim's Thread::loop (Core/Thread.cpp): a scene ends when anyone in
+	// it dies or is in combat, and a scene without the player ends when its
+	// first actor isn't in the player's cell. Four times a second. Main thread.
+	void EndBrokenScenes(float a_seconds)
+	{
+		static float wait = 0.0F;
+		if ((wait -= a_seconds) > 0.0F) {
+			return;
+		}
+		wait = 0.25F;
+		const auto player = RE::PlayerCharacter::GetSingleton();
+		for (auto& active : g_activeScenes) {
+			if (active.ending || active.actors.empty()) {
+				continue;
+			}
+			std::string why;
+			bool        withPlayer = false;
+			for (const auto id : active.actors) {
+				const auto actor = RE::TESForm::GetFormByID<RE::Actor>(id);
+				if (!actor) {
+					continue;
+				}
+				withPlayer = withPlayer || actor == player;
+				if (actor->IsDead(false)) {
+					why = std::format("{:08X} died", id);
+				} else if (actor->IsInCombat()) {
+					why = std::format("{:08X} is in combat", id);
+				}
+				if (!why.empty()) {
+					break;
+				}
+			}
+			if (why.empty() && !withPlayer && player) {
+				const auto first = RE::TESForm::GetFormByID<RE::Actor>(active.actors.front());
+				if (first && first->parentCell != player->parentCell) {
+					why = "the player isn't in its cell";
+				}
+			}
+			if (!why.empty()) {
+				active.ending = true;
+				EndActiveScene(active, why);
+			}
 		}
 	}
 
@@ -4063,6 +4123,49 @@ namespace
 	// ---- Spike 3: play / stop a pose (unchanged) ----
 
 	// Single-actor scene: plays role 0 of a registered scene on a_actor.
+	// A start that failed (no such scene, no AI process, or the game refused
+	// every actor's animation) after Papyrus had already prepared the actors:
+	// restrained, collision changed, interaction blocked, the player's
+	// controls locked and the scene camera on its way, with no running scene
+	// the end key could end. OStim applies nothing to its actors until its
+	// thread exists, so its failed starts leave nothing behind; 4Stim's
+	// Papyrus start does its work first (Fallout 4's Idle-based start needs
+	// the actors placed and locked before the idles play), so it undoes it
+	// here: once Papyrus's start has finished, FourStimMenu.ReleaseFailedStart
+	// runs a scene's normal end for them.
+	std::atomic<std::int64_t> g_failedStartAt = 0;  // steady clock, ms
+
+	std::int64_t NowMs()
+	{
+		return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
+	}
+
+	void ReleaseFailedStart(std::vector<std::uint32_t> a_ids, std::string_view a_why)
+	{
+		std::erase(a_ids, 0u);
+		if (a_ids.empty()) {
+			return;
+		}
+		REX::WARN("Start failed ({}): letting {} actor(s) go again", a_why, a_ids.size());
+		g_failedStartAt = NowMs();
+		g_focusNextScene = false;
+		std::thread([ids = std::move(a_ids)]() {
+			std::this_thread::sleep_for(std::chrono::milliseconds(1500));  // Papyrus's start returns first
+			F4SE::GetTaskInterface()->AddTask([ids]() {
+				// Started after all (another try): leave it to the scene's own end.
+				if (std::ranges::any_of(ids, [](std::uint32_t a_id) { return FindActiveScene(a_id) != nullptr; }) || !g_vm) {
+					return;
+				}
+				std::vector<std::int32_t> args;
+				for (const auto id : ids) {
+					args.push_back(static_cast<std::int32_t>(id));
+				}
+				RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
+				Compat::DispatchStaticCall(g_vm, "FourStimMenu"sv, "ReleaseFailedStart"sv, callback, args);
+			});
+		}).detach();
+	}
+
 	void StartScene(std::monostate, RE::Actor* a_actor, RE::Actor*, std::string a_sceneID)
 	{
 		if (!a_actor) {
@@ -4073,7 +4176,7 @@ namespace
 		const auto scene = SceneRegistry::Find(a_sceneID);
 		if (!scene) {
 			REX::WARN("StartScene: no scene \"{}\" (check the Scenes folder and this log's load summary)", a_sceneID);
-			g_focusNextScene = false;
+			ReleaseFailedStart({ a_actor->GetFormID() }, "no such scene");
 			return;
 		}
 		const auto idle = scene->speeds[0][0];
@@ -4087,10 +4190,14 @@ namespace
 			const auto process = a_actor->currentProcess;
 			if (!process) {
 				REX::WARN("StartScene: actor has no AI process");
+				ReleaseFailedStart({ a_actor->GetFormID() }, "no AI process");
 				return;
 			}
 			const auto ok = process->PlayIdle(*a_actor, idle, nullptr);
 			REX::INFO("StartScene: PlayIdle returned {}", ok);
+			if (!ok) {
+				ReleaseFailedStart({ a_actor->GetFormID() }, "the game refused the animation");
+			}
 			const bool focus = g_focusNextScene.exchange(false) || IsPlayer(a_actor);
 			if (ok) {
 				TrackSceneStart({ a_actor->GetFormID() }, sceneID);
@@ -4447,7 +4554,7 @@ namespace
 		const auto scene = SceneRegistry::Find(a_sceneID);
 		if (!scene || scene->actors.size() < 2) {
 			REX::WARN("PlaySceneIdles: no two-actor scene \"{}\"", a_sceneID);
-			g_focusNextScene = false;
+			ReleaseFailedStart({ a_actor0->GetFormID(), a_actor1->GetFormID() }, "no such scene");
 			return;
 		}
 		const auto idle0 = scene->speeds[0][0];
@@ -4462,6 +4569,7 @@ namespace
 			const auto p1 = a_actor1->currentProcess;
 			if (!p0 || !p1) {
 				REX::WARN("PlaySceneIdles: an actor has no AI process");
+				ReleaseFailedStart({ a_actor0->GetFormID(), a_actor1->GetFormID() }, "no AI process");
 				return;
 			}
 			for (auto* actor : { a_actor0, a_actor1 }) {
@@ -4474,6 +4582,7 @@ namespace
 			REX::INFO("PlaySceneIdles: PlayIdle returned {} / {}", ok0, ok1);
 			const bool focus = g_focusNextScene.exchange(false) || IsPlayer(a_actor0) || IsPlayer(a_actor1);
 			if (!ok0 && !ok1) {
+				ReleaseFailedStart({ a_actor0->GetFormID(), a_actor1->GetFormID() }, "the game refused both animations");
 				return;
 			}
 			TrackSceneStart({ a_actor0->GetFormID(), a_actor1->GetFormID() }, sceneID);
@@ -5284,7 +5393,11 @@ namespace
 		const auto scene = SceneRegistry::Find(a_sceneID);
 		if (!scene || scene->actors.size() != a_actors.size()) {
 			REX::WARN("PlayGroupIdles: no {}-actor scene \"{}\"", a_actors.size(), a_sceneID);
-			g_focusNextScene = false;
+			std::vector<std::uint32_t> failed;
+			for (const auto actor : a_actors) {
+				failed.push_back(actor->GetFormID());
+			}
+			ReleaseFailedStart(std::move(failed), "no such scene");
 			return;
 		}
 		const auto idles = scene->speeds[0];
@@ -5308,6 +5421,7 @@ namespace
 			REX::INFO("PlayGroupIdles: \"{}\": {}", sceneID, results);
 			const bool focus = g_focusNextScene.exchange(false) || withPlayer;
 			if (!any) {
+				ReleaseFailedStart(ids, "the game refused every animation");
 				return;
 			}
 			TrackSceneStart(ids, sceneID);
@@ -5580,6 +5694,12 @@ namespace
 			if (!camera || g_sceneCameraActive) {
 				return;
 			}
+			// The start this camera was for just failed (ReleaseFailedStart):
+			// no camera, or nothing would ever end it.
+			if (!GetPlayerScene().Active() && NowMs() - g_failedStartAt.load() < 3000) {
+				REX::INFO("Scene camera: not started, the scene didn't start");
+				return;
+			}
 			if (!g_startViewSaved) {
 				g_startedFirstPerson = camera->QCameraEquals(RE::CameraState::kFirstPerson);
 			}
@@ -5618,6 +5738,32 @@ namespace
 			SetHUDVisible(true);
 			REX::INFO("Scene camera: restored ({})", g_startedFirstPerson || g_settings.forceFirstPerson ? "first person" : "third person");
 		});
+	}
+
+	// What a player scene changes outside the scene itself, put back: the
+	// input layer, the scene camera's flags, free camera speed, FOV, slow
+	// motion and the hidden HUD. For a game loaded (or started) while the
+	// player was in a scene: none of these are saved, and none of them end
+	// with the old game, so they stayed (the player's controls locked, the
+	// camera zoomed). OStim resets its state on every load. The camera's own
+	// state comes from the save, so it isn't touched. Main thread.
+	void ResetPlayerSceneState(std::string_view a_why)
+	{
+		const bool wasActive = g_sceneCameraActive.exchange(false);
+		const bool locked = static_cast<bool>(g_sceneLayer);
+		g_startViewSaved = false;
+		g_focusNextScene = false;
+		g_sceneFade = false;
+		RestoreFreeCameraSpeed();
+		RestoreFOV();
+		EndSlowMotion();
+		ReleaseSceneLayer();
+		if (wasActive) {
+			SetHUDVisible(true);
+		}
+		if (wasActive || locked) {
+			REX::INFO("Player scene state reset ({}): controls, camera speed, FOV and HUD back", a_why);
+		}
 	}
 
 	// OStim's SetFreeCamToggleKey: in and out of the free camera during a
@@ -9415,6 +9561,9 @@ namespace
 			F4SE::GetTaskInterface()->AddTask([]() {
 				g_activeScenes.clear();
 				SetCameraFadeOff(false);
+				// kGameLoaded comes once per launch (F4SE), so a save loaded
+				// from inside a scene needs this here.
+				ResetPlayerSceneState("another game loaded");
 				{
 					std::scoped_lock lock(g_blockedFurnitureLock);
 					g_blockedFurniture.clear();  // the world comes from the save (version 4 says what was blocked)
@@ -9440,6 +9589,7 @@ namespace
 				PenisBend::Clear();
 				Erection::Clear();
 				EyeLook::Clear();
+				Actor3D::Clear();
 				ScenePackage::Clear();
 			});
 			{
@@ -9499,15 +9649,8 @@ namespace
 				PenisBend::Clear();
 				Erection::Clear();
 				EyeLook::Clear();
-				g_focusNextScene = false;
 				SetPlayerScene({});
-				g_sceneCameraActive = false;
-				g_startViewSaved = false;
-				RestoreFreeCameraSpeed();
-				RestoreFOV();
-				EndSlowMotion();
-				g_sceneFade = false;
-				ReleaseSceneLayer();
+				ResetPlayerSceneState("game loaded");
 			}
 			break;
 		default:

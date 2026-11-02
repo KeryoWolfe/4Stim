@@ -132,7 +132,15 @@ Departures from OStim: lights are 4Stim's own (`LIGHTS.md`), not equip objects, 
 
 As in OStim, an NPC in a scene does nothing but the scene. OStim hooks Skyrim's alias-package check and answers it with its own do-nothing package (OStim.esp's `OStimScenePackage`); 4Stim hooks Fallout 4's (`TESObjectREFR::CheckForCurrentAliasPackage`, Actor's vtable slot 0x5B) the same way. The game asks that before the NPC's own packages, and before starting dialogue or follow packages, so nothing their AI would do (a settler's job, sandboxing, a work spot, a chair) takes them out of the scene. When the scene ends they're handed back their own packages (`EvaluatePackage`). The player isn't touched.
 
-4Stim has no plugin file, so the package isn't a record: it's made the way the game makes its own do-nothing package (`Actor::InitiateDoNothingPackage`: procedure type 0x1B, must complete). Where the game version's functions for that aren't found (1.10.163, possibly), it's Fallout4.esm's `MQ101VaultTecRepDoNothingScene` (a "Wait" with StopMovement, as OStim's). The package doesn't ignore combat: a real attack can still break a scene.
+4Stim has no plugin file, so the package isn't a record: it's made the way the game makes its own do-nothing package (`Actor::InitiateDoNothingPackage`: procedure type 0x1B, must complete). Where the game version's functions for that aren't found (1.10.163, possibly), it's Fallout4.esm's `MQ101VaultTecRepDoNothingScene` (a "Wait" with StopMovement, as OStim's). The package doesn't ignore combat.
+
+## When a scene ends by itself
+
+As OStim's (`Thread::loop`): a scene ends when anyone in it dies or is in combat, and a scene without the player ends when its first actor isn't in the player's cell (the player went elsewhere). `4Stim.log` says why: `Scene "...": ending, 0001A2B3 is in combat`. Like OStim's, the cell check is the game's cell: in the open world, walking a few cells away from an NPC scene ends it.
+
+A scene that couldn't start (no such scene, or the game refused every actor's animation) lets its actors go again a moment later, camera and controls included, as if it had ended (`Start failed (...): letting ... go again`). OStim applies nothing to actors until its thread exists; 4Stim's start places and locks them first, so it undoes that.
+
+Loading a game while the player is in a scene puts back the player's controls, the camera speed, the FOV and the HUD (`Player scene state reset`); they aren't saved with the game and didn't end with the old one.
 
 `4Stim.log` says which package is used (`Scene package: ...` at load) and who gets it. The scene guard (`bGuardScenes`) still takes anyone out of furniture or an idle marker as a fallback.
 

@@ -4,6 +4,14 @@
 
 Needs the plugin rebuilt and FourModEvents.psc and FourJSON.psc compiled.
 
+### Scenes ending, failing and loading (parity audit, tier 1 items 1 to 3)
+- **Scenes end when someone in them dies or is in combat, and NPC scenes end when the player isn't in their cell**, as OStim's (docs/ACTORS.md, "When a scene ends by itself"). Before, a scene went on around a corpse or through a fight, and NPC scenes left behind stayed until their timer ran out.
+- **Fixed:** loading a save while in a scene left the player's controls locked (no menus, no activate), the camera slowed and zoomed and the HUD hidden: they were only put back when the game first started. They're now put back on every load.
+- **Fixed:** a scene that couldn't start (no such scene, or the game refused every animation) left its actors restrained, without collision and unable to talk, and the player locked in the scene camera with nothing running to end. They're now let go again, as at a scene's end.
+
+### Actor 3D rebuilds
+- **A scene actor whose 3D the game rebuilds gets the scene's physics swap back** (docs/PHYSICS.md): equipping something, the undress redraw or another mod's redraw took A-Body back to its own physics. SKSE has an event for this and F4SE doesn't, so 4Stim watches its scene actors itself. This replaces 0.4.2's re-swap after the undress redraw only.
+
 ### Mod events
 - **Mod events, as OStim's** (docs/API.md, "Mod events"): OStim sends its events as SKSE mod events, which Fallout 4 doesn't have, so 4Stim's plugin now keeps mod event registrations itself. A script registers by name (`FourModEvents.RegisterForModEvent(self, "4stim_thread_start", "OnThreadStart")`) and gets OStim's four arguments, with the thread ID. All of OStim's events are sent, renamed "4stim_": the thread events (start, scene changed, speed changed, end with OStim's JSON, actor orgasm, furniture changed, event) and the player thread's older ones (start, scenechanged, scenechanged_<id>, animationchanged, orgasm, end, totalend, spank), in OStim's order. `FourJSON` reads the end events' JSON, as OStim's `OJSON`. Add-ons can send their own with `FourModEvents.SendModEvent`. For 4Stim and its add-ons for now. 4Stim's own `FourStim_On...` scene events still work.
 - **Every speed change now sends the speed event**, whoever made it (auto mode, a climax, `FourThread.SetSpeed`); before, some didn't.
