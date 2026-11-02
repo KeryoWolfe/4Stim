@@ -1,5 +1,6 @@
 #include "SceneRegistry.h"
 #include "Translations.h"
+#include "YamlJSON.h"
 #include "compat/Fallbacks.h"
 
 #include "Actions.h"
@@ -681,8 +682,18 @@ namespace SceneRegistry
 			g_rawSequences.push_back(std::move(raw));
 		}
 
+		// A scene or sequence file: JSON, or YAML (4Stim's; YamlJSON.h), read
+		// into the same JSON value.
 		std::optional<nlohmann::json> ReadJSON(const std::filesystem::path& a_path, const char* a_what)
 		{
+			if (YamlJSON::IsYAML(a_path)) {
+				std::string error;
+				auto        root = YamlJSON::Read(a_path, error);
+				if (!root) {
+					REX::WARN("{}: {}: not valid YAML: {}", a_what, a_path.filename().string(), error);
+				}
+				return root;
+			}
 			try {
 				std::ifstream in(a_path);
 				return nlohmann::json::parse(in, nullptr, true, true);  // comments allowed
@@ -704,7 +715,7 @@ namespace SceneRegistry
 			}
 			const auto& root = *parsed;
 			if (!root.is_object()) {
-				REX::WARN("Scenes: {}: not a JSON object, skipped", file);
+				REX::WARN("Scenes: {}: not an object (a scene, or \"scenes\" / \"sequences\"), skipped", file);
 				++a_skipped;
 				return;
 			}
@@ -841,10 +852,14 @@ namespace SceneRegistry
 			}
 
 			// Every .json under Scenes\ and its subfolders (OStim keeps one
-			// scene per file in subfolders of its scenes folder).
+			// scene per file in subfolders of its scenes folder), and every
+			// .yaml / .yml (4Stim's, the same fields).
+			const auto sceneFile = [](const std::filesystem::path& a_path) {
+				return Lower(a_path.extension().string()) == ".json" || YamlJSON::IsYAML(a_path);
+			};
 			std::vector<std::filesystem::path> files;
 			for (const auto& e : std::filesystem::recursive_directory_iterator(SCENE_FOLDER, ec)) {
-				if (e.is_regular_file() && Lower(e.path().extension().string()) == ".json") {
+				if (e.is_regular_file() && sceneFile(e.path())) {
 					files.push_back(e.path());
 				}
 			}
@@ -857,7 +872,7 @@ namespace SceneRegistry
 			}
 			// OStim's sequences folder: one sequence per file, id = file name.
 			for (const auto& e : std::filesystem::directory_iterator(SEQUENCE_FOLDER, ec)) {
-				if (e.is_regular_file() && Lower(e.path().extension().string()) == ".json") {
+				if (e.is_regular_file() && sceneFile(e.path())) {
 					if (const auto root = ReadJSON(e.path(), "Sequences")) {
 						AddRawSequence(*root, e.path().stem().string(), e.path().filename().string());
 					}

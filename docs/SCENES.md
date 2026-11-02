@@ -1,6 +1,6 @@
 # Adding animations to 4Stim
 
-4Stim reads scenes from JSON files. To add your animations you need two things, and no scripting:
+4Stim reads scenes from JSON or YAML files ("YAML" below). To add your animations you need two things, and no scripting:
 
 1. **A plugin with Idle records** for your animations (one Idle per actor role and speed; see "The plugin: Idle records").
 2. **A JSON file** describing your scenes, placed in:
@@ -9,7 +9,7 @@
 Data\F4SE\Plugins\4Stim\Scenes\YourPack.json
 ```
 
-Every `.json` file in that folder and its subfolders is loaded. Use a filename unique to your pack. 4Stim also reads **OStim's own layout**, one scene per file (see "OStim's layout" below), so a converted OStim pack keeps its files.
+Every `.json`, `.yaml` and `.yml` file in that folder and its subfolders is loaded. Use a filename unique to your pack. 4Stim also reads **OStim's own layout**, one scene per file (see "OStim's layout" below), so a converted OStim pack keeps its files.
 
 ## The plugin: Idle records
 
@@ -116,6 +116,42 @@ The first scene has two speeds and one navigation option. The second uses the si
 - **Sequences**: one per file in `Data\F4SE\Plugins\4Stim\Sequences\`, the file name being the sequence id, with OStim's `scenes` (`id`, `duration`) and `tags`.
 
 Every field of OStim NG's scene files is read and used. `playbackSpeed`: OStim sets its `OStimSpeed` behavior variable, which only OStim's Skyrim behavior patch has; 4Stim speeds up or slows down the actors' animation updates instead (`bUsePlaybackSpeed`, API.md).
+
+## YAML
+
+Any scene or sequence file can be YAML instead of JSON (`.yaml` or `.yml`), with the same fields, in either layout; both kinds load side by side from the same folders. This is 4Stim's: OStim reads JSON only. YAML is easier to write by hand: comments with `#`, no quotes or commas needed. The example above ("Example") as YAML:
+
+```yaml
+# Default plugin for every idle in this file (optional)
+plugin: MyAnimPack.esp
+scenes:
+  - id: MyPack_StandingHug
+    name: Standing hug
+    actors:
+      - sex: male
+      - sex: female
+    speeds:
+      - idles: ["0x000801", "0x000802"]
+      - idles: ["0x000803", "0x000804"]
+    navigations:
+      - to: MyPack_StandingKiss
+        label: kiss {1}
+    tags: [standing, romantic]
+
+  - id: MyPack_Wave
+    name: Wave
+    actors:
+      - idle: "0x000810"
+```
+
+How values are read, so the file means what the JSON would:
+
+- `true` / `false` are booleans, and `null`, `~` or nothing at all is null. YAML 1.1's `yes` / `no` / `on` / `off` are text, as in YAML 1.2.
+- Plain numbers in decimal are numbers (`2`, `-4`, `1.03`, `1e3`). Hex (`0x000801`) and numbers with leading zeros (`007`) stay text, so form IDs keep their spelling; quoting them anyway (`"0x000801"`) is clearer.
+- Anything in quotes is text. Quote a value that starts with `{`, `[`, `#`, `*`, `&` or `!` (`label: "{1} takes over"`): unquoted, YAML reads those as its own syntax. In the middle of a value they're fine (`label: kiss {1}`).
+- Only the file's first document is read. Anchors and aliases (`&name` / `*name`) work, to reuse a block of fields.
+
+A file that isn't valid YAML is skipped with a warning in `4Stim.log` naming the line and column: `Scenes: MyPack.yaml: not valid YAML: line 12, column 5: ...`.
 
 ## Speeds and navigation in game
 

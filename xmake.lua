@@ -17,6 +17,7 @@ add_rules("plugin.vsxmake.autoupdate")
 
 -- third-party packages (fetched by xmake on first build)
 add_requires("nlohmann_json")
+add_requires("yaml-cpp")  -- YAML scene files (src/YamlJSON.cpp)
 add_requires("zydis")  -- CommonLibF4RD's resolver decodes the game's code (src/compat/rd/)
 
 -- CommonLibF4's "commonlibf4.plugin" rule, with 4Stim's own F4SE version data
@@ -49,7 +50,7 @@ target("4Stim")
         description = "A scene/animation framework for Fallout 4, inspired by OStim"
     })
 
-    add_packages("nlohmann_json", "zydis")
+    add_packages("nlohmann_json", "yaml-cpp", "zydis")
     add_syslinks("version")  -- the game's file version (src/compat/rd/RDSupport.cpp)
     add_syslinks("winhttp")  -- Intiface Central's WebSocket (src/Intiface.cpp)
 
