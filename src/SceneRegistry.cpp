@@ -1,4 +1,5 @@
 #include "SceneRegistry.h"
+#include "Translations.h"
 #include "compat/Fallbacks.h"
 
 #include "Actions.h"
@@ -257,7 +258,9 @@ namespace SceneRegistry
 			if (Lower(raw.origin) == Lower(raw.nav.to)) {
 				return std::nullopt;  // neither an origin nor a destination
 			}
-			raw.nav.label = a_value.value("label", a_value.value("description", std::string{}));
+			// Translated here, as OStim does when it loads them; the {n} the
+			// translation leaves are actor names, filled in when it's shown.
+			raw.nav.label = Translations::Localize(a_value.value("label", a_value.value("description", std::string{})));
 			raw.nav.icon = a_value.value("icon", std::string{});
 			raw.nav.border = a_value.value("border", std::string{ "ffffff" });
 			if (const auto it = a_value.find("priority"); it != a_value.end() && it->is_number_integer()) {
@@ -275,7 +278,17 @@ namespace SceneRegistry
 		{
 			Scene scene;
 			scene.id = id;
-			scene.name = entry.value("name", id);
+			// As OStim: the name translated (Translations::Localize); without
+			// one, the translation of "$<id>" (OStim's base scenes are named in
+			// OScenes_en.txt), else the ID (OStim shows "$<id>").
+			if (const auto it = entry.find("name"); it != entry.end() && it->is_string()) {
+				scene.name = Translations::Localize(it->get<std::string>());
+			} else {
+				scene.name = Translations::Localize("$" + id);
+				if (scene.name.starts_with('$')) {
+					scene.name = id;
+				}
+			}
 			scene.icon = entry.value("icon", std::string{});
 			scene.modpack = entry.value("modpack", std::string{});
 			scene.fadeOnEntry = entry.value("fadeOnEntry", false);
@@ -662,7 +675,7 @@ namespace SceneRegistry
 			}
 			RawSequence raw;
 			raw.sequence.id = a_id;
-			raw.sequence.name = a_entry.value("name", a_id);
+			raw.sequence.name = Translations::Localize(a_entry.value("name", a_id));
 			raw.sequence.sourceFile = a_file;
 			raw.sequence.tags = StringList(a_entry, "tags", false);
 			raw.entries = *list;

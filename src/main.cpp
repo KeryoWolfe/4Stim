@@ -4842,6 +4842,7 @@ namespace
 	// Re-reads all scene files (handy while authoring). Returns the count loaded.
 	std::int32_t ReloadScenes(std::monostate)
 	{
+		Translations::Load();  // first: scenes, furniture... are translated as they load
 		const auto count = SceneRegistry::Reload();
 		Alignment::Reload();
 		Expressions::Reload();
@@ -4851,7 +4852,6 @@ namespace
 		Scaling::Reload();
 		ActorProperties::Reload();
 		EquipObjects::Reload();
-		Translations::Load();
 		Options::Reload();
 		HUD::LoadConfig();  // theme and Utility entries too, for HUD authors
 		return count;
@@ -6284,7 +6284,9 @@ namespace
 					return true;
 				}
 				const auto full = a_scene.id.starts_with(SEQUENCE_PREFIX) ? nullptr : SceneRegistry::Find(a_scene.id);
-				return full && !SceneFitsFurniture(*full, here);
+				// No transitions, as OStim's search menu (SearchMenu::Search):
+				// one plays on to its destination, it isn't a scene to pick.
+				return full && (full->IsTransition() || !SceneFitsFurniture(*full, here));
 			});
 			std::size_t sequencesLeft = 0;
 			for (const auto& scene : scenes) {

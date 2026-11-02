@@ -1,4 +1,5 @@
 #include "Lights.h"
+#include "Translations.h"
 #include "compat/Fallbacks.h"
 
 #include <algorithm>
@@ -70,7 +71,7 @@ namespace Lights
 					}
 					auto type = std::make_shared<LightType>();
 					type->id = Lower(e.path().stem().string());
-					type->name = root.value("name", type->id);
+					type->name = Translations::Localize(root.value("name", type->id));
 					if (const auto light = root.find("light"); light != root.end()) {
 						type->form = Sounds::ReadForm(*light);
 						if (!type->form) {

@@ -1,4 +1,5 @@
 #include "EquipObjects.h"
+#include "Translations.h"
 #include "compat/ScrapFunction.h"
 
 #include <algorithm>
@@ -89,7 +90,7 @@ namespace EquipObjects
 					auto object = std::make_shared<Object>();
 					object->id = Lower(e.path().stem().string());
 					object->type = Lower(root.value("type", std::string{}));
-					object->name = root.value("name", object->id);
+					object->name = Translations::Localize(root.value("name", object->id));  // translated, as OStim
 					object->item = Sounds::ReadForm(root);
 					if (object->type.empty() || !object->item || !RE::TESForm::GetFormByID<RE::TESObjectARMO>(object->item)) {
 						REX::WARN("Equip objects: {}: no \"type\", or its armor isn't loaded; skipped", file);

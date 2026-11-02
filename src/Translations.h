@@ -30,6 +30,20 @@ namespace Translations
 	// The text for a_key ("$4Stim_..."), or a_english.
 	std::string Get(std::string_view a_key, std::string_view a_english);
 
+	// OStim's LocaleManager (OStim NG Game/LocaleManager.cpp), for the text
+	// in scene packs' files: scene and navigation "name"/"description",
+	// furniture, voice set, light and equip object names. a_text starting
+	// with '$' is looked up in every Interface\Translations\*_<language>.txt
+	// (and the English ones under it), else returned as it is. As OStim: a
+	// key's {...} contents aren't part of the key, they're translated
+	// themselves and put in the text's {} ("$ostim_nav_lie_on_t{1}" with
+	// "$ostim_nav_lie_on_t{}\tlie on {{}}" is "lie on {1}", whose {1} the
+	// navigation menu fills with actor 1's name). Fallout 4 names the
+	// languages "en", "de"...; packs converted from Skyrim name them
+	// "ENGLISH", "GERMAN"..., so both are read (OStimNG reads sLanguage's
+	// name only). Any thread.
+	std::string Localize(std::string_view a_text);
+
 	// Every translation loaded (for the HUD's and picker's own labels).
 	std::vector<std::pair<std::string, std::string>> Entries();
 

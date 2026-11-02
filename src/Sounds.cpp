@@ -1,4 +1,5 @@
 #include "Sounds.h"
+#include "Translations.h"
 #include "compat/ScrapFunction.h"
 #include "compat/Fallbacks.h"
 
@@ -220,7 +221,7 @@ namespace Sounds
 					std::ifstream in(e.path());
 					const auto    root = nlohmann::json::parse(in, nullptr, true, true);
 					auto          voice = std::make_shared<VoiceSet>();
-					voice->name = root.value("name", e.path().stem().string());
+					voice->name = Translations::Localize(root.value("name", e.path().stem().string()));  // translated, as OStim
 					voice->moan = ReadReaction(root, "moan");
 					voice->climax = ReadReaction(root, "climax");
 					voice->eventActorReactions = ReadReactionMap(root, "eventActorReactions");

@@ -1,4 +1,5 @@
 #include "Furniture.h"
+#include "Translations.h"
 #include "compat/ScrapFunction.h"
 
 #include <algorithm>
@@ -153,7 +154,7 @@ namespace Furniture
 		{
 			Type type;
 			type.id = id;
-			type.name = entry.value("name", type.id);
+			type.name = Translations::Localize(entry.value("name", type.id));  // translated, as OStim
 			if (type.name.starts_with("$")) {
 				type.name = type.id;  // an OStim translation key: no translations here
 			}
