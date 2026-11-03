@@ -9610,6 +9610,27 @@ namespace
 			{
 				REX::INFO("kGameLoaded");
 				g_mainThread = std::this_thread::get_id();
+				// The scene files and the rest the first picker and the first
+				// scene read (with a big pack: hundreds of scene files, their
+				// translations, every plugin's Idle editor IDs), read now on a
+				// thread of their own, while the player is still at the main
+				// menu or loading, instead of as a pause on the first hotkey
+				// press of every launch.
+				static bool preloaded = false;
+				if (!preloaded) {
+					preloaded = true;
+					std::thread([]() {
+						const auto start = std::chrono::steady_clock::now();
+						SceneRegistry::Preload();
+						ActorProperties::Reload();
+						Expressions::Reload();
+						Lights::Reload();
+						// (Voice sets are left to the first scene: Sounds has no lock
+						// of its own, and they're quick.)
+						REX::INFO("Preload: scenes, actor properties, expressions and lights read in {} ms",
+							std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start).count());
+					}).detach();
+				}
 				AnimEventHook::Install();
 				static bool menuRegistered = false;
 				if (!menuRegistered) {

@@ -226,6 +226,10 @@ namespace SceneRegistry
 	// Re-reads every scene file. Returns the number of scenes loaded.
 	int Reload();
 
+	// Loads the scene files now if nothing has yet (the first Find would
+	// otherwise do it, on the first picker). Any thread.
+	void Preload();
+
 	// Case-insensitive lookup. Loads the scene files on first use.
 	// Returns nullptr if the scene doesn't exist. The scene stays valid for
 	// as long as the pointer is held, even across a Reload.

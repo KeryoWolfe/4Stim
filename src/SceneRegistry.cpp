@@ -982,6 +982,14 @@ namespace SceneRegistry
 		return LoadLocked();
 	}
 
+	void Preload()
+	{
+		std::scoped_lock lock(g_lock);
+		if (!g_loaded) {
+			LoadLocked();
+		}
+	}
+
 	std::shared_ptr<const Scene> Find(std::string_view a_id)
 	{
 		std::scoped_lock lock(g_lock);
