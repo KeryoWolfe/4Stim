@@ -138,6 +138,10 @@ As in OStim, an NPC in a scene does nothing but the scene. OStim hooks Skyrim's 
 
 As OStim's (`Thread::loop`): a scene ends when anyone in it dies or is in combat, and a scene without the player ends when its first actor isn't in the player's cell (the player went elsewhere). `4Stim.log` says why: `Scene "...": ending, 0001A2B3 is in combat`. Like OStim's, the cell check is the game's cell: in the open world, walking a few cells away from an NPC scene ends it.
 
+Actors in a scene don't start fights themselves (the scene holds them on the spot, on its own package), so a scene went on while its actors were shot. 4Stim's own addition, `bEndOnDamage` (1 by default; MCM, General page): a scene also ends when someone in it loses health (`ending, ... was hurt (... health lost)`). Shooting near them doesn't count.
+
+When a scene ends, OStim's "Reset position" (`SetResetPosition`) sends NPCs back where they stood before it. A scene broken off by a death, a fight or harm doesn't, with 4Stim's `bStayWhenInterrupted` (1 by default): they carry on from the scene's spot, stepping off it so no one is stuck inside someone else, so a raider whose partner was shot turns on you from there.
+
 A scene that couldn't start (no such scene, or the game refused every actor's animation) lets its actors go again a moment later, camera and controls included, as if it had ended (`Start failed (...): letting ... go again`). OStim applies nothing to actors until its thread exists; 4Stim's start places and locks them first, so it undoes that.
 
 Loading a game while the player is in a scene puts back the player's controls, the camera speed, the FOV and the HUD (`Player scene state reset`); they aren't saved with the game and didn't end with the old one.

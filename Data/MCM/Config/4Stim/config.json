@@ -171,6 +171,36 @@
 					}
 				},
 				{
+					"id": "bEndOnDamage:General",
+					"text": "$4Stim_MCM_bEndOnDamage",
+					"help": "$4Stim_MCM_bEndOnDamage_Help",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "switcher",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "bStayWhenInterrupted:General",
+					"text": "$4Stim_MCM_bStayWhenInterrupted",
+					"help": "$4Stim_MCM_bStayWhenInterrupted_Help",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "switcher",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
 					"id": "fTransitionLead:General",
 					"text": "$4Stim_MCM_fTransitionLead",
 					"help": "$4Stim_MCM_fTransitionLead_Help",

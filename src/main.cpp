@@ -67,6 +67,8 @@ namespace
 	// them back when it ends (bResetPosition, OStim's "Reset position").
 	std::unordered_map<std::uint32_t, PlacedSpot> g_positionBefore;
 	bool                                          g_resetPosition = true;
+	bool                                          g_endOnDamage = true;         // bEndOnDamage (4Stim's)
+	bool                                          g_stayWhenInterrupted = true;  // bStayWhenInterrupted (4Stim's)
 
 	// Turns a_actor to a_heading (radians). Like OStim: Actor::SetHeading
 	// only works on the player; NPCs get their reference angle set.
@@ -748,6 +750,10 @@ namespace
 					Alignment::Settings().groupByHeels = std::stoi(value) != 0;
 				} else if (key == "bresetposition") {
 					g_resetPosition = std::stoi(value) != 0;
+				} else if (key == "bendondamage") {
+					g_endOnDamage = std::stoi(value) != 0;
+				} else if (key == "bstaywheninterrupted") {
+					g_stayWhenInterrupted = std::stoi(value) != 0;
 				} else if (key == "blockscenes") {
 					g_lockScenes = std::stoi(value) != 0;
 				} else if (key == "bguardscenes") {
@@ -1387,6 +1393,11 @@ namespace
 		// Asked to end by the scene clock (EndBrokenScenes); the end goes
 		// through Papyrus, which removes the scene a moment later.
 		bool ending = false;
+		// Ended because someone died, fought or was hurt (not a normal end):
+		// with bStayWhenInterrupted no one is sent back where they stood.
+		bool interrupted = false;
+		// Each actor's health at the last look (bEndOnDamage), role order.
+		std::vector<float> health;
 	};
 
 	// Remembers the outgoing speed when a scene enters a transition.
@@ -3014,7 +3025,7 @@ namespace
 				continue;
 			}
 			if (before != g_positionBefore.end()) {
-				if (g_resetPosition) {
+				if (g_resetPosition && !(a_ended.interrupted && g_stayWhenInterrupted)) {
 					const auto& b = before->second;
 					REX::INFO("Scene end: {:08X} back to where they stood before the scene", id);
 					RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
@@ -3963,8 +3974,20 @@ namespace
 	// As OStim's Thread::loop (Core/Thread.cpp): a scene ends when anyone in
 	// it dies or is in combat, and a scene without the player ends when its
 	// first actor isn't in the player's cell. Four times a second. Main thread.
+	// Fallout4.esm's Health actor value (ActorValueInfo 000002D4), by form
+	// ID rather than the game's actor value list (no new address needed).
+	RE::ActorValueInfo* g_healthAV = nullptr;
+
 	void EndBrokenScenes(float a_seconds)
 	{
+		static bool healthLooked = false;
+		if (!healthLooked) {
+			healthLooked = true;
+			g_healthAV = RE::TESForm::GetFormByID<RE::ActorValueInfo>(0x000002D4);
+			if (!g_healthAV) {
+				REX::WARN("Scene end: Fallout4.esm's Health actor value (000002D4) not found: scenes don't end when someone is hurt");
+			}
+		}
 		static float wait = 0.0F;
 		if ((wait -= a_seconds) > 0.0F) {
 			return;
@@ -3977,16 +4000,27 @@ namespace
 			}
 			std::string why;
 			bool        withPlayer = false;
-			for (const auto id : active.actors) {
+			active.health.resize(active.actors.size(), -1.0F);
+			for (std::size_t role = 0; role < active.actors.size(); ++role) {
+				const auto id = active.actors[role];
 				const auto actor = RE::TESForm::GetFormByID<RE::Actor>(id);
 				if (!actor) {
 					continue;
 				}
 				withPlayer = withPlayer || actor == player;
+				// 4Stim's (bEndOnDamage): hurt. Actors in a scene don't start
+				// fights, so OStim's combat check alone let a scene go on
+				// while its actors were shot (the owner's Legendary Raider).
+				// Health only goes down from harm; it coming back up is regeneration.
+				const float health = g_endOnDamage && g_healthAV ? actor->GetActorValue(*g_healthAV) : -1.0F;
+				const float before = active.health[role];
+				active.health[role] = health;
 				if (actor->IsDead(false)) {
 					why = std::format("{:08X} died", id);
 				} else if (actor->IsInCombat()) {
 					why = std::format("{:08X} is in combat", id);
+				} else if (health >= 0.0F && before >= 0.0F && health < before - 0.5F) {
+					why = std::format("{:08X} was hurt ({:.0f} health lost)", id, before - health);
 				}
 				if (!why.empty()) {
 					break;
@@ -4000,6 +4034,7 @@ namespace
 			}
 			if (!why.empty()) {
 				active.ending = true;
+				active.interrupted = true;
 				EndActiveScene(active, why);
 			}
 		}

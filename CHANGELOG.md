@@ -9,6 +9,10 @@ Needs the plugin rebuilt and FourModEvents.psc, FourJSON.psc and FourStimMenu.ps
 - **Fixed:** loading a save while in a scene left the player's controls locked (no menus, no activate), the camera slowed and zoomed and the HUD hidden: they were only put back when the game first started. They're now put back on every load.
 - **Fixed:** a scene that couldn't start (no such scene, or the game refused every animation) left its actors restrained, without collision and unable to talk, and the player locked in the scene camera with nothing running to end. They're now let go again, as at a scene's end.
 
+- **Scenes end when someone in them is hurt** (`bEndOnDamage`, 4Stim's, on by default; MCM General page): actors in a scene don't start fights, so OStim's combat check let a scene go on while the owner shot one of its actors. Shooting near them doesn't count.
+- **A scene broken off by a death, a fight or harm leaves its actors where the scene was** (`bStayWhenInterrupted`, 4Stim's, on by default): OStim's "Reset position" sent a surviving raider back to the wall she stood at before the scene, to attack from there.
+- **MCM:** the Erections toggle now comes from `tools/make-mcm.py` like the rest (it had been added to the page by hand, and regenerating the page dropped it).
+
 ### Actor 3D rebuilds
 - **A scene actor whose 3D the game rebuilds gets the scene's physics swap back** (docs/PHYSICS.md): equipping something, the undress redraw or another mod's redraw took A-Body back to its own physics. SKSE has an event for this and F4SE doesn't, so 4Stim watches its scene actors itself. This replaces 0.4.2's re-swap after the undress redraw only.
 
