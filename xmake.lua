@@ -60,3 +60,32 @@ target("4Stim")
     add_includedirs("src", "include")
     add_headerfiles("include/**.h")
     set_pcxxheader("src/pch.h")
+
+    -- After each build, copy the DLL (and its .pdb) into the 4Stim Core mod,
+    -- so the game picks up the new build without copying it by hand. The
+    -- folder is the owner's; set FOURSTIM_DEPLOY to use another (or to an
+    -- empty string to turn this off). Skipped when the folder isn't there.
+    after_build(function(target)
+        local dest = os.getenv("FOURSTIM_DEPLOY")
+        if dest == nil then
+            dest = "D:/Naked Commonwealth/mods/4Stim Core/F4SE/Plugins"
+        end
+        if dest == "" or not os.isdir(dest) then
+            return
+        end
+        for _, file in ipairs({ target:targetfile(), target:symbolfile() }) do
+            if file and os.isfile(file) then
+                try {
+                    function()
+                        os.cp(file, dest)
+                        cprint("${green}deployed${clear} %s -> %s", path.filename(file), dest)
+                    end,
+                    catch {
+                        function(e)
+                            cprint("${yellow}not deployed${clear} %s (is the game running?): %s", path.filename(file), tostring(e))
+                        end
+                    }
+                }
+            end
+        end
+    end)
