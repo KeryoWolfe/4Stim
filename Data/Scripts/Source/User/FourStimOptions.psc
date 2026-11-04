@@ -47,6 +47,12 @@ Function ChooseStrapOn(String asState, Actor akActor, String asID) Global
 	FourStim.SetEquipObjectID(akActor, "strapon", asID)
 EndFunction
 
+; The Voice page (4Stim's "voiceSet" option): asID is the voice set's id,
+; "0" for the default.
+Function ChooseVoice(String asState, Actor akActor, String asID) Global
+	FourStim.SetActorVoiceSet(akActor, asID)
+EndFunction
+
 Function ToggleTongue(String asState, Actor akActor) Global
 	ToggleObject(akActor, "tongue")
 EndFunction

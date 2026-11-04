@@ -3742,7 +3742,7 @@ namespace
 		const float relativeSpeed = scene->speeds.empty() ? 0.0F : static_cast<float>(a_scene.speed) / static_cast<float>(scene->speeds.size());
 		for (std::size_t role = 0; role < a_scene.actors.size(); ++role) {
 			Expressions::Enter(a_scene.actors[role], *scene, role, relativeSpeed);
-			Sounds::Enter(a_scene.actors[role], *scene, role);
+			Sounds::Enter(a_scene.actors[role], *scene, role, a_scene.actors);
 		}
 		// Peaks and action sounds (OStim's node handler), and lights.
 		const bool withPlayer = std::ranges::any_of(a_scene.actors, [](std::uint32_t id) { return IsPlayer(RE::TESForm::GetFormByID<RE::Actor>(id)); });
@@ -5183,6 +5183,40 @@ namespace
 		const auto id = SceneWeaponOf(a_actor->GetFormID());
 		NoteSceneWeapon(a_actor->GetFormID(), 0);
 		return static_cast<std::int32_t>(id);
+	}
+
+	// OStim's OData.GetVoiceSetPairs / GetVoiceSetName / SetVoiceSet: voice
+	// set choices per actor base form ID (docs/SOUND.md).
+	std::vector<std::string> GetVoiceSetPairs(std::monostate)
+	{
+		return Sounds::VoiceSetPairs();
+	}
+
+	std::string GetVoiceSetName(std::monostate, std::int32_t a_formID)
+	{
+		return Sounds::VoiceSetName(static_cast<std::uint32_t>(a_formID));
+	}
+
+	void SetVoiceSet(std::monostate, std::int32_t a_formID, std::string a_voice)
+	{
+		const auto base = static_cast<std::uint32_t>(a_formID);
+		Sounds::SetVoiceSet(base, a_voice);
+		F4SE::GetTaskInterface()->AddTask([base]() { Sounds::ApplyVoiceSet(base); });
+	}
+
+	// 4Stim's: the same for an actor (their base), for the HUD's options.
+	void SetActorVoiceSet(std::monostate, RE::Actor* a_actor, std::string a_voice)
+	{
+		const auto npc = a_actor ? a_actor->GetNPC() : nullptr;
+		if (npc) {
+			SetVoiceSet({}, static_cast<std::int32_t>(npc->GetFormID()), std::move(a_voice));
+		}
+	}
+
+	std::string GetActorVoiceSetName(std::monostate, RE::Actor* a_actor)
+	{
+		const auto npc = a_actor ? a_actor->GetNPC() : nullptr;
+		return Sounds::VoiceSetName(npc ? npc->GetFormID() : 0);
 	}
 
 	bool IsMuted(std::monostate, RE::Actor* a_actor)
@@ -9042,6 +9076,11 @@ namespace
 		a_vm->BindNativeMethod(SCRIPT_NAME, "Mute"sv, Mute);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "Unmute"sv, Unmute);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "IsMuted"sv, IsMuted);
+		a_vm->BindNativeMethod(SCRIPT_NAME, "GetVoiceSetPairs"sv, GetVoiceSetPairs);
+		a_vm->BindNativeMethod(SCRIPT_NAME, "GetVoiceSetName"sv, GetVoiceSetName);
+		a_vm->BindNativeMethod(SCRIPT_NAME, "SetVoiceSet"sv, SetVoiceSet);
+		a_vm->BindNativeMethod(SCRIPT_NAME, "SetActorVoiceSet"sv, SetActorVoiceSet);
+		a_vm->BindNativeMethod(SCRIPT_NAME, "GetActorVoiceSetName"sv, GetActorVoiceSetName);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "RememberSceneWeapon"sv, RememberSceneWeapon);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "SheatheForScene"sv, SheatheForScene);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "TakeSceneWeaponID"sv, TakeSceneWeaponID);
@@ -9158,6 +9197,8 @@ namespace
 	constexpr std::uint32_t SCENES_RECORD = 'SCNS';
 	constexpr std::uint32_t CHOICES_RECORD = 'EQCH';  // each actor's chosen equip objects (OStim saves them in its actor data)
 	constexpr std::uint32_t CHOICES_VERSION = 1;
+	constexpr std::uint32_t VOICES_RECORD = 'VOIC';  // voice sets chosen per actor base (OStim's Serialization voice sets)
+	constexpr std::uint32_t VOICES_VERSION = 1;
 	constexpr std::uint32_t SCENES_VERSION = 6;  // 2: each actor's own scale (alignment scales them); 3: equip objects given; 4: wall spot, furniture blocked, clutter; 5: weapon taken off; 6: erect bodysuit given
 
 	struct SavedScene
@@ -9197,6 +9238,8 @@ namespace
 		a_out.resize(length);
 		return a_intfc->ReadRecordData(a_out.data(), length) == length;
 	}
+
+	void WriteVoices(const F4SE::SerializationInterface* a_intfc);
 
 	void OnGameSaved(const F4SE::SerializationInterface* a_intfc)
 	{
@@ -9269,6 +9312,66 @@ namespace
 				}
 			}
 		}
+		WriteVoices(a_intfc);
+	}
+
+	// The VOICES_RECORD: actor base -> voice set key. A key that's a form ID
+	// (OStim's: the voice set's target) is written as one, so a changed load
+	// order still finds it; a name (4Stim's sets without a target) as text.
+	void WriteVoices(const F4SE::SerializationInterface* a_intfc)
+	{
+		const auto voices = Sounds::AllVoiceChoices();
+		if (voices.empty() || !a_intfc->OpenRecord(VOICES_RECORD, VOICES_VERSION)) {
+			return;
+		}
+		a_intfc->WriteRecordData(static_cast<std::uint32_t>(voices.size()));
+		for (const auto& [base, key] : voices) {
+			a_intfc->WriteRecordData(base);
+			std::uint32_t form = 0;
+			bool          isForm = !key.empty() && std::ranges::all_of(key, [](char c) { return std::isdigit(static_cast<unsigned char>(c)) || c == '-'; });
+			if (isForm) {
+				try {
+					form = static_cast<std::uint32_t>(std::stol(key));
+				} catch (...) {
+					isForm = false;
+				}
+			}
+			a_intfc->WriteRecordData(static_cast<std::uint8_t>(isForm ? 1 : 0));
+			if (isForm) {
+				a_intfc->WriteRecordData(form);
+			} else {
+				WriteString(a_intfc, key);
+			}
+		}
+	}
+
+	void ReadVoices(const F4SE::SerializationInterface* a_intfc)
+	{
+		std::vector<std::pair<std::uint32_t, std::string>> voices;
+		std::uint32_t count = 0;
+		a_intfc->ReadRecordData(count);
+		for (std::uint32_t i = 0; i < count && i < 65536; ++i) {
+			std::uint32_t base = 0;
+			std::uint8_t  isForm = 0;
+			a_intfc->ReadRecordData(base);
+			a_intfc->ReadRecordData(isForm);
+			std::string key;
+			if (isForm) {
+				std::uint32_t form = 0;
+				a_intfc->ReadRecordData(form);
+				const auto resolved = a_intfc->ResolveFormID(form).value_or(0);
+				key = resolved ? std::to_string(static_cast<std::int32_t>(resolved)) : std::string{};
+			} else if (!ReadString(a_intfc, key)) {
+				REX::WARN("Save data: the voice set choices are damaged, the rest skipped");
+				break;
+			}
+			const auto resolvedBase = a_intfc->ResolveFormID(base).value_or(0);
+			if (resolvedBase && !key.empty()) {
+				voices.emplace_back(resolvedBase, std::move(key));
+			}
+		}
+		REX::INFO("Save data: voice sets chosen for {} actor(s)", voices.size());
+		Sounds::RestoreVoiceChoices(std::move(voices));
 	}
 
 	// The CHOICES_RECORD: actor -> type -> object id.
@@ -9306,6 +9409,10 @@ namespace
 		while (a_intfc->GetNextRecordInfo(type, version, length)) {
 			if (type == CHOICES_RECORD && version == CHOICES_VERSION) {
 				ReadChoices(a_intfc);
+				continue;
+			}
+			if (type == VOICES_RECORD && version == VOICES_VERSION) {
+				ReadVoices(a_intfc);
 				continue;
 			}
 			if (type != SCENES_RECORD || version < 1 || version > SCENES_VERSION) {
@@ -9423,6 +9530,7 @@ namespace
 	void OnGameReverted(const F4SE::SerializationInterface*)
 	{
 		EquipObjects::ClearChosen();  // before a save's are read, or a new game
+		Sounds::ClearVoiceChoices();
 		std::scoped_lock lock(g_savedLock);
 		g_loadedScenes.clear();
 	}

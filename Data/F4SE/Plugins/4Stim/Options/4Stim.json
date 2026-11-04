@@ -1,5 +1,5 @@
 {
-	"_comment": "4Stim's own HUD options, in OStim's options format (docs/OPTIONS.md): a page per actor with undressing, muting, and their strap-on and tongue (on / off, and which one). \"state\" (4Stim's) picks the state shown; \"english\" holds the English of the $4Stim_ texts (docs/TRANSLATIONS.md).",
+	"_comment": "4Stim's own HUD options, in OStim's options format (docs/OPTIONS.md): a page per actor with undressing, muting, their voice set, and their strap-on and tongue (on / off, and which one). \"state\" (4Stim's) picks the state shown; \"english\" holds the English of the $4Stim_ texts (docs/TRANSLATIONS.md).",
 	"pages": [
 		{
 			"name": "4StimActors",
@@ -13,6 +13,12 @@
 			"icon": "4Stim/symbols/gender_{sex}",
 			"parent": "4StimActors",
 			"repeat": "actor"
+		},
+		{
+			"name": "4StimVoice",
+			"description": "$4Stim_OptVoicePage",
+			"icon": "4Stim/symbols/switch",
+			"parent": "4StimActor"
 		},
 		{
 			"name": "4StimStrapOn",
@@ -61,6 +67,24 @@
 					"icon": "4Stim/sensual/kissing",
 					"border": "ff0000",
 					"function": "FourStimOptions/ToggleMute"
+				}
+			}
+		},
+		{
+			"name": "Voice",
+			"page": "4StimVoice",
+			"repeat": "voiceSet",
+			"states": {
+				"default": {
+					"description": "$4Stim_OptVoiceDefault",
+					"icon": "4Stim/symbols/return",
+					"function": "FourStimOptions/ChooseVoice"
+				},
+				"set": {
+					"description": "$4Stim_OptVoiceSet",
+					"icon": "4Stim/sensual/kissing",
+					"border": "ffff00",
+					"function": "FourStimOptions/ChooseVoice"
 				}
 			}
 		},
@@ -114,6 +138,9 @@
 		"$4Stim_OptUnmute": "Unmute {actor}",
 		"$4Stim_OptStrapOnToggle": "Strap-on on / off for {actor}",
 		"$4Stim_OptTongueToggle": "Tongue on / off for {actor}",
-		"$4Stim_OptWearObject": "Wear {type}"
+		"$4Stim_OptWearObject": "Wear {type}",
+		"$4Stim_OptVoicePage": "Voice",
+		"$4Stim_OptVoiceDefault": "{type} voice for {actor}",
+		"$4Stim_OptVoiceSet": "Voice: {type}"
 	}
 }

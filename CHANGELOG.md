@@ -2,7 +2,7 @@
 
 ## 0.5.0 alpha (in progress)
 
-Needs the plugin rebuilt and FourModEvents.psc, FourJSON.psc, FourStimMenu.psc compiled (and FourStimTest.psc, if you use it), and the new test pack (its scene files changed).
+Needs the plugin rebuilt; FourModEvents.psc, FourJSON.psc, FourStimMenu.psc, FourStim.psc and FourStimOptions.psc compiled (and FourStimTest.psc, if you use it); and the new test pack (its scene files changed).
 
 ### Scenes ending, failing and loading (parity audit, tier 1 items 1 to 3)
 - **Scenes end when someone in them dies or is in combat, and NPC scenes end when the player isn't in their cell**, as OStim's (docs/ACTORS.md, "When a scene ends by itself"). Before, a scene went on around a corpse or through a fight, and NPC scenes left behind stayed until their timer ran out.
@@ -18,6 +18,12 @@ Needs the plugin rebuilt and FourModEvents.psc, FourJSON.psc, FourStimMenu.psc c
 - **OStim's `singlebed` and `doublebed` furniture types** (docs/FURNITURE.md): subtypes of `bed` (one sleep marker, or two or more), so OStim's 40 single and double bed scenes play as written. A scene naming a furniture type nobody defines plays as a floor scene with a warning, as OStim's does; before, it was never offered.
 - **An action of a type no Actions file defines is kept with the `default` action's attributes**, as OStim's (docs/SCENES.md): before, it was dropped, which moved every later action down one, so `4StimPeak.<n>` annotations, `expressionAction` and the action API pointed at the wrong action. An action without `actor` now applies to no one, and `HasAction` / `FindSceneAction` find types by id or alias even when no file defines them.
 - **Facial expressions named by an action alias work** (docs/EXPRESSIONS.md): OStim's own expression files say `cunnilingus`, `lickingpenis`, `ticklingfeet` and six more aliases where 4Stim looked for the ids, so oral, licking and tickling scenes got the generic face.
+
+### Voices (parity audit, tier 1 items 8 to 10)
+- **Choose an actor's voice set**, as OStim's "Player voice" / "Actor voice" (docs/SOUND.md): each actor's page in the HUD's options has a **Voice** page listing the voice sets, and a **Mute** set (`mute.json`) for silence. Saved with the game per actor base. OStim's are in its MCM, which in Fallout 4 can't list what's installed. Papyrus: `FourStim.GetVoiceSetPairs` / `GetVoiceSetName` / `SetVoiceSet` (OStim's `OData` ones), `SetActorVoiceSet` / `GetActorVoiceSetName`.
+- **Who gets which voice set follows OStim's order**: the choice, the NPC, the voice type (else the race's default voice for the actor's sex), the race, and the default for their sex only for humans: creatures without a set of their own are silent instead of moaning like people.
+- **The first voice set entry that fits plays**, as OStim's, instead of one picked at random: packs list specific sounds first and a catch-all last, so the catch-all had played about half the time during a blowjob. OStim's perk `condition` on an entry now works (actor as subject, their primary partner as target); before, it was ignored and conditional sounds always played.
+- **Fixed:** muting an actor mid-moan, or an event reaction with nothing to play, left the moan face on for the rest of the scene.
 
 ### OStim NG's 22 October update
 - **`gropingchest`** (aliases `gropechest`, `holdchest`, `holdingchest`): OStim's new action for groping a man's chest (`gropingbreast` is for women's). `gropingbreast`, `gropingbutt`, `gropingtesticles` and `gropingchest` carry OStim's new `groping` tag. OStim's `groping` action tag file only sets factions, which need a plugin file (parity audit tier 2, item 15). The update's other change, a new channel in OStim's C++ plugin interface (`requestInterfaceMap`), belongs to OStim's second C++ API, which 4Stim doesn't have yet (item 18).

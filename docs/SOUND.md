@@ -23,8 +23,8 @@ Voice sets are in `Data\F4SE\Plugins\4Stim\Voice Sets\`, one per file, in OStim'
 ```
 
 - `target`: who uses it: an NPC or a voice type, by plugin and form ID. As in OStim, form ID `0x000000` is the default set for men and `0x000001` for women. `aliases` can list more NPCs or voice types.
-- An actor gets their NPC's set, else their voice type's, else the default for their sex.
-- `moan` / `climax`: what plays. `sound` normally, `soundMuffled` while the actor's mouth is busy (an action that has them `muffled`, such as oral). One entry is picked at random among those that fit.
+- An actor gets, as in OStim: the set chosen for them (below), else their NPC's, else their voice type's (an NPC without one has their race's default voice for their sex), else their race's, else the default for their sex. The defaults are for humans only (an adult with the `ActorTypeNPC` keyword), so a creature with no set of its own makes no sound, as in OStim. `4Stim.log` says which set each actor got and why.
+- `moan` / `climax`: what plays. `sound` normally, `soundMuffled` while the actor's mouth is busy (an action that has them `muffled`, such as oral). As in OStim, the **first** entry that fits plays: list specific entries first and a catch-all last. Variety comes from inside an entry (a folder of files, or a sound descriptor's own).
 
 Each entry is one of:
 
@@ -35,7 +35,8 @@ And can have:
 
 - `expression`: the event expression shown while it plays (docs/EXPRESSIONS.md).
 - `moanIntervalOverride`: seconds to the next moan, in place of `moanIntervalMin` / `Max`.
-- **4Stim: `actions`**, in place of OStim's perk `condition`: only while the actor takes part in one of these actions (OStim uses a perk to tell blowjob sounds apart).
+- `condition` (OStim's): a perk (`{ "mod", "formid" }`) whose conditions must hold, with the actor as the subject and their primary partner as the target (the other side of the first action they're on; themselves if none). A perk that isn't loaded is logged and the entry plays without it, as OStim's.
+- **4Stim: `actions`**: only while the actor takes part in one of these actions. No plugin needed; 4Stim's default sets use it for the sucking sounds, where OStim's use a perk.
 
 ## When
 
@@ -64,7 +65,7 @@ They play on the action's actor at `soundVolume` (0-1, OStim's setting). A scene
 
 ## Event reactions
 
-A voice set can react to events (docs/EVENTS.md), as OStim's: `eventActorReactions`, `eventTargetReactions` and `eventPerformerReactions` map an event id to a reaction set like `moan`'s (`sound`, `soundMuffled`, with an `expression`). The reaction plays after the event's `reactionDelay`, cutting in over a moan; an event with no reaction of its own uses its supertype's. The default sets have none, as OStim's.
+A voice set can react to events (docs/EVENTS.md), as OStim's: `eventActorReactions`, `eventTargetReactions` and `eventPerformerReactions` map an event id to a reaction set like `moan`'s (`sound`, `soundMuffled`, with an `expression`). The reaction plays after the event's `reactionDelay`, cutting in over a moan (a difference: OStim's waits for the moan to end; parity audit, tier 3); an event with no reaction of its own uses its supertype's. The default sets have none, as OStim's.
 
 ```json
 "eventTargetReactions": {
@@ -80,6 +81,12 @@ A voice set can react to events (docs/EVENTS.md), as OStim's: `eventActorReactio
 
 Dialogue (comments, climax comments, post-scene lines), `talk`.
 
+## Choosing a voice set
+
+As in OStim, any voice set can be chosen for an actor, and the choice is saved with the game, per actor base (all copies of a generic NPC share it). In the HUD's Utility tab, each actor's page has a **Voice** page: "Default" (no choice: the order above), then every voice set but the two defaults, by name; the one in use has a `*`. Actors in a scene take a new choice at once. **Mute** (`mute.json`, as OStim's) makes an actor silent.
+
+OStim puts this in its MCM ("Player voice" on the Sound page, "Actor voice" on the Actors page). Fallout 4's MCM can't list choices that depend on what's installed, so 4Stim's is in the HUD's options, available during a scene (the player's too). Papyrus: OStim's `OData` functions on `FourStim`: `GetVoiceSetPairs()` ("0", "Default", then each set's id and name), `GetVoiceSetName(aiFormID)`, `SetVoiceSet(aiFormID, asVoice)`, and by actor `SetActorVoiceSet(akActor, asVoice)` / `GetActorVoiceSetName(akActor)`. A set's id is its target's form ID as a number, as OStim's; a set without a target (4Stim's mute) is chosen by its file name.
+
 ## Muting
 
-An actor can be muted for the rest of their scene: no moans, climax or event sounds (OStim's `OActor.Mute`). With Papyrus `FourStim.Mute` / `Unmute` / `IsMuted`, or the HUD's options (each actor's page, OPTIONS.md). An actor property's `mute` (a gag, ACTORS.md) mutes them too.
+An actor can be muted for the rest of their scene: no moans, climax or event sounds (OStim's `OActor.Mute`). A moan cut off by muting takes its face with it. With Papyrus `FourStim.Mute` / `Unmute` / `IsMuted`, or the HUD's options (each actor's page, OPTIONS.md). An actor property's `mute` (a gag, ACTORS.md) mutes them too.

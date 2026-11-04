@@ -399,6 +399,34 @@ namespace Options
 					}
 					return;
 				}
+				if (repeat == "voiceset") {
+					// 4Stim's: OStim's "Actor voice" menu (its MCM) as rows, the
+					// "default" state then one "set" state per voice set; the
+					// one chosen has a "*".
+					const auto def = std::ranges::find_if(option.states, [](const State& s) { return Lower(s.name) == "default"; });
+					const auto set = std::ranges::find_if(option.states, [](const State& s) { return Lower(s.name) == "set"; });
+					const auto actor = id ? RE::TESForm::GetFormByID<RE::Actor>(id) : nullptr;
+					const auto npc = actor ? actor->GetNPC() : nullptr;
+					const auto chosen = npc ? Sounds::ChosenVoiceSet(npc->GetFormID()) : std::string{};
+					const auto pairs = Sounds::VoiceSetPairs();
+					if (def != option.states.end()) {
+						auto label = Describe(*def, id, pairs.size() > 1 ? pairs[1] : std::string("Default"));
+						if (chosen.empty()) {
+							label += "  *";
+						}
+						rows.push_back({ OptionID(index, a_actor, def->name, "0"), label, def->icon, def->border });
+					}
+					if (set != option.states.end()) {
+						for (std::size_t k = 2; k + 1 < pairs.size(); k += 2) {
+							auto label = Describe(*set, id, pairs[k + 1]);
+							if (pairs[k] == chosen) {
+								label += "  *";
+							}
+							rows.push_back({ OptionID(index, a_actor, set->name, pairs[k]), label, set->icon, set->border });
+						}
+					}
+					return;
+				}
 				const auto& state = ShownState(option, id);
 				rows.push_back({ OptionID(index, a_actor, state.name, {}), Describe(state, id, {}), state.icon, state.border });
 			};

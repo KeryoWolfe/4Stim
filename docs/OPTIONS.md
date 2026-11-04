@@ -39,7 +39,7 @@ As OStim's:
 | page `parent` | The page it's in; `null` for the top. |
 | page `repeat` | `"actor"`: one page per actor in the scene. |
 | option `page` | The page it's in. |
-| option `repeat` | `"actor"`: one option per actor; `"equipObject"` with `equipType`: a `toggle` option, then an `object` option for every equip object of that type. |
+| option `repeat` | `"actor"`: one option per actor; `"equipObject"` with `equipType`: a `toggle` option, then an `object` option for every equip object of that type. 4Stim's `"voiceSet"`: a `default` option, then a `set` option for every voice set (`{type}` is its name; the function gets the set's id, `"0"` for the default; SOUND.md). |
 | option `states` | What it shows and does: each state's `description`, `icon`, `border` and `function` (`"Script/Function"`, a global function). |
 
 The function gets, as OStim's: `(String asState)`, on an actor's page or a per-actor option `(String asState, Actor akActor)`, and for an `object` option `(String asState, Actor akActor, String asObjectID)`. In a description, `{actor}` is the actor's name (you, as "yourself") and `{type}` the equip object's name.

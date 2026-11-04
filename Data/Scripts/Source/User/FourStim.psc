@@ -98,6 +98,17 @@ Function Mute(Actor akActor) Global Native
 Function Unmute(Actor akActor) Global Native
 bool Function IsMuted(Actor akActor) Global Native
 
+; OStim's OData.GetVoiceSetPairs / GetVoiceSetName / SetVoiceSet: choosing an
+; actor base's voice set (docs\SOUND.md), saved with the game. Pairs are
+; "0", "Default", then each voice set's id and name. asVoice is one of those
+; ids ("0": the default, no choice). Actors in a scene take it at once.
+String[] Function GetVoiceSetPairs() Global Native
+String Function GetVoiceSetName(int aiFormID) Global Native
+Function SetVoiceSet(int aiFormID, String asVoice) Global Native
+; 4Stim's: the same by actor (their base).
+Function SetActorVoiceSet(Actor akActor, String asVoice) Global Native
+String Function GetActorVoiceSetName(Actor akActor) Global Native
+
 ; The weapon an actor held before their scene, which FourStimScene takes off
 ; and puts back on when the scene ends: noted, and taken back (None if none;
 ; forgotten once taken). Kept in the save with the scene.

@@ -3,6 +3,7 @@
 #include <chrono>
 #include <cstdint>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include <nlohmann/json.hpp>
@@ -77,8 +78,9 @@ namespace Sounds
 	// "performer" (OStim's eventActorReactions...). Main thread.
 	void ReactToEvent(std::uint32_t a_id, const std::vector<std::string>& a_events, std::string_view a_which, float a_delay);
 
-	// a_id plays role a_role of a_scene. Main thread.
-	void Enter(std::uint32_t a_id, const SceneRegistry::Scene& a_scene, std::size_t a_role);
+	// a_id plays role a_role of a_scene, with a_actors in its roles (role
+	// order). Main thread.
+	void Enter(std::uint32_t a_id, const SceneRegistry::Scene& a_scene, std::size_t a_role, const std::vector<std::uint32_t>& a_actors);
 
 	// a_id climaxed: their climax sound (OStim's playClimaxSound). Main thread.
 	void Climax(std::uint32_t a_id);
@@ -91,6 +93,21 @@ namespace Sounds
 	// muted too). Main thread.
 	void SetMuted(std::uint32_t a_id, bool a_muted);
 	bool IsMuted(std::uint32_t a_id);
+
+	// Choosing a voice set (OStim's OData.GetVoiceSetPairs / GetVoiceSetName
+	// / SetVoiceSet, its MCM's "Player voice" and "Actor voice"; 4Stim's are
+	// in the HUD's options, docs/SOUND.md). Choices are per actor base form
+	// ID, saved with the game. A voice set is chosen by its key: its
+	// target's form ID as a signed number (as OStim's), or for a set
+	// without a target, its file name. "0" or "": the default (no choice).
+	std::vector<std::string> VoiceSetPairs();  // "0", "Default", then key, name... by name
+	std::string              VoiceSetName(std::uint32_t a_base);
+	std::string              ChosenVoiceSet(std::uint32_t a_base);  // its key, "" = none
+	void                     SetVoiceSet(std::uint32_t a_base, const std::string& a_key);  // any thread
+	void                     ApplyVoiceSet(std::uint32_t a_base);  // main thread: actors in scenes now take it
+	std::vector<std::pair<std::uint32_t, std::string>> AllVoiceChoices();
+	void                     RestoreVoiceChoices(std::vector<std::pair<std::uint32_t, std::string>> a_choices);
+	void                     ClearVoiceChoices();
 
 	// The actors left their scene: stop their sounds.
 	void Leave(const std::vector<std::uint32_t>& a_ids);

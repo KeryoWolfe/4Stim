@@ -1,0 +1,4 @@
+{
+	"_comment": "4Stim's mute voice set, as OStim's mute.json: choosing it for an actor (the HUD's Voice page) makes them silent. OStim's targets a voice type in OStim.esp; this one has no target, so it's only ever chosen.",
+	"name": "Mute"
+}

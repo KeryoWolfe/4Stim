@@ -35,8 +35,11 @@ namespace Sounds
 			Sound                    sound;
 			std::string              expression;      // event expression while it plays
 			float                    moanIntervalOverride = -1.0F;  // seconds; < 0 = none
-			// 4Stim, in place of OStim's perk "condition": only while the
-			// actor takes part in one of these actions (ids). Empty = always.
+			// OStim's "condition": a perk whose conditions must hold, with the
+			// actor as subject and their primary partner as target. 0 = none.
+			std::uint32_t            condition = 0;
+			// 4Stim's addition: only while the actor takes part in one of
+			// these actions (ids). Empty = always.
 			std::vector<std::string> actions;
 		};
 
@@ -48,6 +51,12 @@ namespace Sounds
 
 		struct VoiceSet
 		{
+			// What a choice saves (OStim saves the target's form ID): the
+			// target's form ID as a signed number, as OStim's
+			// GetVoiceSetPairs; for a set without a target (4Stim's mute),
+			// its file name. "" for the default sets, which aren't listed.
+			std::string key;
+			std::uint32_t target = 0;  // its target's form ID (0: none, or a default set)
 			std::string name;
 			ReactionSet moan;
 			ReactionSet climax;
@@ -72,13 +81,24 @@ namespace Sounds
 			const ReactionSet*                    reaction = nullptr;  // an event reaction waiting...
 			float                                 reactionIn = 0.0F;   // ...this long
 			std::vector<std::string>              actions;  // action type ids the actor takes part in
+			std::uint32_t                         partner = 0;  // OStim's primary partner (conditions' target); 0 = themselves
 		};
 
 		Config g_config;
 
+		// The voice sets: read on the main thread and from Papyrus (the
+		// voice set list), so behind a lock. Scene state (g_states) is the
+		// main thread's only.
+		std::recursive_mutex                                          g_voiceLock;
 		bool                                                          g_loaded = false;
-		std::unordered_map<std::uint32_t, std::shared_ptr<const VoiceSet>> g_byTarget;  // NPC or voice type form ID
+		std::unordered_map<std::uint32_t, std::shared_ptr<const VoiceSet>> g_byTarget;  // NPC, voice type or race form ID
 		std::shared_ptr<const VoiceSet>                               g_defaultMale, g_defaultFemale;
+		std::vector<std::shared_ptr<const VoiceSet>>                  g_listed;  // the ones a player can choose (OStim: every set but the defaults)
+
+		// The player's choices (OStim's Serialization::getVoiceSet): actor
+		// base form ID -> voice set key. Saved with the game.
+		std::mutex                                                    g_choiceLock;
+		std::unordered_map<std::uint32_t, std::string>                g_choices;
 		std::unordered_map<std::uint32_t, State>                      g_states;
 		std::mt19937                                                  g_random{ std::random_device{}() };
 
@@ -172,6 +192,15 @@ namespace Sounds
 				if (const auto o = e.find("moanIntervalOverride"); o != e.end() && o->is_number()) {
 					entry.moanIntervalOverride = o->get<float>();
 				}
+				if (const auto c = e.find("condition"); c != e.end()) {
+					entry.condition = ReadFormRaw(*c, false).value_or(0);
+					if (!entry.condition || !RE::TESForm::GetFormByID<RE::BGSPerk>(entry.condition)) {
+						// As OStim: a condition that can't be found doesn't count
+						// (the entry always fits); 4Stim says so in the log.
+						REX::WARN("Sound: a \"{}\" entry's condition perk ({}) isn't loaded: the entry plays without it", a_key, c->dump());
+						entry.condition = 0;
+					}
+				}
 				out.push_back(std::move(entry));
 			}
 			return out;
@@ -205,12 +234,13 @@ namespace Sounds
 			return out;
 		}
 
-		void Load()
+		void LoadLocked()
 		{
 			g_loaded = true;
 			g_byTarget.clear();
 			g_defaultMale.reset();
 			g_defaultFemale.reset();
+			g_listed.clear();
 			std::error_code ec;
 			int             count = 0;
 			for (const auto& e : std::filesystem::directory_iterator(VOICE_SET_FOLDER, ec)) {
@@ -227,7 +257,21 @@ namespace Sounds
 					voice->eventActorReactions = ReadReactionMap(root, "eventActorReactions");
 					voice->eventTargetReactions = ReadReactionMap(root, "eventTargetReactions");
 					voice->eventPerformerReactions = ReadReactionMap(root, "eventPerformerReactions");
+					const auto targetJSON = root.value("target", nlohmann::json::object());
+					const auto targetID = ReadFormRaw(targetJSON, true);
+					if (targetID && *targetID > 1) {
+						voice->target = *targetID;
+						voice->key = std::to_string(static_cast<std::int32_t>(*targetID));
+					} else if (!targetID && !targetJSON.contains("formid")) {
+						voice->key = Lower(e.path().stem().string());  // 4Stim's: no target, chosen by name only
+					} else if (!targetID) {
+						REX::WARN("Sound: {}: its target isn't loaded, so it's not used", e.path().filename().string());
+						continue;
+					}
 					std::shared_ptr<const VoiceSet> shared = voice;
+					if (!voice->key.empty()) {
+						g_listed.push_back(shared);
+					}
 					auto target = [&](const nlohmann::json& a_form) {
 						const auto id = ReadFormRaw(a_form, true);
 						if (!id) {
@@ -241,7 +285,7 @@ namespace Sounds
 							g_byTarget[*id] = shared;
 						}
 					};
-					target(root.value("target", nlohmann::json::object()));
+					target(targetJSON);
 					if (const auto aliases = root.find("aliases"); aliases != root.end() && aliases->is_array()) {
 						for (const auto& a : *aliases) {
 							target(a);
@@ -252,30 +296,99 @@ namespace Sounds
 					REX::WARN("Sound: {}: couldn't be read ({})", e.path().filename().string(), ex.what());
 				}
 			}
-			REX::INFO("Sound: {} voice set(s){}{}", count, g_defaultMale ? "" : ", no default male one", g_defaultFemale ? "" : ", no default female one");
+			std::ranges::sort(g_listed, [](const auto& a, const auto& b) { return Lower(a->name) < Lower(b->name); });
+			REX::INFO("Sound: {} voice set(s), {} to choose from{}{}", count, g_listed.size(), g_defaultMale ? "" : ", no default male one",
+				g_defaultFemale ? "" : ", no default female one");
 		}
 
-		// As OStim: the actor's own NPC, then their voice type, then the
-		// default for their sex.
-		std::shared_ptr<const VoiceSet> VoiceFor(RE::Actor* a_actor)
+		void EnsureLoadedLocked()
 		{
 			if (!g_loaded) {
-				Load();
+				LoadLocked();
 			}
+		}
+
+		std::shared_ptr<const VoiceSet> ByKeyLocked(const std::string& a_key)
+		{
+			const auto it = std::ranges::find_if(g_listed, [&](const auto& v) { return v->key == a_key; });
+			return it != g_listed.end() ? *it : nullptr;
+		}
+
+		std::uint32_t BaseOf(RE::Actor* a_actor)
+		{
+			const auto npc = a_actor ? a_actor->GetNPC() : nullptr;
+			return npc ? npc->GetFormID() : 0;
+		}
+
+		// OStim's GameActor::isHuman: not a child, and an NPC (the
+		// ActorTypeNPC keyword, on the race or the NPC). OStim also leaves
+		// out Skyrim's mannequins, which Fallout 4 doesn't have.
+		bool IsHuman(RE::Actor* a_actor)
+		{
+			if (a_actor->IsChild()) {
+				return false;
+			}
+			const auto npc = a_actor->GetNPC();
+			return (a_actor->race && a_actor->race->HasKeywordString("ActorTypeNPC")) || (npc && npc->HasKeywordString("ActorTypeNPC"));
+		}
+
+		// As OStim's SoundTable::getVoiceSet: the player's choice for this
+		// actor, the actor's own NPC, their voice type (else their race's
+		// default voice for their sex, as OStim's GameActor::getVoice), their
+		// race, and last the default for their sex, for humans only (a
+		// creature with no set of its own makes no sound).
+		std::shared_ptr<const VoiceSet> VoiceFor(RE::Actor* a_actor)
+		{
+			std::scoped_lock lock(g_voiceLock);
+			EnsureLoadedLocked();
 			if (!a_actor) {
 				return nullptr;
 			}
-			if (const auto npc = a_actor->GetNPC()) {
-				if (const auto it = g_byTarget.find(npc->GetFormID()); it != g_byTarget.end()) {
-					return it->second;
-				}
-				if (npc->voiceType) {
-					if (const auto it = g_byTarget.find(npc->voiceType->GetFormID()); it != g_byTarget.end()) {
-						return it->second;
-					}
+			const char* name = a_actor->GetDisplayFullName();
+			const auto  found = [&](const std::shared_ptr<const VoiceSet>& a_set, const char* a_how) {
+				REX::INFO("Sound: voice set \"{}\" for {:08X} ({}) by {}", a_set->name, a_actor->GetFormID(), name ? name : "", a_how);
+				return a_set;
+			};
+			const auto base = BaseOf(a_actor);
+			std::string chosen;
+			{
+				std::scoped_lock choiceLock(g_choiceLock);
+				if (const auto it = g_choices.find(base); it != g_choices.end()) {
+					chosen = it->second;
 				}
 			}
-			return Compat::GetSex(a_actor) == RE::SEX::kFemale ? g_defaultFemale : g_defaultMale;
+			if (!chosen.empty()) {
+				if (const auto set = ByKeyLocked(chosen)) {
+					return found(set, "your choice");
+				}
+			}
+			const auto byTarget = [&](const RE::TESForm* a_form) -> std::shared_ptr<const VoiceSet> {
+				if (!a_form) {
+					return nullptr;
+				}
+				const auto it = g_byTarget.find(a_form->GetFormID());
+				return it != g_byTarget.end() ? it->second : nullptr;
+			};
+			const auto npc = a_actor->GetNPC();
+			if (const auto set = byTarget(npc)) {
+				return found(set, "actor base");
+			}
+			const bool  female = Compat::GetSex(a_actor) == RE::SEX::kFemale;
+			const RE::TESForm* voice = npc ? npc->voiceType : nullptr;
+			if (!voice && a_actor->race) {
+				voice = a_actor->race->defaultVoiceType[female ? 1 : 0];
+			}
+			if (const auto set = byTarget(voice)) {
+				return found(set, "voice type");
+			}
+			if (const auto set = byTarget(a_actor->race)) {
+				return found(set, "race");
+			}
+			if (!IsHuman(a_actor)) {
+				REX::INFO("Sound: no voice set for {:08X} ({}): not human, so no default one", a_actor->GetFormID(), name ? name : "");
+				return nullptr;
+			}
+			return female ? g_defaultFemale : g_defaultMale;
 		}
 
 		float RandomInterval()
@@ -285,20 +398,42 @@ namespace Sounds
 			return std::uniform_real_distribution<float>(lo, hi)(g_random);
 		}
 
-		// Plays a random entry of a_set (muffled ones when muffled) on
-		// a_actor. Returns the entry played, or null.
-		const SoundEntry* PlayReaction(RE::Actor* a_actor, State& a_state, const ReactionSet& a_set)
+		// Whether an entry fits now: its condition perk (OStim's) and its
+		// actions (4Stim's).
+		bool Fits(const SoundEntry& a_entry, RE::Actor* a_actor, const State& a_state)
 		{
-			std::vector<const SoundEntry*> list;
-			for (const auto& e : a_state.muffled ? a_set.soundMuffled : a_set.sound) {
-				if (e.actions.empty() || std::ranges::any_of(e.actions, [&](const std::string& a) { return std::ranges::find(a_state.actions, a) != a_state.actions.end(); })) {
-					list.push_back(&e);
+			if (!a_entry.actions.empty() &&
+				std::ranges::none_of(a_entry.actions, [&](const std::string& a) { return std::ranges::find(a_state.actions, a) != a_state.actions.end(); })) {
+				return false;
+			}
+			if (a_entry.condition) {
+				const auto perk = RE::TESForm::GetFormByID<RE::BGSPerk>(a_entry.condition);
+				const auto partner = a_state.partner ? RE::TESForm::GetFormByID<RE::Actor>(a_state.partner) : nullptr;
+				if (perk && !perk->perkConditions.IsTrue(a_actor, partner ? partner : a_actor)) {
+					return false;
 				}
 			}
-			if (list.empty() || g_config.disabled || g_config.moanVolume <= 0.0F) {
+			return true;
+		}
+
+		// Plays the first entry of a_set that fits (muffled ones when
+		// muffled), as OStim's getSoundSet: packs list specific entries
+		// first and a catch-all last. Randomness comes from inside an entry
+		// (a folder of files, or the sound descriptor's own). Returns the
+		// entry played, or null.
+		const SoundEntry* PlayReaction(RE::Actor* a_actor, State& a_state, const ReactionSet& a_set)
+		{
+			const SoundEntry* first = nullptr;
+			for (const auto& e : a_state.muffled ? a_set.soundMuffled : a_set.sound) {
+				if (Fits(e, a_actor, a_state)) {
+					first = &e;
+					break;
+				}
+			}
+			if (!first || g_config.disabled || g_config.moanVolume <= 0.0F) {
 				return nullptr;
 			}
-			const auto& entry = *list[std::uniform_int_distribution<std::size_t>(0, list.size() - 1)(g_random)];
+			const auto& entry = *first;
 			a_state.sound = Play(entry.sound, a_actor, g_config.moanVolume);
 			if (!a_state.sound.started) {
 				return nullptr;
@@ -307,6 +442,21 @@ namespace Sounds
 			return &entry;
 		}
 
+
+		// Stops what a_id is saying, and the face that goes with it (a moan's
+		// expression lasts until its sound ends, so stopping the sound
+		// without it held the face for the rest of the scene).
+		void StopSound(std::uint32_t a_id, State& a_state)
+		{
+			if (a_state.playing) {
+				a_state.sound.Stop();
+				a_state.playing = false;
+			}
+			if (a_state.eventExpression) {
+				a_state.eventExpression = false;
+				Expressions::ClearEvent(a_id);
+			}
+		}
 
 		void StartReaction(std::uint32_t a_id, State& a_state, const ReactionSet& a_set, const char* a_fallbackEvent)
 		{
@@ -331,7 +481,8 @@ namespace Sounds
 
 	void Reload()
 	{
-		Load();
+		std::scoped_lock lock(g_voiceLock);
+		LoadLocked();
 	}
 
 	std::uint32_t ReadForm(const nlohmann::json& a_value)
@@ -493,7 +644,7 @@ namespace Sounds
 		}
 	}
 
-	void Enter(std::uint32_t a_id, const SceneRegistry::Scene& a_scene, std::size_t a_role)
+	void Enter(std::uint32_t a_id, const SceneRegistry::Scene& a_scene, std::size_t a_role, const std::vector<std::uint32_t>& a_actors)
 	{
 		if (a_role >= a_scene.actors.size()) {
 			return;
@@ -516,6 +667,24 @@ namespace Sounds
 				state.actions.push_back(action.type->id);
 			}
 		}
+		// OStim's Node::getPrimaryPartner: the other side of the first
+		// action this role is on (themselves if none), the target of their
+		// voice set's conditions.
+		state.partner = 0;
+		for (const auto& action : a_scene.actions) {
+			std::size_t other = SceneRegistry::SceneAction::kNoRole;
+			if (action.actor == a_role && action.target != a_role) {
+				other = action.target;
+			} else if (action.target == a_role && action.actor != a_role) {
+				other = action.actor;
+			} else {
+				continue;
+			}
+			if (other < a_actors.size()) {
+				state.partner = a_actors[other];
+			}
+			break;
+		}
 	}
 
 	void Climax(std::uint32_t a_id)
@@ -526,10 +695,7 @@ namespace Sounds
 			return;
 		}
 		auto& state = it->second;
-		if (state.playing) {
-			state.sound.Stop();
-		}
-		state.playing = false;
+		StopSound(a_id, state);
 		state.reaction = nullptr;
 		if (state.voice && !state.mutedByHand) {
 			StartReaction(a_id, state, state.voice->climax, "climax");
@@ -549,10 +715,7 @@ namespace Sounds
 				if (state.mutedByHand) {
 					continue;
 				}
-				if (state.playing) {
-					state.sound.Stop();
-					state.playing = false;
-				}
+				StopSound(id, state);  // the moan's face too, in case the reaction plays nothing
 				StartReaction(id, state, *reaction, nullptr);
 				continue;
 			}
@@ -583,9 +746,8 @@ namespace Sounds
 			return;
 		}
 		it->second.mutedByHand = a_muted;
-		if (a_muted && it->second.playing) {
-			it->second.sound.Stop();
-			it->second.playing = false;
+		if (a_muted) {
+			StopSound(a_id, it->second);
 		}
 		REX::INFO("Sound: {:08X} {}", a_id, a_muted ? "muted" : "unmuted");
 	}
@@ -594,6 +756,84 @@ namespace Sounds
 	{
 		const auto it = g_states.find(a_id);
 		return it != g_states.end() && (it->second.mutedByHand || it->second.mutedByProperty);
+	}
+
+	std::vector<std::string> VoiceSetPairs()
+	{
+		std::scoped_lock lock(g_voiceLock);
+		EnsureLoadedLocked();
+		std::vector<std::string> pairs{ "0", Translations::Get("$ostim_generic_default", "Default") };
+		for (const auto& set : g_listed) {
+			pairs.push_back(set->key);
+			pairs.push_back(set->name);
+		}
+		return pairs;
+	}
+
+	std::string ChosenVoiceSet(std::uint32_t a_base)
+	{
+		std::scoped_lock lock(g_choiceLock);
+		const auto it = g_choices.find(a_base);
+		return it != g_choices.end() ? it->second : std::string{};
+	}
+
+	std::string VoiceSetName(std::uint32_t a_base)
+	{
+		const auto chosen = ChosenVoiceSet(a_base);
+		std::scoped_lock lock(g_voiceLock);
+		EnsureLoadedLocked();
+		const auto set = chosen.empty() ? nullptr : ByKeyLocked(chosen);
+		return set ? set->name : Translations::Get("$ostim_generic_default", "Default");
+	}
+
+	void SetVoiceSet(std::uint32_t a_base, const std::string& a_key)
+	{
+		if (!a_base) {
+			return;
+		}
+		{
+			std::scoped_lock lock(g_choiceLock);
+			if (a_key.empty() || a_key == "0") {
+				g_choices.erase(a_base);
+			} else {
+				g_choices[a_base] = a_key;
+			}
+		}
+		REX::INFO("Sound: voice set for actor base {:08X}: {}", a_base, a_key.empty() || a_key == "0" ? std::string("default") : a_key);
+	}
+
+	void ApplyVoiceSet(std::uint32_t a_base)
+	{
+		for (auto& [id, state] : g_states) {
+			const auto actor = RE::TESForm::GetFormByID<RE::Actor>(id);
+			if (!actor || state.mutedByProperty || BaseOf(actor) != a_base) {
+				continue;
+			}
+			StopSound(id, state);
+			state.reaction = nullptr;
+			state.voice = VoiceFor(actor);
+		}
+	}
+
+	std::vector<std::pair<std::uint32_t, std::string>> AllVoiceChoices()
+	{
+		std::scoped_lock lock(g_choiceLock);
+		return { g_choices.begin(), g_choices.end() };
+	}
+
+	void RestoreVoiceChoices(std::vector<std::pair<std::uint32_t, std::string>> a_choices)
+	{
+		std::scoped_lock lock(g_choiceLock);
+		g_choices.clear();
+		for (auto& [base, key] : a_choices) {
+			g_choices[base] = std::move(key);
+		}
+	}
+
+	void ClearVoiceChoices()
+	{
+		std::scoped_lock lock(g_choiceLock);
+		g_choices.clear();
 	}
 
 	void Leave(const std::vector<std::uint32_t>& a_ids)
