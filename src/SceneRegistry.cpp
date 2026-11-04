@@ -1131,8 +1131,8 @@ namespace SceneRegistry
 	{
 		// As OStim's Action::isType: by the alias-resolved id, so a type no
 		// Actions file defines still matches the scenes that use it.
-		const auto id = Actions::ResolveAlias(a_type);
-		return std::ranges::any_of(actions, [&](const SceneAction& a) { return a.type->id == id; });
+		const auto typeID = Actions::ResolveAlias(a_type);
+		return std::ranges::any_of(actions, [&](const SceneAction& a) { return a.type->id == typeID; });
 	}
 
 	bool Scene::HasActionTag(std::string_view a_tag) const
