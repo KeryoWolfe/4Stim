@@ -19,9 +19,10 @@ Run from anywhere, after building everything you want in it:
 The plugin, settings, data files and script sources come from this repository
 (so testers get the default 4Stim.ini, not yours); the HUD movies, icons and
 sounds from your 4Stim Core mod folder; the compiled scripts from the first of
--ScriptDirs that has them; the test animations from your 4Stim Test Anims mod
-folder (with this repository's scene file). It stops if anything is missing
-and warns about anything that looks older than its source.
+-ScriptDirs that has them; the test animations and OStim's scene files from
+your 4Stim Test Anims mod folder, with this repository's additions file. It
+stops if anything is missing and warns about anything that looks older than
+its source.
 #>
 param(
     [string]   $CoreMod      = "D:\Naked Commonwealth\mods\4Stim Core",
@@ -149,7 +150,12 @@ foreach ($s in $Scripts) {
 # ---- 4Stim Test Anims ----
 $anims = New-List
 Add-File $anims (Need (Join-Path $TestAnimsMod "4StimTestAnims.esp") "4StimTestAnims.esp") "4StimTestAnims.esp"
-Add-File $anims (Need (Join-Path $Repo "Data\F4SE\Plugins\4Stim\Scenes\4StimTestAnims.json") "the test scene file") "F4SE/Plugins/4Stim/Scenes/4StimTestAnims.json"
+# The base scenes: OStim NG's own scene files, unmodified and under OStim's
+# ids (so OStim add-on packs that hub onto them work), from the mod's
+# "4Stim Test Anims" scene folder; and this repository's 4StimTestAnims.json,
+# 4Stim's additions (redress scenes, undress steps, test sequences).
+Add-Tree $anims (Join-Path $TestAnimsMod "F4SE\Plugins\4Stim\Scenes\4Stim Test Anims") "F4SE/Plugins/4Stim/Scenes/4Stim Test Anims" @("*.bak")
+Add-File $anims (Need (Join-Path $Repo "Data\F4SE\Plugins\4Stim\Scenes\4StimTestAnims.json") "the test pack's additions file") "F4SE/Plugins/4Stim/Scenes/4StimTestAnims.json"
 # Only the animations 4StimTestAnims.esp plays (meshes\...\animations\OStim);
 # the folder also holds AnimBridge's reconverted test files, which go with the
 # other plugin ("4Stim Test Anims.esp") and aren't part of the test pack.

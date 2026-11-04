@@ -234,6 +234,34 @@ namespace Alignment
 					}
 				}
 				REX::INFO("Alignment: {} offset(s) for {} actor set(s), from {}", count, g_offsets.size(), path.string());
+				// 0.5.0: the base scenes are OStim's own files now, under OStim's
+				// ids, instead of the old test pack's "4StimTest_<OStim id>".
+				// Offsets saved for the old ids are copied to the OStim ids
+				// (where there are none yet), so testers keep their alignments.
+				// The old entries stay in the file; they're just not used.
+				constexpr std::string_view OLD_PREFIX = "4stimtest_";
+				std::size_t                migrated = 0;
+				for (auto& [key, scenes] : g_offsets) {
+					std::vector<std::pair<std::string, decltype(scenes.begin()->second)>> copies;
+					for (const auto& [id, roles] : scenes) {
+						if (id.starts_with(OLD_PREFIX)) {
+							const auto plain = id.substr(OLD_PREFIX.size());
+							if (!plain.empty() && !scenes.contains(plain)) {
+								copies.emplace_back(plain, roles);
+							}
+						}
+					}
+					for (auto& [plain, roles] : copies) {
+						const auto old = g_sceneNames.find(std::string(OLD_PREFIX) + plain);
+						g_sceneNames.try_emplace(plain, old != g_sceneNames.end() ? old->second.substr(OLD_PREFIX.size()) : plain);
+						migrated += roles.size();
+						scenes.emplace(plain, std::move(roles));
+					}
+				}
+				if (migrated > 0) {
+					SaveLocked();
+					REX::INFO("Alignment: copied {} offset(s) from the old test pack's \"4StimTest_\" scene ids to OStim's ids", migrated);
+				}
 			} catch (const std::exception& e) {
 				REX::WARN("Alignment: {} couldn't be read ({}); starting with no offsets, and it'll be rewritten on the next change", path.string(), e.what());
 				g_offsets.clear();

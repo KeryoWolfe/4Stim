@@ -99,6 +99,17 @@ namespace Actions
 	// nullptr if there's none. Stays valid while held, across a Reload.
 	std::shared_ptr<const Type> Find(std::string_view a_idOrAlias);
 
+	// Find, and for an id no Actions file defines, OStim's fallback: a type
+	// with the "default" action's attributes under that id (logged once per
+	// id and reload). Never null. For scenes: an unknown action is kept, so
+	// action indexes match the file (4StimPeak.N, expressionAction, the API).
+	std::shared_ptr<const Type> FindOrDefault(std::string_view a_idOrAlias);
+
+	// OStim's GraphTable::getActionAlias: the id a_idOrAlias stands for, or
+	// a_idOrAlias itself (lowercase) if it's no action's id or alias. For
+	// matching a scene's actions by type, unknown types included.
+	std::string ResolveAlias(std::string_view a_idOrAlias);
+
 	// Every action type id, sorted.
 	std::vector<std::string> List();
 

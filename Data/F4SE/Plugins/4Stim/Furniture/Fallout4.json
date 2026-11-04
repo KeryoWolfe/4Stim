@@ -1,5 +1,5 @@
 {
-	"_comment": "Furniture types for Fallout 4's own objects, recognized by their model paths. See docs/FURNITURE.md. Spots follow the OStim animations: bed scenes start on the mattress at a long edge facing out; a mattress or sleeping bag on the floor takes the floor scenes (no bed-edge scenes), centered on it and lengthwise; bench scenes on the floor under the seat facing out, table scenes on the floor at a long edge facing the table; shelf scenes on the floor at a shelf's front, facing it (like tables); wall scenes at the nearest wall (found by ray casts, not an object) with their backs to it. Heights and insets are first guesses to tune in game.",
+	"_comment": "Furniture types for Fallout 4's own objects, recognized by their model paths. See docs/FURNITURE.md. Spots follow the OStim animations: bed scenes start on the mattress at a long edge facing out; a mattress or sleeping bag on the floor takes the floor scenes (no bed-edge scenes), centered on it and lengthwise; bench scenes on the floor under the seat facing out, table scenes on the floor at a long edge facing the table; shelf scenes on the floor at a shelf's front, facing it (like tables); wall scenes at the nearest wall (found by ray casts, not an object) with their backs to it. Heights and insets are first guesses to tune in game. Beds as OStim's: \"bed\" is the type bed scenes name, and \"singlebed\" (one sleep marker) and \"doublebed\" (two or more) are its subtypes, so OStim's own singlebed / doublebed scenes work as written; a bed scene plays on either.",
 	"types": [
 		{
 			"id": "bed",
@@ -30,6 +30,69 @@
 				32
 			],
 			"supertype": "none"
+		},
+		{
+			"id": "singlebed",
+			"name": "Bed",
+			"lyingShift": 30,
+			"lyingRaise": 10,
+			"forms": [
+				"FURN"
+			],
+			"models": [
+				"bed"
+			],
+			"excludeModels": [
+				"bedside",
+				"nightstand",
+				"bedpan",
+				"flatbed"
+			],
+			"anchor": "edge",
+			"edgeSide": "long",
+			"facing": "out",
+			"edgeInset": 15,
+			"markerHeight": true,
+			"offset": [
+				0,
+				0,
+				32
+			],
+			"supertype": "bed",
+			"priority": 10,
+			"maxMarkers": 1,
+			"minMarkers": 1
+		},
+		{
+			"id": "doublebed",
+			"name": "Bed",
+			"lyingShift": 30,
+			"lyingRaise": 10,
+			"forms": [
+				"FURN"
+			],
+			"models": [
+				"bed"
+			],
+			"excludeModels": [
+				"bedside",
+				"nightstand",
+				"bedpan",
+				"flatbed"
+			],
+			"anchor": "edge",
+			"edgeSide": "long",
+			"facing": "out",
+			"edgeInset": 15,
+			"markerHeight": true,
+			"offset": [
+				0,
+				0,
+				32
+			],
+			"supertype": "bed",
+			"priority": 20,
+			"minMarkers": 2
 		},
 		{
 			"id": "mattress",

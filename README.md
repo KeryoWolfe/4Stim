@@ -37,7 +37,7 @@ Children are never eligible for scenes.
 - [F4SE](https://f4se.silverlock.org/) for that runtime
 - Address Library for F4SE Plugins, for that runtime
 - Other versions (1.10.163, 1.10.984, other 1.11.x) are experimental, with [Runtime Database](https://www.nexusmods.com/fallout4/mods/108394) instead of the Address Library (CommonLibF4RD's resolver is built in): see [docs/OLDGEN.md](docs/OLDGEN.md)
-- An animation pack with a 4Stim scene file (the test pack in `Data\F4SE\Plugins\4Stim\Scenes\` needs its matching `4StimTestAnims.esp` and animations, which aren't in this repository)
+- An animation pack with scene files. The test pack is OStim NG's own scene files (under OStim's ids) playing animations converted for Fallout 4; this repository has only its additions file, `Data\F4SE\Plugins\4Stim\Scenes\4StimTestAnims.json` (redress scenes, undress steps, test sequences). Its `4StimTestAnims.esp`, animations and OStim's scene files aren't in this repository.
 
 ## Usage
 

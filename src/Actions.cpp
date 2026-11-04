@@ -20,6 +20,9 @@ namespace Actions
 		// key: lowercase id or alias -> the type (aliases share the pointer)
 		std::unordered_map<std::string, std::shared_ptr<const Type>> g_types;
 		std::vector<std::string>                                     g_ids;
+		// Types made by FindOrDefault for ids no file defines: a copy of
+		// "default" under the id asked for. Cleared on reload.
+		std::unordered_map<std::string, std::shared_ptr<const Type>> g_unknown;
 
 		std::string Lower(std::string_view a_str)
 		{
@@ -353,6 +356,7 @@ namespace Actions
 			std::ranges::sort(ids);
 			g_types = std::move(types);
 			g_ids = std::move(ids);
+			g_unknown.clear();
 		}
 	}
 
@@ -376,6 +380,40 @@ namespace Actions
 		}
 		const auto it = g_types.find(Lower(a_idOrAlias));
 		return it != g_types.end() ? it->second : nullptr;
+	}
+
+	std::shared_ptr<const Type> FindOrDefault(std::string_view a_idOrAlias)
+	{
+		std::scoped_lock lock(g_lock);
+		if (!g_loaded) {
+			LoadLocked();
+		}
+		const auto key = Lower(a_idOrAlias);
+		if (const auto it = g_types.find(key); it != g_types.end()) {
+			return it->second;
+		}
+		if (const auto it = g_unknown.find(key); it != g_unknown.end()) {
+			return it->second;
+		}
+		// As OStim's getActionAttributesByType: the "default" action's
+		// attributes, while the action keeps the type it was given (so
+		// lookups by that id still find it). Shown by its id, not "Default".
+		auto type = std::make_shared<Type>();
+		if (const auto def = g_types.find("default"); def != g_types.end()) {
+			*type = *def->second;
+		}
+		type->id = key;
+		type->name = key;
+		REX::WARN("Actions: no action found for \"{}\", using default (as OStim)", key);
+		std::shared_ptr<const Type> shared = type;
+		g_unknown.emplace(key, shared);
+		return shared;
+	}
+
+	std::string ResolveAlias(std::string_view a_idOrAlias)
+	{
+		const auto type = Find(a_idOrAlias);
+		return type ? type->id : Lower(a_idOrAlias);
 	}
 
 	std::vector<std::string> List()

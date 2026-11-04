@@ -41,7 +41,7 @@ As in OStim, alignments are saved per **set of actors**, scene and role, to `Doc
 ```json
 {
   "M100x0&F100x0": {
-    "4StimTest_OStim2PMissionaryMF": {
+    "OStim2PMissionaryMF": {
       "0": { "offsetX": 0, "offsetY": -3.5, "offsetZ": 1, "rotation": 0, "scale": 1, "sosBend": 0 }
     }
   }

@@ -4720,13 +4720,11 @@ namespace
 		if (!scene) {
 			return -1;
 		}
-		const auto type = a_type.empty() ? nullptr : Actions::Find(a_type);
-		if (!a_type.empty() && !type) {
-			return -1;
-		}
+		// By the alias-resolved id, as OStim's findAction: unknown types too.
+		const auto id = a_type.empty() ? std::string{} : Actions::ResolveAlias(a_type);
 		for (std::size_t i = 0; i < scene->actions.size(); ++i) {
 			const auto& action = scene->actions[i];
-			if ((!type || action.type->id == type->id) &&
+			if ((id.empty() || action.type->id == id) &&
 				(a_actor < 0 || action.actor == static_cast<std::size_t>(a_actor)) &&
 				(a_target < 0 || action.target == static_cast<std::size_t>(a_target))) {
 				return static_cast<std::int32_t>(i);

@@ -2,7 +2,7 @@
 
 ## 0.5.0 alpha (in progress)
 
-Needs the plugin rebuilt and FourModEvents.psc, FourJSON.psc and FourStimMenu.psc compiled.
+Needs the plugin rebuilt and FourModEvents.psc, FourJSON.psc, FourStimMenu.psc compiled (and FourStimTest.psc, if you use it), and the new test pack (its scene files changed).
 
 ### Scenes ending, failing and loading (parity audit, tier 1 items 1 to 3)
 - **Scenes end when someone in them dies or is in combat, and NPC scenes end when the player isn't in their cell**, as OStim's (docs/ACTORS.md, "When a scene ends by itself"). Before, a scene went on around a corpse or through a fight, and NPC scenes left behind stayed until their timer ran out.
@@ -12,6 +12,12 @@ Needs the plugin rebuilt and FourModEvents.psc, FourJSON.psc and FourStimMenu.ps
 - **Scenes end when someone in them is hurt** (`bEndOnDamage`, 4Stim's, on by default; MCM General page): actors in a scene don't start fights, so OStim's combat check let a scene go on while the owner shot one of its actors. Shooting near them doesn't count.
 - **A scene broken off by a death, a fight or harm leaves its actors where the scene was** (`bStayWhenInterrupted`, 4Stim's, on by default): OStim's "Reset position" sent a surviving raider back to the wall she stood at before the scene, to attack from there.
 - **MCM:** the Erections toggle now comes from `tools/make-mcm.py` like the rest (it had been added to the page by hand, and regenerating the page dropped it).
+
+### OStim content as written (parity audit, tier 1 items 4 to 7)
+- **The base scenes are OStim's own scene files, under OStim's ids** (`OStim2PStandingApartMF`, not `4StimTest_OStim2PStandingApartMF`): OStim add-on packs hub onto the base scenes by id, so with the old ids their rows into the standing, kneeling and bed scenes went nowhere, silently for packs with `noWarnings`. The test pack now ships OStim NG's scene files unmodified (the 246 it has animations for) in `Scenes\4Stim Test Anims\`, and `4StimTestAnims.json` holds only 4Stim's additions: the redress scenes, the undressing scenes' `undress` steps and the two test sequences. Alignments saved for the old ids are copied to the new ones on load. A navigation to a missing `OStim...` scene is now logged even with `noWarnings`.
+- **OStim's `singlebed` and `doublebed` furniture types** (docs/FURNITURE.md): subtypes of `bed` (one sleep marker, or two or more), so OStim's 40 single and double bed scenes play as written. A scene naming a furniture type nobody defines plays as a floor scene with a warning, as OStim's does; before, it was never offered.
+- **An action of a type no Actions file defines is kept with the `default` action's attributes**, as OStim's (docs/SCENES.md): before, it was dropped, which moved every later action down one, so `4StimPeak.<n>` annotations, `expressionAction` and the action API pointed at the wrong action. An action without `actor` now applies to no one, and `HasAction` / `FindSceneAction` find types by id or alias even when no file defines them.
+- **Facial expressions named by an action alias work** (docs/EXPRESSIONS.md): OStim's own expression files say `cunnilingus`, `lickingpenis`, `ticklingfeet` and six more aliases where 4Stim looked for the ids, so oral, licking and tickling scenes got the generic face.
 
 ### Actor 3D rebuilds
 - **A scene actor whose 3D the game rebuilds gets the scene's physics swap back** (docs/PHYSICS.md): equipping something, the undress redraw or another mod's redraw took A-Body back to its own physics. SKSE has an event for this and F4SE doesn't, so 4Stim watches its scene actors itself. This replaces 0.4.2's re-swap after the undress redraw only.

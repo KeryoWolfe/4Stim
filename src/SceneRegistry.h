@@ -115,7 +115,12 @@ namespace SceneRegistry
 	// One action in a scene: who does what to whom (docs/ACTIONS.md).
 	struct SceneAction
 	{
-		std::shared_ptr<const Actions::Type> type;  // never null
+		// A role OStim reads as -1 (no "actor" given). Roles may also be past
+		// the scene's last role (kept as written, as OStim): either way they
+		// match no actor, so check them against the actor count before use.
+		static constexpr std::size_t kNoRole = static_cast<std::size_t>(-1);
+
+		std::shared_ptr<const Actions::Type> type;  // never null; an unknown type is "default"'s attributes under its own id
 		std::size_t                          actor = 0;      // role doing it
 		std::size_t                          target = 0;     // role it's done to (= actor: done to themselves)
 		std::size_t                          performer = 0;  // role moving

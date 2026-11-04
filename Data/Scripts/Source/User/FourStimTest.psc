@@ -64,7 +64,7 @@ Function EndSelf() Global
 EndFunction
 
 Function BeginPair(Actor akActor0) Global
-	BeginPairWith(akActor0, "4StimTest_OStim2PStandingBehindFuckMF")
+	BeginPairWith(akActor0, "OStim2PStandingBehindFuckMF")
 EndFunction
 
 Function BeginPairWith(Actor akActor0, String asSceneID) Global
@@ -76,7 +76,7 @@ EndFunction
 
 Function BeginPairCam(Actor akActor0) Global
 	Actor akActor1 = SelectedActor()
-	if akActor1 && !FourStimScene.BeginPairScene(akActor0, akActor1, "4StimTest_OStim2PStandingBehindFuckMF", Game.GetPlayer(), 100.0, 180.0, true)
+	if akActor1 && !FourStimScene.BeginPairScene(akActor0, akActor1, "OStim2PStandingBehindFuckMF", Game.GetPlayer(), 100.0, 180.0, true)
 		Debug.Notification("4Stim: pair scene couldn't start (see Papyrus log / 4Stim.log)")
 	endif
 EndFunction

@@ -4,6 +4,7 @@
 #include "compat/Fallbacks.h"
 
 #include "Actions.h"
+#include "Furniture.h"
 
 #include <algorithm>
 #include <cctype>
@@ -296,6 +297,12 @@ namespace SceneRegistry
 			scene.furniture = Lower(entry.value("furniture", std::string{}));
 			if (scene.furniture == "none") {
 				scene.furniture.clear();
+			} else if (!scene.furniture.empty() && !Furniture::Known(scene.furniture)) {
+				// As OStim (GraphTableSetupNodes.cpp, FurnitureTable::
+				// getFurnitureType): a type no furniture file defines is "none",
+				// so the scene plays as a floor scene instead of never.
+				REX::WARN("Scenes: {}: scene \"{}\": unknown furniture type \"{}\", played without furniture (as OStim)", file, id, scene.furniture);
+				scene.furniture.clear();
 			}
 			if (const auto off = entry.find("furnitureOffset"); off != entry.end()) {
 				if (off->is_array() && (off->size() == 3 || off->size() == 4) && std::ranges::all_of(*off, [](const nlohmann::json& v) { return v.is_number(); })) {
@@ -555,26 +562,46 @@ namespace SceneRegistry
 			// Actions: who does what to whom. Each role collects what its
 			// side of its actions needs (Fits checks it).
 			if (const auto acts = entry.find("actions"); acts != entry.end() && acts->is_array()) {
+				// As OStim (GraphTableSetupNodes.cpp): every entry is kept, so an
+				// action's index is its place in the file (4StimPeak.N,
+				// expressionAction and the API count that way). An unknown type
+				// gets the "default" action's attributes under its own id; a
+				// missing "actor" stays "no one" (-1); a role the scene doesn't
+				// have is kept as written and applies to no one.
 				for (const auto& a : *acts) {
-					const auto typeID = a.is_object() ? a.value("type", std::string{}) : std::string{};
-					auto       type = Actions::Find(typeID);
-					if (!type) {
-						REX::WARN("Scenes: {}: scene \"{}\": unknown action \"{}\" ignored (not in any Actions file)", file, id, typeID);
-						continue;
+					if (!a.is_object()) {
+						REX::WARN("Scenes: {}: scene \"{}\": action {} is malformed", file, id, scene.actions.size());
 					}
+					const auto typeID = a.is_object() ? a.value("type", std::string{}) : std::string{};
+					auto       type = Actions::FindOrDefault(typeID);
 					auto role = [&](const char* a_key, int a_default) {
-						const auto v = a.find(a_key);
-						return v != a.end() && v->is_number_integer() ? v->get<int>() : a_default;
+						const auto v = a.is_object() ? a.find(a_key) : a.end();
+						if (v == a.end()) {
+							return a_default;
+						}
+						if (!v->is_number_integer()) {
+							REX::WARN("Scenes: {}: scene \"{}\": {} of action {} isn't an integer", file, id, a_key, scene.actions.size());
+							return a_default;
+						}
+						return v->get<int>();
 					};
-					const int actor = role("actor", 0);
+					if (a.is_object() && !a.contains("actor")) {
+						REX::WARN("Scenes: {}: scene \"{}\": action {} doesn't have an actor", file, id, scene.actions.size());
+					}
+					const int actor = role("actor", -1);
 					const int target = role("target", actor);
 					const int performer = role("performer", actor);
 					const auto inRange = [&](int a_role) { return a_role >= 0 && static_cast<std::size_t>(a_role) < roles; };
-					if (!inRange(actor) || !inRange(target) || !inRange(performer)) {
-						REX::WARN("Scenes: {}: scene \"{}\": action \"{}\" names a role the scene doesn't have (0 to {}), ignored", file, id, typeID, roles - 1);
-						continue;
+					if ((actor >= 0 && !inRange(actor)) || (target >= 0 && !inRange(target)) || (performer >= 0 && !inRange(performer))) {
+						REX::WARN("Scenes: {}: scene \"{}\": action {} (\"{}\") names a role the scene doesn't have (0 to {}): that side applies to no one", file, id, scene.actions.size(), typeID, roles - 1);
 					}
+					// Stored roles: as written; -1 becomes kNoRole. Either way a
+					// role outside the scene matches no actor.
+					const auto stored = [](int a_role) { return a_role < 0 ? SceneAction::kNoRole : static_cast<std::size_t>(a_role); };
 					auto need = [&](int a_role, const Actions::Side& a_side) {
+						if (!inRange(a_role)) {
+							return;
+						}
 						auto& reqs = scene.actors[static_cast<std::size_t>(a_role)].requirements;
 						for (const auto& r : a_side.requirements) {
 							if (std::ranges::find(reqs, r) == reqs.end()) {
@@ -594,6 +621,9 @@ namespace SceneRegistry
 					// As OStim's GraphActor::merge, and its getOverrideExpressions
 					// (the first action, actor / target / performer, with one).
 					auto merge = [&](int a_role, const Actions::Side& a_side) {
+						if (!inRange(a_role)) {
+							return;
+						}
 						auto& part = scene.actors[static_cast<std::size_t>(a_role)];
 						part.moan |= a_side.moan;
 						part.talk |= a_side.talk;
@@ -605,10 +635,12 @@ namespace SceneRegistry
 					merge(actor, type->actor);
 					merge(target, type->target);
 					merge(performer, type->performer);
-					SceneAction action{ std::move(type), static_cast<std::size_t>(actor), static_cast<std::size_t>(target), static_cast<std::size_t>(performer) };
-					action.muted = a.value("muted", false);
-					action.doPeaks = a.value("doPeaks", true);
-					action.peaksAnnotated = a.value("peaksAnnotated", false);
+					SceneAction action{ std::move(type), stored(actor), stored(target), stored(performer) };
+					if (a.is_object()) {
+						action.muted = a.value("muted", false);
+						action.doPeaks = a.value("doPeaks", true);
+						action.peaksAnnotated = a.value("peaksAnnotated", false);
+					}
 					scene.actions.push_back(std::move(action));
 				}
 			}
@@ -889,9 +921,15 @@ namespace SceneRegistry
 				const auto dest = g_scenes.find(Lower(raw.nav.to));
 				if (origin == g_scenes.end() || dest == g_scenes.end()) {
 					// OStim's noWarnings: a link to a scene that may not be
-					// installed (another pack's) goes quietly.
-					if (!raw.nav.noWarnings) {
-						REX::WARN("Scenes: {}: navigation \"{}\" -> \"{}\" dropped (no such scene)", raw.file, raw.origin, raw.nav.to);
+					// installed (another pack's) goes quietly. 4Stim's addition:
+					// not when the missing end is an "OStim..." id: those are the
+					// base scenes, which should always be there (a pack hubbed
+					// onto them that loses its way in shows nothing otherwise).
+					const auto missing = origin == g_scenes.end() ? raw.origin : raw.nav.to;
+					const bool base = Lower(missing).starts_with("ostim");
+					if (!raw.nav.noWarnings || base) {
+						REX::WARN("Scenes: {}: navigation \"{}\" -> \"{}\" dropped (no scene \"{}\"{})", raw.file, raw.origin, raw.nav.to, missing,
+							base ? ": an OStim base scene, so the base scenes aren't installed or are under other ids" : "");
 					}
 					++dropped;
 					continue;
@@ -1091,8 +1129,10 @@ namespace SceneRegistry
 
 	bool Scene::HasAction(std::string_view a_type) const
 	{
-		const auto type = Actions::Find(a_type);
-		return type && std::ranges::any_of(actions, [&](const SceneAction& a) { return a.type->id == type->id; });
+		// As OStim's Action::isType: by the alias-resolved id, so a type no
+		// Actions file defines still matches the scenes that use it.
+		const auto id = Actions::ResolveAlias(a_type);
+		return std::ranges::any_of(actions, [&](const SceneAction& a) { return a.type->id == id; });
 	}
 
 	bool Scene::HasActionTag(std::string_view a_tag) const

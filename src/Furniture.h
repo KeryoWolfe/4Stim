@@ -56,6 +56,9 @@ namespace Furniture
 	// the same type, or a subtype of it.
 	bool IsA(std::string_view a_type, std::string_view a_wanted);
 
+	// Whether a type file defines a_type ("none" counts: it's the root).
+	bool Known(std::string_view a_type);
+
 	// The display name of a type (its id if it has none).
 	std::string Name(std::string_view a_type);
 

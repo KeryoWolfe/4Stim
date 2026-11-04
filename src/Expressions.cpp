@@ -249,19 +249,30 @@ namespace Expressions
 					expression->female = ReadGender(root.value("female", nlohmann::json::object()));
 					expression->male = ReadGender(root.value("male", nlohmann::json::object()));
 					const std::shared_ptr<const Expression> shared = expression;
-					auto file = [&](const char* a_key, std::unordered_map<std::string, ExpressionList>& a_table) {
+					// a_actions: the names are action types, possibly by an alias
+					// (OStim's own files say "cunnilingus" for "vulvaleating",
+					// "ticklingfeet" for "ticklingfoot"...). OStim resolves them
+					// at load (TraitTable.cpp, GraphTable::getActionAlias); a name
+					// that's no action's id or alias stays as written, as there.
+					auto file = [&](const char* a_key, std::unordered_map<std::string, ExpressionList>& a_table, bool a_actions) {
 						if (const auto it = root.find(a_key); it != root.end() && it->is_array()) {
 							for (const auto& key : *it) {
 								if (key.is_string()) {
-									a_table[Lower(key.get<std::string>())].push_back(shared);
+									auto name = Lower(key.get<std::string>());
+									if (a_actions) {
+										if (const auto type = Actions::Find(name)) {
+											name = type->id;
+										}
+									}
+									a_table[name].push_back(shared);
 								}
 							}
 						}
 					};
-					file("events", g_byEvent);
-					file("sets", g_bySet);
-					file("actionActors", g_byActionActor);
-					file("actionTargets", g_byActionTarget);
+					file("events", g_byEvent, false);
+					file("sets", g_bySet, false);
+					file("actionActors", g_byActionActor, true);
+					file("actionTargets", g_byActionTarget, true);
 					++count;
 				} catch (const std::exception& ex) {
 					REX::WARN("Expressions: {}: couldn't be read ({})", e.path().filename().string(), ex.what());

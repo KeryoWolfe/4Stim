@@ -24,7 +24,7 @@ Expression files are in `Data\F4SE\Plugins\4Stim\Facial Expressions\` (subfolder
 }
 ```
 
-- `sets`: named sets it belongs to (`default`, `openmouth`, `tongue`...). `actionActors` / `actionTargets`: actions it's used for, by the actor doing them or the one they're done to. `events`: `moan`, `climax`.
+- `sets`: named sets it belongs to (`default`, `openmouth`, `tongue`...). `actionActors` / `actionTargets`: actions it's used for, by the actor doing them or the one they're done to, by id or alias (`cunnilingus` means `vulvaleating`, as OStim resolves them at load). `events`: `moan`, `climax`.
 - `female` / `male`: the face for each sex. `expression` (Skyrim's emotion, one), `modifiers` (eyes and brows), `phonemes` (the mouth). Each value is `baseValue` (0-100) plus a random 0-`variance`, plus `speedMultiplier` × the scene's relative speed and `excitementMultiplier` × the actor's excitement, as in OStim. `delay` is read but not used yet.
 - **4Stim adds `morphs`:** a list like `modifiers`, but its `type` is a Fallout 4 morph index (below), for files made for Fallout 4.
 

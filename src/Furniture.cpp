@@ -722,6 +722,17 @@ namespace Furniture
 		return IsALocked(a_type, a_wanted);
 	}
 
+	bool Known(std::string_view a_type)
+	{
+		const auto key = Lower(a_type);
+		if (key.empty() || key == "none") {
+			return true;
+		}
+		std::scoped_lock lock(g_lock);
+		EnsureLoaded();
+		return g_types.contains(key);
+	}
+
 	std::string Name(std::string_view a_type)
 	{
 		std::scoped_lock lock(g_lock);
