@@ -19,6 +19,9 @@ Needs the plugin rebuilt and FourModEvents.psc, FourJSON.psc, FourStimMenu.psc c
 - **An action of a type no Actions file defines is kept with the `default` action's attributes**, as OStim's (docs/SCENES.md): before, it was dropped, which moved every later action down one, so `4StimPeak.<n>` annotations, `expressionAction` and the action API pointed at the wrong action. An action without `actor` now applies to no one, and `HasAction` / `FindSceneAction` find types by id or alias even when no file defines them.
 - **Facial expressions named by an action alias work** (docs/EXPRESSIONS.md): OStim's own expression files say `cunnilingus`, `lickingpenis`, `ticklingfeet` and six more aliases where 4Stim looked for the ids, so oral, licking and tickling scenes got the generic face.
 
+### OStim NG's 22 October update
+- **`gropingchest`** (aliases `gropechest`, `holdchest`, `holdingchest`): OStim's new action for groping a man's chest (`gropingbreast` is for women's). `gropingbreast`, `gropingbutt`, `gropingtesticles` and `gropingchest` carry OStim's new `groping` tag. OStim's `groping` action tag file only sets factions, which need a plugin file (parity audit tier 2, item 15). The update's other change, a new channel in OStim's C++ plugin interface (`requestInterfaceMap`), belongs to OStim's second C++ API, which 4Stim doesn't have yet (item 18).
+
 ### Actor 3D rebuilds
 - **A scene actor whose 3D the game rebuilds gets the scene's physics swap back** (docs/PHYSICS.md): equipping something, the undress redraw or another mod's redraw took A-Body back to its own physics. SKSE has an event for this and F4SE doesn't, so 4Stim watches its scene actors itself. This replaces 0.4.2's re-swap after the undress redraw only.
 

@@ -895,6 +895,7 @@
 				"holdtits"
 			],
 			"tags": [
+				"groping",
 				"sensual"
 			],
 			"actor": {
@@ -921,6 +922,38 @@
 			}
 		},
 		{
+			"id": "gropingchest",
+			"name": "Groping chest",
+			"aliases": [
+				"gropechest",
+				"holdchest",
+				"holdingchest"
+			],
+			"tags": [
+				"groping",
+				"sensual"
+			],
+			"actor": {
+				"stimulation": 0.1,
+				"maxStimulation": 50,
+				"requirements": [
+					"hand"
+				],
+				"undressSlots": [
+					34,
+					35
+				],
+				"moan": true,
+				"talk": true
+			},
+			"target": {
+				"stimulation": 0.1,
+				"maxStimulation": 50,
+				"moan": true,
+				"talk": true
+			}
+		},
+		{
 			"id": "gropingbutt",
 			"name": "Groping butt",
 			"aliases": [
@@ -937,6 +970,7 @@
 				"holdingbutt"
 			],
 			"tags": [
+				"groping",
 				"sensual"
 			],
 			"actor": {
@@ -980,6 +1014,7 @@
 				"holdtesticles"
 			],
 			"tags": [
+				"groping",
 				"sexual"
 			],
 			"actor": {
