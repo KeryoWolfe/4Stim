@@ -98,7 +98,7 @@ The first scene has two speeds and one navigation option. The second uses the si
 | `noRandomSelection` | scene | no | `true`: auto mode never picks this scene at random (it can still walk through it). For scenes that only make sense from a particular other one. |
 | `offset` | scene or actor | no | OStim's `{"x", "y", "z", "r"}`: moves an actor from the scene's spot (x right, y forward, z up, r degrees clockwise), before alignment. A scene's offset moves every actor, on top of each one's own. |
 | `modpack` | scene | no | OStim's: the pack the scene comes from, shown in the picker. |
-| `fadeOnEntry` | scene | no | OStim's: in a scene with the player, fade to black when auto mode moves to this scene (as `SetUseAutoFades` does for every scene, `AUTOMODE.md`). |
+| `fadeOnEntry` | scene | no | OStim's: in a scene with the player, fade to black on the way into this scene. OStim fades for any move into it; 4Stim, so far, only when auto mode moves there (as `SetUseAutoFades` does for every scene, `AUTOMODE.md`), not when you pick it. |
 | `scale`, `scaleHeight`, `feetOnGround` | actor | no | OStim's actor scaling and heels: the scale the role is played at, the height the animation was made for, and whether heels stay on (`SCALING.md`). |
 | `penisBend` | actor | no | The penis bend for this role, in SoS steps from -9 to +9, or -10 for flaccid (OStim's `sosBend` and `tngBend`, also read): the default until an alignment sets one (`ALIGNMENT.md`, Penis bend). |
 | `noStrip` | scene or actor | no | `true` on the scene: no one undresses in this scene, whatever its actions (UNDRESS.md). Scenes after it still undress as usual. On an actor (OStim's): that role's actions don't undress them (undressing at the start still does). |

@@ -174,8 +174,10 @@ namespace
 		std::uint32_t navYesKey = 0x67;        // numpad 7
 		std::uint32_t navToggleKey = 0x69;     // numpad 9
 		// Controller buttons for the scene keys ([Controller], 4Stim's: OStim
-		// takes its keys from the keyboard map). Gamepad codes as the game's
-		// (0x100 LB...); 0 = none, the default.
+		// binds gamepad buttons and mouse buttons through the same key codes
+		// as keys, which Fallout 4's virtual-key codes can't hold; 4Stim
+		// has no mouse buttons). Gamepad codes as the game's (0x100 LB...);
+		// 0 = none, the default.
 		std::uint32_t padHotkey = 0, padNpcScene = 0, padSpeedUp = 0, padSpeedDown = 0, padAutoMode = 0, padPullOut = 0;
 		std::uint32_t padEnd = 0, padSearch = 0, padAlign = 0, padFreeCam = 0, padHideUI = 0;
 		bool          padClassic = false;  // sPadScheme: Modern (4Stim's) or Classic (OStim's navigation)

@@ -50,4 +50,4 @@ Texts starting with `$4Stim_` are translated (TRANSLATIONS.md); a file's `"engli
 
 ## Papyrus for options
 
-`FourStim.Mute` / `Unmute` / `IsMuted` (OStim's `OActor` ones), `FourStim.UndressActor` / `RedressActor`, `FourStim.EquipObject` / `UnequipObject` / `IsObjectEquipped`, and 4Stim's `FourStim.SetEquipObjectID(akActor, asType, asID)` / `GetEquipObjectID` (which object of a type an actor wears, until a game is loaded).
+`FourStim.Mute` / `Unmute` / `IsMuted` (OStim's `OActor` ones), `FourStim.UndressActor` / `RedressActor`, `FourStim.EquipObject` / `UnequipObject` / `IsObjectEquipped`, and 4Stim's `FourStim.SetEquipObjectID(akActor, asType, asID)` / `GetEquipObjectID` (which object of a type an actor wears, saved with the game).

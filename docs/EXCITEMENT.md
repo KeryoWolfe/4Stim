@@ -34,4 +34,4 @@ A **stalled** actor (`StallClimax`) stays at 100 without climaxing until release
 - `GetExcitementMultiplier` and `SetExcitementMultiplier`
 - `GetTimeUntilClimax`
 
-Excitement lives only as long as the actor's scene. It starts at 0 in every new scene, and it isn't saved.
+Excitement lives only as long as the actor's scene. It starts at 0 in every new scene. It's saved with the game, so a scene started again from a save goes on from where it was (OStim's threads end on load, so OStim has nothing to save); times climaxed and climax stalls aren't saved.

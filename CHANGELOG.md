@@ -25,6 +25,9 @@ Needs the plugin rebuilt; FourModEvents.psc, FourJSON.psc, FourStimMenu.psc, Fou
 - **The first voice set entry that fits plays**, as OStim's, instead of one picked at random: packs list specific sounds first and a catch-all last, so the catch-all had played about half the time during a blowjob. OStim's perk `condition` on an entry now works (actor as subject, their primary partner as target); before, it was ignored and conditional sounds always played.
 - **Fixed:** muting an actor mid-moan, or an event reaction with nothing to play, left the moan face on for the rest of the scene.
 
+### Docs
+- **The doc lines the parity audit found describing 4Stim as OStim are corrected** (docs/PARITY_AUDIT.md, "Docs that say the wrong thing"): auto mode's speed control, standing rule and pull-out, `fadeOnEntry`, `listIndividually`, the player not being put back after a furniture scene, weapons at scene start, the sex toy inputs, `FindRandomScene`, the alignment API, and OStim's key defaults and gamepad / mouse keys. Equip-object choices and excitement were said not to be saved; they are. The ini-only settings missing from SETTINGS.md and MCM.md are listed.
+
 ### OStim NG's 22 October update
 - **`gropingchest`** (aliases `gropechest`, `holdchest`, `holdingchest`): OStim's new action for groping a man's chest (`gropingbreast` is for women's). `gropingbreast`, `gropingbutt`, `gropingtesticles` and `gropingchest` carry OStim's new `groping` tag. OStim's `groping` action tag file only sets factions, which need a plugin file (parity audit tier 2, item 15). The update's other change, a new channel in OStim's C++ plugin interface (`requestInterfaceMap`), belongs to OStim's second C++ API, which 4Stim doesn't have yet (item 18).
 

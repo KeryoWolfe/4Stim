@@ -21,7 +21,8 @@
 // - Scenes are passed by ID (const char*), not as OStim's Graph::Node
 //   objects; scene data is read through FourStim's Papyrus functions or the
 //   scene files. OStim's GraphInterface, FurnitureInterface and
-//   SettingInterface aren't here; 4Stim adds an "Alignment" interface.
+//   SettingInterface aren't here; 4Stim adds an "Alignment" interface (OStim's
+//   alignment get / set is in its separate OstimNG-API, not ported yet).
 // - ThreadActor has no undressPartial / redressPartial (4Stim undresses
 //   whole items, docs/UNDRESS.md).
 //
@@ -178,7 +179,8 @@ namespace FourStimAPI
 		virtual ThreadActor* getActor(void* gameActor) = 0;
 	};
 
-	// ---- Alignment (4Stim's own; OStim has none) ----
+	// ---- Alignment (4Stim's own interface; OStim has alignment get / set only in
+	// its separate OstimNG-API thread interface, which 4Stim doesn't have yet) ----
 
 	struct AlignmentOffset
 	{

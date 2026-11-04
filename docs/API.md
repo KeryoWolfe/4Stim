@@ -53,7 +53,7 @@ Without a starting scene, the builder picks a scene the way the scene picker wou
 
 Random scenes for a set of actors, with OStim's function names: `GetRandomScene(actors)`, `GetRandomFurnitureScene(actors, type)`, and for each, scene tags (`...WithSceneTag`, `...WithAnySceneTag`, `...WithAllSceneTags`, `CSV` versions), one actor's tags (`...WithSingleActorTag(actors, position, tag)`, `Any` / `All`, `CSV`), any actor's tags (`...WithMultiActorTagForAny`), and actions (`...WithAction`, `...WithAnyAction`, `...WithAllActions`, `CSV`), each also as `GetRandomFurnitureScene...` with a furniture type. A scene qualifies if these actors can play it (any role order that fits their sexes and actor properties), it's not a transition, and it isn't marked `noRandomSelection`. They return "" when none fits.
 
-All of them use one native: `FindRandomScene(actors, furnitureType, anySceneTags, allSceneTags, anyActions, allActions, position, anyActorTags, allActorTags)`, which mods can call directly for combinations OStim spells out as separate functions (its multi-actor "ForAll" and action actor / target variants aren't wrapped yet). `GetAllScenes()` lists every scene, `SplitCSV("a,b")` splits a list.
+All of them use one native: `FindRandomScene(actors, furnitureType, anySceneTags, allSceneTags, anyActions, allActions, position, anyActorTags, allActorTags)`, which mods can call directly for combinations OStim spells out as separate functions (not all of them: it has no action-role parameter, so OStim's action actor / target variants and the multi-actor "ForAll" ones can't be built on it yet; FourLibrary has about a third of OLibrary's functions, and its random picks accept any actor order where OStim's keep the order given). `GetAllScenes()` lists every scene, `SplitCSV("a,b")` splits a list.
 
 ## FourMetadata
 
@@ -157,7 +157,7 @@ if (message.interfaceMap) {
 ```
 
 - **"Threads"** (OStim's `ThreadInterface`): `getThread(id)`; listeners for thread start, speed change, scene change (OStim's node changed), climax and thread stop; `createThreadBuilder(count, actors)` (the Papyrus builder's options; `start()` / `cancel()` free it); `getActor(actor)`. A `Thread` gives its ID, whether it's the player's, its actors, scene, speed and furniture, and can navigate, warp, change speed or stop; a `ThreadActor` gives the game actor, undresses / redresses, removes / adds weapons, and (4Stim) reads and sets excitement and climaxes.
-- **"Alignment"** (4Stim's own): a thread actor's alignment offset in the current scene (sideways, forward, up, rotation, scale, penis bend), read, set (saved, applied at once) or reset, as the HUD's Align tab does.
+- **"Alignment"** (4Stim's own interface; OStim's alignment get / set is in its second C++ API, `OstimNG-API`'s thread interface, which 4Stim doesn't have yet): a thread actor's alignment offset in the current scene (sideways, forward, up, rotation, scale, penis bend), read, set (saved, applied at once) or reset, as the HUD's Align tab does.
 - **"SexToys"** (OStim's `SexToyInterface`, the same): device plugins register a reload listener once and add their toys whenever it's called.
 
 Listeners are called on the game's main thread, and the `Thread` / `ThreadActor` objects stay valid for the session (a stopped thread says so with `isRunning()`).
@@ -172,7 +172,7 @@ OStim's sex toys: a device plugin (for buttplug.io, say) registers toys through 
 - a `peak(fToyClimaxMagnitude, 1)` when its actor climaxes (`bToyClimax`);
 - `stop()` when the scene moves on, `turnOn()` / `turnOff()` as it gets used and when the scene ends.
 
-The strength comes from `sToyScaling`: none (always the strongest, OStim's default), the excitement rate, the excitement (0-1), or the scene speed (0-1), between `fToyMinScale` and `fToyMaxScale`. Toys are registered again on every save load and each time the player's scene starts (OStim's reload).
+The strength comes from `sToyScaling`: none (always the strongest, OStim's default), the excitement rate, the excitement (0-1), or the scene speed (0-1), between `fToyMinScale` and `fToyMaxScale`. Departures in the inputs: 4Stim's rate includes the sex and actor excitement multipliers (OStim's is the base rate times 1 + the relative speed), its excitement is 0-1 (OStim passes 0-100, so with its 0-1 scale defaults it's always at the top), and its speed reaches 1 at the top speed (OStim's speed / speed count never does). Toys are registered again on every save load and each time the player's scene starts (OStim's reload).
 
 ### Intiface Central, built in
 

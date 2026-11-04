@@ -102,7 +102,7 @@ The Low findings, each a line or two, are in the reports: the Align tab's steps 
 
 ## Docs that say the wrong thing
 
-These lines describe 4Stim as OStim, or are out of date. Each is a one-line fix and they're where the "redo" cycles came from:
+**Fixed in 0.5.0:** each line below now says what 4Stim does and, where it differs, what OStim does (the behaviour itself is unchanged; those are tier 3 items). These lines described 4Stim as OStim, or were out of date. Each was a one-line fix and they're where the "redo" cycles came from:
 
 - SOUND.md:67 "cutting in over a moan... as OStim's" (OStim waits).
 - AUTOMODE.md: speed control, the standing/bed rule, pull-out "as OStim" (1 §7, §16).
