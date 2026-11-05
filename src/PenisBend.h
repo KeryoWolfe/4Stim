@@ -43,8 +43,17 @@ namespace PenisBend
 	Config& Settings();
 
 	// a_id's bend in the scene now (OStim's setSoSBend: the alignment's, or
-	// the scene's). Any thread.
-	void Set(std::uint32_t a_id, float a_steps);
+	// the scene's). a_fromAlignment: the bend is the player's own, from the
+	// Align tab, which counts even on an aimed animation (Aim). Any thread.
+	void Set(std::uint32_t a_id, float a_steps, bool a_fromAlignment = false);
+
+	// The 4StimPenisAim annotation: the actor's animation already points the
+	// penis at the partner (AnimBridge bends the whole Penis_00..05 chain toward
+	// the partner's vagina, anus or mouth when it converts a pack), so the scene
+	// file's bend would only bend it off target: it's left out until the scene
+	// changes. A bend from the Align tab and 4StimBendSoS annotations still
+	// count. Any thread.
+	void Aim(std::uint32_t a_id, bool a_aimed);
 
 	// An annotation's offset on top (OStim's offsetSoSBend; 0 = none).
 	void Offset(std::uint32_t a_id, int a_steps);

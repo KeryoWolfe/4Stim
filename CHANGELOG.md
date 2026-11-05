@@ -2,6 +2,9 @@
 
 ## 0.5.0 alpha (in progress)
 
+### Aimed animations
+- **The `4StimPenisAim` annotation** (docs/EVENTS.md, docs/ALIGNMENT.md): AnimBridge now bends the whole penis chain toward the partner when it converts a pack and marks those animations with it. On them the scene file's penis bend is left out (it was written for SoS's straight schlong, and bent the aimed shaft off target); the Align tab's bend still counts.
+
 Needs the plugin rebuilt; FourModEvents.psc, FourJSON.psc, FourStimMenu.psc, FourStim.psc, FourStimOptions.psc, FourStimPhysics.psc, FourStimScene.psc and FourStimFactions.psc compiled (and FourStimTest.psc, if you use it); the new test pack (its scene files changed); and `4Stim.esl` enabled.
 
 ### Scenes ending, failing and loading (parity audit, tier 1 items 1 to 3)

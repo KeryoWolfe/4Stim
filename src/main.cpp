@@ -2450,6 +2450,7 @@ namespace
 			ApiForms::SceneChanged(scene->actors, *entered, scene->threadID == 0);
 			for (const auto id : scene->actors) {
 				PenisBend::Offset(id, 0);  // OStim's changeNode: the annotation's bend ends with the scene
+				PenisBend::Aim(id, false);  // until the new animation's 4StimPenisAim says so
 			}
 			LockScene(*scene);  // this scene's alignment
 		}
@@ -2537,6 +2538,7 @@ namespace
 			EquipObjects::SceneEntered(a_active.actors, *scene, false);
 			for (const auto id : a_active.actors) {
 				PenisBend::Offset(id, 0);  // OStim's changeNode: the annotation's bend ends with the scene
+				PenisBend::Aim(id, false);  // until the new animation's 4StimPenisAim says so
 			}
 			LockScene(a_active);  // this scene's alignment
 		}
@@ -3118,7 +3120,7 @@ namespace
 			// The penis bend (OStim's setSoSBend): the alignment's, else the scene's.
 			{
 				const auto found = settled ? Alignment::Find(a_active.alignKey, settled->id, role) : std::nullopt;
-				PenisBend::Set(id, found ? found->bend : settled && role < settled->actors.size() ? settled->actors[role].penisBend : 0.0F);
+				PenisBend::Set(id, found ? found->bend : settled && role < settled->actors.size() ? settled->actors[role].penisBend : 0.0F, found.has_value());
 			}
 			// OStim's look directions (its eyeballModifierOverride), for this scene.
 			if (settled && role < settled->actors.size()) {
@@ -7969,6 +7971,8 @@ namespace
 				}
 			} else if (_stricmp(a_event.tag.c_str(), "4StimResetSoS") == 0) {
 				PenisBend::Offset(id, 0);  // OStim's OStimResetSoS
+			} else if (_stricmp(a_event.tag.c_str(), "4StimPenisAim") == 0) {
+				PenisBend::Aim(id, true);  // AnimBridge aimed this animation's penis: no scene bend on top
 			} else if (_stricmp(a_event.tag.c_str(), "4StimEquipObject") == 0 || _stricmp(a_event.tag.c_str(), "4StimUnequipObject") == 0) {
 				// OStim's OStimEquipObject / OStimUnequipObject: "<type>".
 				const bool  equip = _stricmp(a_event.tag.c_str(), "4StimEquipObject") == 0;

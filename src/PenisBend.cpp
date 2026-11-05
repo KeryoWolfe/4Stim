@@ -18,6 +18,8 @@ namespace PenisBend
 		struct State
 		{
 			float steps = 0.0F;   // the scene's / alignment's
+			bool  fromAlignment = false;  // steps are the Align tab's (the player's own)
+			bool  aimed = false;  // 4StimPenisAim: the animation points the penis itself
 			int   offset = 0;     // the annotation's
 			bool  applied = false;
 			bool  warned = false;  // said once that the node isn't there
@@ -136,14 +138,28 @@ namespace PenisBend
 		return g_config;
 	}
 
-	void Set(std::uint32_t a_id, float a_steps)
+	void Set(std::uint32_t a_id, float a_steps, bool a_fromAlignment)
 	{
 		std::scoped_lock lock(g_lock);
 		auto&            state = g_states[a_id];
 		if (state.steps != a_steps) {
-			REX::INFO("Penis bend: {:08X} at {} step(s)", a_id, a_steps);
+			REX::INFO("Penis bend: {:08X} at {} step(s){}", a_id, a_steps, a_fromAlignment ? " (alignment)" : "");
 		}
 		state.steps = a_steps;
+		state.fromAlignment = a_fromAlignment;
+	}
+
+	void Aim(std::uint32_t a_id, bool a_aimed)
+	{
+		std::scoped_lock lock(g_lock);
+		auto&            state = g_states[a_id];
+		if (state.aimed != a_aimed) {
+			if (a_aimed) {
+				REX::INFO("Penis bend: {:08X}'s animation aims the penis itself (4StimPenisAim): the scene's bend is left out{}", a_id,
+					state.fromAlignment && state.steps != 0.0F ? ", the alignment's still counts" : "");
+			}
+			state.aimed = a_aimed;
+		}
 	}
 
 	void Offset(std::uint32_t a_id, int a_steps)
@@ -166,7 +182,10 @@ namespace PenisBend
 			// (Erection.h: morphs, a bodysuit) does, and the nodes go back
 			// to their own angle; one that can't (A-Body's rigid penis with
 			// its physics off) takes TNG's flaccid pose (sPenisFlaccid).
-			float total = std::clamp(std::round(state.steps + static_cast<float>(state.offset)), -10.0F, 9.0F);
+			// An aimed animation (4StimPenisAim) gets no scene bend on top: only
+			// the player's own from the Align tab, and the annotations'.
+			const float steps = state.aimed && !state.fromAlignment ? 0.0F : state.steps;
+			float       total = std::clamp(std::round(steps + static_cast<float>(state.offset)), -10.0F, 9.0F);
 			Erection::SetBend(id, static_cast<int>(total));
 			bool flaccidPose = false;
 			if (total <= -10.0F) {
