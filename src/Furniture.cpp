@@ -1077,6 +1077,26 @@ namespace Furniture
 		const auto  origin = a_ref->GetPosition();
 		spot.position = { origin.x + local.x * c + local.y * s, origin.y - local.x * s + local.y * c, origin.z + local.z };
 		spot.heading = yaw + localHeading + type.rotation;
+		// A spot at the furniture's own origin height (a chair without
+		// markers): the object can be sunk into the floor, and an actor locked
+		// below the floor has the floor pushing their character controller up
+		// while the lock pulls them back down, a bounce several times a second
+		// (the owner's chair scenes, 4 November: the spot 2.7 below where the
+		// NPC stood, the player held 8 units over it). Not in OStim, whose
+		// chairs have markers: the spot goes up onto the floor, found by a
+		// ray straight down past the furniture itself.
+		if (!type.edge && !type.center && std::fabs(local.z) < 1.0F) {
+			if (const auto cell = a_ref->GetParentCell()) {
+				const RE::NiPoint3 from{ spot.position.x, spot.position.y, spot.position.z + 40.0F };
+				const RE::NiPoint3 to{ spot.position.x, spot.position.y, spot.position.z - 20.0F };
+				const float        free = FreeDistance(cell, a_ref, from, to);
+				const float        floor = from.z - free;
+				if (free < 60.0F && floor > spot.position.z + 0.5F && floor < spot.position.z + 20.0F) {
+					REX::INFO("Furniture: {:08X}'s spot is {:.1f} below the floor under it: raised onto the floor", a_ref->GetFormID(), floor - spot.position.z);
+					spot.position.z = floor;
+				}
+			}
+		}
 		REX::INFO("Furniture: spot on {:08X} ({}): ({:.1f}, {:.1f}, {:.1f}), heading {:.1f} deg (marker {}: local ({:.1f}, {:.1f}, {:.1f}), {:.1f} deg)",
 			a_ref->GetFormID(), a_type, spot.position.x, spot.position.y, spot.position.z, spot.heading / DEG,
 			used >= 0 ? std::to_string(used) : std::string("none"), local.x, local.y, local.z, localHeading / DEG);
