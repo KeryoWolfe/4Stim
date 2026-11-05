@@ -3595,6 +3595,15 @@ namespace
 		if (!body || !body->GetAppCulled()) {
 			return;
 		}
+		// Not in first person: there the culling is the game's own, and the
+		// third-person skeleton isn't animated. A scene ending put the camera
+		// back in first person half a second before the scene was let go, and
+		// this showed the body then (the owner's log, 5 November): a T-posed
+		// player with his head bent, and FSMP crashed in its collider when
+		// the physics swap went back on that body a moment later.
+		if (const auto camera = RE::PlayerCamera::GetSingleton(); camera && camera->QCameraEquals(RE::CameraState::kFirstPerson)) {
+			return;
+		}
 		body->SetAppCulled(false);
 		if (++shown <= 5) {
 			REX::INFO("Scene guard: the player's body was hidden in \"{}\" (third-person 3D culled, as first person leaves it): shown again", a_sceneID);
