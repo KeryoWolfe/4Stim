@@ -2288,9 +2288,9 @@ namespace
 		EndedThread done{ ended.threadID, ended.sceneID, ended.actors, {} };
 		{
 			std::scoped_lock lock(g_threadsLock);
-			if (const auto it = g_threads.find(ended.threadID); it != g_threads.end() && it->second.status == ThreadRecord::Status::kRunning) {
-				done.metadata = it->second.metadata;
-				it->second.status = ThreadRecord::Status::kEnded;
+			if (const auto record = g_threads.find(ended.threadID); record != g_threads.end() && record->second.status == ThreadRecord::Status::kRunning) {
+				done.metadata = record->second.metadata;
+				record->second.status = ThreadRecord::Status::kEnded;
 			}
 		}
 		g_endedThreads.push_back(std::move(done));
