@@ -1657,6 +1657,62 @@ namespace
 
 	constexpr float FURNITURE_CLEAR_RADIUS = 120.0F;  // other furniture this close to the scene's joins too
 
+	// ---- The physics world's lock ----
+	// Havok steps the physics world on its own threads while the game runs,
+	// and 4Stim's changes to it (collision filters, character controllers'
+	// gravity, reading what a controller touches) run in the F4SE task
+	// queue, which can overlap a step: a race on Havok's memory (pointed out
+	// to the owner, 5 November; the collision watch's 1 November crash was
+	// Havok's own read check failing there). The game guards its world with
+	// hknpBSWorld::m_worldLock (a BSReadWriteLock): another F4SE plugin
+	// takes it the same way around its Havok changes, and notes the game's
+	// own picks take it too. So every 4Stim change and read of a cell's
+	// physics world holds that lock for writing (Bethesda's lock lets the
+	// same thread take it again, for the game's own calls inside). Never
+	// with a pick (Furniture's raycasts) inside: those take it themselves.
+	// The physics world's own threads hold it while they step, so this
+	// waits for a step to finish (a fraction of a frame).
+	class PhysicsLock
+	{
+	public:
+		explicit PhysicsLock(const RE::TESObjectREFR* a_ref)
+		{
+			const auto cell = a_ref ? a_ref->GetParentCell() : nullptr;
+			const auto bhk = cell ? cell->GetbhkWorld() : nullptr;
+			const auto world = bhk ? bhk->m_worldNP.get() : nullptr;
+			if (!world) {
+				return;
+			}
+			// Waits for a step in progress, but not forever: if the lock
+			// isn't free within 20 ms, this goes ahead without it (as
+			// 4Stim did before) rather than risk freezing the game on a
+			// lock it can't get, and says so once.
+			const auto until = std::chrono::steady_clock::now() + std::chrono::milliseconds(20);
+			do {
+				if (world->m_worldLock.try_lock_write()) {
+					_lock = &world->m_worldLock;
+					return;
+				}
+				std::this_thread::yield();
+			} while (std::chrono::steady_clock::now() < until);
+			static std::atomic<int> warned = 0;
+			if (warned++ < 3) {
+				REX::WARN("Physics lock: the physics world stayed locked for 20 ms: changed without the lock");
+			}
+		}
+		~PhysicsLock()
+		{
+			if (_lock) {
+				_lock->unlock_write();
+			}
+		}
+		PhysicsLock(const PhysicsLock&) = delete;
+		PhysicsLock& operator=(const PhysicsLock&) = delete;
+
+	private:
+		RE::BSReadWriteLock* _lock = nullptr;
+	};
+
 	void CollectBodies(RE::NiAVObject* a_object, std::vector<RE::bhkNPCollisionObject*>& a_out, int a_depth)
 	{
 		if (!a_object) {
@@ -1692,7 +1748,18 @@ namespace
 			if (!furniture) {
 				return;
 			}
-			std::uint32_t group = 0;
+			// The furniture next to it first: the cell's references, not the
+			// physics world (outside its lock).
+			std::vector<RE::TESObjectREFR*> pieces{ furniture };
+			Compat::ForEachReferenceInRange(furniture->data.location, FURNITURE_CLEAR_RADIUS, [&](RE::TESObjectREFR* a_ref) {
+				const auto base = a_ref ? a_ref->GetObjectReference() : nullptr;
+				if (a_ref != furniture && base && base->GetFormType() == RE::ENUM_FORM_ID::kFURN && !a_ref->IsDisabled() && !a_ref->IsDeleted() && a_ref->Get3D()) {
+					pieces.push_back(a_ref);
+				}
+				return pieces.size() < 8 ? RE::BSContainer::ForEachResult::kContinue : RE::BSContainer::ForEachResult::kStop;
+			});
+			const PhysicsLock physics(furniture);
+			std::uint32_t     group = 0;
 			for (const auto id : a_actors) {
 				const auto controller = GetCharController(RE::TESForm::GetFormByID<RE::Actor>(id));
 				const auto body = controller ? controller->GetBodyImpl() : nullptr;
@@ -1707,14 +1774,6 @@ namespace
 				REX::INFO("Furniture collision: the actors on {:08X} have no collision group; left as it is", a_furniture);
 				return;
 			}
-			std::vector<RE::TESObjectREFR*> pieces{ furniture };
-			Compat::ForEachReferenceInRange(furniture->data.location, FURNITURE_CLEAR_RADIUS, [&](RE::TESObjectREFR* a_ref) {
-				const auto base = a_ref ? a_ref->GetObjectReference() : nullptr;
-				if (a_ref != furniture && base && base->GetFormType() == RE::ENUM_FORM_ID::kFURN && !a_ref->IsDisabled() && !a_ref->IsDeleted() && a_ref->Get3D()) {
-					pieces.push_back(a_ref);
-				}
-				return pieces.size() < 8 ? RE::BSContainer::ForEachResult::kContinue : RE::BSContainer::ForEachResult::kStop;
-			});
 			std::scoped_lock lock(g_furnitureFiltersLock);
 			auto&            saved = g_furnitureFilters[a_furniture];
 			for (const auto piece : pieces) {
@@ -1760,7 +1819,8 @@ namespace
 				bodies = std::move(it->second);
 				g_furnitureFilters.erase(it);
 			}
-			std::size_t restored = 0;
+			const PhysicsLock physics(RE::TESForm::GetFormByID<RE::TESObjectREFR>(a_furniture));
+			std::size_t       restored = 0;
 			for (const auto& body : bodies) {
 				RE::CFilter filter{};
 				filter.filter = body.filter;
@@ -1819,23 +1879,15 @@ namespace
 
 	constexpr float WATCH_RADIUS = 160.0F;  // references this close to the actor are looked through
 
-	const NearbyBodies::Entry* OwnerOf(RE::Actor* a_actor, const RE::hknpBody* a_body)
+	// The references around a_actor and their collision objects, looked up
+	// again at most every 5 seconds. Outside the physics lock: it walks the
+	// cell's references and their 3D, not the physics world.
+	void RefreshNearby(RE::Actor* a_actor)
 	{
 		auto&      nearby = g_nearbyBodies[a_actor->GetFormID()];
 		const auto now = std::chrono::steady_clock::now();
-		const auto find = [&]() -> const NearbyBodies::Entry* {
-			for (const auto& entry : nearby.entries) {
-				if (entry.object && entry.object->GetBody() == a_body) {
-					return &entry;
-				}
-			}
-			return nullptr;
-		};
-		if (const auto found = find()) {
-			return found;
-		}
-		if (now - nearby.built < std::chrono::seconds(5)) {
-			return nullptr;
+		if (!nearby.entries.empty() && now - nearby.built < std::chrono::seconds(5)) {
+			return;
 		}
 		nearby.built = now;
 		nearby.entries.clear();
@@ -1852,7 +1904,17 @@ namespace
 			}
 			return ++refs < 96 ? RE::BSContainer::ForEachResult::kContinue : RE::BSContainer::ForEachResult::kStop;
 		});
-		return find();
+	}
+
+	// Which of those owns a_body (under the physics lock).
+	const NearbyBodies::Entry* OwnerOf(RE::Actor* a_actor, const RE::hknpBody* a_body)
+	{
+		for (const auto& entry : g_nearbyBodies[a_actor->GetFormID()].entries) {
+			if (entry.object && entry.object->GetBody() == a_body) {
+				return &entry;
+			}
+		}
+		return nullptr;
 	}
 
 	void WatchCollisions(RE::Actor* a_actor, const std::string& a_sceneID)
@@ -1860,8 +1922,12 @@ namespace
 		if (!Compat::CanReadCollisionBodies()) {
 			return;  // 1.10.163 without Getbhk / GetBody: no watch (compat/Fallbacks.h)
 		}
-		const auto controller = GetCharController(a_actor);
-		const auto own = controller ? controller->GetBodyImpl() : nullptr;
+		if (g_lockScenes && g_settings.furnitureOutOfWay) {
+			RefreshNearby(a_actor);
+		}
+		const PhysicsLock physics(a_actor);
+		const auto        controller = GetCharController(a_actor);
+		const auto        own = controller ? controller->GetBodyImpl() : nullptr;
 		if (!own) {
 			return;
 		}
@@ -2013,7 +2079,8 @@ namespace
 		if (!controller || controller->gravity == 0.0F) {
 			return;
 		}
-		const auto id = a_actor->GetFormID();
+		const PhysicsLock physics(a_actor);
+		const auto        id = a_actor->GetFormID();
 		if (g_savedGravity.try_emplace(id, controller->gravity).second) {
 			REX::INFO("Scene lock: {:08X}'s controller gravity {:.2f} -> 0 for the scene", id, controller->gravity);
 		}
@@ -2027,6 +2094,7 @@ namespace
 		if (it == g_savedGravity.end()) {
 			return;
 		}
+		const PhysicsLock physics(a_actor);
 		if (const auto controller = GetCharController(a_actor)) {
 			controller->gravity = it->second;
 			REX::INFO("Scene lock: {:08X}'s controller gravity back to {:.2f}", a_actor->GetFormID(), it->second);
@@ -2044,7 +2112,8 @@ namespace
 		if (it == g_touched.end()) {
 			return;
 		}
-		std::size_t restored = 0;
+		const PhysicsLock physics(RE::TESForm::GetFormByID<RE::TESObjectREFR>(a_actor));
+		std::size_t       restored = 0;
 		for (const auto& touched : it->second) {
 			RE::CFilter filter{};
 			filter.filter = touched.filter;
@@ -4872,7 +4941,8 @@ namespace
 
 	bool ApplyFilter(RE::Actor* a_actor, std::uint32_t a_filter)
 	{
-		const auto controller = GetCharController(a_actor);
+		const PhysicsLock physics(a_actor);
+		const auto        controller = GetCharController(a_actor);
 		if (!controller) {
 			return false;
 		}
@@ -4889,7 +4959,8 @@ namespace
 		}
 
 		F4SE::GetTaskInterface()->AddTask([a_actor0, a_actor1]() {
-			const auto c0 = GetCharController(a_actor0);
+			const PhysicsLock physics(a_actor0);  // both are in one cell for a scene
+			const auto        c0 = GetCharController(a_actor0);
 			const auto c1 = GetCharController(a_actor1);
 			const auto b0 = c0 ? c0->GetBodyImpl() : nullptr;
 			const auto b1 = c1 ? c1->GetBodyImpl() : nullptr;
@@ -5855,7 +5926,8 @@ namespace
 			return;
 		}
 		F4SE::GetTaskInterface()->AddTask([a_actors]() {
-			std::uint32_t group = 0;
+			const PhysicsLock physics(a_actors.front());
+			std::uint32_t     group = 0;
 			for (const auto actor : a_actors) {
 				const auto c = GetCharController(actor);
 				const auto b = c ? c->GetBodyImpl() : nullptr;
