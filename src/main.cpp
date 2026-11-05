@@ -190,6 +190,7 @@ namespace
 		bool          hudEnabled = true;
 		bool          hudColumns = false;     // sHUDControls=Columns: OStim's control scheme (Left / Right between the list and the tab buttons)
 		bool          logAnimEvents = false;  // log scene actors' animation events (for authors)
+		bool          timeAnimCues = true;    // bTimeAnimCues: read and time the animation files' annotation cues (AnimCues.h)
 		bool          collisionWatch = false; // bCollisionWatch: log where scene actors' controllers and bodies are against their spots
 		bool          furnitureOutOfWay = true; // bFurnitureOutOfTheWay: scene furniture doesn't collide with the scene's actors
 		float         transitionLead = 0.0F;   // seconds before a transition's length to move on (see 4Stim.ini)
@@ -704,6 +705,8 @@ namespace
 					Physics::Settings().resetAfterScene = std::stoi(value) != 0;
 				} else if (key == "bcollisionwatch") {
 					g_settings.collisionWatch = std::stoi(value) != 0;
+				} else if (key == "btimeanimcues") {
+					g_settings.timeAnimCues = std::stoi(value) != 0;
 				} else if (key == "bloganimevents") {
 					g_settings.logAnimEvents = std::stoi(value) != 0;
 				} else if (key == "benableexcitement") {
@@ -1617,6 +1620,9 @@ namespace
 	// AnimCues: a_actor started a_idle as a scene's animation (a_sceneID's).
 	void CuePlayed(std::uint32_t a_actor, const RE::TESIdleForm* a_idle, const std::string& a_sceneID)
 	{
+		if (!g_settings.timeAnimCues) {
+			return;
+		}
 		const auto scene = SceneRegistry::Find(a_sceneID);
 		AnimCues::Played(a_actor, a_idle, !scene || !scene->IsTransition());
 	}
