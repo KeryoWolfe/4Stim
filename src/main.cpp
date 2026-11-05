@@ -696,6 +696,8 @@ namespace
 					EquipObjects::Settings().unequipStrapOnIfNotNeeded = std::stoi(value) != 0;
 				} else if (key == "bfurnitureoutoftheway") {
 					g_settings.furnitureOutOfWay = std::stoi(value) != 0;
+				} else if (key == "bresetphysicsafterscene") {
+					Physics::Settings().resetAfterScene = std::stoi(value) != 0;
 				} else if (key == "bcollisionwatch") {
 					g_settings.collisionWatch = std::stoi(value) != 0;
 				} else if (key == "bloganimevents") {

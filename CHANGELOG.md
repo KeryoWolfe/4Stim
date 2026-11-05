@@ -2,7 +2,7 @@
 
 ## 0.5.0 alpha (in progress)
 
-Needs the plugin rebuilt; FourModEvents.psc, FourJSON.psc, FourStimMenu.psc, FourStim.psc and FourStimOptions.psc compiled (and FourStimTest.psc, if you use it); and the new test pack (its scene files changed).
+Needs the plugin rebuilt; FourModEvents.psc, FourJSON.psc, FourStimMenu.psc, FourStim.psc, FourStimOptions.psc and FourStimPhysics.psc compiled (and FourStimTest.psc, if you use it); and the new test pack (its scene files changed).
 
 ### Scenes ending, failing and loading (parity audit, tier 1 items 1 to 3)
 - **Scenes end when someone in them dies or is in combat, and NPC scenes end when the player isn't in their cell**, as OStim's (docs/ACTORS.md, "When a scene ends by itself"). Before, a scene went on around a corpse or through a fight, and NPC scenes left behind stayed until their timer ran out.
@@ -18,6 +18,9 @@ Needs the plugin rebuilt; FourModEvents.psc, FourJSON.psc, FourStimMenu.psc, Fou
 - **OStim's `singlebed` and `doublebed` furniture types** (docs/FURNITURE.md): subtypes of `bed` (one sleep marker, or two or more), so OStim's 40 single and double bed scenes play as written. A scene naming a furniture type nobody defines plays as a floor scene with a warning, as OStim's does; before, it was never offered.
 - **An action of a type no Actions file defines is kept with the `default` action's attributes**, as OStim's (docs/SCENES.md): before, it was dropped, which moved every later action down one, so `4StimPeak.<n>` annotations, `expressionAction` and the action API pointed at the wrong action. An action without `actor` now applies to no one, and `HasAction` / `FindSceneAction` find types by id or alias even when no file defines them.
 - **Facial expressions named by an action alias work** (docs/EXPRESSIONS.md): OStim's own expression files say `cunnilingus`, `lickingpenis`, `ticklingfeet` and six more aliases where 4Stim looked for the ids, so oral, licking and tickling scenes got the generic face.
+
+### Crash
+- **No more full physics rebuilds after a scene by default** (`bResetPhysicsAfterScene=0`, docs/PHYSICS.md): the owner's crash of 4 November, like two on 23 October, was inside FSMP's rebuild (`TryRebuildPendingActorsLocked` freeing a collider tree twice), a second after the NPC's after-scene `ResetPhysics`. A physics swap is still put back after the scene, which rebuilds that body. Set it to 1 for the old behaviour. The crash itself is FSMP's (FO4 Faster HDT-SMP 1.3.1.0); this only stops 4Stim from asking for the extra rebuilds.
 
 ### Voices (parity audit, tier 1 items 8 to 10)
 - **Choose an actor's voice set**, as OStim's "Player voice" / "Actor voice" (docs/SOUND.md): each actor's page in the HUD's options has a **Voice** page listing the voice sets, and a **Mute** set (`mute.json`) for silence. Saved with the game per actor base. OStim's are in its MCM, which in Fallout 4 can't list what's installed. Papyrus: `FourStim.GetVoiceSetPairs` / `GetVoiceSetName` / `SetVoiceSet` (OStim's `OData` ones), `SetActorVoiceSet` / `GetActorVoiceSetName`.

@@ -82,15 +82,18 @@ EndFunction
 ; physics around that pose (a penis left stretched, stuck at an angle).
 ; Returns what Swap returns, or -4 if they're in a new scene by then (the
 ; swap stays: it's that scene's now).
-int Function SwapAfterScene(int aiActorID, String asFrom1, String asTo1, String asFrom2, String asTo2, String asFrom3, String asTo3, float afDelay) Global
+; abReset (bResetPhysicsAfterScene): then a full rebuild, 1 s later.
+int Function SwapAfterScene(int aiActorID, String asFrom1, String asTo1, String asFrom2, String asTo2, String asFrom3, String asTo3, float afDelay, bool abReset) Global
 	Utility.Wait(afDelay)
 	Actor akActor = Game.GetForm(aiActorID) as Actor
 	if akActor && FourStim.IsInScene(akActor)
 		return -4
 	endif
 	int result = Swap(aiActorID, asFrom1, asTo1, asFrom2, asTo2, asFrom3, asTo3)
-	Utility.Wait(1.0)  ; the swap's rebuild done before the next one starts
-	ResetNow(aiActorID)
+	if abReset
+		Utility.Wait(1.0)  ; the swap's rebuild done before the next one starts
+		ResetNow(aiActorID)
+	endif
 	return result
 EndFunction
 

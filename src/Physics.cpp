@@ -438,7 +438,7 @@ namespace Physics
 				break;
 			case When::kAfterScene:
 				ok = Compat::DispatchStaticCall(vm, "FourStimPhysics"sv, "SwapAfterScene"sv, callback, id, pairs[0].first, pairs[0].second, pairs[1].first,
-					pairs[1].second, pairs[2].first, pairs[2].second, a_delay);
+					pairs[1].second, pairs[2].first, pairs[2].second, a_delay, Settings().resetAfterScene);
 				break;
 			}
 			REX::INFO("Physics: {:08X} \"{}\" -> \"{}\"{} (dispatch={})", a_actor->GetFormID(), a_from, a_to,
@@ -548,6 +548,12 @@ namespace Physics
 		}
 	}
 
+	Config& Settings()
+	{
+		static Config config;
+		return config;
+	}
+
 	void Reapply(std::uint32_t a_actor)
 	{
 		std::scoped_lock lock(g_lock);
@@ -652,14 +658,15 @@ namespace Physics
 			const auto actor = RE::TESForm::GetFormByID<RE::Actor>(id);
 			if (actor && CallSwap(actor, it->second.to, it->second.from, When::kAfterScene, delay)) {
 				it->second.pendingBack = true;  // forgotten when the swap back answers
-				delay += STAGGER + 1.0F;          // the swap back, then its rebuild 1 s later
+				delay += STAGGER + (Settings().resetAfterScene ? 1.0F : 0.0F);  // the swap back, then (with the reset) its rebuild 1 s later
 			} else {
 				g_applied.erase(it);
 			}
 		}
 		// Everyone else's physics rebuilt too, once they're out of the pose
-		// (a penis bend undone, breasts tangled in a pose).
-		if (const auto vm = FourStim::GetVM()) {
+		// (a penis bend undone, breasts tangled in a pose), with
+		// bResetPhysicsAfterScene only (Config: FSMP's rebuild crashes).
+		if (const auto vm = Settings().resetAfterScene ? FourStim::GetVM() : nullptr) {
 			for (const auto id : unswapped) {
 				if (g_noPhysics.contains(id)) {
 					continue;
