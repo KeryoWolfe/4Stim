@@ -1094,6 +1094,10 @@ namespace Furniture
 				if (free < 60.0F && floor > spot.position.z + 0.5F && floor < spot.position.z + 20.0F) {
 					REX::INFO("Furniture: {:08X}'s spot is {:.1f} below the floor under it: raised onto the floor", a_ref->GetFormID(), floor - spot.position.z);
 					spot.position.z = floor;
+				} else if (free < 60.0F) {
+					REX::INFO("Furniture: {:08X}: floor under the spot at {:.1f} ({:+.1f} from the spot): left as it is", a_ref->GetFormID(), floor, floor - spot.position.z);
+				} else {
+					REX::INFO("Furniture: {:08X}: no floor found under the spot (down to {:.1f})", a_ref->GetFormID(), to.z);
 				}
 			}
 		}
