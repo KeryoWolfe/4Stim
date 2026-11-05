@@ -68,7 +68,7 @@ By scene ID: `GetName`, `GetActorCount`, `IsTransition`, `GetDestination`, `GetF
 
 ## FourActor
 
-`GetThreadID`, `IsInOStim` (and 4Stim's `IsIn4Stim`), `VerifyActors`, `HasSchlong`, excitement (`Get` / `Set` / `ModifyExcitement`, multiplier), `Climax`, `GetTimesClimaxed`, `StallClimax` / `PermitClimax` / `IsClimaxStalled`, `Mute` / `Unmute` / `IsMuted`, `Undress` / `Redress`, `RemoveWeapons` / `AddWeapons` (put back when the scene ends either way), equip objects (`EquipObject`, `UnequipObject`, `Get` / `SetEquipObjectID`), `AutoTransition`, per-actor metadata (as the thread's, kept while they're in a scene), `PlayExpression(act, event)` / `ClearExpression` (an expression event from `Expressions\`, held until cleared).
+`GetThreadID`, `IsInOStim` (and 4Stim's `IsIn4Stim`), `VerifyActors`, `HasSchlong`, excitement (`Get` / `Set` / `ModifyExcitement`, multiplier), `Climax(act, ignoreStall)`, `GetTimesClimaxed`, `StallClimax` / `PermitClimax` / `IsClimaxStalled(act, checkThread)` (as OStim's: an actor's stall and their thread's are separate, a climax reached or asked for while stalled waits until both are lifted, and `Climax(act, true)` climaxes now without lifting the stall), `Mute` / `Unmute` / `IsMuted`, `Undress` / `Redress`, `RemoveWeapons` / `AddWeapons` (put back when the scene ends either way), equip objects (`EquipObject`, `UnequipObject`, `Get` / `SetEquipObjectID`), `AutoTransition`, per-actor metadata (as the thread's, kept while they're in a scene), `PlayExpression(act, event)` / `ClearExpression` (an expression event from `Expressions\`, held until cleared).
 
 The equip object chosen for an actor (`SetEquipObjectID`, or the HUD's options) is saved with the game, as OStim saves its actors' equip objects.
 

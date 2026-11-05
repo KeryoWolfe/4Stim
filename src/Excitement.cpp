@@ -20,7 +20,10 @@ namespace Excitement
 			float cooldown = 0.0F;  // decay grace left
 			float multiplier = 1.0F;
 			int   climaxes = 0;
-			bool  stalled = false;
+			bool  stalled = false;        // the actor's own stall (OStim's ThreadActor::stallClimax)
+			bool  threadStalled = false;  // their thread's (Thread::stallClimax), kept apart as OStim does
+			bool  awaiting = false;       // at 100 while stalled: climaxes once nothing stalls them (OStim's awaitingOrgasm)
+			bool  forced = false;         // Orgasm(..., ignoreStall): climaxes next tick, stalled or not
 			bool  climaxing = false;  // reported by Tick, waiting for Climaxed
 			int   logged = 0;         // last quarter logged
 		};
@@ -116,6 +119,17 @@ namespace Excitement
 			if (s.climaxing) {
 				continue;
 			}
+			// OStim's loopClimax: a queued climax goes off once nothing stalls
+			// it; its excitement stays at 100 meanwhile (loopExcitement skips).
+			if (s.awaiting) {
+				if (s.forced || !(s.stalled || s.threadStalled)) {
+					s.awaiting = false;
+					s.forced = false;
+					s.climaxing = true;
+					climaxing.push_back(id);
+				}
+				continue;
+			}
 			if (s.excitement > s.ceiling) {
 				// Above what this scene gives: fall back after the grace.
 				if (s.cooldown > 0.0F) {
@@ -134,9 +148,13 @@ namespace Excitement
 			}
 			if (s.excitement >= 100.0F) {
 				s.excitement = 100.0F;
-				if (!s.stalled) {
+				if (!s.stalled && !s.threadStalled) {
 					s.climaxing = true;
 					climaxing.push_back(id);
+				} else {
+					// OStim's orgasm: stalled at 100, the climax waits for them.
+					s.awaiting = true;
+					REX::INFO("Excitement: {:08X} at 100 but their climax is stalled{}: it waits", id, s.stalled ? "" : " (by their thread)");
 				}
 			}
 		}
@@ -214,11 +232,31 @@ namespace Excitement
 		}
 	}
 
-	bool IsStalled(std::uint32_t a_id)
+	void SetThreadStalled(std::uint32_t a_id, bool a_stalled)
+	{
+		std::scoped_lock lock(g_lock);
+		if (const auto s = Find(a_id)) {
+			s->threadStalled = a_stalled;
+		}
+	}
+
+	bool IsStalled(std::uint32_t a_id, bool a_checkThread)
 	{
 		std::scoped_lock lock(g_lock);
 		const auto s = Find(a_id);
-		return s && s->stalled;
+		return s && (s->stalled || (a_checkThread && s->threadStalled));
+	}
+
+	void Orgasm(std::uint32_t a_id, bool a_ignoreStall)
+	{
+		std::scoped_lock lock(g_lock);
+		const auto s = Find(a_id);
+		if (!s || s->climaxing) {
+			return;  // OStim's orgasm: not while a climax is already under way
+		}
+		s->excitement = 100.0F;
+		s->awaiting = true;  // Tick climaxes them, now or once their stall ends
+		s->forced = s->forced || a_ignoreStall;
 	}
 
 	float TimeUntilClimax(std::uint32_t a_id)
@@ -226,7 +264,10 @@ namespace Excitement
 		std::scoped_lock lock(g_lock);
 		const auto s = Find(a_id);
 		const float rate = s ? Rate(*s) : 0.0F;
-		if (!s || s->ceiling < 100.0F || rate <= 0.0F || s->stalled) {
+		if (s && s->awaiting) {
+			return 0.0F;  // OStim's setTimeUntilClimax(0) for a waiting climax
+		}
+		if (!s || s->ceiling < 100.0F || rate <= 0.0F || s->stalled || s->threadStalled) {
 			return -1.0F;
 		}
 		return std::max(100.0F - s->excitement, 0.0F) / rate;

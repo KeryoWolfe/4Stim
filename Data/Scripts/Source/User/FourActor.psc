@@ -47,10 +47,7 @@ EndFunction
 
 ; ---- Climax ----
 Function Climax(Actor Act, bool IgnoreStall = false) Global
-	if !IgnoreStall && FourStim.IsClimaxStalled(Act)
-		return
-	endif
-	FourStim.Climax(Act)
+	FourStim.Climax(Act, IgnoreStall)
 EndFunction
 int Function GetTimesClimaxed(Actor Act) Global
 	return FourStim.GetTimesClimaxed(Act)
@@ -61,8 +58,8 @@ EndFunction
 Function PermitClimax(Actor Act) Global
 	FourStim.StallClimax(Act, false)
 EndFunction
-bool Function IsClimaxStalled(Actor Act) Global
-	return FourStim.IsClimaxStalled(Act)
+bool Function IsClimaxStalled(Actor Act, bool CheckThread = true) Global
+	return FourStim.IsClimaxStalled(Act, CheckThread)
 EndFunction
 
 ; ---- Sound ----

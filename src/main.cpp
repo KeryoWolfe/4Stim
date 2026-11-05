@@ -1395,6 +1395,7 @@ namespace
 		// for a moment after).
 		std::chrono::steady_clock::time_point lastPlayed = std::chrono::steady_clock::now();
 		bool                                  checkedAfterPlay = false;  // the scene guard's check a second after each play (GuardScenes)
+		bool                                  stallClimax = false;       // OStim's Thread::stallClimax (OThread.StallClimax), apart from the actors' own
 		// The scene's spot: where its animations are played around (every
 		// actor of a paired animation shares it), and the heading they face.
 		// Each actor is locked there for the whole scene (see "Scene lock").
@@ -2342,8 +2343,9 @@ namespace
 		// What a mod asked of the thread while it was starting.
 		if (start) {
 			if (start->stallWhenStarted) {
+				added.stallClimax = *start->stallWhenStarted;
 				for (const auto id : added.actors) {
-					Excitement::SetStalled(id, *start->stallWhenStarted);
+					Excitement::SetThreadStalled(id, added.stallClimax);
 				}
 			}
 			if (start->autoWhenStarted && *start->autoWhenStarted != added.autoMode.on) {
@@ -4114,6 +4116,9 @@ namespace
 			sexes.push_back(ActorProperties::MaleExcitement(RE::TESForm::GetFormByID<RE::Actor>(id)) ? SceneRegistry::Sex::kMale : SceneRegistry::Sex::kFemale);
 		}
 		Excitement::Enter(a_scene.actors, sexes, *scene, a_scene.speed);
+		for (const auto id : a_scene.actors) {
+			Excitement::SetThreadStalled(id, a_scene.stallClimax);  // actors new to the thread too
+		}
 		// OStim's playbackSpeed for this speed.
 		if (a_scene.speed >= 0 && static_cast<std::size_t>(a_scene.speed) < scene->speedInfo.size()) {
 			PlaybackSpeed::Set(a_scene.actors, std::clamp(scene->speedInfo[static_cast<std::size_t>(a_scene.speed)].playbackSpeed, 0.05F, 10.0F));
@@ -5239,11 +5244,14 @@ namespace
 		return a_actor ? Excitement::TimesClimaxed(a_actor->GetFormID()) : 0;
 	}
 
-	void Climax(std::monostate, RE::Actor* a_actor)
+	// OStim's OActor.Climax(act, ignoreStall) (ThreadActor::orgasm): while
+	// stalled the climax waits for the stall to end, and ignoring the stall
+	// doesn't lift it. Was: the stall dropped for good, and the climax lost
+	// if a stall came back before the next tick.
+	void Climax(std::monostate, RE::Actor* a_actor, bool a_ignoreStall)
 	{
 		if (a_actor) {
-			Excitement::SetStalled(a_actor->GetFormID(), false);
-			Excitement::Set(a_actor->GetFormID(), 100.0F);
+			Excitement::Orgasm(a_actor->GetFormID(), a_ignoreStall);
 		}
 	}
 
@@ -5254,9 +5262,11 @@ namespace
 		}
 	}
 
-	bool IsClimaxStalled(std::monostate, RE::Actor* a_actor)
+	// OActor.IsClimaxStalled(act, checkThread): the actor's own stall, or
+	// with a_checkThread their thread's too.
+	bool IsClimaxStalled(std::monostate, RE::Actor* a_actor, bool a_checkThread)
 	{
-		return a_actor && Excitement::IsStalled(a_actor->GetFormID());
+		return a_actor && Excitement::IsStalled(a_actor->GetFormID(), a_checkThread);
 	}
 
 	float GetExcitementMultiplier(std::monostate, RE::Actor* a_actor)
@@ -8704,27 +8714,36 @@ namespace
 		const auto it = std::ranges::find(actors, a_actor->GetFormID());
 		return it != actors.end() ? static_cast<std::int32_t>(it - actors.begin()) : -1;
 	}
+	// OThread's climax stall, as OStim's Thread::stallClimax: the thread's
+	// own flag, apart from each actor's (OActor.StallClimax), so permitting
+	// one doesn't lift the other. PermitClimax(id, true) lifts the actors'
+	// too, as OStim's permitActors.
 	void T_StallClimax(std::monostate, std::int32_t a_id)
 	{
 		ThreadDo(
 			a_id,
 			[](ActiveScene& a) {
+				a.stallClimax = true;
 				for (const auto id : a.actors) {
-					Excitement::SetStalled(id, true);
+					Excitement::SetThreadStalled(id, true);
 				}
 			},
 			[](ThreadRecord& r) { r.stallWhenStarted = true; });
 	}
-	void T_PermitClimax(std::monostate, std::int32_t a_id, bool)
+	void T_PermitClimax(std::monostate, std::int32_t a_id, bool a_permitActors)
 	{
 		ThreadDo(
 			a_id,
-			[](ActiveScene& a) {
+			[a_permitActors](ActiveScene& a) {
+				a.stallClimax = false;
 				for (const auto id : a.actors) {
-					Excitement::SetStalled(id, false);
+					Excitement::SetThreadStalled(id, false);
+					if (a_permitActors) {
+						Excitement::SetStalled(id, false);
+					}
 				}
 			},
-			[](ThreadRecord& r) { r.stallWhenStarted = false; });
+			[a_permitActors](ThreadRecord& r) { r.stallWhenStarted = false; (void)a_permitActors; });
 	}
 	bool T_IsClimaxStalled(std::monostate, std::int32_t a_id)
 	{
@@ -8734,7 +8753,7 @@ namespace
 			return true;
 		}
 		const auto a = FindThread(a_id);
-		return a && std::ranges::any_of(a->actors, [](std::uint32_t id) { return Excitement::IsStalled(id); });
+		return a && a->stallClimax;  // OStim's: the thread's own flag only
 	}
 	RE::TESObjectREFR* T_GetFurniture(std::monostate, std::int32_t a_id)
 	{
@@ -9240,8 +9259,7 @@ namespace
 			void  setExcitement(float a_excitement) override { Excitement::Set(id, a_excitement); }
 			void  climax() override
 			{
-				Excitement::SetStalled(id, false);
-				Excitement::Set(id, 100.0F);  // as FourStim.Climax: the scene clock climaxes them
+				Excitement::Orgasm(id, true);  // as OActor.Climax(act, true): now, stalled or not, the stall left as it is
 			}
 
 			std::uint32_t id;

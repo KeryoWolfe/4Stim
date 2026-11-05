@@ -68,8 +68,19 @@ namespace Excitement
 	int   TimesClimaxed(std::uint32_t a_id);
 	float Multiplier(std::uint32_t a_id);
 	void  SetMultiplier(std::uint32_t a_id, float a_multiplier);  // on top of the sex multiplier
-	void  SetStalled(std::uint32_t a_id, bool a_stalled);         // held just short of climax while true
-	bool  IsStalled(std::uint32_t a_id);
+	// Climax stalls, as OStim's: the actor's own (OActor.StallClimax) and their
+	// thread's (OThread.StallClimax) are kept apart. While either holds,
+	// reaching 100 queues the climax instead of dropping it, and it goes off
+	// once both are lifted.
+	void  SetStalled(std::uint32_t a_id, bool a_stalled);
+	void  SetThreadStalled(std::uint32_t a_id, bool a_stalled);
+	// OActor.IsClimaxStalled: the actor's own stall, or their thread's too
+	// with a_checkThread.
+	bool  IsStalled(std::uint32_t a_id, bool a_checkThread = false);
+	// OStim's ThreadActor::orgasm (OActor.Climax): excitement to 100 and a
+	// climax on the next tick; while stalled it waits, unless a_ignoreStall.
+	// Doesn't change the stalls (OStim's Climax(act, true) doesn't permit).
+	void  Orgasm(std::uint32_t a_id, bool a_ignoreStall);
 	// Seconds until a_id climaxes at the current rate, or -1 if they won't.
 	float TimeUntilClimax(std::uint32_t a_id);
 	// How fast a_id's excitement rises, per second (0 if not in a scene).

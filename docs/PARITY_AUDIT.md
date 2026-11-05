@@ -52,7 +52,7 @@ The short answer to "are we missing anything": yes, and it falls into five patte
 | 16 | **Done in 0.5.0 (not yet built or tested).** Was: **Starting scenes**: given a starting scene, 4Stim still reorders the actors and fails instead of falling back to a random start; `AddStartingAnimation` without a duration skips the scene at once (OStim uses its length); `navigateTo` is ignored. | 1 §4-5, 6 F11 |
 | 17 | **Coverage**: `FourMetadata` has 22 of OMetadata's 282 functions, `FourLibrary` 37 of 97; `OActorUtil`, `OSequence`, `OJSON` have no counterpart; `PlayExpression` returns bool not float and `IsClimaxStalled` lacks `CheckThread`, so renamed calls don't compile; `VerifyActors` accepts children. | 6 F14-F16 |
 | 18 | **OStim's second C++ API (`OstimNG-API`)** (OStim's 22 October update added an interface map to it, `requestInterfaceMap`, through which plugins find its interfaces), used by external UIs (OStim Prism) and companion plugins, is missing; the header wrongly says OStim has no alignment API. | 5 §8, 6 F13 |
-| 19 | **Climax stall**: thread and actor stalls are merged, `Climax(act, true)` permanently unstalls, a stalled climax is dropped instead of queued. | 2 §6, 6 F8-F9 |
+| 19 | **Done in 0.5.0 (not yet built or tested).** Was: **Climax stall**: thread and actor stalls are merged, `Climax(act, true)` permanently unstalls, a stalled climax is dropped instead of queued. | 2 §6, 6 F8-F9 |
 
 ## Tier 3: behaviour that differs from OStim (Medium)
 

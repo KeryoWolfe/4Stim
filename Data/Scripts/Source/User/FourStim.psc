@@ -188,13 +188,17 @@ Function AddExcitement(Actor akActor, float afValue, bool abUseMultiplier = true
 ; How many times the actor climaxed in this scene.
 int Function GetTimesClimaxed(Actor akActor) Global Native
 
-; Makes the actor climax now (even if it was stalled).
-Function Climax(Actor akActor) Global Native
+; Makes the actor climax (OStim's OActor.Climax). While their climax is
+; stalled (their own or their thread's) it waits until the stall is lifted,
+; unless abIgnoreStall; either way the stall stays as it was.
+Function Climax(Actor akActor, bool abIgnoreStall = false) Global Native
 
-; While stalled, the actor's excitement stops at 100 without a climax,
-; until StallClimax(akActor, false) or Climax(akActor).
+; The actor's own climax stall (OStim's OActor.StallClimax / PermitClimax).
+; While stalled, reaching 100 queues the climax, which goes off once neither
+; this nor the thread's stall (FourThread.StallClimax) holds it.
 Function StallClimax(Actor akActor, bool abStall) Global Native
-bool Function IsClimaxStalled(Actor akActor) Global Native
+; Their own stall, or with abCheckThread their thread's too.
+bool Function IsClimaxStalled(Actor akActor, bool abCheckThread = false) Global Native
 
 ; The actor's own multiplier on excitement gain (1 = normal), on top of the
 ; ini's male / female multipliers. Reset when the scene ends.
