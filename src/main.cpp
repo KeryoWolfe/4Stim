@@ -14,6 +14,7 @@
 #include "Actions.h"
 #include "compat/ScrapFunction.h"
 #include "compat/Fallbacks.h"
+#include "AnimCues.h"
 #include "Excitement.h"
 #include "Undress.h"
 #include "ScenePackage.h"
@@ -1611,6 +1612,14 @@ namespace
 	void AutoModeTick(ActiveScene& a_active, float a_seconds);
 	bool IsPlayer(const RE::Actor* a_actor);
 	void StartAutoplayTicks();
+	void HandleTimedCue(const AnimCues::Due& a_due);  // AnimEventHook::Handle, for AnimCues' cues
+
+	// AnimCues: a_actor started a_idle as a scene's animation (a_sceneID's).
+	void CuePlayed(std::uint32_t a_actor, const RE::TESIdleForm* a_idle, const std::string& a_sceneID)
+	{
+		const auto scene = SceneRegistry::Find(a_sceneID);
+		AnimCues::Played(a_actor, a_idle, !scene || !scene->IsTransition());
+	}
 	void RefreshExcitement(const ActiveScene& a_scene);
 	bool IsPlayer(const RE::Actor* a_actor);
 	void WatchAnimEvents(const std::vector<std::uint32_t>& a_actors, const std::string& a_sceneID);
@@ -2155,6 +2164,7 @@ namespace
 				std::vector<std::uint32_t> left;
 				std::ranges::copy_if(a_scene.actors, std::back_inserter(left), [&](std::uint32_t id) { return std::ranges::find(a_actors, id) == a_actors.end(); });
 				Excitement::Leave(left);
+				AnimCues::Stop(left);
 				Expressions::Leave(left);
 				Sounds::Leave(left);
 				Peaks::Leave(left);
@@ -2390,6 +2400,7 @@ namespace
 		MoveApart(ended);
 		RestoreScales(ended);
 		Excitement::Leave(ended.actors);
+		AnimCues::Stop(ended.actors);
 		Expressions::Leave(ended.actors);
 		Sounds::Leave(ended.actors);
 		Peaks::Leave(ended.actors);
@@ -2523,6 +2534,9 @@ namespace
 			const auto actor = RE::TESForm::GetFormByID<RE::Actor>(a_active.actors[role]);
 			const auto process = actor ? actor->currentProcess : nullptr;
 			const bool ok = process && process->PlayIdle(*actor, idles[role], nullptr);
+			if (ok) {
+				CuePlayed(a_active.actors[role], idles[role], scene->id);
+			}
 			results += std::format("{}{:08X} {}", role ? ", " : "", a_active.actors[role], ok ? "ok" : "refused");
 		}
 		REX::INFO("Autoplay: \"{}\" speed {}: PlayIdle {}", scene->id, speed + 1, results);
@@ -4295,6 +4309,10 @@ namespace
 					AdvanceAutoplay(active);
 				}
 			}
+			// The animation files' annotation cues, timed here (AnimCues.h).
+			for (const auto& due : AnimCues::Tick(elapsed, [](std::uint32_t a_id) { return PlaybackSpeed::RateOf(RE::TESForm::GetFormByID<RE::TESObjectREFR>(a_id)); })) {
+				HandleTimedCue(due);
+			}
 			for (const auto id : Excitement::Tick(elapsed)) {
 				if (const auto active = FindActiveScene(id)) {
 					HandleClimax(*active, id);
@@ -4622,6 +4640,9 @@ namespace
 			}
 			const auto ok = process->PlayIdle(*a_actor, idle, nullptr);
 			REX::INFO("StartScene: PlayIdle returned {}", ok);
+			if (ok) {
+				CuePlayed(a_actor->GetFormID(), idle, sceneID);
+			}
 			if (!ok) {
 				ReleaseFailedStart({ a_actor->GetFormID() }, "the game refused the animation");
 			}
@@ -5008,6 +5029,12 @@ namespace
 			const auto ok0 = p0->PlayIdle(*a_actor0, idle0, nullptr);
 			const auto ok1 = p1->PlayIdle(*a_actor1, idle1, nullptr);
 			REX::INFO("PlaySceneIdles: PlayIdle returned {} / {}", ok0, ok1);
+			if (ok0) {
+				CuePlayed(a_actor0->GetFormID(), idle0, sceneID);
+			}
+			if (ok1) {
+				CuePlayed(a_actor1->GetFormID(), idle1, sceneID);
+			}
 			const bool focus = g_focusNextScene.exchange(false) || IsPlayer(a_actor0) || IsPlayer(a_actor1);
 			if (!ok0 && !ok1) {
 				ReleaseFailedStart({ a_actor0->GetFormID(), a_actor1->GetFormID() }, "the game refused both animations");
@@ -5893,6 +5920,9 @@ namespace
 				const auto actor = RE::TESForm::GetFormByID<RE::Actor>(ids[role]);
 				const auto process = actor ? actor->currentProcess : nullptr;
 				const bool ok = process && process->PlayIdle(*actor, idles[role], nullptr);
+				if (ok) {
+					CuePlayed(ids[role], idles[role], sceneID);
+				}
 				any = any || ok;
 				withPlayer = withPlayer || IsPlayer(actor);
 				results += std::format("{}{:08X} {}", role ? ", " : "", ids[role], ok ? "ok" : "refused");
@@ -6304,6 +6334,9 @@ namespace
 				const auto actor = RE::TESForm::GetFormByID<RE::Actor>(ids[role]);
 				const auto process = actor ? actor->currentProcess : nullptr;
 				const bool ok = process && process->PlayIdle(*actor, idles[role], nullptr);
+				if (ok) {
+					CuePlayed(ids[role], idles[role], next.sceneID);
+				}
 				results += std::format("{}{:08X} {}", results.empty() ? "" : ", ", ids[role], ok ? "ok" : process ? "refused" : "no AI process");
 				if (!ok && process) {
 					// Refused (a tester on 1.10.163: the player stood still while
@@ -6312,6 +6345,9 @@ namespace
 						const auto again = RE::TESForm::GetFormByID<RE::Actor>(id);
 						const auto process = again ? again->currentProcess : nullptr;
 						const bool ok = process && GetPlayerScene().sceneID == sceneID && process->PlayIdle(*again, idle, nullptr);
+						if (ok) {
+							CuePlayed(id, idle, sceneID);
+						}
 						REX::INFO("Player scene: {:08X} PlayIdle again: {}", id, ok ? "ok" : "refused again");
 					});
 				}
@@ -7874,11 +7910,21 @@ namespace
 		static void Log(RE::BSTEventSink<RE::BSAnimationGraphEvent>* a_this, const RE::BSAnimationGraphEvent& a_event)
 		{
 			const auto ref = reinterpret_cast<RE::TESObjectREFR*>(reinterpret_cast<std::uintptr_t>(a_this) - 0x38);
-			const auto id = ref->GetFormID();
+			const char* tag = a_event.tag.c_str();
+			if (tag && _strnicmp(tag, "4Stim", 5) == 0) {
+				AnimCues::EngineForwarded(tag);  // the game sent one itself: 4Stim's own cue timing stands down
+			}
+			Handle(ref->GetFormID(), tag ? tag : "", a_event.payload.c_str() ? a_event.payload.c_str() : "", true);
+		}
+
+		// An animation event (a_fromEngine) or an annotation cue 4Stim read
+		// from the animation file and timed itself (AnimCues).
+		static void Handle(std::uint32_t id, const std::string& a_tag, const std::string& a_payload, bool a_fromEngine)
+		{
 			// 4Stim's annotations count for as long as the actor is in a scene
 			// (checked on the main thread); the rest only shortly after a
 			// scene change.
-			const char* tag = a_event.tag.c_str();
+			const char* tag = a_tag.c_str();
 			const bool  ours = tag && _strnicmp(tag, "4Stim", 5) == 0;
 			std::string sceneID;
 			float       seconds = 0.0F;
@@ -7899,11 +7945,11 @@ namespace
 			if (sceneID.empty() && !ours) {
 				return;
 			}
-			if (g_settings.logAnimEvents && seconds <= 5.0F) {
-				REX::INFO("AnimEvent: {:08X} +{:.2f}s in \"{}\": \"{}\" ({})", id, seconds, sceneID,
-					a_event.tag.c_str(), a_event.payload.c_str());
+			if (g_settings.logAnimEvents && (seconds <= 5.0F || !a_fromEngine)) {
+				REX::INFO("AnimEvent: {:08X} +{:.2f}s in \"{}\": \"{}\" ({}){}", id, seconds, sceneID,
+					a_tag.c_str(), a_payload.c_str(), a_fromEngine ? "" : ", timed by 4Stim from the animation file");
 			}
-			if (_stricmp(a_event.tag.c_str(), "IdleStop") == 0) {
+			if (_stricmp(a_tag.c_str(), "IdleStop") == 0) {
 				// Animation threads: hand it to the main thread.
 				F4SE::GetTaskInterface()->AddTask([id, sceneID]() {
 					const auto active = FindActiveScene(id);
@@ -7918,7 +7964,7 @@ namespace
 					active->remaining = -1.0F;
 					AdvanceAutoplay(*active);
 				});
-			} else if (_stricmp(a_event.tag.c_str(), "4StimClimax") == 0) {
+			} else if (_stricmp(a_tag.c_str(), "4StimClimax") == 0) {
 				// The climax annotation (OStim's OStimClimax): this actor
 				// climaxes now, as OStim's climax() does when its annotation
 				// comes, whether or not they were waiting for it.
@@ -7928,11 +7974,11 @@ namespace
 						ClimaxNow(*active, id);
 					}
 				});
-			} else if (_stricmp(a_event.tag.c_str(), "4StimEvent") == 0) {
+			} else if (_stricmp(a_tag.c_str(), "4StimEvent") == 0) {
 				// OStim's OStimEvent: "4StimEvent.<event>,<target>" (this actor
 				// did it to role <target>) or "4StimEvent.<event>,<actor>,
 				// <target>,<performer>" (roles).
-				std::string payload = a_event.payload.c_str();
+				std::string payload = a_payload.c_str();
 				F4SE::GetTaskInterface()->AddTask([id, payload]() {
 					const auto active = FindActiveScene(id);
 					if (!active) {
@@ -7960,10 +8006,10 @@ namespace
 						REX::WARN("Events: 4StimEvent.{} on {:08X}: roles must be numbers", payload, id);
 					}
 				});
-			} else if (_stricmp(a_event.tag.c_str(), "4StimPeak") == 0) {
+			} else if (_stricmp(a_tag.c_str(), "4StimPeak") == 0) {
 				// OStim's OStimPeak: "4StimPeak.<action index>", for actions
 				// with "peaksAnnotated".
-				std::string payload = a_event.payload.c_str();
+				std::string payload = a_payload.c_str();
 				F4SE::GetTaskInterface()->AddTask([id, payload]() {
 					try {
 						Peaks::Annotated(id, std::stoi(payload));
@@ -7971,9 +8017,9 @@ namespace
 						REX::WARN("Peaks: 4StimPeak.{} on {:08X}: the action must be a number", payload, id);
 					}
 				});
-			} else if (_stricmp(a_event.tag.c_str(), "4StimPlayExpression") == 0) {
+			} else if (_stricmp(a_tag.c_str(), "4StimPlayExpression") == 0) {
 				// OStim's OStimPlayExpression: the event expression, no sound.
-				std::string payload = a_event.payload.c_str();
+				std::string payload = a_payload.c_str();
 				F4SE::GetTaskInterface()->AddTask([id, payload]() {
 					if (FindActiveScene(id)) {
 						std::string event = payload;
@@ -7981,21 +8027,21 @@ namespace
 						Expressions::SetEvent(id, event, true);
 					}
 				});
-			} else if (_stricmp(a_event.tag.c_str(), "4StimBendSoS") == 0) {
+			} else if (_stricmp(a_tag.c_str(), "4StimBendSoS") == 0) {
 				// OStim's OStimBendSoS: "<steps>" on top of the scene's bend.
 				try {
-					PenisBend::Offset(id, std::stoi(a_event.payload.c_str()));
+					PenisBend::Offset(id, std::stoi(a_payload.c_str()));
 				} catch (const std::exception&) {
-					REX::WARN("Penis bend: 4StimBendSoS.{} on {:08X}: the bend must be a number", a_event.payload.c_str(), id);
+					REX::WARN("Penis bend: 4StimBendSoS.{} on {:08X}: the bend must be a number", a_payload.c_str(), id);
 				}
-			} else if (_stricmp(a_event.tag.c_str(), "4StimResetSoS") == 0) {
+			} else if (_stricmp(a_tag.c_str(), "4StimResetSoS") == 0) {
 				PenisBend::Offset(id, 0);  // OStim's OStimResetSoS
-			} else if (_stricmp(a_event.tag.c_str(), "4StimPenisAim") == 0) {
+			} else if (_stricmp(a_tag.c_str(), "4StimPenisAim") == 0) {
 				PenisBend::Aim(id, true);  // AnimBridge aimed this animation's penis: no scene bend on top
-			} else if (_stricmp(a_event.tag.c_str(), "4StimEquipObject") == 0 || _stricmp(a_event.tag.c_str(), "4StimUnequipObject") == 0) {
+			} else if (_stricmp(a_tag.c_str(), "4StimEquipObject") == 0 || _stricmp(a_tag.c_str(), "4StimUnequipObject") == 0) {
 				// OStim's OStimEquipObject / OStimUnequipObject: "<type>".
-				const bool  equip = _stricmp(a_event.tag.c_str(), "4StimEquipObject") == 0;
-				std::string payload = a_event.payload.c_str();
+				const bool  equip = _stricmp(a_tag.c_str(), "4StimEquipObject") == 0;
+				std::string payload = a_payload.c_str();
 				if (equip) {
 					EquipObjects::Equip(id, payload);
 				} else {
@@ -8040,6 +8086,11 @@ namespace
 			REX::INFO("Animation event log hook installed");
 		}
 	};
+
+	void HandleTimedCue(const AnimCues::Due& a_due)
+	{
+		AnimEventHook::Handle(a_due.actor, a_due.tag, a_due.payload, false);
+	}
 
 	// ---- OStim's thread API (docs/API.md): FourThread, FourThreadBuilder ----
 	// A thread is a running scene; its ID is ActiveScene::threadID (0 = the
@@ -10405,6 +10456,7 @@ namespace
 				}
 				g_endedThreads.clear();
 				Excitement::Clear();
+				AnimCues::Clear();
 				Expressions::Clear();
 				Sounds::Clear();
 				Peaks::Clear();
@@ -10487,6 +10539,7 @@ namespace
 				HUD::Reset();
 				g_activeScenes.clear();
 				Excitement::Clear();
+				AnimCues::Clear();
 				Expressions::Clear();
 				Sounds::Clear();
 				Peaks::Clear();

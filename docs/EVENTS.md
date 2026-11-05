@@ -69,6 +69,8 @@ Events are in `Data\F4SE\Plugins\4Stim\Events\`, one per file, the id being the 
 
 Annotations count for as long as the actor is in a scene.
 
+**How they reach 4Stim (Fallout 4 only).** Skyrim sends an animation's text annotations to OStim as animation events. Fallout 4 doesn't, for idles played the way scenes play them: the game only sends its behavior graph's own events. So 4Stim reads the annotations from the idle's `.hkx` itself when the idle plays (Havok 2014 packfiles, as AnimBridge writes them: the annotation tracks and the clip's length) and fires each at its time on the scene clock, again on each loop of a looping scene, at the actor's playback speed, through the same handling. `4Stim.log` lists each file's cues the first time it plays (`Animation cues: ...`); with `bLogAnimEvents=1`, every cue fired is logged too (`timed by 4Stim from the animation file`). If the game ever sends one of them itself, 4Stim stops timing them, so nothing fires twice.
+
 ## Not in yet
 
 OStim's sex toys (which also follow peaks), and muting actors from Papyrus (`muteWithActor` / `muteWithTarget` on action sounds are read but nothing mutes an actor yet).
