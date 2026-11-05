@@ -2267,9 +2267,15 @@ namespace
 				g_placedSpots.erase(it);
 			}
 		}
+		// The player is moved only onto furniture (the picker's, placed
+		// above): otherwise the scene is built on their own spot. Not after
+		// a placement: the game had pushed the player up out of the chair's
+		// collision by then (9 units in the owner's log, 5 November, before
+		// the chair was out of the way), and his spot held both actors in the
+		// air over the chair for the whole scene, the player bouncing.
 		for (const auto id : a_actors) {
 			const auto actor = RE::TESForm::GetFormByID<RE::Actor>(id);
-			if (IsPlayer(actor)) {
+			if (IsPlayer(actor) && !fromPlacement) {
 				scene.center = actor->data.location;  // the player is never moved: the scene is built on their spot
 				scene.heading = actor->data.angle.z;
 			}
