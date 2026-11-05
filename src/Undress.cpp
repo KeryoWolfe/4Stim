@@ -244,7 +244,24 @@ namespace Undress
 					const bool same = after == before;
 					REX::INFO("Undress check: {:08X}: {} of {} item(s) still on; drawn {} -> {} shape(s){}", a_id, on, items.size(), before.size(), after.size(),
 						same ? ", unchanged" : "");
-					if (on == 0 && same && IsPlayer(a_id)) {
+					// Only for clothes on the body (slot 33): items that change
+					// nothing drawn (gloves, a ring, a hat over hair) leave the
+					// same shapes when taken off, and redrawing the player for
+					// them was a visible stutter in the next scene (the owner's
+					// "Turn around" after a standing hold took off his gloves, 5
+					// November). The tester's stuck clothes were body clothes.
+					std::uint32_t slots = 0;
+					for (const auto item : items) {
+						if (const auto form = RE::TESForm::GetFormByID(item)) {
+							if (const auto armor = form->As<RE::TESObjectARMO>()) {
+								slots |= armor->GetFilledSlots();
+							}
+						}
+					}
+					const bool body = (slots & (1u << (33 - 30))) != 0;
+					if (on == 0 && same && IsPlayer(a_id) && !body) {
+						REX::INFO("Undress check: nothing on the body came off (slots {:08X}): the shapes drawn staying the same is expected, no redraw", slots);
+					} else if (on == 0 && same && IsPlayer(a_id)) {
 						if (Compat::CanReset3D()) {
 							REX::WARN("Undress check: the player's clothes are off but still drawn: redrawing them");
 							actor->Reset3D(true, 0, true, 0xC);
