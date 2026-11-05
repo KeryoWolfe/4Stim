@@ -1975,6 +1975,49 @@ namespace
 		}
 	}
 
+	// ---- No gravity in scenes ----
+	// Not in OStim (Skyrim's lock holds actors in the air without help).
+	// The lock's translation puts the actor back on their spot every frame,
+	// but the player isn't restrained (SetRestrained also freezes the look
+	// input the free camera needs), so their character controller still
+	// falls under gravity between frames wherever the spot is above the
+	// floor: a chair scene's spot, with its alignment, holds them some units
+	// up (the owner's log, 5 November: both held at 1509.1 over a floor at
+	// about 1504, the player standing on nothing). Fall, put back, fall: the
+	// player's whole body bouncing about six times a second, in chair scenes
+	// only and whichever role he had, while the restrained NPC stayed still.
+	// So scene actors' controllers have no gravity while the lock holds
+	// them (the guard keeps it at 0), and get their own back with their
+	// collision (RestoreCollisionNow).
+	std::unordered_map<std::uint32_t, float> g_savedGravity;  // actor -> their controller's gravity before the scene (main thread)
+
+	void HoldGravity(RE::Actor* a_actor)
+	{
+		const auto controller = g_lockScenes ? GetCharController(a_actor) : nullptr;
+		if (!controller || controller->gravity == 0.0F) {
+			return;
+		}
+		const auto id = a_actor->GetFormID();
+		if (g_savedGravity.try_emplace(id, controller->gravity).second) {
+			REX::INFO("Scene lock: {:08X}'s controller gravity {:.2f} -> 0 for the scene", id, controller->gravity);
+		}
+		controller->gravity = 0.0F;
+		controller->fallTime = 0.0F;
+	}
+
+	void RestoreGravity(RE::Actor* a_actor)
+	{
+		const auto it = g_savedGravity.find(a_actor->GetFormID());
+		if (it == g_savedGravity.end()) {
+			return;
+		}
+		if (const auto controller = GetCharController(a_actor)) {
+			controller->gravity = it->second;
+			REX::INFO("Scene lock: {:08X}'s controller gravity back to {:.2f}", a_actor->GetFormID(), it->second);
+		}
+		g_savedGravity.erase(it);
+	}
+
 	// The actor's collision back (RestoreCollisionNow): what the watch
 	// changed for them, back as it was. Main thread.
 	void RestoreTouched(std::uint32_t a_actor)
@@ -3744,6 +3787,9 @@ namespace
 						}
 					}
 				}
+				if (actor) {
+					HoldGravity(actor);  // see "No gravity in scenes"
+				}
 				// Without Getbhk since 0.5.0 (it crashed the owner's game from
 				// here, 1 November): see WatchCollisions.
 				if (actor && settled) {
@@ -4847,6 +4893,7 @@ namespace
 	void RestoreCollisionNow(RE::Actor* a_actor)
 	{
 		RestoreTouched(a_actor->GetFormID());
+		RestoreGravity(a_actor);
 		{
 			const auto it = g_savedFilters.find(a_actor->GetFormID());
 			if (it == g_savedFilters.end()) {
