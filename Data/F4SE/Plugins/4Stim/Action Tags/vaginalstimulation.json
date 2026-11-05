@@ -1,0 +1,76 @@
+{
+	"actor": {
+		"faction": {
+			"info": "4StimVaginalStimulationActorFaction",
+			"mod": "4Stim.esl",
+			"formid": "0xF1B"
+		},
+		"statFaction": {
+			"info": "OStatVaginalStimulationActorFaction",
+			"mod": "4Stim.esl",
+			"formid": "0xF1D"
+		},
+		"playerStatFaction": {
+			"info": "OStatVaginalStimulationWithPlayerActorFaction",
+			"mod": "4Stim.esl",
+			"formid": "0xFAB"
+		},
+		"partnerClimaxStatFaction": {
+			"info": "OStatVaginalStimulationActorPartnerClimaxFaction",
+			"mod": "4Stim.esl",
+			"formid": "0x85C"
+		},
+		"playerPartnerClimaxStatFaction": {
+			"info": "OStatVaginalStimulationWithPlayerActorPartnerClimaxFaction",
+			"mod": "4Stim.esl",
+			"formid": "0x85E"
+		},
+		"playerStatList": {
+			"info": "OStatVaginalStimulationWithPlayerActorList",
+			"mod": "4Stim.esl",
+			"formid": "0x8A9"
+		},
+		"playerPartnerClimaxStatList": {
+			"info": "OStatVaginalStimulationWithPlayerActorPartnerClimaxList",
+			"mod": "4Stim.esl",
+			"formid": "0x8AA"
+		}
+	},
+	"target": {
+		"faction": {
+			"info": "4StimVaginalStimulationTargetFaction",
+			"mod": "4Stim.esl",
+			"formid": "0xF1C"
+		},
+		"statFaction": {
+			"info": "OStatVaginalStimulationTargetFaction",
+			"mod": "4Stim.esl",
+			"formid": "0xF1E"
+		},
+		"playerStatFaction": {
+			"info": "OStatVaginalStimulationWithPlayerTargetFaction",
+			"mod": "4Stim.esl",
+			"formid": "0xFAC"
+		},
+		"climaxStatFaction": {
+			"info": "OStatVaginalStimulationTargetClimaxFaction",
+			"mod": "4Stim.esl",
+			"formid": "0x85B"
+		},
+		"playerClimaxStatFaction": {
+			"info": "OStatVaginalStimulationWithPlayerTargetClimaxFaction",
+			"mod": "4Stim.esl",
+			"formid": "0x85D"
+		},
+		"playerStatList": {
+			"info": "OStatVaginalStimulationWithPlayerTargetList",
+			"mod": "4Stim.esl",
+			"formid": "0x8AB"
+		},
+		"playerClimaxStatList": {
+			"info": "OStatVaginalStimulationWithPlayerTargetClimaxList",
+			"mod": "4Stim.esl",
+			"formid": "0x8AC"
+		}
+	}
+}

@@ -1,0 +1,106 @@
+{
+	"actor": {
+		"faction": {
+			"info": "4StimSexualMateFaction",
+			"mod": "4Stim.esl",
+			"formid": "0xF8D"
+		},
+		"statFaction": {
+			"info": "OStatSexualMateFaction",
+			"mod": "4Stim.esl",
+			"formid": "0xF8E"
+		},
+		"playerStatFaction": {
+			"info": "OStatSexualWithPlayerMateFaction",
+			"mod": "4Stim.esl",
+			"formid": "0xFA6"
+		},
+		"climaxStatFaction": {
+			"info": "OStatSexualMateClimaxFaction",
+			"mod": "4Stim.esl",
+			"formid": "0x84F"
+		},
+		"partnerClimaxStatFaction": {
+			"info": "OStatSexualMatePartnerClimaxFaction",
+			"mod": "4Stim.esl",
+			"formid": "0x850"
+		},
+		"playerClimaxStatFaction": {
+			"info": "OStatSexualWithPlayerMateClimaxFaction",
+			"mod": "4Stim.esl",
+			"formid": "0x851"
+		},
+		"playerPartnerClimaxStatFaction": {
+			"info": "OStatSexualWithPlayerMatePartnerClimaxFaction",
+			"mod": "4Stim.esl",
+			"formid": "0x852"
+		},
+		"playerStatList": {
+			"info": "OStatSexualWithPlayerMateList",
+			"mod": "4Stim.esl",
+			"formid": "0x89E"
+		},
+		"playerClimaxStatList": {
+			"info": "OStatSexualWithPlayerMateClimaxList",
+			"mod": "4Stim.esl",
+			"formid": "0x89F"
+		},
+		"playerPartnerClimaxStatList": {
+			"info": "OStatSexualWithPlayerMatePartnerClimaxList",
+			"mod": "4Stim.esl",
+			"formid": "0x8A0"
+		}
+	},
+	"target": {
+		"faction": {
+			"info": "4StimSexualMateFaction",
+			"mod": "4Stim.esl",
+			"formid": "0xF8D"
+		},
+		"statFaction": {
+			"info": "OStatSexualMateFaction",
+			"mod": "4Stim.esl",
+			"formid": "0xF8E"
+		},
+		"playerStatFaction": {
+			"info": "OStatSexualWithPlayerMateFaction",
+			"mod": "4Stim.esl",
+			"formid": "0xFA6"
+		},
+		"climaxStatFaction": {
+			"info": "OStatSexualMateClimaxFaction",
+			"mod": "4Stim.esl",
+			"formid": "0x84F"
+		},
+		"partnerClimaxStatFaction": {
+			"info": "OStatSexualMatePartnerClimaxFaction",
+			"mod": "4Stim.esl",
+			"formid": "0x850"
+		},
+		"playerClimaxStatFaction": {
+			"info": "OStatSexualWithPlayerMateClimaxFaction",
+			"mod": "4Stim.esl",
+			"formid": "0x851"
+		},
+		"playerPartnerClimaxStatFaction": {
+			"info": "OStatSexualWithPlayerMatePartnerClimaxFaction",
+			"mod": "4Stim.esl",
+			"formid": "0x852"
+		},
+		"playerStatList": {
+			"info": "OStatSexualWithPlayerMateList",
+			"mod": "4Stim.esl",
+			"formid": "0x89E"
+		},
+		"playerClimaxStatList": {
+			"info": "OStatSexualWithPlayerMateClimaxList",
+			"mod": "4Stim.esl",
+			"formid": "0x89F"
+		},
+		"playerPartnerClimaxStatList": {
+			"info": "OStatSexualWithPlayerMatePartnerClimaxList",
+			"mod": "4Stim.esl",
+			"formid": "0x8A0"
+		}
+	}
+}

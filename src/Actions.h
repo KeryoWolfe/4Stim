@@ -1,9 +1,12 @@
 #pragma once
 
+#include <cstdint>
 #include <memory>
 #include <string>
 #include <string_view>
 #include <vector>
+
+#include <nlohmann/json.hpp>
 
 #include "SceneRegistry.h"
 #include "Sounds.h"
@@ -17,6 +20,31 @@
 // SCENES.md). Excitement, undressing, sounds and expressions build on these.
 namespace Actions
 {
+	// OStim's API forms on an action side (docs/API.md, "Factions, form
+	// lists and keywords"): form IDs of factions and form lists, 4Stim.esl's
+	// for OStim's own (ApiForms.h fills them in during scenes).
+	struct ApiFormRefs
+	{
+		std::vector<std::uint32_t> factions;                        // "faction": in it while doing the action
+		std::vector<std::uint32_t> statFactions;                    // "statFaction": +1 per scene they did it in
+		std::vector<std::uint32_t> playerStatFactions;              // "playerStatFaction": the same, with the player
+		std::vector<std::uint32_t> climaxStatFactions;              // "climaxStatFaction": +1 per climax while doing it
+		std::vector<std::uint32_t> partnerClimaxStatFactions;       // "partnerClimaxStatFaction": +1 per scene the partner climaxed at it
+		std::vector<std::uint32_t> playerClimaxStatFactions;        // "playerClimaxStatFaction": climaxed at it with the player
+		std::vector<std::uint32_t> playerPartnerClimaxStatFactions; // "playerPartnerClimaxStatFaction": the player climaxed at it with them
+		std::vector<std::uint32_t> playerStatLists;                 // "playerStatList": did it with the player
+		std::vector<std::uint32_t> playerClimaxStatLists;
+		std::vector<std::uint32_t> playerPartnerClimaxStatLists;
+
+		void Merge(const ApiFormRefs& a_other);
+		[[nodiscard]] bool Empty() const;
+	};
+
+	// {"mod": "...", "formid": "0x..."} or a list of them: their loaded form
+	// IDs. OStim's "OStim.esp" means 4Stim.esl (the same form IDs,
+	// tools/make-api-plugin.py). Forms that aren't loaded are left out.
+	std::vector<std::uint32_t> ReadForms(const nlohmann::json& a_value);
+
 	// What an action means for one of its sides.
 	struct Side
 	{
@@ -31,6 +59,7 @@ namespace Actions
 		std::string              expressionOverride;       // facial expression set while doing it ("openmouth", "tongue"...)
 		std::vector<std::string> equipObjects;             // OStim's "equipObject": equip object types this side's actor wears ("tongue"...), lowercase
 		std::vector<std::string> toySlots;                 // OStim's "toySlot": sex toy slots this side drives ("genital", "anus"...), lowercase (SexToys.h)
+		ApiFormRefs              forms;                    // OStim's factions and stat forms, with its action tags' (Action Tags\)
 	};
 
 	// How an action's peaks (its strokes, thrusts, slaps) are found, as

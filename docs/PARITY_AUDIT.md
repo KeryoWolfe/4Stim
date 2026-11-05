@@ -48,7 +48,7 @@ The short answer to "are we missing anything": yes, and it falls into five patte
 | 12 | **Done in 0.5.0 (not yet built or tested).** Was: **Thread calls right after `Start` are dropped, and setters apply a frame later** (`AddMetadata` then `HasMetadata` is false). OStim's NPC threads exist when `Start` returns and setters apply in the call. | 6 F2, F3 |
 | 13 | **Done in 0.5.0 (not yet built or tested):** `4stim_thread_end` carries the thread ID and OStim's JSON (scene, actors, metadata), and it's sent after Papyrus has released the actors, whose release skips anyone already in a new scene. Was: **The end event fires after the scene and its metadata are erased, and before the actors are released**: no thread ID, metadata or reason, and a scene chained on it can be undone by the release. | 1 §10, 6 F4 |
 | 14 | **Done in 0.5.0 (built, untested):** 4Stim now has its own mod events with OStim's names, arguments, thread IDs and order (API.md, "Mod events"). Was: **Mod events**: API.md says Fallout 4's Papyrus has none. F4SE's `RegisterForExternalEvent` exists (**checked**), but F4SE only fires those from Scaleform (`f4se.SendExternalEvent`), so 4Stim would send them from its HUD movie. Event names differ, there are no thread IDs, 8 of OStim's events are missing, and API.md lists two "OStim" events OStim doesn't have. | 6 F5, F17 |
-| 15 | **No API factions, stat form lists or action factions** (`OStimExcitementFaction`, times climaxed, actor count, in water...), because 4Stim has no plugin file. Dialogue, condition and voice-set add-ons read these. Needs a decision on a small `4Stim.esl`. | 1 §18, 2 §10, 4 §14, 6 F7 |
+| 15 | **Done in 0.5.0 (not yet built or tested):** `4Stim.esl` has OStim's factions, form lists and keywords (OStim's form IDs), and the plugin fills them in during scenes (API.md). Not set: in-water, time until climax. Was: **No API factions, stat form lists or action factions** (`OStimExcitementFaction`, times climaxed, actor count, in water...), because 4Stim has no plugin file. Dialogue, condition and voice-set add-ons read these. Needs a decision on a small `4Stim.esl`. | 1 §18, 2 §10, 4 §14, 6 F7 |
 | 16 | **Done in 0.5.0 (not yet built or tested).** Was: **Starting scenes**: given a starting scene, 4Stim still reorders the actors and fails instead of falling back to a random start; `AddStartingAnimation` without a duration skips the scene at once (OStim uses its length); `navigateTo` is ignored. | 1 §4-5, 6 F11 |
 | 17 | **Coverage**: `FourMetadata` has 22 of OMetadata's 282 functions, `FourLibrary` 37 of 97; `OActorUtil`, `OSequence`, `OJSON` have no counterpart; `PlayExpression` returns bool not float and `IsClimaxStalled` lacks `CheckThread`, so renamed calls don't compile; `VerifyActors` accepts children. | 6 F14-F16 |
 | 18 | **OStim's second C++ API (`OstimNG-API`)** (OStim's 22 October update added an interface map to it, `requestInterfaceMap`, through which plugins find its interfaces), used by external UIs (OStim Prism) and companion plugins, is missing; the header wrongly says OStim has no alignment API. | 5 §8, 6 F13 |
@@ -69,7 +69,7 @@ The short answer to "are we missing anything": yes, and it falls into five patte
 - Actor conditions are cached and only refreshed by the picker, so a mid-scene change (a worn penis) doesn't reach navigation (2 §5).
 
 **Actions**
-- Action tags aren't implemented (no `action tags` files, no inverted `-tag`), action custom data (`ints`, `floats`, `strings`, used by OCum and OEndurance) isn't read, and `Default.json` drifted from OStim's data (male masturbation peaks inverted, bathing lost its water requirement...) (3 §4-5, §13).
+- Action tags: done in 0.5.0 for what OStim's carry (their API forms, inverted `-tag` included). Was: action tags aren't implemented (no `action tags` files, no inverted `-tag`), action custom data (`ints`, `floats`, `strings`, used by OCum and OEndurance) isn't read, and `Default.json` drifted from OStim's data (male masturbation peaks inverted, bathing lost its water requirement...) (3 §4-5, §13).
 - Per-actor action stimulation overrides (OData) are missing (2 §9).
 
 **Climax**
@@ -79,7 +79,7 @@ The short answer to "are we missing anything": yes, and it falls into five patte
 
 **Furniture**
 - OStim's furniture `rotation` is radians; 4Stim reads degrees, so 180° becomes about 3° (3 §10).
-- `listIndividually` means something else, and furniture isn't grouped by list type (3 §9). Conditions are partly skipped, multiple `anykeyword` are ORed (3 §11). Occupied furniture and the `NoStim` keyword aren't excluded (3 §14).
+- `listIndividually` means something else, and furniture isn't grouped by list type (3 §9). Conditions are partly skipped, multiple `anykeyword` are ORed (3 §11). Occupied furniture isn't excluded (3 §14); the `NoStim` keyword is, since 0.5.0.
 - The player isn't put back after a furniture scene, though ALIGNMENT.md says the player is never moved (1 §11).
 
 **Sound**

@@ -24,7 +24,42 @@
 					35
 				],
 				"moan": true,
-				"talk": true
+				"talk": true,
+				"faction": {
+					"info": "4StimAnalFingeringActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xE4B"
+				},
+				"statFaction": {
+					"info": "OStatAnalFingeringActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xF03"
+				},
+				"playerStatFaction": {
+					"info": "OStatAnalFingeringWithPlayerActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xFC6"
+				},
+				"partnerClimaxStatFaction": {
+					"info": "OStatAnalFingeringActorPartnerClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x90E"
+				},
+				"playerPartnerClimaxStatFaction": {
+					"info": "OStatAnalFingeringWithPlayerActorPartnerClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x90F"
+				},
+				"playerStatList": {
+					"info": "OStatAnalFingeringWithPlayerActorList",
+					"mod": "4Stim.esl",
+					"formid": "0x912"
+				},
+				"playerPartnerClimaxStatList": {
+					"info": "OStatAnalFingeringWithPlayerActorPartnerClimaxList",
+					"mod": "4Stim.esl",
+					"formid": "0x913"
+				}
 			},
 			"target": {
 				"stimulation": 0.2,
@@ -34,7 +69,42 @@
 				"fullStrip": true,
 				"moan": true,
 				"talk": true,
-				"toySlot": "anus"
+				"toySlot": "anus",
+				"faction": {
+					"info": "4StimAnalFingeringTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xE4C"
+				},
+				"statFaction": {
+					"info": "OStatAnalFingeringTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xF04"
+				},
+				"playerStatFaction": {
+					"info": "OStatAnalFingeringWithPlayerTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xFC7"
+				},
+				"climaxStatFaction": {
+					"info": "OStatAnalFingeringTargetClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x910"
+				},
+				"playerClimaxStatFaction": {
+					"info": "OStatAnalFingeringWithPlayerTargetClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x911"
+				},
+				"playerStatList": {
+					"info": "OStatAnalFingeringWithPlayerTargetList",
+					"mod": "4Stim.esl",
+					"formid": "0x914"
+				},
+				"playerClimaxStatList": {
+					"info": "OStatAnalFingeringWithPlayerTargetClimaxList",
+					"mod": "4Stim.esl",
+					"formid": "0x915"
+				}
 			}
 		},
 		{
@@ -57,7 +127,42 @@
 					35
 				],
 				"moan": true,
-				"talk": true
+				"talk": true,
+				"faction": {
+					"info": "4StimAnalFistingActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xE4D"
+				},
+				"statFaction": {
+					"info": "OStatAnalFistingActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xF0B"
+				},
+				"playerStatFaction": {
+					"info": "OStatAnalFistingWithPlayerActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xFC8"
+				},
+				"partnerClimaxStatFaction": {
+					"info": "OStatAnalFistingActorPartnerClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x916"
+				},
+				"playerPartnerClimaxStatFaction": {
+					"info": "OStatAnalFistingWithPlayerActorPartnerClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x917"
+				},
+				"playerStatList": {
+					"info": "OStatAnalFistingWithPlayerActorList",
+					"mod": "4Stim.esl",
+					"formid": "0x91A"
+				},
+				"playerPartnerClimaxStatList": {
+					"info": "OStatAnalFistingWithPlayerActorPartnerClimaxList",
+					"mod": "4Stim.esl",
+					"formid": "0x91B"
+				}
 			},
 			"target": {
 				"stimulation": 0.2,
@@ -67,7 +172,42 @@
 				"fullStrip": true,
 				"moan": true,
 				"talk": true,
-				"toySlot": "anus"
+				"toySlot": "anus",
+				"faction": {
+					"info": "4StimAnalFistingTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xE4E"
+				},
+				"statFaction": {
+					"info": "OStatAnalFistingTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xF0C"
+				},
+				"playerStatFaction": {
+					"info": "OStatAnalFistingWithPlayerTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xFC9"
+				},
+				"climaxStatFaction": {
+					"info": "OStatAnalFistingTargetClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x918"
+				},
+				"playerClimaxStatFaction": {
+					"info": "OStatAnalFistingWithPlayerTargetClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x919"
+				},
+				"playerStatList": {
+					"info": "OStatAnalFistingWithPlayerTargetList",
+					"mod": "4Stim.esl",
+					"formid": "0x91C"
+				},
+				"playerClimaxStatList": {
+					"info": "OStatAnalFistingWithPlayerTargetClimaxList",
+					"mod": "4Stim.esl",
+					"formid": "0x91D"
+				}
 			}
 		},
 		{
@@ -95,7 +235,42 @@
 				],
 				"moan": true,
 				"muffled": true,
-				"expressionOverride": "tongue"
+				"expressionOverride": "tongue",
+				"faction": {
+					"info": "4StimAnalLickingActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xE80"
+				},
+				"statFaction": {
+					"info": "OStatAnalLickingActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xF3D"
+				},
+				"playerStatFaction": {
+					"info": "OStatAnalLickingWithPlayerActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xFCA"
+				},
+				"partnerClimaxStatFaction": {
+					"info": "OStatAnalLickingActorPartnerClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x91E"
+				},
+				"playerPartnerClimaxStatFaction": {
+					"info": "OStatAnalLickingWithPlayerActorPartnerClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x91F"
+				},
+				"playerStatList": {
+					"info": "OStatAnalLickingWithPlayerActorList",
+					"mod": "4Stim.esl",
+					"formid": "0x922"
+				},
+				"playerPartnerClimaxStatList": {
+					"info": "OStatAnalLickingWithPlayerActorPartnerClimaxList",
+					"mod": "4Stim.esl",
+					"formid": "0x923"
+				}
 			},
 			"target": {
 				"stimulation": 0.3,
@@ -105,7 +280,42 @@
 				"fullStrip": true,
 				"moan": true,
 				"talk": true,
-				"toySlot": "anus"
+				"toySlot": "anus",
+				"faction": {
+					"info": "4StimAnalLickingTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xE81"
+				},
+				"statFaction": {
+					"info": "OStatAnalLickingTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xF3E"
+				},
+				"playerStatFaction": {
+					"info": "OStatAnalLickingWithPlayerTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xFCB"
+				},
+				"climaxStatFaction": {
+					"info": "OStatAnalLickingTargetClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x920"
+				},
+				"playerClimaxStatFaction": {
+					"info": "OStatAnalLickingWithPlayerTargetClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x921"
+				},
+				"playerStatList": {
+					"info": "OStatAnalLickingWithPlayerTargetList",
+					"mod": "4Stim.esl",
+					"formid": "0x924"
+				},
+				"playerClimaxStatList": {
+					"info": "OStatAnalLickingWithPlayerTargetClimaxList",
+					"mod": "4Stim.esl",
+					"formid": "0x925"
+				}
 			}
 		},
 		{
@@ -128,7 +338,57 @@
 				"fullStrip": true,
 				"moan": true,
 				"talk": true,
-				"toySlot": "genital"
+				"toySlot": "genital",
+				"faction": {
+					"info": "4StimAnalSexActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xE4F"
+				},
+				"statFaction": {
+					"info": "OStatAnalSexActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xF11"
+				},
+				"playerStatFaction": {
+					"info": "OStatAnalSexWithPlayerActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xFCC"
+				},
+				"climaxStatFaction": {
+					"info": "OStatAnalSexActorClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x8BC"
+				},
+				"partnerClimaxStatFaction": {
+					"info": "OStatAnalSexActorPartnerClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x8BD"
+				},
+				"playerClimaxStatFaction": {
+					"info": "OStatAnalSexWithPlayerActorClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x8BE"
+				},
+				"playerPartnerClimaxStatFaction": {
+					"info": "OStatAnalSexWithPlayerActorPartnerClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x8BF"
+				},
+				"playerStatList": {
+					"info": "OStatAnalSexWithPlayerActorList",
+					"mod": "4Stim.esl",
+					"formid": "0x8C0"
+				},
+				"playerClimaxStatList": {
+					"info": "OStatAnalSexWithPlayerActorClimaxList",
+					"mod": "4Stim.esl",
+					"formid": "0x8C1"
+				},
+				"playerPartnerClimaxStatList": {
+					"info": "OStatAnalSexWithPlayerActorPartnerClimaxList",
+					"mod": "4Stim.esl",
+					"formid": "0x8C2"
+				}
 			},
 			"target": {
 				"stimulation": 0.3,
@@ -138,7 +398,57 @@
 				"fullStrip": true,
 				"moan": true,
 				"talk": true,
-				"toySlot": "anus"
+				"toySlot": "anus",
+				"faction": {
+					"info": "4StimAnalSexTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xE50"
+				},
+				"statFaction": {
+					"info": "OStatAnalSexTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xF12"
+				},
+				"playerStatFaction": {
+					"info": "OStatAnalSexWithPlayerTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xFCD"
+				},
+				"climaxStatFaction": {
+					"info": "OStatAnalSexTargetClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x8C3"
+				},
+				"partnerClimaxStatFaction": {
+					"info": "OStatAnalSexTargetPartnerClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x8C4"
+				},
+				"playerClimaxStatFaction": {
+					"info": "OStatAnalSexWithPlayerTargetClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x8C5"
+				},
+				"playerPartnerClimaxStatFaction": {
+					"info": "OStatAnalSexWithPlayerTargetPartnerClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x8C6"
+				},
+				"playerStatList": {
+					"info": "OStatAnalSexWithPlayerTargetList",
+					"mod": "4Stim.esl",
+					"formid": "0x8C7"
+				},
+				"playerClimaxStatList": {
+					"info": "OStatAnalSexWithPlayerTargetClimaxList",
+					"mod": "4Stim.esl",
+					"formid": "0x8C8"
+				},
+				"playerPartnerClimaxStatList": {
+					"info": "OStatAnalSexWithPlayerTargetPartnerClimaxList",
+					"mod": "4Stim.esl",
+					"formid": "0x8C9"
+				}
 			},
 			"sounds": [
 				{
@@ -150,6 +460,13 @@
 				"type": "bonedistance",
 				"actorBone": "Pelvis",
 				"targetBone": "Pelvis"
+			},
+			"performer": {
+				"faction": {
+					"info": "4StimAnalSexPerformerFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xE51"
+				}
 			}
 		},
 		{
@@ -168,7 +485,42 @@
 					"tail"
 				],
 				"moan": true,
-				"talk": true
+				"talk": true,
+				"faction": {
+					"info": "4StimAnalTailSexActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xF82"
+				},
+				"statFaction": {
+					"info": "OStatAnalTailSexActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xF84"
+				},
+				"playerStatFaction": {
+					"info": "OStatAnalTailSexWithPlayerActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xFCE"
+				},
+				"partnerClimaxStatFaction": {
+					"info": "OStatAnalTailSexActorPartnerClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x926"
+				},
+				"playerPartnerClimaxStatFaction": {
+					"info": "OStatAnalTailSexWithPlayerActorPartnerClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x927"
+				},
+				"playerStatList": {
+					"info": "OStatAnalTailSexWithPlayerActorList",
+					"mod": "4Stim.esl",
+					"formid": "0x92A"
+				},
+				"playerPartnerClimaxStatList": {
+					"info": "OStatAnalTailSexWithPlayerActorPartnerClimaxList",
+					"mod": "4Stim.esl",
+					"formid": "0x92B"
+				}
 			},
 			"target": {
 				"stimulation": 0.3,
@@ -178,7 +530,42 @@
 				"fullStrip": true,
 				"moan": true,
 				"talk": true,
-				"toySlot": "anus"
+				"toySlot": "anus",
+				"faction": {
+					"info": "4StimAnalTailSexTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xF83"
+				},
+				"statFaction": {
+					"info": "OStatAnalTailSexTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xF85"
+				},
+				"playerStatFaction": {
+					"info": "OStatAnalTailSexWithPlayerTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xFCF"
+				},
+				"climaxStatFaction": {
+					"info": "OStatAnalTailSexTargetClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x928"
+				},
+				"playerClimaxStatFaction": {
+					"info": "OStatAnalTailSexWithPlayerTargetClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x929"
+				},
+				"playerStatList": {
+					"info": "OStatAnalTailSexWithPlayerTargetList",
+					"mod": "4Stim.esl",
+					"formid": "0x92C"
+				},
+				"playerClimaxStatList": {
+					"info": "OStatAnalTailSexWithPlayerTargetClimaxList",
+					"mod": "4Stim.esl",
+					"formid": "0x92D"
+				}
 			}
 		},
 		{
@@ -194,7 +581,42 @@
 				"stimulation": 0.1,
 				"maxStimulation": 75,
 				"moan": true,
-				"talk": true
+				"talk": true,
+				"faction": {
+					"info": "4StimAnalToyingActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xEA1"
+				},
+				"statFaction": {
+					"info": "OStatAnalToyingActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xF35"
+				},
+				"playerStatFaction": {
+					"info": "OStatAnalToyingWithPlayerActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xFD0"
+				},
+				"partnerClimaxStatFaction": {
+					"info": "OStatAnalToyingActorPartnerClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x92E"
+				},
+				"playerPartnerClimaxStatFaction": {
+					"info": "OStatAnalToyingWithPlayerActorPartnerClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x92F"
+				},
+				"playerStatList": {
+					"info": "OStatAnalToyingWithPlayerActorList",
+					"mod": "4Stim.esl",
+					"formid": "0x932"
+				},
+				"playerPartnerClimaxStatList": {
+					"info": "OStatAnalToyingWithPlayerActorPartnerClimaxList",
+					"mod": "4Stim.esl",
+					"formid": "0x933"
+				}
 			},
 			"target": {
 				"stimulation": 0.3,
@@ -204,7 +626,42 @@
 				"fullStrip": true,
 				"moan": true,
 				"talk": true,
-				"toySlot": "anus"
+				"toySlot": "anus",
+				"faction": {
+					"info": "4StimAnalToyingTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xEA2"
+				},
+				"statFaction": {
+					"info": "OStatAnalToyingTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xF36"
+				},
+				"playerStatFaction": {
+					"info": "OStatAnalToyingWithPlayerTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xFD1"
+				},
+				"climaxStatFaction": {
+					"info": "OStatAnalToyingTargetClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x930"
+				},
+				"playerClimaxStatFaction": {
+					"info": "OStatAnalToyingWithPlayerTargetClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x931"
+				},
+				"playerStatList": {
+					"info": "OStatAnalToyingWithPlayerTargetList",
+					"mod": "4Stim.esl",
+					"formid": "0x934"
+				},
+				"playerClimaxStatList": {
+					"info": "OStatAnalToyingWithPlayerTargetClimaxList",
+					"mod": "4Stim.esl",
+					"formid": "0x935"
+				}
 			}
 		},
 		{
@@ -230,7 +687,19 @@
 					45,
 					46,
 					49
-				]
+				],
+				"faction": {
+					"info": "4StimBathingTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xEE2"
+				}
+			},
+			"actor": {
+				"faction": {
+					"info": "4StimBathingActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xEE1"
+				}
 			}
 		},
 		{
@@ -263,7 +732,42 @@
 				],
 				"moan": true,
 				"muffled": true,
-				"expressionOverride": "openmouth"
+				"expressionOverride": "openmouth",
+				"faction": {
+					"info": "4StimBlowjobActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xE52"
+				},
+				"statFaction": {
+					"info": "OStatBlowjobActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xF50"
+				},
+				"playerStatFaction": {
+					"info": "OStatBlowjobWithPlayerActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xFD2"
+				},
+				"partnerClimaxStatFaction": {
+					"info": "OStatBlowjobActorPartnerClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x936"
+				},
+				"playerPartnerClimaxStatFaction": {
+					"info": "OStatBlowjobWithPlayerActorPartnerClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x937"
+				},
+				"playerStatList": {
+					"info": "OStatBlowjobWithPlayerActorList",
+					"mod": "4Stim.esl",
+					"formid": "0x93A"
+				},
+				"playerPartnerClimaxStatList": {
+					"info": "OStatBlowjobWithPlayerActorPartnerClimaxList",
+					"mod": "4Stim.esl",
+					"formid": "0x93B"
+				}
 			},
 			"target": {
 				"stimulation": 1.4,
@@ -273,7 +777,49 @@
 				"fullStrip": true,
 				"moan": true,
 				"talk": true,
-				"toySlot": "genital"
+				"toySlot": "genital",
+				"faction": {
+					"info": "4StimBlowjobTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xE53"
+				},
+				"statFaction": {
+					"info": "OStatBlowjobTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xF51"
+				},
+				"playerStatFaction": {
+					"info": "OStatBlowjobWithPlayerTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xFD3"
+				},
+				"climaxStatFaction": {
+					"info": "OStatBlowjobTargetClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x938"
+				},
+				"playerClimaxStatFaction": {
+					"info": "OStatBlowjobWithPlayerTargetClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x939"
+				},
+				"playerStatList": {
+					"info": "OStatBlowjobWithPlayerTargetList",
+					"mod": "4Stim.esl",
+					"formid": "0x93C"
+				},
+				"playerClimaxStatList": {
+					"info": "OStatBlowjobWithPlayerTargetClimaxList",
+					"mod": "4Stim.esl",
+					"formid": "0x93D"
+				}
+			},
+			"performer": {
+				"faction": {
+					"info": "4StimBlowjobPerformerFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xE54"
+				}
 			}
 		},
 		{
@@ -299,7 +845,42 @@
 				],
 				"fullStrip": true,
 				"moan": true,
-				"talk": true
+				"talk": true,
+				"faction": {
+					"info": "4StimBoobjobActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xE55"
+				},
+				"statFaction": {
+					"info": "OStatBoobjobActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xF52"
+				},
+				"playerStatFaction": {
+					"info": "OStatBoobjobWithPlayerActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xFD4"
+				},
+				"partnerClimaxStatFaction": {
+					"info": "OStatBoobjobActorPartnerClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x93E"
+				},
+				"playerPartnerClimaxStatFaction": {
+					"info": "OStatBoobjobWithPlayerActorPartnerClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x93F"
+				},
+				"playerStatList": {
+					"info": "OStatBoobjobWithPlayerActorList",
+					"mod": "4Stim.esl",
+					"formid": "0x942"
+				},
+				"playerPartnerClimaxStatList": {
+					"info": "OStatBoobjobWithPlayerActorPartnerClimaxList",
+					"mod": "4Stim.esl",
+					"formid": "0x943"
+				}
 			},
 			"target": {
 				"stimulation": 0.8,
@@ -309,7 +890,49 @@
 				"fullStrip": true,
 				"moan": true,
 				"talk": true,
-				"toySlot": "genital"
+				"toySlot": "genital",
+				"faction": {
+					"info": "4StimBoobjobTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xE56"
+				},
+				"statFaction": {
+					"info": "OStatBoobjobTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xF53"
+				},
+				"playerStatFaction": {
+					"info": "OStatBoobjobWithPlayerActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xFD5"
+				},
+				"climaxStatFaction": {
+					"info": "OStatBoobjobTargetClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x940"
+				},
+				"playerClimaxStatFaction": {
+					"info": "OStatBoobjobWithPlayerTargetClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x941"
+				},
+				"playerStatList": {
+					"info": "OStatBoobjobWithPlayerTargetList",
+					"mod": "4Stim.esl",
+					"formid": "0x944"
+				},
+				"playerClimaxStatList": {
+					"info": "OStatBoobjobWithPlayerTargetClimaxList",
+					"mod": "4Stim.esl",
+					"formid": "0x945"
+				}
+			},
+			"performer": {
+				"faction": {
+					"info": "4StimBoobjobPerformerFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xE57"
+				}
 			}
 		},
 		{
@@ -403,7 +1026,12 @@
 					45
 				],
 				"moan": true,
-				"talk": true
+				"talk": true,
+				"faction": {
+					"info": "4StimBreastSmotheringActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xEE4"
+				}
 			},
 			"target": {
 				"stimulation": 0.3,
@@ -412,7 +1040,19 @@
 					46,
 					49
 				],
-				"moan": true
+				"moan": true,
+				"faction": {
+					"info": "4StimBreastSmotheringTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xEE5"
+				}
+			},
+			"performer": {
+				"faction": {
+					"info": "4StimBreastSmotheringPerformerFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xEE6"
+				}
 			}
 		},
 		{
@@ -431,7 +1071,42 @@
 				"maxStimulation": 50,
 				"fullStrip": true,
 				"moan": true,
-				"talk": true
+				"talk": true,
+				"faction": {
+					"info": "4StimButtjobActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xE58"
+				},
+				"statFaction": {
+					"info": "OStatButtjobActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xF54"
+				},
+				"playerStatFaction": {
+					"info": "OStatButtjobWithPlayerActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xFD6"
+				},
+				"partnerClimaxStatFaction": {
+					"info": "OStatButtjobActorPartnerClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x946"
+				},
+				"playerPartnerClimaxStatFaction": {
+					"info": "OStatButtjobWithPlayerActorPartnerClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x947"
+				},
+				"playerStatList": {
+					"info": "OStatButtjobWithPlayerActorList",
+					"mod": "4Stim.esl",
+					"formid": "0x94A"
+				},
+				"playerPartnerClimaxStatList": {
+					"info": "OStatButtjobWithPlayerActorPartnerClimaxList",
+					"mod": "4Stim.esl",
+					"formid": "0x94B"
+				}
 			},
 			"target": {
 				"stimulation": 0.8,
@@ -441,7 +1116,49 @@
 				"fullStrip": true,
 				"moan": true,
 				"talk": true,
-				"toySlot": "genital"
+				"toySlot": "genital",
+				"faction": {
+					"info": "4StimButtjobTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xE59"
+				},
+				"statFaction": {
+					"info": "OStatButtjobTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xF55"
+				},
+				"playerStatFaction": {
+					"info": "OStatButtjobWithPlayerTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xFD7"
+				},
+				"climaxStatFaction": {
+					"info": "OStatButtjobTargetClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x948"
+				},
+				"playerClimaxStatFaction": {
+					"info": "OStatButtjobWithPlayerTargetClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x949"
+				},
+				"playerStatList": {
+					"info": "OStatButtjobWithPlayerTargetList",
+					"mod": "4Stim.esl",
+					"formid": "0x94C"
+				},
+				"playerClimaxStatList": {
+					"info": "OStatButtjobWithPlayerTargetClimaxList",
+					"mod": "4Stim.esl",
+					"formid": "0x94D"
+				}
+			},
+			"performer": {
+				"faction": {
+					"info": "4StimButtjobPerformerFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xE5A"
+				}
 			}
 		},
 		{
@@ -469,7 +1186,12 @@
 					45
 				],
 				"moan": true,
-				"talk": true
+				"talk": true,
+				"faction": {
+					"info": "4StimButtSmotheringActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xEEA"
+				}
 			},
 			"target": {
 				"stimulation": 0.3,
@@ -478,7 +1200,19 @@
 					46,
 					49
 				],
-				"moan": true
+				"moan": true,
+				"faction": {
+					"info": "4StimButtSmotheringTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xEEB"
+				}
+			},
+			"performer": {
+				"faction": {
+					"info": "4StimButtSmotheringPerformerFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xEEC"
+				}
 			}
 		},
 		{
@@ -494,11 +1228,21 @@
 				"undressSlots": [
 					34,
 					35
-				]
+				],
+				"faction": {
+					"info": "4StimChokingActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xEFE"
+				}
 			},
 			"target": {
 				"stimulation": 0.25,
-				"maxStimulation": 65
+				"maxStimulation": 65,
+				"faction": {
+					"info": "4StimChokingTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xEFF"
+				}
 			}
 		},
 		{
@@ -522,10 +1266,50 @@
 				"requirements": [
 					"penis"
 				],
-				"fullStrip": true
+				"fullStrip": true,
+				"faction": {
+					"info": "4StimCumOnButtActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x862"
+				},
+				"climaxStatFaction": {
+					"info": "OStatCumOnButtActorClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x8E6"
+				},
+				"playerClimaxStatFaction": {
+					"info": "OStatCumOnButtWithPlayerActorClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x8E8"
+				},
+				"playerClimaxStatList": {
+					"info": "OStatCumOnButtWithPlayerActorClimaxList",
+					"mod": "4Stim.esl",
+					"formid": "0x8EA"
+				}
 			},
 			"target": {
-				"fullStrip": true
+				"fullStrip": true,
+				"faction": {
+					"info": "4StimCumOnButtTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x863"
+				},
+				"partnerClimaxStatFaction": {
+					"info": "OStatCumOnButtTargetPartnerClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x8E7"
+				},
+				"playerPartnerClimaxStatFaction": {
+					"info": "OStatCumOnButtWithPlayerTargetPartnerClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x8E9"
+				},
+				"playerPartnerClimaxStatList": {
+					"info": "OStatCumOnButtWithPlayerTargetPartnerClimaxList",
+					"mod": "4Stim.esl",
+					"formid": "0x8EB"
+				}
 			}
 		},
 		{
@@ -539,10 +1323,50 @@
 				"requirements": [
 					"penis"
 				],
-				"fullStrip": true
+				"fullStrip": true,
+				"faction": {
+					"info": "4StimCumOnChestActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x864"
+				},
+				"climaxStatFaction": {
+					"info": "OStatCumOnChestActorClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x8EC"
+				},
+				"playerClimaxStatFaction": {
+					"info": "OStatCumOnChestWithPlayerActorClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x8EE"
+				},
+				"playerClimaxStatList": {
+					"info": "OStatCumOnChestWithPlayerActorClimaxList",
+					"mod": "4Stim.esl",
+					"formid": "0x8F0"
+				}
 			},
 			"target": {
-				"fullStrip": true
+				"fullStrip": true,
+				"faction": {
+					"info": "4StimCumOnChestTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x865"
+				},
+				"partnerClimaxStatFaction": {
+					"info": "OStatCumOnChestTargetPartnerClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x8ED"
+				},
+				"playerPartnerClimaxStatFaction": {
+					"info": "OStatCumOnChestWithPlayerTargetPartnerClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x8EF"
+				},
+				"playerPartnerClimaxStatList": {
+					"info": "OStatCumOnChestWithPlayerTargetPartnerClimaxList",
+					"mod": "4Stim.esl",
+					"formid": "0x8F1"
+				}
 			}
 		},
 		{
@@ -556,13 +1380,53 @@
 				"requirements": [
 					"penis"
 				],
-				"fullStrip": true
+				"fullStrip": true,
+				"faction": {
+					"info": "4StimCumOnVulvaActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x866"
+				},
+				"climaxStatFaction": {
+					"info": "OStatCumOnVulvaActorClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x8F2"
+				},
+				"playerClimaxStatFaction": {
+					"info": "OStatCumOnVulvaWithPlayerActorClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x8F4"
+				},
+				"playerClimaxStatList": {
+					"info": "OStatCumOnVulvaWithPlayerActorClimaxList",
+					"mod": "4Stim.esl",
+					"formid": "0x8F6"
+				}
 			},
 			"target": {
 				"requirements": [
 					"vagina"
 				],
-				"fullStrip": true
+				"fullStrip": true,
+				"faction": {
+					"info": "4StimCumOnVulvaTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x867"
+				},
+				"partnerClimaxStatFaction": {
+					"info": "OStatCumOnVulvaTargetPartnerClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x8F3"
+				},
+				"playerPartnerClimaxStatFaction": {
+					"info": "OStatCumOnVulvaWithPlayerTargetPartnerClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x8F5"
+				},
+				"playerPartnerClimaxStatList": {
+					"info": "OStatCumOnVulvaWithPlayerTargetPartnerClimaxList",
+					"mod": "4Stim.esl",
+					"formid": "0x8F7"
+				}
 			}
 		},
 		{
@@ -570,7 +1434,12 @@
 			"name": "Dancing",
 			"actor": {
 				"moan": true,
-				"talk": true
+				"talk": true,
+				"faction": {
+					"info": "4StimDancingFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xEE3"
+				}
 			}
 		},
 		{
@@ -597,7 +1466,42 @@
 				],
 				"moan": true,
 				"muffled": true,
-				"expressionOverride": "openmouth"
+				"expressionOverride": "openmouth",
+				"faction": {
+					"info": "4StimBlowjobActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xE52"
+				},
+				"statFaction": {
+					"info": "OStatBlowjobActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xF50"
+				},
+				"playerStatFaction": {
+					"info": "OStatDeepthroatingWithPlayerActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xFDE"
+				},
+				"partnerClimaxStatFaction": {
+					"info": "OStatDeepthroatingActorPartnerClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x976"
+				},
+				"playerPartnerClimaxStatFaction": {
+					"info": "OStatDeepthroatingWithPlayerActorPartnerClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x977"
+				},
+				"playerStatList": {
+					"info": "OStatDeepthroatingWithPlayerActorList",
+					"mod": "4Stim.esl",
+					"formid": "0x97A"
+				},
+				"playerPartnerClimaxStatList": {
+					"info": "OStatDeepthroatingWithPlayerActorPartnerClimaxList",
+					"mod": "4Stim.esl",
+					"formid": "0x97B"
+				}
 			},
 			"target": {
 				"stimulation": 1.4,
@@ -607,7 +1511,42 @@
 				"fullStrip": true,
 				"moan": true,
 				"talk": true,
-				"toySlot": "genital"
+				"toySlot": "genital",
+				"faction": {
+					"info": "4StimBlowjobTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xE53"
+				},
+				"statFaction": {
+					"info": "OStatBlowjobTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xF51"
+				},
+				"playerStatFaction": {
+					"info": "OStatDeepthroatingWithPlayerTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xFDF"
+				},
+				"climaxStatFaction": {
+					"info": "OStatDeepthroatingTargetClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x978"
+				},
+				"playerClimaxStatFaction": {
+					"info": "OStatDeepthroatingWithPlayerTargetClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x979"
+				},
+				"playerStatList": {
+					"info": "OStatDeepthroatingWithPlayerTargetList",
+					"mod": "4Stim.esl",
+					"formid": "0x97C"
+				},
+				"playerClimaxStatList": {
+					"info": "OStatDeepthroatingWithPlayerTargetClimaxList",
+					"mod": "4Stim.esl",
+					"formid": "0x97D"
+				}
 			}
 		},
 		{
@@ -628,7 +1567,27 @@
 				"requirements": [
 					"penis"
 				],
-				"fullStrip": true
+				"fullStrip": true,
+				"faction": {
+					"info": "4StimFacialActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x860"
+				},
+				"climaxStatFaction": {
+					"info": "OStatFacialActorClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x8F8"
+				},
+				"playerClimaxStatFaction": {
+					"info": "OStatFacialWithPlayerActorClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x8FA"
+				},
+				"playerClimaxStatList": {
+					"info": "OStatFacialWithPlayerActorClimaxList",
+					"mod": "4Stim.esl",
+					"formid": "0x8FC"
+				}
 			},
 			"target": {
 				"undressSlots": [
@@ -637,7 +1596,27 @@
 				],
 				"moan": true,
 				"talk": true,
-				"expressionOverride": "tongue"
+				"expressionOverride": "tongue",
+				"faction": {
+					"info": "4StimFacialTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x861"
+				},
+				"partnerClimaxStatFaction": {
+					"info": "OStatFacialTargetPartnerClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x8F9"
+				},
+				"playerPartnerClimaxStatFaction": {
+					"info": "OStatFacialWithPlayerTargetPartnerClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x8FB"
+				},
+				"playerPartnerClimaxStatList": {
+					"info": "OStatFacialWithPlayerTargetPartnerClimaxList",
+					"mod": "4Stim.esl",
+					"formid": "0x8FD"
+				}
 			}
 		},
 		{
@@ -654,7 +1633,22 @@
 				"undressSlots": [
 					34,
 					35
-				]
+				],
+				"faction": {
+					"info": "4StimFemaleMasturbationFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xE5E"
+				},
+				"statFaction": {
+					"info": "OStatFemaleMasturbationFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xF56"
+				},
+				"climaxStatFaction": {
+					"info": "OStatFemaleMasturbationClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x9D6"
+				}
 			},
 			"target": {
 				"stimulation": 0.9,
@@ -687,7 +1681,42 @@
 					"foot"
 				],
 				"moan": true,
-				"talk": true
+				"talk": true,
+				"faction": {
+					"info": "4StimFootjobActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xE5F"
+				},
+				"statFaction": {
+					"info": "OStatFootjobActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xF5A"
+				},
+				"playerStatFaction": {
+					"info": "OStatFootjobWithPlayerActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xFE0"
+				},
+				"partnerClimaxStatFaction": {
+					"info": "OStatFootjobActorPartnerClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x94E"
+				},
+				"playerPartnerClimaxStatFaction": {
+					"info": "OStatFootjobWithPlayerActorPartnerClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x94F"
+				},
+				"playerStatList": {
+					"info": "OStatFootjobWithPlayerActorList",
+					"mod": "4Stim.esl",
+					"formid": "0x952"
+				},
+				"playerPartnerClimaxStatList": {
+					"info": "OStatFootjobWithPlayerActorPartnerClimaxList",
+					"mod": "4Stim.esl",
+					"formid": "0x953"
+				}
 			},
 			"target": {
 				"stimulation": 0.9,
@@ -697,7 +1726,42 @@
 				"fullStrip": true,
 				"moan": true,
 				"talk": true,
-				"toySlot": "genital"
+				"toySlot": "genital",
+				"faction": {
+					"info": "4StimFootjobTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xE60"
+				},
+				"statFaction": {
+					"info": "OStatFootjobTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xF5B"
+				},
+				"playerStatFaction": {
+					"info": "OStatFootjobWithPlayerTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xFE1"
+				},
+				"climaxStatFaction": {
+					"info": "OStatFootjobTargetClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x950"
+				},
+				"playerClimaxStatFaction": {
+					"info": "OStatFootjobWithPlayerTargetClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x951"
+				},
+				"playerStatList": {
+					"info": "OStatFootjobWithPlayerTargetList",
+					"mod": "4Stim.esl",
+					"formid": "0x954"
+				},
+				"playerClimaxStatList": {
+					"info": "OStatFootjobWithPlayerTargetClimaxList",
+					"mod": "4Stim.esl",
+					"formid": "0x955"
+				}
 			},
 			"sounds": [
 				{
@@ -736,7 +1800,19 @@
 				],
 				"moan": true,
 				"muffled": true,
-				"expressionOverride": "tongue"
+				"expressionOverride": "tongue",
+				"faction": [
+					{
+						"info": "4StimFrenchKissingFaction",
+						"mod": "4Stim.esl",
+						"formid": "0xE61"
+					},
+					{
+						"info": "4StimAnyKissingActorFaction",
+						"mod": "4Stim.esl",
+						"formid": "0xEC7"
+					}
+				]
 			},
 			"target": {
 				"stimulation": 0.1,
@@ -750,7 +1826,19 @@
 				],
 				"moan": true,
 				"muffled": true,
-				"expressionOverride": "tongue"
+				"expressionOverride": "tongue",
+				"faction": [
+					{
+						"info": "4StimFrenchKissingFaction",
+						"mod": "4Stim.esl",
+						"formid": "0xE61"
+					},
+					{
+						"info": "4StimAnyKissingActorFaction",
+						"mod": "4Stim.esl",
+						"formid": "0xEC7"
+					}
+				]
 			}
 		},
 		{
@@ -771,13 +1859,90 @@
 				"fullStrip": true,
 				"moan": true,
 				"talk": true,
-				"toySlot": "genital"
+				"toySlot": "genital",
+				"faction": {
+					"info": "4StimGrindingFootActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xEFB"
+				},
+				"statFaction": {
+					"info": "OStatGrindingFootActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xF5C"
+				},
+				"playerStatFaction": {
+					"info": "OStatGrindingFootWithPlayerActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xFE3"
+				},
+				"climaxStatFaction": {
+					"info": "OStatGrindingFootActorClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x8FE"
+				},
+				"playerClimaxStatFaction": {
+					"info": "OStatGrindingFootWithPlayerActorClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x900"
+				},
+				"playerStatList": {
+					"info": "OStatGrindingFootWithPlayerActorList",
+					"mod": "4Stim.esl",
+					"formid": "0x902"
+				},
+				"playerClimaxStatList": {
+					"info": "OStatGrindingFootWithPlayerActorClimaxList",
+					"mod": "4Stim.esl",
+					"formid": "0x903"
+				}
 			},
 			"target": {
 				"stimulation": 0.2,
 				"maxStimulation": 75,
 				"moan": true,
-				"talk": true
+				"talk": true,
+				"faction": {
+					"info": "4StimGrindingFootTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xEFC"
+				},
+				"statFaction": {
+					"info": "OStatGrindingFootTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xFE2"
+				},
+				"playerStatFaction": {
+					"info": "OStatGrindingFootWithPlayerTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xFE4"
+				},
+				"partnerClimaxStatFaction": {
+					"info": "OStatGrindingFootTargetPartnerClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x8FF"
+				},
+				"playerPartnerClimaxStatFaction": {
+					"info": "OStatGrindingFootWithPlayerTargetPartnerClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x901"
+				},
+				"playerStatList": {
+					"info": "OStatGrindingFootWithPlayerTargetList",
+					"mod": "4Stim.esl",
+					"formid": "0x904"
+				},
+				"playerPartnerClimaxStatList": {
+					"info": "OStatGrindingFootWithPlayerTargetPartnerClimaxList",
+					"mod": "4Stim.esl",
+					"formid": "0x905"
+				}
+			},
+			"performer": {
+				"faction": {
+					"info": "4StimGrindingFootPerformerFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xEFD"
+				}
 			}
 		},
 		{
@@ -794,7 +1959,29 @@
 				],
 				"fullStrip": true,
 				"moan": true,
-				"toySlot": "genital"
+				"toySlot": "genital",
+				"faction": {
+					"info": "4StimGrindingObjectActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xE62"
+				},
+				"statFaction": {
+					"info": "OStatGrindingObjectActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xF5C"
+				},
+				"climaxStatFaction": {
+					"info": "OStatGrindingObjectActorClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x9D8"
+				}
+			},
+			"performer": {
+				"faction": {
+					"info": "4StimGrindingObjectPerformerFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xE63"
+				}
 			}
 		},
 		{
@@ -818,7 +2005,57 @@
 				"fullStrip": true,
 				"moan": true,
 				"talk": true,
-				"toySlot": "genital"
+				"toySlot": "genital",
+				"faction": {
+					"info": "4StimGrindingPenisActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xE64"
+				},
+				"statFaction": {
+					"info": "OStatGrindingPenisActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xF60"
+				},
+				"playerStatFaction": {
+					"info": "OStatGrindingPenisWithPlayerActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xFE5"
+				},
+				"climaxStatFaction": {
+					"info": "OStatVaginalSexActorClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x8D8"
+				},
+				"partnerClimaxStatFaction": {
+					"info": "OStatVaginalSexActorPartnerClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x8D9"
+				},
+				"playerClimaxStatFaction": {
+					"info": "OStatVaginalSexWithPlayerActorClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x8DA"
+				},
+				"playerPartnerClimaxStatFaction": {
+					"info": "OStatVaginalSexWithPlayerActorPartnerClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x8DB"
+				},
+				"playerStatList": {
+					"info": "OStatVaginalSexWithPlayerActorList",
+					"mod": "4Stim.esl",
+					"formid": "0x8E0"
+				},
+				"playerClimaxStatList": {
+					"info": "OStatVaginalSexWithPlayerActorClimaxList",
+					"mod": "4Stim.esl",
+					"formid": "0x8E1"
+				},
+				"playerPartnerClimaxStatList": {
+					"info": "OStatVaginalSexWithPlayerActorPartnerClimaxList",
+					"mod": "4Stim.esl",
+					"formid": "0x8E2"
+				}
 			},
 			"target": {
 				"stimulation": 0.75,
@@ -828,7 +2065,64 @@
 				"fullStrip": true,
 				"moan": true,
 				"talk": true,
-				"toySlot": "genital"
+				"toySlot": "genital",
+				"faction": {
+					"info": "4StimGrindingPenisTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xE65"
+				},
+				"statFaction": {
+					"info": "OStatGrindingPenisTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xF61"
+				},
+				"playerStatFaction": {
+					"info": "OStatGrindingPenisWithPlayerTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xFE6"
+				},
+				"climaxStatFaction": {
+					"info": "OStatVaginalSexActorClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x8DC"
+				},
+				"partnerClimaxStatFaction": {
+					"info": "OStatVaginalSexActorPartnerClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x8DD"
+				},
+				"playerClimaxStatFaction": {
+					"info": "OStatVaginalSexWithPlayerActorClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x8DE"
+				},
+				"playerPartnerClimaxStatFaction": {
+					"info": "OStatVaginalSexWithPlayerActorPartnerClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x8DF"
+				},
+				"playerStatList": {
+					"info": "OStatVaginalSexWithPlayerActorList",
+					"mod": "4Stim.esl",
+					"formid": "0x8E3"
+				},
+				"playerClimaxStatList": {
+					"info": "OStatVaginalSexWithPlayerActorClimaxList",
+					"mod": "4Stim.esl",
+					"formid": "0x8E4"
+				},
+				"playerPartnerClimaxStatList": {
+					"info": "OStatVaginalSexWithPlayerActorPartnerClimaxList",
+					"mod": "4Stim.esl",
+					"formid": "0x8E5"
+				}
+			},
+			"performer": {
+				"faction": {
+					"info": "4StimGrindingPenisPerformerFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xE66"
+				}
 			}
 		},
 		{
@@ -848,7 +2142,42 @@
 				"fullStrip": true,
 				"moan": true,
 				"talk": true,
-				"toySlot": "genital"
+				"toySlot": "genital",
+				"faction": {
+					"info": "4StimGrindingThighActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xE67"
+				},
+				"statFaction": {
+					"info": "OStatGrindingThighActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xF62"
+				},
+				"playerStatFaction": {
+					"info": "OStatGrindingThighWithPlayerActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xFE8"
+				},
+				"climaxStatFaction": {
+					"info": "OStatGrindingThighActorClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x906"
+				},
+				"playerClimaxStatFaction": {
+					"info": "OStatGrindingThighWithPlayerActorClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x908"
+				},
+				"playerStatList": {
+					"info": "OStatGrindingThighWithPlayerActorList",
+					"mod": "4Stim.esl",
+					"formid": "0x90A"
+				},
+				"playerClimaxStatList": {
+					"info": "OStatGrindingThighWithPlayerActorClimaxList",
+					"mod": "4Stim.esl",
+					"formid": "0x90B"
+				}
 			},
 			"target": {
 				"stimulation": 0.2,
@@ -863,7 +2192,49 @@
 					45
 				],
 				"moan": true,
-				"talk": true
+				"talk": true,
+				"faction": {
+					"info": "4StimGrindingThighTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xE68"
+				},
+				"statFaction": {
+					"info": "OStatGrindingThighTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xFE7"
+				},
+				"playerStatFaction": {
+					"info": "OStatGrindingThighWithPlayerTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xFE9"
+				},
+				"partnerClimaxStatFaction": {
+					"info": "OStatGrindingThighTargetPartnerClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x907"
+				},
+				"playerPartnerClimaxStatFaction": {
+					"info": "OStatGrindingThighWithPlayerTargetPartnerClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x909"
+				},
+				"playerStatList": {
+					"info": "OStatGrindingThighWithPlayerTargetList",
+					"mod": "4Stim.esl",
+					"formid": "0x90C"
+				},
+				"playerPartnerClimaxStatList": {
+					"info": "OStatGrindingThighWithPlayerTargetPartnerClimaxList",
+					"mod": "4Stim.esl",
+					"formid": "0x90D"
+				}
+			},
+			"performer": {
+				"faction": {
+					"info": "4StimGrindingThighPerformerFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xE69"
+				}
 			}
 		},
 		{
@@ -909,7 +2280,12 @@
 					35
 				],
 				"moan": true,
-				"talk": true
+				"talk": true,
+				"faction": {
+					"info": "4StimGropingBreastActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xE6A"
+				}
 			},
 			"target": {
 				"stimulation": 0.1,
@@ -918,7 +2294,12 @@
 					"breast"
 				],
 				"moan": true,
-				"talk": true
+				"talk": true,
+				"faction": {
+					"info": "4StimGropingBreastTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xE6B"
+				}
 			}
 		},
 		{
@@ -944,13 +2325,23 @@
 					35
 				],
 				"moan": true,
-				"talk": true
+				"talk": true,
+				"faction": {
+					"info": "4StimGropingChestActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xA04"
+				}
 			},
 			"target": {
 				"stimulation": 0.1,
 				"maxStimulation": 50,
 				"moan": true,
-				"talk": true
+				"talk": true,
+				"faction": {
+					"info": "4StimGropingChestTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xA05"
+				}
 			}
 		},
 		{
@@ -984,13 +2375,23 @@
 					35
 				],
 				"moan": true,
-				"talk": true
+				"talk": true,
+				"faction": {
+					"info": "4StimGropingButtActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xE6C"
+				}
 			},
 			"target": {
 				"stimulation": 0.1,
 				"maxStimulation": 50,
 				"moan": true,
-				"talk": true
+				"talk": true,
+				"faction": {
+					"info": "4StimGropingButtTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xE6D"
+				}
 			}
 		},
 		{
@@ -1028,7 +2429,12 @@
 					35
 				],
 				"moan": true,
-				"talk": true
+				"talk": true,
+				"faction": {
+					"info": "4StimGropingTesticlesActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xE6E"
+				}
 			},
 			"target": {
 				"stimulation": 0.4,
@@ -1039,7 +2445,12 @@
 				"fullStrip": true,
 				"moan": true,
 				"talk": true,
-				"toySlot": "scrotum"
+				"toySlot": "scrotum",
+				"faction": {
+					"info": "4StimGropingTesticlesTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xE6F"
+				}
 			}
 		},
 		{
@@ -1064,7 +2475,42 @@
 					35
 				],
 				"moan": true,
-				"talk": true
+				"talk": true,
+				"faction": {
+					"info": "4StimHandjobActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xE70"
+				},
+				"statFaction": {
+					"info": "OStatHandjobActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xF63"
+				},
+				"playerStatFaction": {
+					"info": "OStatHandjobWithPlayerActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xFEA"
+				},
+				"partnerClimaxStatFaction": {
+					"info": "OStatHandjobActorPartnerClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x956"
+				},
+				"playerPartnerClimaxStatFaction": {
+					"info": "OStatHandjobWithPlayerActorPartnerClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x957"
+				},
+				"playerStatList": {
+					"info": "OStatHandjobWithPlayerActorList",
+					"mod": "4Stim.esl",
+					"formid": "0x95A"
+				},
+				"playerPartnerClimaxStatList": {
+					"info": "OStatHandjobWithPlayerActorPartnerClimaxList",
+					"mod": "4Stim.esl",
+					"formid": "0x95B"
+				}
 			},
 			"target": {
 				"stimulation": 0.9,
@@ -1074,7 +2520,42 @@
 				"fullStrip": true,
 				"moan": true,
 				"talk": true,
-				"toySlot": "genital"
+				"toySlot": "genital",
+				"faction": {
+					"info": "4StimHandjobTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xE71"
+				},
+				"statFaction": {
+					"info": "OStatHandjobActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xF64"
+				},
+				"playerStatFaction": {
+					"info": "OStatHandjobWithPlayerTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xFEB"
+				},
+				"climaxStatFaction": {
+					"info": "OStatHandjobTargetClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x958"
+				},
+				"playerClimaxStatFaction": {
+					"info": "OStatHandjobWithPlayerTargetClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x959"
+				},
+				"playerStatList": {
+					"info": "OStatHandjobWithPlayerTargetList",
+					"mod": "4Stim.esl",
+					"formid": "0x95C"
+				},
+				"playerClimaxStatList": {
+					"info": "OStatHandjobWithPlayerTargetClimaxList",
+					"mod": "4Stim.esl",
+					"formid": "0x95D"
+				}
 			},
 			"sounds": [
 				{
@@ -1335,7 +2816,19 @@
 					49
 				],
 				"moan": true,
-				"muffled": true
+				"muffled": true,
+				"faction": [
+					{
+						"info": "4StimKissingFaction",
+						"mod": "4Stim.esl",
+						"formid": "0xE72"
+					},
+					{
+						"info": "4StimAnyKissingActorFaction",
+						"mod": "4Stim.esl",
+						"formid": "0xEC7"
+					}
+				]
 			},
 			"target": {
 				"stimulation": 0.1,
@@ -1348,7 +2841,19 @@
 					49
 				],
 				"moan": true,
-				"muffled": true
+				"muffled": true,
+				"faction": [
+					{
+						"info": "4StimKissingFaction",
+						"mod": "4Stim.esl",
+						"formid": "0xE72"
+					},
+					{
+						"info": "4StimAnyKissingActorFaction",
+						"mod": "4Stim.esl",
+						"formid": "0xEC7"
+					}
+				]
 			}
 		},
 		{
@@ -1374,7 +2879,19 @@
 					49
 				],
 				"moan": true,
-				"muffled": true
+				"muffled": true,
+				"faction": [
+					{
+						"info": "4StimKissingCheekActorFaction",
+						"mod": "4Stim.esl",
+						"formid": "0xEC3"
+					},
+					{
+						"info": "4StimAnyKissingActorFaction",
+						"mod": "4Stim.esl",
+						"formid": "0xEC7"
+					}
+				]
 			},
 			"target": {
 				"stimulation": 0.1,
@@ -1384,7 +2901,19 @@
 					49
 				],
 				"moan": true,
-				"talk": true
+				"talk": true,
+				"faction": [
+					{
+						"info": "4StimKissingCheekTargetFaction",
+						"mod": "4Stim.esl",
+						"formid": "0xEC4"
+					},
+					{
+						"info": "4StimAnyKissingTargetFaction",
+						"mod": "4Stim.esl",
+						"formid": "0xEC8"
+					}
+				]
 			}
 		},
 		{
@@ -1409,7 +2938,19 @@
 					49
 				],
 				"moan": true,
-				"muffled": true
+				"muffled": true,
+				"faction": [
+					{
+						"info": "4StimKissingFeetActorFaction",
+						"mod": "4Stim.esl",
+						"formid": "0xE73"
+					},
+					{
+						"info": "4StimAnyKissingActorFaction",
+						"mod": "4Stim.esl",
+						"formid": "0xEC7"
+					}
+				]
 			},
 			"target": {
 				"stimulation": 0.1,
@@ -1418,7 +2959,19 @@
 					"foot"
 				],
 				"moan": true,
-				"talk": true
+				"talk": true,
+				"faction": [
+					{
+						"info": "4StimKissingFeetTargetFaction",
+						"mod": "4Stim.esl",
+						"formid": "0xE74"
+					},
+					{
+						"info": "4StimAnyKissingTargetFaction",
+						"mod": "4Stim.esl",
+						"formid": "0xEC8"
+					}
+				]
 			}
 		},
 		{
@@ -1446,7 +2999,19 @@
 					49
 				],
 				"moan": true,
-				"muffled": true
+				"muffled": true,
+				"faction": [
+					{
+						"info": "4StimKissingHandActorFaction",
+						"mod": "4Stim.esl",
+						"formid": "0xEC5"
+					},
+					{
+						"info": "4StimAnyKissingActorFaction",
+						"mod": "4Stim.esl",
+						"formid": "0xEC7"
+					}
+				]
 			},
 			"target": {
 				"stimulation": 0.1,
@@ -1456,7 +3021,19 @@
 					35
 				],
 				"moan": true,
-				"talk": true
+				"talk": true,
+				"faction": [
+					{
+						"info": "4StimKissingHandTargetFaction",
+						"mod": "4Stim.esl",
+						"formid": "0xEC6"
+					},
+					{
+						"info": "4StimAnyKissingTargetFaction",
+						"mod": "4Stim.esl",
+						"formid": "0xEC8"
+					}
+				]
 			}
 		},
 		{
@@ -1480,7 +3057,19 @@
 					49
 				],
 				"moan": true,
-				"muffled": true
+				"muffled": true,
+				"faction": [
+					{
+						"info": "4StimKissingNeckActorFaction",
+						"mod": "4Stim.esl",
+						"formid": "0xE75"
+					},
+					{
+						"info": "4StimAnyKissingActorFaction",
+						"mod": "4Stim.esl",
+						"formid": "0xEC7"
+					}
+				]
 			},
 			"target": {
 				"stimulation": 0.1,
@@ -1489,7 +3078,19 @@
 					50
 				],
 				"moan": true,
-				"talk": true
+				"talk": true,
+				"faction": [
+					{
+						"info": "4StimKissingNeckTargetFaction",
+						"mod": "4Stim.esl",
+						"formid": "0xE76"
+					},
+					{
+						"info": "4StimAnyKissingTargetFaction",
+						"mod": "4Stim.esl",
+						"formid": "0xEC8"
+					}
+				]
 			}
 		},
 		{
@@ -1528,7 +3129,42 @@
 				],
 				"moan": true,
 				"muffled": true,
-				"expressionOverride": "tongue"
+				"expressionOverride": "tongue",
+				"faction": {
+					"info": "4StimLickingNipplesActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xE77"
+				},
+				"statFaction": {
+					"info": "OStatLickingNippleActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xF6B"
+				},
+				"playerStatFaction": {
+					"info": "OStatLickingNippleWithPlayerActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xFEC"
+				},
+				"partnerClimaxStatFaction": {
+					"info": "OStatLickingNippleActorPartnerClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x97E"
+				},
+				"playerPartnerClimaxStatFaction": {
+					"info": "OStatLickingNippleWithPlayerActorPartnerClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x97F"
+				},
+				"playerStatList": {
+					"info": "OStatLickingNippleWithPlayerActorList",
+					"mod": "4Stim.esl",
+					"formid": "0x982"
+				},
+				"playerPartnerClimaxStatList": {
+					"info": "OStatLickingNippleWithPlayerActorPartnerClimaxList",
+					"mod": "4Stim.esl",
+					"formid": "0x983"
+				}
 			},
 			"target": {
 				"stimulation": 0.6,
@@ -1538,7 +3174,42 @@
 				"fullStrip": true,
 				"moan": true,
 				"talk": true,
-				"toySlot": "nipples"
+				"toySlot": "nipples",
+				"faction": {
+					"info": "4StimLickingNipplesTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xE78"
+				},
+				"statFaction": {
+					"info": "OStatLickingNippleTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xF6C"
+				},
+				"playerStatFaction": {
+					"info": "OStatLickingNippleWithPlayerTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xFED"
+				},
+				"climaxStatFaction": {
+					"info": "OStatLickingNippleTargetClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x980"
+				},
+				"playerClimaxStatFaction": {
+					"info": "OStatLickingNippleWithPlayerTargetClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x981"
+				},
+				"playerStatList": {
+					"info": "OStatLickingNippleWithPlayerTargetList",
+					"mod": "4Stim.esl",
+					"formid": "0x984"
+				},
+				"playerClimaxStatList": {
+					"info": "OStatLickingNippleWithPlayerTargetClimaxList",
+					"mod": "4Stim.esl",
+					"formid": "0x985"
+				}
 			}
 		},
 		{
@@ -1555,7 +3226,22 @@
 				"undressSlots": [
 					34,
 					35
-				]
+				],
+				"faction": {
+					"info": "4StimMaleMasturbationFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xE7F"
+				},
+				"statFaction": {
+					"info": "OStatMaleMasturbationFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xF57"
+				},
+				"climaxStatFaction": {
+					"info": "OStatMaleMasturbationClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x9D7"
+				}
 			},
 			"target": {
 				"stimulation": 0.9,
@@ -1599,7 +3285,12 @@
 				"undressSlots": [
 					34,
 					35
-				]
+				],
+				"faction": {
+					"info": "4StimMassagingActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xF7C"
+				}
 			},
 			"target": {
 				"stimulation": 0.1,
@@ -1620,7 +3311,12 @@
 					45,
 					46,
 					49
-				]
+				],
+				"faction": {
+					"info": "4StimMassagingTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xF7D"
+				}
 			}
 		},
 		{
@@ -1678,7 +3374,12 @@
 					35
 				],
 				"moan": true,
-				"talk": true
+				"talk": true,
+				"faction": {
+					"info": "4StimOralFingeringActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xE9F"
+				}
 			},
 			"target": {
 				"stimulation": 0.1,
@@ -1692,7 +3393,12 @@
 				],
 				"moan": true,
 				"muffled": true,
-				"expressionOverride": "openmouth"
+				"expressionOverride": "openmouth",
+				"faction": {
+					"info": "4StimOralFingeringTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xEA0"
+				}
 			}
 		},
 		{
@@ -1706,7 +3412,27 @@
 				"stimulation": 0.1,
 				"maxStimulation": 75,
 				"moan": true,
-				"talk": true
+				"talk": true,
+				"faction": {
+					"info": "4StimOralToyingActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xF27"
+				},
+				"statFaction": {
+					"info": "OStatOralToyingActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xF58"
+				},
+				"playerStatFaction": {
+					"info": "OStatOralToyingWithPlayerActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xFEE"
+				},
+				"playerStatList": {
+					"info": "OStatOralToyingWithPlayerActorList",
+					"mod": "4Stim.esl",
+					"formid": "0x8B3"
+				}
 			},
 			"target": {
 				"stimulation": 0.1,
@@ -1719,7 +3445,27 @@
 					49
 				],
 				"moan": true,
-				"muffled": true
+				"muffled": true,
+				"faction": {
+					"info": "4StimOralToyingTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xF28"
+				},
+				"statFaction": {
+					"info": "OStatOralToyingTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xF59"
+				},
+				"playerStatFaction": {
+					"info": "OStatOralToyingWithPlayerTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xFEF"
+				},
+				"playerStatList": {
+					"info": "OStatOralToyingWithPlayerTargetList",
+					"mod": "4Stim.esl",
+					"formid": "0x8B4"
+				}
 			}
 		},
 		{
@@ -1771,7 +3517,42 @@
 				],
 				"moan": true,
 				"muffled": true,
-				"expressionOverride": "tongue"
+				"expressionOverride": "tongue",
+				"faction": {
+					"info": "4StimLickingPenisActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xE79"
+				},
+				"statFaction": {
+					"info": "OStatPenileLickingActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xF6D"
+				},
+				"playerStatFaction": {
+					"info": "OStatPenileLickingWithPlayerActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xFF0"
+				},
+				"partnerClimaxStatFaction": {
+					"info": "OStatPenileLickingActorPartnerClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x986"
+				},
+				"playerPartnerClimaxStatFaction": {
+					"info": "OStatPenileLickingWithPlayerActorPartnerClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x987"
+				},
+				"playerStatList": {
+					"info": "OStatPenileLickingWithPlayerActorList",
+					"mod": "4Stim.esl",
+					"formid": "0x98A"
+				},
+				"playerPartnerClimaxStatList": {
+					"info": "OStatPenileLickingWithPlayerActorPartnerClimaxList",
+					"mod": "4Stim.esl",
+					"formid": "0x98B"
+				}
 			},
 			"target": {
 				"stimulation": 1.4,
@@ -1781,7 +3562,42 @@
 				"fullStrip": true,
 				"moan": true,
 				"talk": true,
-				"toySlot": "genital"
+				"toySlot": "genital",
+				"faction": {
+					"info": "4StimLickingPenisTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xE7A"
+				},
+				"statFaction": {
+					"info": "OStatPenileLickingTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xF6E"
+				},
+				"playerStatFaction": {
+					"info": "OStatPenileLickingWithPlayerTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xFF1"
+				},
+				"climaxStatFaction": {
+					"info": "OStatPenileLickingTargetClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x988"
+				},
+				"playerClimaxStatFaction": {
+					"info": "OStatPenileLickingWithPlayerTargetClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x989"
+				},
+				"playerStatList": {
+					"info": "OStatPenileLickingWithPlayerTargetList",
+					"mod": "4Stim.esl",
+					"formid": "0x98C"
+				},
+				"playerClimaxStatList": {
+					"info": "OStatPenileLickingWithPlayerTargetClimaxList",
+					"mod": "4Stim.esl",
+					"formid": "0x98D"
+				}
 			}
 		},
 		{
@@ -1878,7 +3694,42 @@
 				],
 				"moan": true,
 				"muffled": true,
-				"expressionOverride": "openmouth"
+				"expressionOverride": "openmouth",
+				"faction": {
+					"info": "4StimRimjobActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xF3F"
+				},
+				"statFaction": {
+					"info": "OStatRimjobActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xF41"
+				},
+				"playerStatFaction": {
+					"info": "OStatRimjobWithPlayerActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xFF2"
+				},
+				"partnerClimaxStatFaction": {
+					"info": "OStatRimjobActorPartnerClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x95E"
+				},
+				"playerPartnerClimaxStatFaction": {
+					"info": "OStatRimjobWithPlayerActorPartnerClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x95F"
+				},
+				"playerStatList": {
+					"info": "OStatRimjobWithPlayerActorList",
+					"mod": "4Stim.esl",
+					"formid": "0x962"
+				},
+				"playerPartnerClimaxStatList": {
+					"info": "OStatRimjobWithPlayerActorPartnerClimaxList",
+					"mod": "4Stim.esl",
+					"formid": "0x963"
+				}
 			},
 			"target": {
 				"stimulation": 0.3,
@@ -1888,7 +3739,49 @@
 				"fullStrip": true,
 				"moan": true,
 				"talk": true,
-				"toySlot": "anus"
+				"toySlot": "anus",
+				"faction": {
+					"info": "4StimRimjobTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xF40"
+				},
+				"statFaction": {
+					"info": "OStatRimjobTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xF42"
+				},
+				"playerStatFaction": {
+					"info": "OStatRimjobWithPlayerTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xFF3"
+				},
+				"climaxStatFaction": {
+					"info": "OStatRimjobTargetClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x960"
+				},
+				"playerClimaxStatFaction": {
+					"info": "OStatRimjobWithPlayerTargetClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x961"
+				},
+				"playerStatList": {
+					"info": "OStatRimjobWithPlayerTargetList",
+					"mod": "4Stim.esl",
+					"formid": "0x964"
+				},
+				"playerClimaxStatList": {
+					"info": "OStatRimjobWithPlayerTargetClimaxList",
+					"mod": "4Stim.esl",
+					"formid": "0x965"
+				}
+			},
+			"performer": {
+				"faction": {
+					"info": "4StimRimjobPerformerFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xF43"
+				}
 			}
 		},
 		{
@@ -1910,7 +3803,12 @@
 				"fullStrip": true,
 				"moan": true,
 				"talk": true,
-				"toySlot": "genital"
+				"toySlot": "genital",
+				"faction": {
+					"info": "4StimRubbingPenisAgainstFaceActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xE84"
+				}
 			},
 			"target": {
 				"stimulation": 0.1,
@@ -1920,7 +3818,12 @@
 					49
 				],
 				"moan": true,
-				"talk": true
+				"talk": true,
+				"faction": {
+					"info": "4StimRubbingPenisAgainstFaceTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xE85"
+				}
 			}
 		},
 		{
@@ -1950,7 +3853,19 @@
 			],
 			"actor": {
 				"moan": true,
-				"talk": true
+				"talk": true,
+				"faction": {
+					"info": "4StimSpectatingActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xE9D"
+				}
+			},
+			"target": {
+				"faction": {
+					"info": "4StimSpectatingTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xE9E"
+				}
 			}
 		},
 		{
@@ -2034,7 +3949,42 @@
 				],
 				"moan": true,
 				"muffled": true,
-				"expressionOverride": "openmouth"
+				"expressionOverride": "openmouth",
+				"faction": {
+					"info": "4StimSuckingNipplesActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xE86"
+				},
+				"statFaction": {
+					"info": "OStatSuckingNippleActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xF71"
+				},
+				"playerStatFaction": {
+					"info": "OStatSuckingNippleWithPlayerActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xFF4"
+				},
+				"partnerClimaxStatFaction": {
+					"info": "OStatSuckingNippleActorPartnerClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x98E"
+				},
+				"playerPartnerClimaxStatFaction": {
+					"info": "OStatSuckingNippleWithPlayerActorPartnerClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x98F"
+				},
+				"playerStatList": {
+					"info": "OStatSuckingNippleWithPlayerActorList",
+					"mod": "4Stim.esl",
+					"formid": "0x992"
+				},
+				"playerPartnerClimaxStatList": {
+					"info": "OStatSuckingNippleWithPlayerActorPartnerClimaxList",
+					"mod": "4Stim.esl",
+					"formid": "0x993"
+				}
 			},
 			"target": {
 				"stimulation": 0.6,
@@ -2044,7 +3994,42 @@
 				"fullStrip": true,
 				"moan": true,
 				"talk": true,
-				"toySlot": "nipples"
+				"toySlot": "nipples",
+				"faction": {
+					"info": "4StimSuckingNipplesTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xE87"
+				},
+				"statFaction": {
+					"info": "OStatSuckingNippleActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xF72"
+				},
+				"playerStatFaction": {
+					"info": "OStatSuckingNippleWithPlayerTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xFF5"
+				},
+				"climaxStatFaction": {
+					"info": "OStatSuckingNippleTargetClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x990"
+				},
+				"playerClimaxStatFaction": {
+					"info": "OStatSuckingNippleWithPlayerTargetClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x991"
+				},
+				"playerStatList": {
+					"info": "OStatSuckingNippleWithPlayerTargetList",
+					"mod": "4Stim.esl",
+					"formid": "0x994"
+				},
+				"playerClimaxStatList": {
+					"info": "OStatSuckingNippleWithPlayerTargetClimaxList",
+					"mod": "4Stim.esl",
+					"formid": "0x995"
+				}
 			}
 		},
 		{
@@ -2065,7 +4050,42 @@
 					"tail"
 				],
 				"moan": true,
-				"talk": true
+				"talk": true,
+				"faction": {
+					"info": "4StimTailjobActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xF7E"
+				},
+				"statFaction": {
+					"info": "OStatTailjobActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xF80"
+				},
+				"playerStatFaction": {
+					"info": "OStatTailjobWithPlayerActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xFF6"
+				},
+				"partnerClimaxStatFaction": {
+					"info": "OStatTailjobActorPartnerClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x966"
+				},
+				"playerPartnerClimaxStatFaction": {
+					"info": "OStatTailjobWithPlayerActorPartnerClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x967"
+				},
+				"playerStatList": {
+					"info": "OStatTailjobWithPlayerActorList",
+					"mod": "4Stim.esl",
+					"formid": "0x96A"
+				},
+				"playerPartnerClimaxStatList": {
+					"info": "OStatTailjobWithPlayerActorPartnerClimaxList",
+					"mod": "4Stim.esl",
+					"formid": "0x96B"
+				}
 			},
 			"target": {
 				"stimulation": 0.9,
@@ -2075,7 +4095,42 @@
 				"fullStrip": true,
 				"moan": true,
 				"talk": true,
-				"toySlot": "genital"
+				"toySlot": "genital",
+				"faction": {
+					"info": "4StimTailjobTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xF7F"
+				},
+				"statFaction": {
+					"info": "OStatTailjobTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xF81"
+				},
+				"playerStatFaction": {
+					"info": "OStatTailjobWithPlayerTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xFF7"
+				},
+				"climaxStatFaction": {
+					"info": "OStatTailjobTargetClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x968"
+				},
+				"playerClimaxStatFaction": {
+					"info": "OStatTailjobWithPlayerTargetClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x969"
+				},
+				"playerStatList": {
+					"info": "OStatTailjobWithPlayerTargetList",
+					"mod": "4Stim.esl",
+					"formid": "0x96C"
+				},
+				"playerClimaxStatList": {
+					"info": "OStatTailjobWithPlayerTargetClimaxList",
+					"mod": "4Stim.esl",
+					"formid": "0x96D"
+				}
 			}
 		},
 		{
@@ -2107,7 +4162,42 @@
 				],
 				"moan": true,
 				"muffled": true,
-				"expressionOverride": "tongue"
+				"expressionOverride": "tongue",
+				"faction": {
+					"info": "4StimTesticularLickingActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xE7B"
+				},
+				"statFaction": {
+					"info": "OStatTesticularLickingActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xFF8"
+				},
+				"playerStatFaction": {
+					"info": "OStatTesticularLickingWithPlayerActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xFFA"
+				},
+				"partnerClimaxStatFaction": {
+					"info": "OStatTesticularLickingActorPartnerClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x996"
+				},
+				"playerPartnerClimaxStatFaction": {
+					"info": "OStatTesticularLickingWithPlayerActorPartnerClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x997"
+				},
+				"playerStatList": {
+					"info": "OStatTesticularLickingWithPlayerActorList",
+					"mod": "4Stim.esl",
+					"formid": "0x99A"
+				},
+				"playerPartnerClimaxStatList": {
+					"info": "OStatTesticularLickingWithPlayerActorPartnerClimaxList",
+					"mod": "4Stim.esl",
+					"formid": "0x99B"
+				}
 			},
 			"target": {
 				"stimulation": 0.4,
@@ -2117,7 +4207,42 @@
 				"fullStrip": true,
 				"moan": true,
 				"talk": true,
-				"toySlot": "scrotum"
+				"toySlot": "scrotum",
+				"faction": {
+					"info": "4StimTesticularLickingTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xE7C"
+				},
+				"statFaction": {
+					"info": "OStatTesticularLickingTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xFF9"
+				},
+				"playerStatFaction": {
+					"info": "OStatTesticularLickingWithPlayerTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xFFB"
+				},
+				"climaxStatFaction": {
+					"info": "OStatTesticularLickingTargetClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x998"
+				},
+				"playerClimaxStatFaction": {
+					"info": "OStatTesticularLickingWithPlayerTargetClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x999"
+				},
+				"playerStatList": {
+					"info": "OStatTesticularLickingWithPlayerTargetList",
+					"mod": "4Stim.esl",
+					"formid": "0x99C"
+				},
+				"playerClimaxStatList": {
+					"info": "OStatTesticularLickingWithPlayerTargetClimaxList",
+					"mod": "4Stim.esl",
+					"formid": "0x99D"
+				}
 			}
 		},
 		{
@@ -2135,7 +4260,42 @@
 				"stimulation": 0.2,
 				"fullStrip": true,
 				"moan": true,
-				"talk": true
+				"talk": true,
+				"faction": {
+					"info": "4StimThighjobActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xE88"
+				},
+				"statFaction": {
+					"info": "OStatThighjobActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xF73"
+				},
+				"playerStatFaction": {
+					"info": "OStatThighjobWithPlayerActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xFFC"
+				},
+				"partnerClimaxStatFaction": {
+					"info": "OStatThighjobActorPartnerClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x972"
+				},
+				"playerPartnerClimaxStatFaction": {
+					"info": "OStatThighjobWithPlayerActorPartnerClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x973"
+				},
+				"playerStatList": {
+					"info": "OStatThighjobWithPlayerActorList",
+					"mod": "4Stim.esl",
+					"formid": "0x96E"
+				},
+				"playerPartnerClimaxStatList": {
+					"info": "OStatThighjobWithPlayerActorPartnerClimaxList",
+					"mod": "4Stim.esl",
+					"formid": "0x96F"
+				}
 			},
 			"target": {
 				"stimulation": 0.9,
@@ -2145,7 +4305,48 @@
 				"fullStrip": true,
 				"moan": true,
 				"talk": true,
-				"toySlot": "genital"
+				"toySlot": "genital",
+				"faction": {
+					"info": "4StimThighjobTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xE89"
+				},
+				"statFaction": {
+					"info": "OStatThighjobActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xF74"
+				},
+				"playerStatFaction": {
+					"info": "OStatThighjobWithPlayerTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xFFD"
+				},
+				"climaxStatFaction": {
+					"info": "OStatThighjobTargetClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x974"
+				},
+				"playerClimaxStatFaction": {
+					"info": "OStatThighjobWithPlayerTargetClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x975"
+				},
+				"playerStatList": {
+					"info": "OStatThighjobWithPlayerTargetList",
+					"mod": "4Stim.esl",
+					"formid": "0x970"
+				},
+				"playerClimaxStatList": {
+					"info": "OStatThighjobWithPlayerTargetClimaxList",
+					"mod": "4Stim.esl",
+					"formid": "0x971"
+				}
+			},
+			"performer": {
+				"faction": {
+					"mod": "4Stim.esl",
+					"formid": "0xE8A"
+				}
 			}
 		},
 		{
@@ -2183,7 +4384,57 @@
 				"fullStrip": true,
 				"moan": true,
 				"talk": true,
-				"toySlot": "genital"
+				"toySlot": "genital",
+				"faction": {
+					"info": "4StimTribbingMateFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xE8B"
+				},
+				"statFaction": {
+					"info": "OStatTribbingMateFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xF16"
+				},
+				"playerStatFaction": {
+					"info": "OStatTribbingWithPlayerMateFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xFFE"
+				},
+				"climaxStatFaction": {
+					"info": "OStatTribbingMateClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x8B5"
+				},
+				"partnerClimaxStatFaction": {
+					"info": "OStatTribbingMatePartnerClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x8B6"
+				},
+				"playerClimaxStatFaction": {
+					"info": "OStatTribbingWithPlayerMateClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x8B7"
+				},
+				"playerPartnerClimaxStatFaction": {
+					"info": "OStatTribbingWithPlayerMatePartnerClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x8B8"
+				},
+				"playerStatList": {
+					"info": "OStatTribbingWithPlayerMateList",
+					"mod": "4Stim.esl",
+					"formid": "0x8B9"
+				},
+				"playerClimaxStatList": {
+					"info": "OStatTribbingWithPlayerMateClimaxList",
+					"mod": "4Stim.esl",
+					"formid": "0x8BA"
+				},
+				"playerPartnerClimaxStatList": {
+					"info": "OStatTribbingWithPlayerMatePartnerClimaxList",
+					"mod": "4Stim.esl",
+					"formid": "0x8BB"
+				}
 			},
 			"target": {
 				"stimulation": 1.0,
@@ -2193,7 +4444,22 @@
 				"fullStrip": true,
 				"moan": true,
 				"talk": true,
-				"toySlot": "genital"
+				"toySlot": "genital",
+				"faction": {
+					"info": "4StimTribbingMateFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xE8B"
+				},
+				"statFaction": {
+					"info": "OStatTribbingMateFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xF16"
+				},
+				"playerStatFaction": {
+					"info": "OStatTribbingWithPlayerMateFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xFFE"
+				}
 			}
 		},
 		{
@@ -2220,7 +4486,42 @@
 					35
 				],
 				"moan": true,
-				"talk": true
+				"talk": true,
+				"faction": {
+					"info": "4StimVaginalFingeringActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xE8C"
+				},
+				"statFaction": {
+					"info": "OStatVaginalFingeringActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xF07"
+				},
+				"playerStatFaction": {
+					"info": "OStatVaginalFingeringWithPlayerActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xFFF"
+				},
+				"partnerClimaxStatFaction": {
+					"info": "OStatVaginalFingeringActorPartnerClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x99E"
+				},
+				"playerPartnerClimaxStatFaction": {
+					"info": "OStatVaginalFingeringWithPlayerActorPartnerClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x99F"
+				},
+				"playerStatList": {
+					"info": "OStatVaginalFingeringWithPlayerActorList",
+					"mod": "4Stim.esl",
+					"formid": "0x9A2"
+				},
+				"playerPartnerClimaxStatList": {
+					"info": "OStatVaginalFingeringWithPlayerActorPartnerClimaxList",
+					"mod": "4Stim.esl",
+					"formid": "0x9A3"
+				}
 			},
 			"target": {
 				"stimulation": 0.6,
@@ -2230,7 +4531,42 @@
 				"fullStrip": true,
 				"moan": true,
 				"talk": true,
-				"toySlot": "genital"
+				"toySlot": "genital",
+				"faction": {
+					"info": "4StimVaginalFingeringTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xE8D"
+				},
+				"statFaction": {
+					"info": "OStatVaginalFingeringTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xF08"
+				},
+				"playerStatFaction": {
+					"info": "OStatVaginalFingeringWithPlayerTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x803"
+				},
+				"climaxStatFaction": {
+					"info": "OStatVaginalFingeringTargetClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x9A0"
+				},
+				"playerClimaxStatFaction": {
+					"info": "OStatVaginalFingeringWithPlayerTargetClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x9A1"
+				},
+				"playerStatList": {
+					"info": "OStatVaginalFingeringWithPlayerTargetList",
+					"mod": "4Stim.esl",
+					"formid": "0x9A4"
+				},
+				"playerClimaxStatList": {
+					"info": "OStatVaginalFingeringWithPlayerTargetClimaxList",
+					"mod": "4Stim.esl",
+					"formid": "0x9A5"
+				}
 			}
 		},
 		{
@@ -2256,7 +4592,42 @@
 					35
 				],
 				"moan": true,
-				"talk": true
+				"talk": true,
+				"faction": {
+					"info": "4StimVaginalFistingActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xE8E"
+				},
+				"statFaction": {
+					"info": "OStatVaginalFistingActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xF0F"
+				},
+				"playerStatFaction": {
+					"info": "OStatVaginalFistingWithPlayerActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x807"
+				},
+				"partnerClimaxStatFaction": {
+					"info": "OStatVaginalFistingActorPartnerClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x9A6"
+				},
+				"playerPartnerClimaxStatFaction": {
+					"info": "OStatVaginalFistingWithPlayerActorPartnerClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x9A7"
+				},
+				"playerStatList": {
+					"info": "OStatVaginalFistingWithPlayerActorList",
+					"mod": "4Stim.esl",
+					"formid": "0x9AA"
+				},
+				"playerPartnerClimaxStatList": {
+					"info": "OStatVaginalFistingWithPlayerActorPartnerClimaxList",
+					"mod": "4Stim.esl",
+					"formid": "0x9AB"
+				}
 			},
 			"target": {
 				"stimulation": 0.6,
@@ -2266,7 +4637,42 @@
 				"fullStrip": true,
 				"moan": true,
 				"talk": true,
-				"toySlot": "genital"
+				"toySlot": "genital",
+				"faction": {
+					"info": "4StimVaginalFistingTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xE8F"
+				},
+				"statFaction": {
+					"info": "OStatVaginalFistingTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xF10"
+				},
+				"playerStatFaction": {
+					"info": "OStatVaginalFistingWithPlayerTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x808"
+				},
+				"climaxStatFaction": {
+					"info": "OStatVaginalFistingTargetClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x9A8"
+				},
+				"playerClimaxStatFaction": {
+					"info": "OStatVaginalFistingWithPlayerTargetClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x9A9"
+				},
+				"playerStatList": {
+					"info": "OStatVaginalFistingWithPlayerTargetList",
+					"mod": "4Stim.esl",
+					"formid": "0x9AC"
+				},
+				"playerClimaxStatList": {
+					"info": "OStatVaginalFistingWithPlayerTargetClimaxList",
+					"mod": "4Stim.esl",
+					"formid": "0x9AD"
+				}
 			}
 		},
 		{
@@ -2289,7 +4695,57 @@
 				"fullStrip": true,
 				"moan": true,
 				"talk": true,
-				"toySlot": "genital"
+				"toySlot": "genital",
+				"faction": {
+					"info": "4StimVaginalSexActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xE90"
+				},
+				"statFaction": {
+					"info": "OStatVaginalSexActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xF14"
+				},
+				"playerStatFaction": {
+					"info": "OStatVaginalSexWithPlayerActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x809"
+				},
+				"climaxStatFaction": {
+					"info": "OStatVaginalSexActorClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x8CA"
+				},
+				"partnerClimaxStatFaction": {
+					"info": "OStatVaginalSexActorPartnerClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x8CB"
+				},
+				"playerClimaxStatFaction": {
+					"info": "OStatVaginalSexWithPlayerActorClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x8CC"
+				},
+				"playerPartnerClimaxStatFaction": {
+					"info": "OStatVaginalSexWithPlayerActorPartnerClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x8CD"
+				},
+				"playerStatList": {
+					"info": "OStatVaginalSexWithPlayerActorList",
+					"mod": "4Stim.esl",
+					"formid": "0x8D2"
+				},
+				"playerClimaxStatList": {
+					"info": "OStatVaginalSexWithPlayerActorClimaxList",
+					"mod": "4Stim.esl",
+					"formid": "0x8D3"
+				},
+				"playerPartnerClimaxStatList": {
+					"info": "OStatVaginalSexWithPlayerActorPartnerClimaxList",
+					"mod": "4Stim.esl",
+					"formid": "0x8D4"
+				}
 			},
 			"target": {
 				"stimulation": 1.0,
@@ -2299,7 +4755,57 @@
 				"fullStrip": true,
 				"moan": true,
 				"talk": true,
-				"toySlot": "genital"
+				"toySlot": "genital",
+				"faction": {
+					"info": "4StimVaginalSexTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xE91"
+				},
+				"statFaction": {
+					"info": "OStatVaginalSexTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xF15"
+				},
+				"playerStatFaction": {
+					"info": "OStatVaginalSexWithPlayerTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x80A"
+				},
+				"climaxStatFaction": {
+					"info": "OStatVaginalSexTargetClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x8CE"
+				},
+				"partnerClimaxStatFaction": {
+					"info": "OStatVaginalSexTargetPartnerClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x8CF"
+				},
+				"playerClimaxStatFaction": {
+					"info": "OStatVaginalSexWithPlayerTargetClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x8D0"
+				},
+				"playerPartnerClimaxStatFaction": {
+					"info": "OStatVaginalSexWithPlayerTargetPartnerClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x8D1"
+				},
+				"playerStatList": {
+					"info": "OStatVaginalSexWithPlayerTargetList",
+					"mod": "4Stim.esl",
+					"formid": "0x8D5"
+				},
+				"playerClimaxStatList": {
+					"info": "OStatVaginalSexWithPlayerTargetClimaxList",
+					"mod": "4Stim.esl",
+					"formid": "0x8D6"
+				},
+				"playerPartnerClimaxStatList": {
+					"info": "OStatVaginalSexWithPlayerTargetPartnerClimaxList",
+					"mod": "4Stim.esl",
+					"formid": "0x8D7"
+				}
 			},
 			"sounds": [
 				{
@@ -2311,6 +4817,13 @@
 				"type": "bonedistance",
 				"actorBone": "Pelvis",
 				"targetBone": "Pelvis"
+			},
+			"performer": {
+				"faction": {
+					"info": "4StimVaginalSexPerformerFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xE92"
+				}
 			}
 		},
 		{
@@ -2329,7 +4842,42 @@
 					"tail"
 				],
 				"moan": true,
-				"talk": true
+				"talk": true,
+				"faction": {
+					"info": "4StimVaginalTailSexActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xF86"
+				},
+				"statFaction": {
+					"info": "OStatVaginalTailSexActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xF88"
+				},
+				"playerStatFaction": {
+					"info": "OStatVaginalTailSexWithPlayerActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x80B"
+				},
+				"partnerClimaxStatFaction": {
+					"info": "OStatVaginalTailSexActorPartnerClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x9AE"
+				},
+				"playerPartnerClimaxStatFaction": {
+					"info": "OStatVaginalTailSexWithPlayerActorPartnerClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x9AF"
+				},
+				"playerStatList": {
+					"info": "OStatVaginalTailSexWithPlayerActorList",
+					"mod": "4Stim.esl",
+					"formid": "0x9B2"
+				},
+				"playerPartnerClimaxStatList": {
+					"info": "OStatVaginalTailSexWithPlayerActorPartnerClimaxList",
+					"mod": "4Stim.esl",
+					"formid": "0x9B3"
+				}
 			},
 			"target": {
 				"stimulation": 1.0,
@@ -2339,7 +4887,42 @@
 				"fullStrip": true,
 				"moan": true,
 				"talk": true,
-				"toySlot": "genital"
+				"toySlot": "genital",
+				"faction": {
+					"info": "4StimVaginalTailSexTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xF87"
+				},
+				"statFaction": {
+					"info": "OStatVaginalTailSexTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xF89"
+				},
+				"playerStatFaction": {
+					"info": "OStatVaginalTailSexWithPlayerTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x80C"
+				},
+				"climaxStatFaction": {
+					"info": "OStatVaginalTailSexTargetClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x9B0"
+				},
+				"playerClimaxStatFaction": {
+					"info": "OStatVaginalTailSexWithPlayerTargetClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x9B1"
+				},
+				"playerStatList": {
+					"info": "OStatVaginalTailSexWithPlayerTargetList",
+					"mod": "4Stim.esl",
+					"formid": "0x9B4"
+				},
+				"playerClimaxStatList": {
+					"info": "OStatVaginalTailSexWithPlayerTargetClimaxList",
+					"mod": "4Stim.esl",
+					"formid": "0x9B5"
+				}
 			}
 		},
 		{
@@ -2358,7 +4941,42 @@
 				"stimulation": 0.1,
 				"maxStimulation": 75,
 				"moan": true,
-				"talk": true
+				"talk": true,
+				"faction": {
+					"info": "4StimVaginalToyingActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xEA3"
+				},
+				"statFaction": {
+					"info": "OStatVaginalToyingActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xF37"
+				},
+				"playerStatFaction": {
+					"info": "OStatVaginalToyingWithPlayerActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x80D"
+				},
+				"partnerClimaxStatFaction": {
+					"info": "OStatVaginalToyingActorPartnerClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x9B6"
+				},
+				"playerPartnerClimaxStatFaction": {
+					"info": "OStatVaginalToyingWithPlayerActorPartnerClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x9B7"
+				},
+				"playerStatList": {
+					"info": "OStatVaginalToyingWithPlayerActorList",
+					"mod": "4Stim.esl",
+					"formid": "0x9BA"
+				},
+				"playerPartnerClimaxStatList": {
+					"info": "OStatVaginalToyingWithPlayerActorPartnerClimaxList",
+					"mod": "4Stim.esl",
+					"formid": "0x9BB"
+				}
 			},
 			"target": {
 				"stimulation": 1.0,
@@ -2368,7 +4986,42 @@
 				"fullStrip": true,
 				"moan": true,
 				"talk": true,
-				"toySlot": "genital"
+				"toySlot": "genital",
+				"faction": {
+					"info": "4StimVaginalToyingTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xEA4"
+				},
+				"statFaction": {
+					"info": "OStatVaginalToyingTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xF38"
+				},
+				"playerStatFaction": {
+					"info": "OStatVaginalToyingWithPlayerTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x80E"
+				},
+				"climaxStatFaction": {
+					"info": "OStatVaginalToyingTargetClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x9B8"
+				},
+				"playerClimaxStatFaction": {
+					"info": "OStatVaginalToyingWithPlayerTargetClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x9B9"
+				},
+				"playerStatList": {
+					"info": "OStatVaginalToyingWithPlayerTargetList",
+					"mod": "4Stim.esl",
+					"formid": "0x9BC"
+				},
+				"playerClimaxStatList": {
+					"info": "OStatVaginalToyingWithPlayerTargetClimaxList",
+					"mod": "4Stim.esl",
+					"formid": "0x9BD"
+				}
 			}
 		},
 		{
@@ -2405,12 +5058,52 @@
 				],
 				"moan": true,
 				"muffled": true,
-				"expressionOverride": "openmouth"
+				"expressionOverride": "openmouth",
+				"faction": {
+					"info": "4StimVampireBiteActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xE93"
+				},
+				"statFaction": {
+					"info": "OStatVampireBitingActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xF75"
+				},
+				"playerStatFaction": {
+					"info": "OStatVampireBitingWithPlayerActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x80F"
+				},
+				"playerStatList": {
+					"info": "OStatVampireBitingWithPlayerActorList",
+					"mod": "4Stim.esl",
+					"formid": "0x8B1"
+				}
 			},
 			"target": {
 				"stimulation": 0.25,
 				"maxStimulation": 50,
-				"moan": true
+				"moan": true,
+				"faction": {
+					"info": "4StimVampireBiteTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xE94"
+				},
+				"statFaction": {
+					"info": "OStatVampireBitingTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xF76"
+				},
+				"playerStatFaction": {
+					"info": "OStatVampireBitingWithPlayerTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x810"
+				},
+				"playerStatList": {
+					"info": "OStatVampireBitingWithPlayerTargetList",
+					"mod": "4Stim.esl",
+					"formid": "0x8B2"
+				}
 			}
 		},
 		{
@@ -2439,7 +5132,42 @@
 				],
 				"moan": true,
 				"muffled": true,
-				"expressionOverride": "openmouth"
+				"expressionOverride": "openmouth",
+				"faction": {
+					"info": "4StimVulvalEatingActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xF46"
+				},
+				"statFaction": {
+					"info": "OStatVulvalEatingActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xF49"
+				},
+				"playerStatFaction": {
+					"info": "OStatVulvalEatingWithPlayerActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xFD8"
+				},
+				"partnerClimaxStatFaction": {
+					"info": "OStatVulvalEatingActorPartnerClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x9BE"
+				},
+				"playerPartnerClimaxStatFaction": {
+					"info": "OStatVulvalEatingWithPlayerActorPartnerClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x9BF"
+				},
+				"playerStatList": {
+					"info": "OStatVulvalEatingWithPlayerActorList",
+					"mod": "4Stim.esl",
+					"formid": "0x9C2"
+				},
+				"playerPartnerClimaxStatList": {
+					"info": "OStatVulvalEatingWithPlayerActorPartnerClimaxList",
+					"mod": "4Stim.esl",
+					"formid": "0x9C3"
+				}
 			},
 			"target": {
 				"stimulation": 1.4,
@@ -2449,7 +5177,49 @@
 				"fullStrip": true,
 				"moan": true,
 				"talk": true,
-				"toySlot": "genital"
+				"toySlot": "genital",
+				"faction": {
+					"info": "4StimVulvalEatingTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xF47"
+				},
+				"statFaction": {
+					"info": "OStatVulvalEatingTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xF4A"
+				},
+				"playerStatFaction": {
+					"info": "OStatVulvalEatingWithPlayerTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xFD9"
+				},
+				"climaxStatFaction": {
+					"info": "OStatVulvalEatingSexTargetClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x9C0"
+				},
+				"playerClimaxStatFaction": {
+					"info": "OStatVulvalEatingWithPlayerTargetClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x9C1"
+				},
+				"playerStatList": {
+					"info": "OStatVulvalEatingWithPlayerTargetList",
+					"mod": "4Stim.esl",
+					"formid": "0x9C4"
+				},
+				"playerClimaxStatList": {
+					"info": "OStatVulvalEatingWithPlayerTargetClimaxList",
+					"mod": "4Stim.esl",
+					"formid": "0x9C5"
+				}
+			},
+			"performer": {
+				"faction": {
+					"info": "4StimClitoralEatingPerformerFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xF48"
+				}
 			}
 		},
 		{
@@ -2486,7 +5256,42 @@
 				],
 				"moan": true,
 				"muffled": true,
-				"expressionOverride": "tongue"
+				"expressionOverride": "tongue",
+				"faction": {
+					"info": "4StimVulvalLickingActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xE7D"
+				},
+				"statFaction": {
+					"info": "OStatVulvalLickingActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xF44"
+				},
+				"playerStatFaction": {
+					"info": "OStatVulvalLickingWithPlayerActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xFDA"
+				},
+				"partnerClimaxStatFaction": {
+					"info": "OStatVulvalLickingActorPartnerClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x9C6"
+				},
+				"playerPartnerClimaxStatFaction": {
+					"info": "OStatVulvalLickingWithPlayerActorPartnerClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x9C7"
+				},
+				"playerStatList": {
+					"info": "OStatVulvalLickingWithPlayerActorList",
+					"mod": "4Stim.esl",
+					"formid": "0x9CA"
+				},
+				"playerPartnerClimaxStatList": {
+					"info": "OStatVulvalLickingWithPlayerActorPartnerClimaxList",
+					"mod": "4Stim.esl",
+					"formid": "0x9CB"
+				}
 			},
 			"target": {
 				"stimulation": 1.4,
@@ -2496,7 +5301,42 @@
 				"fullStrip": true,
 				"moan": true,
 				"talk": true,
-				"toySlot": "genital"
+				"toySlot": "genital",
+				"faction": {
+					"info": "4StimVulvalLickingTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xE7E"
+				},
+				"statFaction": {
+					"info": "OStatVulvalLickingTActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xF45"
+				},
+				"playerStatFaction": {
+					"info": "OStatVulvalLickingTWithPlayerTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xFDB"
+				},
+				"climaxStatFaction": {
+					"info": "OStatVulvalLickingSexTargetClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x9C8"
+				},
+				"playerClimaxStatFaction": {
+					"info": "OStatVulvalLickingWithPlayerTargetClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x9C9"
+				},
+				"playerStatList": {
+					"info": "OStatVulvalLickingWithPlayerTargetList",
+					"mod": "4Stim.esl",
+					"formid": "0x9CC"
+				},
+				"playerClimaxStatList": {
+					"info": "OStatVulvalLickingWithPlayerTargetClimaxList",
+					"mod": "4Stim.esl",
+					"formid": "0x9CD"
+				}
 			}
 		},
 		{
@@ -2527,7 +5367,42 @@
 					35
 				],
 				"moan": true,
-				"talk": true
+				"talk": true,
+				"faction": {
+					"info": "4StimVulvalRubbingActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xE82"
+				},
+				"statFaction": {
+					"info": "OStatVulvalRubbingActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xF6F"
+				},
+				"playerStatFaction": {
+					"info": "OStatVulvalRubbingWithPlayerActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xFDC"
+				},
+				"partnerClimaxStatFaction": {
+					"info": "OStatVulvalRubbingActorPartnerClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x9CE"
+				},
+				"playerPartnerClimaxStatFaction": {
+					"info": "OStatVulvalRubbingWithPlayerActorPartnerClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x9CF"
+				},
+				"playerStatList": {
+					"info": "OStatVulvalRubbingWithPlayerActorList",
+					"mod": "4Stim.esl",
+					"formid": "0x9D2"
+				},
+				"playerPartnerClimaxStatList": {
+					"info": "OStatVulvalRubbingWithPlayerActorPartnerClimaxList",
+					"mod": "4Stim.esl",
+					"formid": "0x9D3"
+				}
 			},
 			"target": {
 				"stimulation": 1.3,
@@ -2537,7 +5412,42 @@
 				"fullStrip": true,
 				"moan": true,
 				"talk": true,
-				"toySlot": "genital"
+				"toySlot": "genital",
+				"faction": {
+					"info": "4StimVulvalRubbingTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xE83"
+				},
+				"statFaction": {
+					"info": "OStatVulvalRubbingActorFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xF70"
+				},
+				"playerStatFaction": {
+					"info": "OStatVulvalRubbingWithPlayerTargetFaction",
+					"mod": "4Stim.esl",
+					"formid": "0xFDD"
+				},
+				"climaxStatFaction": {
+					"info": "OStatVulvalRubbingSexTargetClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x9D0"
+				},
+				"playerClimaxStatFaction": {
+					"info": "OStatVulvalRubbingWithPlayerTargetClimaxFaction",
+					"mod": "4Stim.esl",
+					"formid": "0x9D1"
+				},
+				"playerStatList": {
+					"info": "OStatVulvalRubbingWithPlayerTargetList",
+					"mod": "4Stim.esl",
+					"formid": "0x9D4"
+				},
+				"playerClimaxStatList": {
+					"info": "OStatVulvalRubbingWithPlayerTargetClimaxList",
+					"mod": "4Stim.esl",
+					"formid": "0x9D5"
+				}
 			}
 		},
 		{

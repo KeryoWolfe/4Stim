@@ -59,6 +59,10 @@ namespace Furniture
 	// Whether a type file defines a_type ("none" counts: it's the root).
 	bool Known(std::string_view a_type);
 
+	// OStim's FurnitureType::getFactions: the type's factions and its
+	// supertypes' (form IDs; actors in a scene on it are in them).
+	std::vector<std::uint32_t> Factions(std::string_view a_type);
+
 	// The display name of a type (its id if it has none).
 	std::string Name(std::string_view a_type);
 

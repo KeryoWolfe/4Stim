@@ -47,7 +47,7 @@ $Scripts = @("FourStim", "FourStimScene", "FourStimMenu", "FourStimUndress", "Fo
     "FourStimMCM", "FourStimOptions",
     # OStim's API scripts (docs\API.md)
     "FourThread", "FourThreadBuilder", "FourLibrary", "FourMetadata", "FourActor", "FourFurniture",
-    "FourModEvents", "FourJSON")
+    "FourModEvents", "FourJSON", "FourStimFactions")
 $problems = @()
 $warnings = @()
 
@@ -108,6 +108,8 @@ if (Test-Path -LiteralPath $dll) {
 }
 
 Add-File $core (Need (Join-Path $Repo "Data\F4SE\Plugins\4Stim.ini") "the default 4Stim.ini") "F4SE/Plugins/4Stim.ini"
+# OStim's API factions, form lists and keywords (tools\make-api-plugin.py).
+Add-File $core (Need (Join-Path $Repo "Data\4Stim.esl") "4Stim.esl (python tools\make-api-plugin.py <OStim.esp> Data\4Stim.esl)") "4Stim.esl"
 # Every data folder and file in Data\F4SE\Plugins\4Stim (actions, events,
 # expressions, furniture, lights, physics, voice sets...), except the scene
 # files: the test pack brings its own.

@@ -1,0 +1,83 @@
+{
+	"actor": {
+		"faction": {
+			"info": "4StimFellatioActorFaction",
+			"mod": "4Stim.esl",
+			"formid": "0xFAD"
+		},
+		"statFaction": {
+			"info": "OStatFellatioActorFaction",
+			"mod": "4Stim.esl",
+			"formid": "0xFB0"
+		},
+		"playerStatFaction": {
+			"info": "OStatFellatioWithPlayerActorFaction",
+			"mod": "4Stim.esl",
+			"formid": "0xFB2"
+		},
+		"partnerClimaxStatFaction": {
+			"info": "OStatFellatioActorPartnerClimaxFaction",
+			"mod": "4Stim.esl",
+			"formid": "0x832"
+		},
+		"playerPartnerClimaxStatFaction": {
+			"info": "OStatFellatioWithPlayerActorPartnerClimaxFaction",
+			"mod": "4Stim.esl",
+			"formid": "0x834"
+		},
+		"playerStatList": {
+			"info": "OStatFellatioWithPlayerActorList",
+			"mod": "4Stim.esl",
+			"formid": "0x87C"
+		},
+		"playerPartnerClimaxStatList": {
+			"info": "OStatFellatioWithPlayerActorPartnerClimaxList",
+			"mod": "4Stim.esl",
+			"formid": "0x87D"
+		}
+	},
+	"target": {
+		"faction": {
+			"info": "4StimFellatioTargetFaction",
+			"mod": "4Stim.esl",
+			"formid": "0xFAE"
+		},
+		"statFaction": {
+			"info": "OStatFellatioTargetFaction",
+			"mod": "4Stim.esl",
+			"formid": "0xFB1"
+		},
+		"playerStatFaction": {
+			"info": "OStatFellatioWithPlayerTargetFaction",
+			"mod": "4Stim.esl",
+			"formid": "0xFB3"
+		},
+		"climaxStatFaction": {
+			"info": "OStatFellatioTargetClimaxFaction",
+			"mod": "4Stim.esl",
+			"formid": "0x831"
+		},
+		"playerClimaxStatFaction": {
+			"info": "OStatFellatioWithPlayerTargetClimaxFaction",
+			"mod": "4Stim.esl",
+			"formid": "0x833"
+		},
+		"playerStatList": {
+			"info": "OStatFellatioWithPlayerTargetList",
+			"mod": "4Stim.esl",
+			"formid": "0x87E"
+		},
+		"playerClimaxStatList": {
+			"info": "OStatFellatioWithPlayerTargetClimaxList",
+			"mod": "4Stim.esl",
+			"formid": "0x87F"
+		}
+	},
+	"performer": {
+		"faction": {
+			"info": "4StimFellatioPerformerFaction",
+			"mod": "4Stim.esl",
+			"formid": "0xFAF"
+		}
+	}
+}

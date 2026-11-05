@@ -36,6 +36,7 @@
 #include "Erection.h"
 #include "PenisBend.h"
 #include "Physics.h"
+#include "ApiForms.h"
 #include "EyeLook.h"
 #include "Translations.h"
 #include "MCM.h"
@@ -2040,6 +2041,7 @@ namespace
 				SexToys::Leave(left);
 				PlaybackSpeed::Set(left, 1.0F);
 				Lights::Leave(left);
+				ApiForms::SceneEnded(left);
 				EquipObjects::Leave(left);
 				PenisBend::Leave(left);
 				PenisBend::RestoreRestPose(left);
@@ -2167,6 +2169,9 @@ namespace
 		auto& added = g_activeScenes.back();
 		RefreshExcitement(added);
 		if (const auto first = SceneRegistry::Find(added.sceneID)) {
+			ApiForms::SceneStarted(added.actors, *first, hasPlayer, added.furnitureType);  // OStim's API factions (4Stim.esl)
+		}
+		if (const auto first = SceneRegistry::Find(added.sceneID)) {
 			Undress::SceneEntered(added.actors, *first, true);
 			EquipObjects::SceneEntered(added.actors, *first, true);
 		}
@@ -2274,6 +2279,7 @@ namespace
 			Undress::Redress(id, false, true);
 		}
 		SceneEvents::SceneStopped(ended.actors);
+		ApiForms::SceneEnded(ended.actors);  // OStim's Core::free: out of the scene's factions
 		// The thread ends; its end event waits until Papyrus has let its
 		// actors go (SceneReleased, FourStimScene's EndPairScene /
 		// EndGroupScene), or RELEASE_WAIT if that never comes. Until then
@@ -2316,6 +2322,7 @@ namespace
 		if (const auto entered = moved ? SceneRegistry::Find(a_sceneID) : nullptr) {
 			Undress::SceneEntered(scene->actors, *entered, false);
 			EquipObjects::SceneEntered(scene->actors, *entered, false);
+			ApiForms::SceneChanged(scene->actors, *entered, scene->threadID == 0);
 			for (const auto id : scene->actors) {
 				PenisBend::Offset(id, 0);  // OStim's changeNode: the annotation's bend ends with the scene
 			}
@@ -3154,6 +3161,7 @@ namespace
 			a_active.autoMode.cooldown = std::max(a_active.autoMode.cooldown, g_autoConfig.sceneMin);
 		}
 		SceneEvents::FurnitureChanged(a_active.actors, a_piece.ref, a_piece.type, a_active.sceneID, a_active.threadID);
+		ApiForms::FurnitureChanged(a_active.actors, {}, a_piece.type);
 		return true;
 	}
 
@@ -4033,6 +4041,9 @@ namespace
 		}
 
 		SceneEvents::Climaxed(a_actorID, a_active.actors, a_active.sceneID, times, a_active.threadID);
+		if (scene) {
+			ApiForms::Climaxed(a_actorID, a_active.actors, *scene, times, a_active.threadID == 0);
+		}
 		Sounds::Climax(a_actorID);  // OStim's playClimaxSound, with the climax expression
 
 		const bool withPlayer = std::ranges::any_of(a_active.actors, [](std::uint32_t id) { return IsPlayer(RE::TESForm::GetFormByID<RE::Actor>(id)); });
@@ -4190,6 +4201,7 @@ namespace
 			}
 			Actor3D::Tick(everyone);  // a rebuilt actor gets the scene's changes back
 		}
+		ApiForms::Tick(elapsed);  // the excitement faction's rank
 		const bool waiting = !g_activeScenes.empty();  // faces and voices run as long as any scene does
 		if (!waiting && !g_climaxShake.active) {
 			g_autoplayTicking = false;
@@ -10240,6 +10252,7 @@ namespace
 				Erection::Clear();
 				EyeLook::Clear();
 				Actor3D::Clear();
+				ApiForms::Clear();
 				ScenePackage::Clear();
 			});
 			{

@@ -1,0 +1,76 @@
+{
+	"actor": {
+		"faction": {
+			"info": "4StimAnyToyingActorFaction",
+			"mod": "4Stim.esl",
+			"formid": "0xF29"
+		},
+		"statFaction": {
+			"info": "OStatAnyToyingActorFaction",
+			"mod": "4Stim.esl",
+			"formid": "0xF2B"
+		},
+		"playerStatFaction": {
+			"info": "OStatAnyToyingWithPlayerActorFaction",
+			"mod": "4Stim.esl",
+			"formid": "0xFA7"
+		},
+		"partnerClimaxStatFaction": {
+			"info": "OStatAnyToyingActorPartnerClimaxFaction",
+			"mod": "4Stim.esl",
+			"formid": "0x854"
+		},
+		"playerPartnerClimaxStatFaction": {
+			"info": "OStatAnyToyingWithPlayerActorPartnerClimaxFaction",
+			"mod": "4Stim.esl",
+			"formid": "0x856"
+		},
+		"playerStatList": {
+			"info": "OStatPenileStimulationWithPlayerActorList",
+			"mod": "4Stim.esl",
+			"formid": "0x8A1"
+		},
+		"playerPartnerClimaxStatList": {
+			"info": "OStatPenileStimulationWithPlayerActorPartnerClimaxList",
+			"mod": "4Stim.esl",
+			"formid": "0x8A2"
+		}
+	},
+	"target": {
+		"faction": {
+			"info": "4StimAnyToyingTargetFaction",
+			"mod": "4Stim.esl",
+			"formid": "0xF2A"
+		},
+		"statFaction": {
+			"info": "OStatAnyToyingTargetFaction",
+			"mod": "4Stim.esl",
+			"formid": "0xF2C"
+		},
+		"playerStatFaction": {
+			"info": "OStatAnyToyingWithPlayerTargetFaction",
+			"mod": "4Stim.esl",
+			"formid": "0xFA8"
+		},
+		"climaxStatFaction": {
+			"info": "OStatAnyToyingTargetClimaxFaction",
+			"mod": "4Stim.esl",
+			"formid": "0x853"
+		},
+		"playerClimaxStatFaction": {
+			"info": "OStatAnyToyingWithPlayerTargetClimaxFaction",
+			"mod": "4Stim.esl",
+			"formid": "0x855"
+		},
+		"playerStatList": {
+			"info": "OStatAnyToyingWithPlayerTargetList",
+			"mod": "4Stim.esl",
+			"formid": "0x8A3"
+		},
+		"playerClimaxStatList": {
+			"info": "OStatAnyToyingWithPlayerTargetClimaxList",
+			"mod": "4Stim.esl",
+			"formid": "0x8A4"
+		}
+	}
+}

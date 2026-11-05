@@ -1,4 +1,5 @@
 #include "Furniture.h"
+#include "Actions.h"
 #include "Translations.h"
 #include "compat/ScrapFunction.h"
 
@@ -32,6 +33,7 @@ namespace Furniture
 			std::string                    name;
 			std::string                    supertype;  // "" = none
 			int                            priority = 0;
+			std::vector<std::uint32_t>     factions;   // OStim's "faction": scene actors on it are in these (4Stim.esl's), its supertypes' too
 			std::vector<RE::ENUM_FORM_ID>  forms;            // base object types it can be
 			std::vector<std::string>       models;           // any of these in the model path (lowercase)
 			std::vector<std::string>       excludeModels;    // none of these
@@ -173,6 +175,9 @@ namespace Furniture
 			type.models = Strings(entry, "models", true);
 			type.excludeModels = Strings(entry, "excludeModels", true);
 			type.keywords = Strings(entry, "keywords", false);
+			if (const auto faction = entry.find("faction"); faction != entry.end()) {
+				type.factions = Actions::ReadForms(*faction);
+			}
 			type.excludeKeywords = Strings(entry, "excludeKeywords", false);
 			if (const auto conditions = entry.find("conditions"); conditions != entry.end() && conditions->is_array()) {
 				for (const auto& condition : *conditions) {
@@ -674,6 +679,10 @@ namespace Furniture
 			if (!base) {
 				return {};
 			}
+			// OStim's NoStim keyword (4Stim.esl has it too): never scene furniture.
+			if (const auto keywords = base->As<RE::BGSKeywordForm>(); keywords && keywords->HasKeywordString("NoStim")) {
+				return {};
+			}
 			const auto  model = Lower(ModelOf(base));
 			const Type* best = nullptr;
 			for (const auto& [key, type] : g_types) {
@@ -731,6 +740,27 @@ namespace Furniture
 		std::scoped_lock lock(g_lock);
 		EnsureLoaded();
 		return g_types.contains(key);
+	}
+
+	std::vector<std::uint32_t> Factions(std::string_view a_type)
+	{
+		std::scoped_lock lock(g_lock);
+		EnsureLoaded();
+		std::vector<std::uint32_t> out;
+		auto                       key = Lower(a_type);
+		for (int hop = 0; hop < 8 && !key.empty() && key != "none"; ++hop) {
+			const auto it = g_types.find(key);
+			if (it == g_types.end()) {
+				break;
+			}
+			for (const auto id : it->second.factions) {
+				if (std::ranges::find(out, id) == out.end()) {
+					out.push_back(id);
+				}
+			}
+			key = it->second.supertype;
+		}
+		return out;
 	}
 
 	std::string Name(std::string_view a_type)

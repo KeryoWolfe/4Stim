@@ -57,8 +57,13 @@ Action types are defined in JSON files in `Data\F4SE\Plugins\4Stim\Actions\`. Al
 | `moan`, `talk`, `muffled`, `expressionOverride` | That side's actor moans, may talk (kept for dialogue), sounds muffled, makes this expression (`SOUND.md`, `EXPRESSIONS.md`). |
 | `equipObject` | Equip object types that side's actor wears while doing it (OStim's field: a type or a list, e.g. `"tongue"`; `ACTORS.md`). |
 | `toySlot` | Sex toy slots that side drives (OStim's field: a slot or a list, e.g. `"genital"`, `"anus"`; API.md). |
+| `faction`, `statFaction`, `playerStatFaction`, `climaxStatFaction`, `partnerClimaxStatFaction`, `playerClimaxStatFaction`, `playerPartnerClimaxStatFaction`, `playerStatList`, `playerClimaxStatList`, `playerPartnerClimaxStatList` | OStim's API forms for that side: `{"mod", "formid"}` or a list (API.md, "Factions, form lists and keywords"). `"OStim.esp"` means `4Stim.esl`. |
 | `peak` | How the action's peaks are found (`EVENTS.md`). |
 | `sounds` | Sounds it plays on peaks, as bones meet, or in a loop (`SOUND.md`). |
+
+### Action tags
+
+As OStim's `action tags` folder: a file per tag in `Data\F4SE\Plugins\4Stim\Action Tags\` (`oral.json`, `intercourse.json`...) gives every action with that tag its `actor` / `target` / `performer` forms (the fields above), added to the action's own; `-oral` is the same tag with actor and target swapped. 4Stim's are OStim's, pointed at `4Stim.esl` (`tools/sync-action-forms.py`). They carry only the API forms, as OStim's do.
 
 ### OStim's layout
 

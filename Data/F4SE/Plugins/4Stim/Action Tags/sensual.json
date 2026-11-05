@@ -1,0 +1,46 @@
+{
+	"actor": {
+		"faction": {
+			"info": "4StimSensualMateFaction",
+			"mod": "4Stim.esl",
+			"formid": "0xFB4"
+		},
+		"statFaction": {
+			"info": "OStatSensualMateFaction",
+			"mod": "4Stim.esl",
+			"formid": "0xFB5"
+		},
+		"playerStatFaction": {
+			"info": "OStatSensualWithPlayerMateFaction",
+			"mod": "4Stim.esl",
+			"formid": "0xFB6"
+		},
+		"playerStatList": {
+			"info": "OStatSensualWithPlayerMateList",
+			"mod": "4Stim.esl",
+			"formid": "0x89D"
+		}
+	},
+	"target": {
+		"faction": {
+			"info": "4StimSensualMateFaction",
+			"mod": "4Stim.esl",
+			"formid": "0xFB4"
+		},
+		"statFaction": {
+			"info": "OStatSensualMateFaction",
+			"mod": "4Stim.esl",
+			"formid": "0xFB5"
+		},
+		"playerStatFaction": {
+			"info": "OStatSensualWithPlayerMateFaction",
+			"mod": "4Stim.esl",
+			"formid": "0xFB6"
+		},
+		"playerStatList": {
+			"info": "OStatSensualWithPlayerMateList",
+			"mod": "4Stim.esl",
+			"formid": "0x89D"
+		}
+	}
+}

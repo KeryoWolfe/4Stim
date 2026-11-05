@@ -1,0 +1,76 @@
+{
+	"actor": {
+		"faction": {
+			"info": "4StimOralNippleStimulationActorFaction",
+			"mod": "4Stim.esl",
+			"formid": "0x9E7"
+		},
+		"statFaction": {
+			"info": "OStatOralNippleStimulationActorFaction",
+			"mod": "4Stim.esl",
+			"formid": "0x9E8"
+		},
+		"playerStatFaction": {
+			"info": "OStatOralNippleStimulationWithPlayerActorFaction",
+			"mod": "4Stim.esl",
+			"formid": "0x9E9"
+		},
+		"partnerClimaxStatFaction": {
+			"info": "OStatOralNippleStimulationActorPartnerClimaxFaction",
+			"mod": "4Stim.esl",
+			"formid": "0x9EA"
+		},
+		"playerPartnerClimaxStatFaction": {
+			"info": "OStatOralNippleStimulationWithPlayerActorPartnerClimaxFaction",
+			"mod": "4Stim.esl",
+			"formid": "0x9EB"
+		},
+		"playerStatList": {
+			"info": "OStatOralNippleStimulationWithPlayerActorList",
+			"mod": "4Stim.esl",
+			"formid": "0x9F1"
+		},
+		"playerPartnerClimaxStatList": {
+			"info": "OStatOralNippleStimulationWithPlayerActorPartnerClimaxList",
+			"mod": "4Stim.esl",
+			"formid": "0x9F2"
+		}
+	},
+	"target": {
+		"faction": {
+			"info": "4StimOralNippleStimulationTargetFaction",
+			"mod": "4Stim.esl",
+			"formid": "0x9EC"
+		},
+		"statFaction": {
+			"info": "OStatOralNippleStimulationTargetFaction",
+			"mod": "4Stim.esl",
+			"formid": "0x9ED"
+		},
+		"playerStatFaction": {
+			"info": "OStatOralNippleStimulationWithPlayerTargetFaction",
+			"mod": "4Stim.esl",
+			"formid": "0x9EE"
+		},
+		"climaxStatFaction": {
+			"info": "OStatOralNippleStimulationTargetClimaxFaction",
+			"mod": "4Stim.esl",
+			"formid": "0x9EF"
+		},
+		"playerClimaxStatFaction": {
+			"info": "OStatOralNippleStimulationWithPlayerTargetClimaxFaction",
+			"mod": "4Stim.esl",
+			"formid": "0x9F0"
+		},
+		"playerStatList": {
+			"info": "OStatOralNippleStimulationWithPlayerTargetList",
+			"mod": "4Stim.esl",
+			"formid": "0x9F3"
+		},
+		"playerClimaxStatList": {
+			"info": "OStatOralNippleStimulationWithPlayerTargetClimaxList",
+			"mod": "4Stim.esl",
+			"formid": "0x9F4"
+		}
+	}
+}

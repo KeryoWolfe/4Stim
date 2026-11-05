@@ -1,0 +1,76 @@
+{
+	"actor": {
+		"faction": {
+			"info": "4StimVulvalStimulationActorFaction",
+			"mod": "4Stim.esl",
+			"formid": "0xF1F"
+		},
+		"statFaction": {
+			"info": "OStatVulvalStimulationActorFaction",
+			"mod": "4Stim.esl",
+			"formid": "0xF21"
+		},
+		"playerStatFaction": {
+			"info": "OStatVulvalStimulationWithPlayerActorFaction",
+			"mod": "4Stim.esl",
+			"formid": "0xF95"
+		},
+		"partnerClimaxStatFaction": {
+			"info": "OStatVulvalStimulationActorPartnerClimaxFaction",
+			"mod": "4Stim.esl",
+			"formid": "0x826"
+		},
+		"playerPartnerClimaxStatFaction": {
+			"info": "OStatVulvalStimulationWithPlayerActorPartnerClimaxFaction",
+			"mod": "4Stim.esl",
+			"formid": "0x828"
+		},
+		"playerStatList": {
+			"info": "OStatVulvalStimulationWithPlayerActorList",
+			"mod": "4Stim.esl",
+			"formid": "0x8AD"
+		},
+		"playerPartnerClimaxStatList": {
+			"info": "OStatVulvalStimulationWithPlayerActorPartnerClimaxList",
+			"mod": "4Stim.esl",
+			"formid": "0x8AE"
+		}
+	},
+	"target": {
+		"faction": {
+			"info": "4StimVulvalStimulationTargetFaction",
+			"mod": "4Stim.esl",
+			"formid": "0xF20"
+		},
+		"statFaction": {
+			"info": "OStatVulvalStimulationTargetFaction",
+			"mod": "4Stim.esl",
+			"formid": "0xF22"
+		},
+		"playerStatFaction": {
+			"info": "OStatVulvalStimulationWithPlayerTargetFaction",
+			"mod": "4Stim.esl",
+			"formid": "0xF96"
+		},
+		"climaxStatFaction": {
+			"info": "OStatVulvalStimulationTargetClimaxFaction",
+			"mod": "4Stim.esl",
+			"formid": "0x825"
+		},
+		"playerClimaxStatFaction": {
+			"info": "OStatVulvalStimulationWithPlayerTargetClimaxFaction",
+			"mod": "4Stim.esl",
+			"formid": "0x827"
+		},
+		"playerStatList": {
+			"info": "OStatVulvalStimulationWithPlayerTargetList",
+			"mod": "4Stim.esl",
+			"formid": "0x8AF"
+		},
+		"playerClimaxStatList": {
+			"info": "OStatVulvalStimulationWithPlayerTargetClimaxList",
+			"mod": "4Stim.esl",
+			"formid": "0x8B0"
+		}
+	}
+}

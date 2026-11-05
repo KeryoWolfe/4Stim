@@ -2,7 +2,7 @@
 
 ## 0.5.0 alpha (in progress)
 
-Needs the plugin rebuilt; FourModEvents.psc, FourJSON.psc, FourStimMenu.psc, FourStim.psc, FourStimOptions.psc, FourStimPhysics.psc and FourStimScene.psc compiled (and FourStimTest.psc, if you use it); and the new test pack (its scene files changed).
+Needs the plugin rebuilt; FourModEvents.psc, FourJSON.psc, FourStimMenu.psc, FourStim.psc, FourStimOptions.psc, FourStimPhysics.psc, FourStimScene.psc and FourStimFactions.psc compiled (and FourStimTest.psc, if you use it); the new test pack (its scene files changed); and `4Stim.esl` enabled.
 
 ### Scenes ending, failing and loading (parity audit, tier 1 items 1 to 3)
 - **Scenes end when someone in them dies or is in combat, and NPC scenes end when the player isn't in their cell**, as OStim's (docs/ACTORS.md, "When a scene ends by itself"). Before, a scene went on around a corpse or through a fight, and NPC scenes left behind stayed until their timer ran out.
@@ -18,6 +18,13 @@ Needs the plugin rebuilt; FourModEvents.psc, FourJSON.psc, FourStimMenu.psc, Fou
 - **OStim's `singlebed` and `doublebed` furniture types** (docs/FURNITURE.md): subtypes of `bed` (one sleep marker, or two or more), so OStim's 40 single and double bed scenes play as written. A scene naming a furniture type nobody defines plays as a floor scene with a warning, as OStim's does; before, it was never offered.
 - **An action of a type no Actions file defines is kept with the `default` action's attributes**, as OStim's (docs/SCENES.md): before, it was dropped, which moved every later action down one, so `4StimPeak.<n>` annotations, `expressionAction` and the action API pointed at the wrong action. An action without `actor` now applies to no one, and `HasAction` / `FindSceneAction` find types by id or alias even when no file defines them.
 - **Facial expressions named by an action alias work** (docs/EXPRESSIONS.md): OStim's own expression files say `cunnilingus`, `lickingpenis`, `ticklingfeet` and six more aliases where 4Stim looked for the ids, so oral, licking and tickling scenes got the generic face.
+
+### 4Stim.esl: OStim's API factions, form lists and keywords (parity audit, tier 2 item 15)
+- **A new light plugin, `4Stim.esl`** (enable it; no load order slot): 4Stim's counterparts of the 642 factions, 231 form lists and 2 keywords in OStim's `OStim.esp`, with OStim's form IDs and "4Stim" for "OStim" in their editor IDs (docs/API.md, "Factions, form lists and keywords"). Add-ons' dialogue and voice-set conditions read these.
+- **4Stim fills them in during scenes, as OStim does:** the excitement, times climaxed, actor count and has-a-penis factions; each action's factions for what an actor is doing now, and the furniture's; the stat factions that count, for good, the scenes an actor did something in, the climaxes they had at it and with whom; and the form lists of who's been in a scene and who did what with the player.
+- **OStim's action tags** (`Action Tags\`, docs/ACTIONS.md): a tag's forms go to every action with it, and `-tag` swaps actor and target, as OStim's. The action data's forms and the tags are OStim's, copied by `tools/sync-action-forms.py`; `tools/make-api-plugin.py` writes the plugin from OStim's.
+- **Furniture with OStim's `NoStim` keyword is never used for scenes.**
+- Needs `FourStimFactions.psc` compiled. Without the plugin, 4Stim logs it once and goes on without the factions.
 
 ### Threads as OStim's (parity audit, tier 2 items 11 to 13 and 16)
 - **A thread exists as soon as `Start` returns it** (docs/API.md, "Threads"): `IsRunning`, metadata, `GetActors` and the climax stall work on the next line, and are read and written at once (`AddMetadata` then `HasMetadata` was false). Speed, navigation, stop and auto mode asked for before the actors are placed are done once the scene plays; before, they were dropped without a word.

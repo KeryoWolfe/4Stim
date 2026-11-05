@@ -14,6 +14,17 @@ namespace Actions
 	namespace
 	{
 		constexpr auto ACTION_FOLDER = "Data/F4SE/Plugins/4Stim/Actions";
+		constexpr auto TAG_FOLDER = "Data/F4SE/Plugins/4Stim/Action Tags";  // OStim: action tags
+
+		// OStim's action tags: forms every action with the tag gets, per side
+		// ("-tag": the same with actor and target swapped). Read before the
+		// actions.
+		struct TagForms
+		{
+			ApiFormRefs actor, target, performer;
+		};
+		std::unordered_map<std::string, TagForms> g_tagForms;
+		int                                       g_missingForms = 0;  // references to forms not loaded (no 4Stim.esl?)
 
 		std::mutex g_lock;
 		bool       g_loaded = false;
@@ -91,6 +102,63 @@ namespace Actions
 			}
 		}
 
+		ApiFormRefs ParseForms(const nlohmann::json& a_side)
+		{
+			ApiFormRefs forms;
+			const auto read = [&](const char* a_key, std::vector<std::uint32_t>& a_out) {
+				if (const auto v = a_side.find(a_key); v != a_side.end()) {
+					a_out = ReadForms(*v);
+				}
+			};
+			read("faction", forms.factions);
+			read("statFaction", forms.statFactions);
+			read("playerStatFaction", forms.playerStatFactions);
+			read("climaxStatFaction", forms.climaxStatFactions);
+			read("partnerClimaxStatFaction", forms.partnerClimaxStatFactions);
+			read("playerClimaxStatFaction", forms.playerClimaxStatFactions);
+			read("playerPartnerClimaxStatFaction", forms.playerPartnerClimaxStatFactions);
+			read("playerStatList", forms.playerStatLists);
+			read("playerClimaxStatList", forms.playerClimaxStatLists);
+			read("playerPartnerClimaxStatList", forms.playerPartnerClimaxStatLists);
+			return forms;
+		}
+
+		void LoadTags()
+		{
+			g_tagForms.clear();
+			std::error_code ec;
+			if (!std::filesystem::is_directory(TAG_FOLDER, ec)) {
+				return;
+			}
+			for (const auto& e : std::filesystem::directory_iterator(TAG_FOLDER, ec)) {
+				if (!e.is_regular_file() || Lower(e.path().extension().string()) != ".json") {
+					continue;
+				}
+				try {
+					std::ifstream in(e.path());
+					const auto    root = nlohmann::json::parse(in, nullptr, true, true);
+					if (!root.is_object()) {
+						continue;
+					}
+					TagForms tag;
+					const auto side = [&](const char* a_key) {
+						const auto it = root.find(a_key);
+						return it != root.end() && it->is_object() ? ParseForms(*it) : ApiFormRefs{};
+					};
+					tag.actor = side("actor");
+					tag.target = side("target");
+					tag.performer = side("performer");
+					const auto name = Lower(e.path().stem().string());
+					TagForms inverted{ tag.target, tag.actor, tag.performer };  // OStim's "-tag"
+					g_tagForms[name] = std::move(tag);
+					g_tagForms["-" + name] = std::move(inverted);
+				} catch (const std::exception& ex) {
+					REX::WARN("Actions: action tag {}: not valid JSON ({})", e.path().filename().string(), ex.what());
+				}
+			}
+			REX::INFO("Actions: {} action tag(s)", g_tagForms.size() / 2);
+		}
+
 		Side ParseSide(const nlohmann::json& a_action, const char* a_key)
 		{
 			Side side;
@@ -112,6 +180,7 @@ namespace Actions
 			side.expressionOverride = Lower(it->value("expressionOverride", std::string{}));
 			side.equipObjects = LowerList(*it, "equipObject");  // OStim's field name (a string or a list)
 			side.toySlots = LowerList(*it, "toySlot");          // OStim's, a string or a list
+			side.forms = ParseForms(*it);
 			if (const auto v = it->find("undressSlots"); v != it->end() && v->is_array()) {
 				for (const auto& slot : *v) {
 					if (slot.is_number_integer() && slot.get<int>() >= 30 && slot.get<int>() <= 61) {
@@ -302,6 +371,14 @@ namespace Actions
 				type.actor = ParseSide(entry, "actor");
 				type.target = ParseSide(entry, "target");
 				type.performer = ParseSide(entry, "performer");
+				// As OStim's mergeTags: each tag's forms on the matching side.
+				for (const auto& tag : type.tags) {
+					if (const auto it = g_tagForms.find(tag); it != g_tagForms.end()) {
+						type.actor.forms.Merge(it->second.actor);
+						type.target.forms.Merge(it->second.target);
+						type.performer.forms.Merge(it->second.performer);
+					}
+				}
 				type.peak = ParsePeak(entry, id, file);
 				type.sounds = ParseSounds(entry, id, file);
 				type.sourceFile = file;
@@ -336,6 +413,8 @@ namespace Actions
 			std::unordered_map<std::string, std::shared_ptr<const Type>> types;
 			std::vector<std::string>                                     ids;
 
+			g_missingForms = 0;
+			LoadTags();
 			std::error_code ec;
 			if (!std::filesystem::is_directory(ACTION_FOLDER, ec)) {
 				REX::INFO("Actions: no {} folder, no actions loaded", ACTION_FOLDER);
@@ -352,12 +431,70 @@ namespace Actions
 					LoadFile(f, types, ids, loaded);
 				}
 				REX::INFO("Actions: loaded {} action type(s) from {} file(s)", ids.size(), files.size());
+				if (g_missingForms > 0) {
+					REX::WARN("Actions: {} faction / form list reference(s) to forms that aren't loaded (is 4Stim.esl enabled?): no API factions for those", g_missingForms);
+				}
 			}
 			std::ranges::sort(ids);
 			g_types = std::move(types);
 			g_ids = std::move(ids);
 			g_unknown.clear();
 		}
+	}
+
+	void ApiFormRefs::Merge(const ApiFormRefs& a_other)
+	{
+		const auto add = [](std::vector<std::uint32_t>& a_to, const std::vector<std::uint32_t>& a_from) {
+			for (const auto id : a_from) {
+				if (std::ranges::find(a_to, id) == a_to.end()) {
+					a_to.push_back(id);
+				}
+			}
+		};
+		add(factions, a_other.factions);
+		add(statFactions, a_other.statFactions);
+		add(playerStatFactions, a_other.playerStatFactions);
+		add(climaxStatFactions, a_other.climaxStatFactions);
+		add(partnerClimaxStatFactions, a_other.partnerClimaxStatFactions);
+		add(playerClimaxStatFactions, a_other.playerClimaxStatFactions);
+		add(playerPartnerClimaxStatFactions, a_other.playerPartnerClimaxStatFactions);
+		add(playerStatLists, a_other.playerStatLists);
+		add(playerClimaxStatLists, a_other.playerClimaxStatLists);
+		add(playerPartnerClimaxStatLists, a_other.playerPartnerClimaxStatLists);
+	}
+
+	bool ApiFormRefs::Empty() const
+	{
+		return factions.empty() && statFactions.empty() && playerStatFactions.empty() && climaxStatFactions.empty() && partnerClimaxStatFactions.empty() &&
+		       playerClimaxStatFactions.empty() && playerPartnerClimaxStatFactions.empty() && playerStatLists.empty() && playerClimaxStatLists.empty() &&
+		       playerPartnerClimaxStatLists.empty();
+	}
+
+	std::vector<std::uint32_t> ReadForms(const nlohmann::json& a_value)
+	{
+		std::vector<std::uint32_t> out;
+		const auto one = [&](const nlohmann::json& a_ref) {
+			if (!a_ref.is_object()) {
+				return;
+			}
+			auto ref = a_ref;
+			if (_stricmp(ref.value("mod", std::string{}).c_str(), "OStim.esp") == 0) {
+				ref["mod"] = "4Stim.esl";
+			}
+			if (const auto id = Sounds::ReadForm(ref); id) {
+				out.push_back(id);
+			} else {
+				++g_missingForms;
+			}
+		};
+		if (a_value.is_array()) {
+			for (const auto& v : a_value) {
+				one(v);
+			}
+		} else {
+			one(a_value);
+		}
+		return out;
 	}
 
 	bool Type::HasTag(std::string_view a_tag) const

@@ -1,0 +1,76 @@
+{
+	"actor": {
+		"faction": {
+			"info": "4StimAnyFistingActorFaction",
+			"mod": "4Stim.esl",
+			"formid": "0xF09"
+		},
+		"statFaction": {
+			"info": "OStatAnyFistingActorFaction",
+			"mod": "4Stim.esl",
+			"formid": "0xF0D"
+		},
+		"playerStatFaction": {
+			"info": "OStatAnyFistingWithPlayerActorFaction",
+			"mod": "4Stim.esl",
+			"formid": "0xF9B"
+		},
+		"partnerClimaxStatFaction": {
+			"info": "OStatAnyFistingActorPartnerClimaxFaction",
+			"mod": "4Stim.esl",
+			"formid": "0x83A"
+		},
+		"playerPartnerClimaxStatFaction": {
+			"info": "OStatAnyFistingWithPlayerActorPartnerClimaxFaction",
+			"mod": "4Stim.esl",
+			"formid": "0x83C"
+		},
+		"playerStatList": {
+			"info": "OStatAnyFistingWithPlayerActorList",
+			"mod": "4Stim.esl",
+			"formid": "0x884"
+		},
+		"playerPartnerClimaxStatList": {
+			"info": "OStatAnyFistingWithPlayerActorPartnerClimaxList",
+			"mod": "4Stim.esl",
+			"formid": "0x885"
+		}
+	},
+	"target": {
+		"faction": {
+			"info": "4StimAnyFistingTargetFaction",
+			"mod": "4Stim.esl",
+			"formid": "0xF0A"
+		},
+		"statFaction": {
+			"info": "OStatAnyFistingTargetFaction",
+			"mod": "4Stim.esl",
+			"formid": "0xF0E"
+		},
+		"playerStatFaction": {
+			"info": "OStatAnyFistingWithPlayerTargetFaction",
+			"mod": "4Stim.esl",
+			"formid": "0xF9C"
+		},
+		"climaxStatFaction": {
+			"info": "OStatAnyFistingTargetClimaxFaction",
+			"mod": "4Stim.esl",
+			"formid": "0x839"
+		},
+		"playerClimaxStatFaction": {
+			"info": "OStatAnyFistingWithPlayerTargetClimaxFaction",
+			"mod": "4Stim.esl",
+			"formid": "0x83B"
+		},
+		"playerStatList": {
+			"info": "OStatAnyFistingWithPlayerTargetList",
+			"mod": "4Stim.esl",
+			"formid": "0x886"
+		},
+		"playerClimaxStatList": {
+			"info": "OStatAnyFistingWithPlayerTargetClimaxList",
+			"mod": "4Stim.esl",
+			"formid": "0x887"
+		}
+	}
+}

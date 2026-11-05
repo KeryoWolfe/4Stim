@@ -1,5 +1,5 @@
 {
-	"_comment": "Furniture types for Fallout 4's own objects, recognized by their model paths. See docs/FURNITURE.md. Spots follow the OStim animations: bed scenes start on the mattress at a long edge facing out; a mattress or sleeping bag on the floor takes the floor scenes (no bed-edge scenes), centered on it and lengthwise; bench scenes on the floor under the seat facing out, table scenes on the floor at a long edge facing the table; shelf scenes on the floor at a shelf's front, facing it (like tables); wall scenes at the nearest wall (found by ray casts, not an object) with their backs to it. Heights and insets are first guesses to tune in game. Beds as OStim's: \"bed\" is the type bed scenes name, and \"singlebed\" (one sleep marker) and \"doublebed\" (two or more) are its subtypes, so OStim's own singlebed / doublebed scenes work as written; a bed scene plays on either.",
+	"_comment": "Furniture types for Fallout 4's own objects, recognized by their model paths. See docs/FURNITURE.md. Spots follow the OStim animations: bed scenes start on the mattress at a long edge facing out; a mattress or sleeping bag on the floor takes the floor scenes (no bed-edge scenes), centered on it and lengthwise; bench scenes on the floor under the seat facing out, table scenes on the floor at a long edge facing the table; shelf scenes on the floor at a shelf's front, facing it (like tables); wall scenes at the nearest wall (found by ray casts, not an object) with their backs to it. Heights and insets are first guesses to tune in game. Beds as OStim's: \"bed\" is the type bed scenes name, and \"singlebed\" (one sleep marker) and \"doublebed\" (two or more) are its subtypes, so OStim's own singlebed / doublebed scenes work as written; a bed scene plays on either. \"faction\": OStim's furniture factions (in 4Stim.esl): actors in a scene on the type (or a subtype) are in it, as OStim's; a mattress is OStim's bedroll.",
 	"types": [
 		{
 			"id": "bed",
@@ -29,7 +29,12 @@
 				0,
 				32
 			],
-			"supertype": "none"
+			"supertype": "none",
+			"faction": {
+				"info": "4StimBedFaction",
+				"mod": "4Stim.esl",
+				"formid": "0xEEF"
+			}
 		},
 		{
 			"id": "singlebed",
@@ -112,7 +117,12 @@
 				0,
 				0,
 				2
-			]
+			],
+			"faction": {
+				"info": "4StimBedrollFaction",
+				"mod": "4Stim.esl",
+				"formid": "0xEF7"
+			}
 		},
 		{
 			"id": "chair",
@@ -133,7 +143,12 @@
 			"minMarkers": 1,
 			"ignoreMarkerAxes": [
 				"z"
-			]
+			],
+			"faction": {
+				"info": "4StimSeatFaction",
+				"mod": "4Stim.esl",
+				"formid": "0xEF2"
+			}
 		},
 		{
 			"id": "bench",
@@ -166,7 +181,12 @@
 				0,
 				0
 			],
-			"onFloor": true
+			"onFloor": true,
+			"faction": {
+				"info": "4StimBenchFaction",
+				"mod": "4Stim.esl",
+				"formid": "0xEF8"
+			}
 		},
 		{
 			"id": "table",
@@ -201,7 +221,12 @@
 				0,
 				0
 			],
-			"onFloor": true
+			"onFloor": true,
+			"faction": {
+				"info": "4StimTableFaction",
+				"mod": "4Stim.esl",
+				"formid": "0xEF0"
+			}
 		},
 		{
 			"id": "cookingpot",
@@ -215,7 +240,12 @@
 				"cookpot",
 				"cookstation"
 			],
-			"anchor": "origin"
+			"anchor": "origin",
+			"faction": {
+				"info": "4StimCookingPotFaction",
+				"mod": "4Stim.esl",
+				"formid": "0xEF4"
+			}
 		},
 		{
 			"id": "shelf",
@@ -245,7 +275,12 @@
 				0,
 				0
 			],
-			"onFloor": true
+			"onFloor": true,
+			"faction": {
+				"info": "4StimShelfFaction",
+				"mod": "4Stim.esl",
+				"formid": "0xEF3"
+			}
 		},
 		{
 			"id": "wall",
@@ -256,7 +291,12 @@
 				0,
 				15,
 				0
-			]
+			],
+			"faction": {
+				"info": "4StimWallFaction",
+				"mod": "4Stim.esl",
+				"formid": "0xEF1"
+			}
 		}
 	]
 }

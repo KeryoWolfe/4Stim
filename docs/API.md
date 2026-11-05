@@ -76,6 +76,18 @@ The equip object chosen for an actor (`SetEquipObjectID`, or the HUD's options) 
 
 `FindFurniture(actorCount, centerRef, radius = 0, sameFloor = 0)`: the furniture around `centerRef` a scene for that many actors could go on, nearest first (0 = any count; radius 0 = `SetFurnitureSearchDistance`, sameFloor 0 = `fFurnitureHeight`); furniture in use or blocked is left out. `FindFurnitureOfType(type, centerRef, radius, sameFloor)`: the nearest of a type (or a kind of it), or None. `GetFurnitureType(ref)`, `IsChildOf(superType, subType)`. (Walls aren't objects, so these don't return them.)
 
+## Factions, form lists and keywords
+
+OStim's API also works through game forms in `OStim.esp`, which add-ons read in the Creation Kit's conditions (dialogue, voice-set conditions, quests). 4Stim's are in **`4Stim.esl`** (a light plugin: enable it; it takes no load order slot). Each keeps OStim's form ID, and its editor ID reads "4Stim" where OStim's reads "OStim" (`OStat...` and `NoStim` stay). A data file that names `{"mod": "OStim.esp", "formid": ...}` gets the same form in `4Stim.esl`. As OStim's:
+
+- **In a scene:** `4StimExcitementFaction` (rank = excitement, updated about once a second), `4StimTimesClimaxedFaction` (rank = climaxes this scene), `4StimTimeUntilClimaxFaction` (-1), `4StimActorCountFaction` (rank = the scene's actor count), `4StimSchlongifiedFaction` (has a penis). Left when the scene ends.
+- **Doing an action now:** each action side's `faction` (`4StimVaginalSexActorFaction`, `4StimAnyOralTargetFaction`...), for the actor's side of every action they're on in the scene playing; and the furniture type's `faction` (`4StimBedFaction`, `4StimSeatFaction`...; FURNITURE.md).
+- **Stats that stay** (saved with the game, as faction ranks are): an action side's `statFaction` (+1 per scene they did it in), `climaxStatFaction` (+1 per climax while doing it), `partnerClimaxStatFaction` (+1 per scene their partner climaxed at it), and with the player: `playerStatFaction`, `playerClimaxStatFaction`, `playerPartnerClimaxStatFaction`. Ranks stop at 101, as OStim's.
+- **Form lists:** `OStatActorList` (everyone who's been in a scene), `OStatPlayerPartnerList` (everyone who's been in one with the player), and each action side's `playerStatList`, `playerClimaxStatList`, `playerPartnerClimaxStatList`.
+- **Keywords:** `NoStim` on furniture keeps it out of scenes; `4StimNoStrip` (or any keyword with "NoStrip" in it) on clothes keeps them on (UNDRESS.md).
+
+The action data comes from OStim's actions and action tags (ACTIONS.md), copied by `tools/sync-action-forms.py`; `tools/make-api-plugin.py` writes `4Stim.esl` from OStim's `OStim.esp`. Differences: factions are changed through Papyrus (`FourStimFactions.psc`), a moment after the scene changes; OStim's `OStimInWaterFaction` isn't set (4Stim doesn't check for water yet), `4StimTimeUntilClimaxFaction` stays -1 (OStim counts down climax animations), and OStim's 137 globals (its MCM settings) aren't in the plugin: 4Stim's settings are in `4Stim.ini`. Without `4Stim.esl` none of this happens, and `4Stim.log` says so once.
+
 ## Mod events
 
 OStim sends its events as SKSE mod events (`RegisterForModEvent` / `SendModEvent`, through SKSE's `ModCallbackEvent` in OStim's `GameAPI/GameUtil.cpp`). Fallout 4's Papyrus and F4SE have none, so 4Stim's plugin keeps the registrations itself and calls the callbacks through the script engine, the way SKSE does. The events are OStim's, with "ostim_" renamed "4stim_", and carry OStim's arguments. This is 4Stim's own system for now: 4Stim sends its events through it and its add-ons can use it; a version shared by other mods may come later.
