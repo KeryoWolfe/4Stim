@@ -224,6 +224,12 @@ Function NoteStripped(Actor akActor, Form[] akItems) Global Native
 ; Whether akActor is in a running scene.
 bool Function IsInScene(Actor akActor) Global Native
 
+; Called by FourStimScene's EndPairScene / EndGroupScene once they've let the
+; actors go (unrestrained, interaction back): the end event of the scene they
+; were in goes out now, as OStim sends its end event after freeing everyone.
+; Without it the event goes out a few seconds after the stop anyway.
+Function SceneReleased(Actor[] akActors) Global Native
+
 ; ---- Auto mode ----
 ; The scene moves on by itself, as OStim's auto mode (docs\AUTOMODE.md).
 ; NPC-only scenes start in auto mode, player scenes don't (4Stim.ini).

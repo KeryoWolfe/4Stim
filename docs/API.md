@@ -37,7 +37,7 @@ FourThreadBuilder.SetMetadataCSV(builder, "mymod,romance")
 thread = FourThreadBuilder.Start(builder)
 ```
 
-`Start` / `QuickStart` return the thread ID the scene will have (-1 if it can't start: an actor is dead, a child, in combat or already in a scene, or the scene doesn't fit them). The scene itself starts a moment later, once the actors are placed: `FourThread.IsRunning(thread)` says when.
+`Start` / `QuickStart` return the thread ID (-1 if it can't start: an actor is dead, a child, in combat, not loaded, given twice, or already in a scene or a starting one). As in OStim, the thread exists from then on: `IsRunning` is true, and metadata, `GetActors` (in the order given) and the stall flag work on the next line, read and written at once (`AddMetadata` then `HasMetadata` is true). The scene itself plays a moment later, once Papyrus has placed the actors: `GetScene` is "" until then, and what needs the scene playing (`SetSpeed`, `NavigateTo` / `WarpTo`, `Stop`, `StartAutoMode` / `StopAutoMode`, `StallClimax`) is kept and done as soon as it plays. Any number of threads can start at once, each with its own options and furniture. A start that fails after `Start` returned (no scene fits, the game refuses the animations) ends the thread: `IsRunning` goes false and `4Stim.log` says why; one that hasn't started within 30 seconds is dropped.
 
 ### FourThreadBuilder
 
@@ -45,9 +45,16 @@ thread = FourThreadBuilder.Start(builder)
 
 Without a starting scene, the builder picks a scene the way the scene picker would for those actors: an intro or idle scene that fits them (and the furniture). Its actors get OStim's order when it fits the scene's roles (dominant actors first, then those with a penis), another order when it doesn't.
 
+With starting scenes, as OStim's:
+- The actors play the roles in the order given (`Actors[i]` is role i). If the first starting scene doesn't fit them in that order, it's dropped and a start scene is picked as above. An unknown scene ID is left out with a warning (so `QuickStart` with a bad ID starts a random scene).
+- Without `SetFurniture` or `NoFurniture`, the nearest furniture the first starting scene is made for is used.
+- One starting scene is a plain start. Several make a sequence: an entry with no duration plays for its scene's `length` (10 s if it has none), and `navigateTo` puts in the way there from the entry before (through navigations, at most `navigationDistanceMax` steps; transitions play for their length, other scenes on the way half a second).
+
 ### FourThread
 
-`QuickStart`, `IsRunning`, `Stop`, `GetThreadCount`, `GetAllThreadIDs`, `GetScene`, `NavigateTo` (after a transition that's playing) / `WarpTo` (at once), `QueueNavigation` / `QueueWarp` (go at once: 4Stim doesn't wait the duration), `GetSpeed` / `SetSpeed` (0-based), `PlaySequence`, `GetActors` / `GetActor(id, index)` / `GetActorPosition`, `StallClimax` / `PermitClimax` / `IsClimaxStalled`, `GetFurniture` / `GetFurnitureType` / `ChangeFurniture`, `IsInAutoMode` / `StartAutoMode` / `StopAutoMode`, `AutoTransition` / `AutoTransitionForActor`, `CallEvent`, and metadata: `HasMetadata` / `AddMetadata` / `GetMetadata`, `Has` / `Get` / `SetMetaFloat`, `Has` / `Get` / `SetMetaString` (kept while the thread runs).
+`QuickStart`, `IsRunning`, `Stop`, `GetThreadCount`, `GetAllThreadIDs`, `GetScene`, `NavigateTo` (after a transition that's playing) / `WarpTo` (at once), `QueueNavigation` / `QueueWarp` (go at once: 4Stim doesn't wait the duration), `GetSpeed` / `SetSpeed` (0-based), `PlaySequence`, `GetActors` / `GetActor(id, index)` / `GetActorPosition`, `StallClimax` / `PermitClimax` / `IsClimaxStalled`, `GetFurniture` / `GetFurnitureType` / `ChangeFurniture`, `IsInAutoMode` / `StartAutoMode` / `StopAutoMode`, `AutoTransition` / `AutoTransitionForActor`, `CallEvent`, and metadata: `HasMetadata` / `AddMetadata` / `GetMetadata`, `Has` / `Get` / `SetMetaFloat`, `Has` / `Get` / `SetMetaString` (from `Start` until the end event is sent).
+
+When a thread ends, as OStim's: 4Stim frees its actors first (unrestrained, collision, interaction back, which takes about 1.5 s in Papyrus), and then sends the end event (`4stim_thread_end` and the rest, the scene event functions, the plugin interface's thread stop). A scene a listener starts with the same actors isn't undone by the release. The thread's metadata is still readable inside the end event. If the release never reports back, the event goes out 4 seconds after the stop.
 
 ## FourLibrary
 

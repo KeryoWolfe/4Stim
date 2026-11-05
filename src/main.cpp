@@ -1142,6 +1142,44 @@ namespace
 		std::optional<Furniture::Spot> fixedSpot;  // a wall: no object, where it was found
 	};
 
+	// Something a scene about to start takes over when it does, one per set
+	// of actors (sorted form IDs): any number of scenes can be starting at
+	// once (a script starting several NPC scenes in a row, the picker, a
+	// save's scenes), and each finds its own. Before 0.5.0 each of these was
+	// one slot, and a second start before the first was placed took the
+	// first's (parity audit, tier 2 item 11). The caller locks.
+	template <class T>
+	class ActorSlots
+	{
+	public:
+		static std::vector<std::uint32_t> Key(std::vector<std::uint32_t> a_actors)
+		{
+			std::ranges::sort(a_actors);
+			return a_actors;
+		}
+		void Put(const std::vector<std::uint32_t>& a_actors, T a_value) { _slots[Key(a_actors)] = std::move(a_value); }
+		T*   Peek(const std::vector<std::uint32_t>& a_actors)
+		{
+			const auto it = _slots.find(Key(a_actors));
+			return it != _slots.end() ? &it->second : nullptr;
+		}
+		std::optional<T> Take(const std::vector<std::uint32_t>& a_actors)
+		{
+			const auto it = _slots.find(Key(a_actors));
+			if (it == _slots.end()) {
+				return std::nullopt;
+			}
+			auto out = std::move(it->second);
+			_slots.erase(it);
+			return out;
+		}
+		void Erase(const std::vector<std::uint32_t>& a_actors) { _slots.erase(Key(a_actors)); }
+		void Clear() { _slots.clear(); }
+
+	private:
+		std::map<std::vector<std::uint32_t>, T> _slots;
+	};
+
 	// The clutter around furniture a scene is about to go on, noted before
 	// its actors are moved there (SetResetClutter); the scene takes it when
 	// it starts.
@@ -1152,7 +1190,7 @@ namespace
 		bool                                fromSave = false;  // noted before the save: not noted again
 	};
 	std::mutex                    g_pendingClutterLock;
-	std::optional<PendingClutter> g_pendingClutter;
+	ActorSlots<PendingClutter>    g_pendingClutter;
 
 	// Furniture whose activation 4Stim blocked (FourStimFurniture.Block, which
 	// leaves furniture blocked by someone else alone): only these are
@@ -1202,13 +1240,13 @@ namespace
 		std::ranges::sort(a_actors);
 		{
 			std::scoped_lock lock(g_pendingClutterLock);
-			if (g_pendingClutter && g_pendingClutter->fromSave && g_pendingClutter->actors == a_actors) {
+			if (const auto noted = g_pendingClutter.Peek(a_actors); noted && noted->fromSave) {
 				return;  // a scene from a save: its clutter was noted before the save
 			}
 		}
 		auto items = Furniture::SnapshotClutter(a_spot, g_settings.resetClutterRadius);
 		std::scoped_lock lock(g_pendingClutterLock);
-		g_pendingClutter = PendingClutter{ std::move(a_actors), std::move(items), false };
+		g_pendingClutter.Put(a_actors, PendingClutter{ a_actors, std::move(items), false });
 	}
 
 	// Edge furniture (beds): the spot for scenes made for it and the spot
@@ -1220,22 +1258,32 @@ namespace
 		Furniture::Spot            furniture;
 		Furniture::Spot            floor;
 	};
-	std::optional<FurnitureSpots> g_furnitureSpots;
-	std::mutex                      g_pendingFurnitureLock;
-	std::optional<PendingFurniture> g_pendingFurniture;
+	ActorSlots<FurnitureSpots>     g_furnitureSpots;  // main thread
+	std::mutex                     g_pendingFurnitureLock;
+	ActorSlots<PendingFurniture>   g_pendingFurniture;
 
-	std::optional<PendingFurniture> PendingFurnitureFor(std::vector<std::uint32_t> a_actors, bool a_take)
+	std::optional<PendingFurniture> PendingFurnitureFor(const std::vector<std::uint32_t>& a_actors, bool a_take)
 	{
-		std::ranges::sort(a_actors);
 		std::scoped_lock lock(g_pendingFurnitureLock);
-		if (!g_pendingFurniture || g_pendingFurniture->actors != a_actors) {
-			return std::nullopt;
-		}
-		auto out = g_pendingFurniture;
 		if (a_take) {
-			g_pendingFurniture.reset();
+			return g_pendingFurniture.Take(a_actors);
 		}
-		return out;
+		const auto found = g_pendingFurniture.Peek(a_actors);
+		return found ? std::optional<PendingFurniture>(*found) : std::nullopt;
+	}
+
+	// Furniture for the scene a_actors are about to start.
+	void SetPendingFurniture(PendingFurniture a_pending)
+	{
+		std::scoped_lock lock(g_pendingFurnitureLock);
+		const auto actors = a_pending.actors;
+		g_pendingFurniture.Put(actors, std::move(a_pending));
+	}
+
+	void ClearPendingFurniture(const std::vector<std::uint32_t>& a_actors)
+	{
+		std::scoped_lock lock(g_pendingFurnitureLock);
+		g_pendingFurniture.Erase(a_actors);
 	}
 
 	bool PlaceActorAt(RE::Actor* a_actor, const Furniture::Spot& a_spot);
@@ -1272,12 +1320,10 @@ namespace
 		}
 		// On a bed, the scene can later move between bed scenes and floor
 		// scenes: keep both spots.
-		g_furnitureSpots.reset();
+		g_furnitureSpots.Erase(ids);
 		if (ref && Furniture::IsEdgeAnchored(pending->type)) {
 			const auto other = Furniture::SpotFor(ref, pending->type, near, !pending->floorScene);
-			auto       sorted = ids;
-			std::ranges::sort(sorted);
-			g_furnitureSpots = FurnitureSpots{ sorted, pending->floorScene ? other : spot, pending->floorScene ? spot : other };
+			g_furnitureSpots.Put(ids, FurnitureSpots{ ActorSlots<FurnitureSpots>::Key(ids), pending->floorScene ? other : spot, pending->floorScene ? spot : other });
 		}
 		// The clutter there, before anyone is moved onto it (tasks run in order).
 		F4SE::GetTaskInterface()->AddTask([ids, at = spot.position]() { NoteClutterFor(ids, at); });
@@ -1384,11 +1430,9 @@ namespace
 
 		// OStim's threads (docs/API.md): an ID other mods use for it (0 =
 		// the player's scene, as OStim's player thread; others count up from
-		// 1), its metadata, and what a thread builder asked for.
+		// 1), and what a thread builder asked for. Its metadata is in its
+		// ThreadRecord (g_threads), readable from any thread.
 		std::int32_t                                 threadID = 0;
-		std::vector<std::string>                     metadata;      // lowercase
-		std::unordered_map<std::string, float>       metaFloat;     // key lowercase
-		std::unordered_map<std::string, std::string> metaString;
 		bool                                         noAutoMode = false;
 		bool                                         noPlayerControl = false;
 		bool                                         noUndress = false;
@@ -1428,7 +1472,7 @@ namespace
 		std::vector<std::uint32_t>                     actors;  // any order
 	};
 	std::mutex                     g_pendingSequenceLock;
-	std::optional<PendingSequence> g_pendingSequence;
+	ActorSlots<PendingSequence>    g_pendingSequence;
 
 	// A scene from a loaded save, being started again (see "Save data"):
 	// what to restore once it's running.
@@ -1440,25 +1484,112 @@ namespace
 		std::vector<std::pair<std::uint32_t, float>> excitement;
 	};
 	std::mutex                   g_pendingResumeLock;
-	std::optional<PendingResume> g_pendingResume;
+	ActorSlots<PendingResume>    g_pendingResume;
 
-	// A thread builder's start (OStim's OThreadBuilder.Start, docs/API.md):
-	// what the next scene started for these actors takes over.
-	struct PendingStart
+	// ---- Threads (OStim's, docs/API.md) ----
+	// A thread exists from the moment a mod asks for it (OStim's
+	// OThreadBuilder.Start returns a thread that's already there), while
+	// Papyrus is still placing its actors ("starting"), and while its scene
+	// runs. Its metadata and options live here, behind a lock, so scripts
+	// read and write them at once from their own threads (OStim's API is
+	// immediate: AddMetadata then HasMetadata is true). Calls that need the
+	// running scene (speed, navigation, stop...) made while it's starting
+	// are kept and done once it runs. The scene itself is an ActiveScene
+	// with the same threadID (main thread only).
+	struct ThreadRecord
 	{
-		std::vector<std::uint32_t> actors;  // sorted
-		std::int32_t               threadID = 0;
-		float                      duration = 0.0F;  // seconds; 0 = the usual
-		bool                       undressAtStart = false;
-		bool                       noAutoMode = false;
-		bool                       noPlayerControl = false;
-		bool                       noUndress = false;
-		bool                       endAfterSequence = false;
-		std::vector<std::string>   metadata;
+		enum class Status
+		{
+			kStarting,  // asked for, actors being placed
+			kRunning,   // its ActiveScene exists
+			kEnded,     // its scene stopped; its end event not sent yet (metadata still readable)
+		};
+		std::int32_t                          id = 0;
+		Status                                status = Status::kStarting;
+		std::vector<std::uint32_t>            actors;      // sorted: matched against the scene that starts
+		std::vector<std::uint32_t>            roleActors;  // the order asked for (GetActors while starting)
+		std::chrono::steady_clock::time_point since = std::chrono::steady_clock::now();
+		// What a thread builder asked for.
+		float duration = 0.0F;  // seconds; 0 = the usual
+		bool  undressAtStart = false;
+		bool  noAutoMode = false;
+		bool  noPlayerControl = false;
+		bool  noUndress = false;
+		bool  endAfterSequence = false;
+		// Metadata (OStim's thread metadata), lowercase keys.
+		std::vector<std::string>                     metadata;
+		std::unordered_map<std::string, float>       metaFloat;
+		std::unordered_map<std::string, std::string> metaString;
+		// Asked for while starting: done once the scene runs.
+		bool                   stopWhenStarted = false;
+		std::optional<bool>    stallWhenStarted;
+		std::optional<bool>    autoWhenStarted;
+		std::optional<int>     speedWhenStarted;
+		std::string            sceneWhenStarted;
 	};
-	std::mutex                  g_pendingStartLock;
-	std::optional<PendingStart> g_pendingStart;
-	std::int32_t                g_nextThreadID = 1;  // NPC scenes; the player's is 0
+	std::mutex                                    g_threadsLock;
+	std::unordered_map<std::int32_t, ThreadRecord> g_threads;
+	std::int32_t                                  g_nextThreadID = 1;  // NPC scenes; the player's is 0
+
+	// A thread that's been asked for but hasn't started in this long has
+	// failed somewhere the plugin didn't hear about: dropped.
+	constexpr auto STARTING_TIMEOUT = std::chrono::seconds(30);
+
+	// g_threadsLock held.
+	void PruneStartingLocked()
+	{
+		const auto now = std::chrono::steady_clock::now();
+		std::erase_if(g_threads, [&](const auto& a_entry) {
+			const auto& r = a_entry.second;
+			if (r.status == ThreadRecord::Status::kStarting && now - r.since > STARTING_TIMEOUT) {
+				REX::WARN("Thread {}: never started (its actors weren't placed within {} s), dropped", r.id, STARTING_TIMEOUT.count());
+				return true;
+			}
+			return false;
+		});
+	}
+
+	// The thread a_id, if it's starting or running. g_threadsLock held.
+	ThreadRecord* ThreadRecordLocked(std::int32_t a_id)
+	{
+		const auto it = g_threads.find(a_id);
+		return it != g_threads.end() ? &it->second : nullptr;
+	}
+
+	// Whether a_actor is in a thread that's starting (not running yet).
+	bool InStartingThread(std::uint32_t a_actor)
+	{
+		std::scoped_lock lock(g_threadsLock);
+		PruneStartingLocked();
+		return std::ranges::any_of(g_threads, [&](const auto& a_entry) {
+			return a_entry.second.status == ThreadRecord::Status::kStarting && std::ranges::find(a_entry.second.actors, a_actor) != a_entry.second.actors.end();
+		});
+	}
+
+	// A start that failed after the thread was handed out: it never runs.
+	void DropStartingThread(std::int32_t a_id, std::string_view a_why)
+	{
+		std::scoped_lock lock(g_threadsLock);
+		const auto it = g_threads.find(a_id);
+		if (it != g_threads.end() && it->second.status == ThreadRecord::Status::kStarting) {
+			REX::WARN("Thread {}: not started ({})", a_id, a_why);
+			g_threads.erase(it);
+		}
+	}
+
+	// The same, by its actors (FourStimMenu.ReleaseFailedStart knows only those).
+	void DropStartingThreadOf(std::vector<std::uint32_t> a_actors, std::string_view a_why)
+	{
+		std::ranges::sort(a_actors);
+		std::scoped_lock lock(g_threadsLock);
+		std::erase_if(g_threads, [&](const auto& a_entry) {
+			if (a_entry.second.status == ThreadRecord::Status::kStarting && a_entry.second.actors == a_actors) {
+				REX::WARN("Thread {}: not started ({})", a_entry.first, a_why);
+				return true;
+			}
+			return false;
+		});
+	}
 
 	void LockScene(ActiveScene& a_active);
 	void UnlockActors(const std::vector<std::uint32_t>& a_ids);
@@ -1834,6 +1965,52 @@ namespace
 		return it != g_activeScenes.end() ? &*it : nullptr;
 	}
 
+	// A thread whose scene stopped, waiting for Papyrus to release its
+	// actors before other mods hear it ended (SceneEvents::SceneEnded).
+	// Main thread.
+	struct EndedThread
+	{
+		std::int32_t                threadID = 0;
+		std::string                 sceneID;
+		std::vector<std::uint32_t>  actors;  // role order
+		std::vector<std::string>    metadata;
+	};
+	std::vector<EndedThread> g_endedThreads;
+	// How long the end event waits for Papyrus's release (EndPairScene /
+	// EndGroupScene take 1.5 s) before it's sent anyway.
+	constexpr auto RELEASE_WAIT = std::chrono::seconds(4);
+
+	// Sends the end event for the ended threads with any of a_actors (their
+	// release done, or a_late: it never came), and forgets their actors'
+	// metadata (OStim's ends with the thread). Main thread.
+	void SendEndedFor(const std::vector<std::uint32_t>& a_actors, bool a_late)
+	{
+		std::vector<EndedThread> due;
+		std::erase_if(g_endedThreads, [&](EndedThread& a_ended) {
+			const bool mine = std::ranges::any_of(a_ended.actors, [&](std::uint32_t id) { return std::ranges::find(a_actors, id) != a_actors.end(); });
+			if (mine) {
+				due.push_back(std::move(a_ended));
+			}
+			return mine;
+		});
+		for (auto& ended : due) {
+			{
+				std::scoped_lock lock(g_threadsLock);
+				if (const auto it = g_threads.find(ended.threadID); it != g_threads.end() && it->second.status == ThreadRecord::Status::kEnded) {
+					g_threads.erase(it);
+				}
+			}
+			if (a_late) {
+				REX::INFO("Thread {}: end event sent without hearing the actors were released", ended.threadID);
+			}
+			// Actors already in a new scene keep that scene's metadata.
+			std::vector<std::uint32_t> free;
+			std::ranges::copy_if(ended.actors, std::back_inserter(free), [](std::uint32_t id) { return !FindActiveScene(id); });
+			ForgetActorMeta(free);
+			SceneEvents::SceneEnded(ended.actors, ended.sceneID, ended.threadID, ended.metadata);
+		}
+	}
+
 	void TrackSceneStart(std::vector<std::uint32_t> a_actors, const std::string& a_sceneID)
 	{
 		PenisBend::NoteRestPose(a_actors);  // before the scene's animation poses them
@@ -1873,24 +2050,45 @@ namespace
 				for (const auto id : left) {
 					Undress::Redress(id, false, true);
 				}
+				// Its thread is over (replaced, not ended: no end event, as before).
+				std::scoped_lock lock(g_threadsLock);
+				g_threads.erase(a_scene.threadID);
 			}
 			return replaced;
 		});
 		ActiveScene scene{ a_actors, a_sceneID };
 		const bool hasPlayer = std::ranges::any_of(a_actors, [](std::uint32_t id) { return IsPlayer(RE::TESForm::GetFormByID<RE::Actor>(id)); });
-		std::optional<PendingStart> start;
+		// Its thread: the one a mod asked for with these actors (thread
+		// builder), else a new one (the picker, a save's scene...).
+		std::optional<ThreadRecord> start;  // a copy of what was asked for
 		{
-			auto sorted = a_actors;
-			std::ranges::sort(sorted);
-			std::scoped_lock lock(g_pendingStartLock);
-			if (g_pendingStart && g_pendingStart->actors == sorted) {
-				start = std::move(g_pendingStart);
-				g_pendingStart.reset();
+			const auto sorted = ActorSlots<int>::Key(a_actors);
+			std::scoped_lock lock(g_threadsLock);
+			PruneStartingLocked();
+			auto it = std::ranges::find_if(g_threads, [&](const auto& a_entry) {
+				return a_entry.second.status == ThreadRecord::Status::kStarting && a_entry.second.actors == sorted;
+			});
+			if (it == g_threads.end()) {
+				ThreadRecord record;
+				record.id = hasPlayer ? 0 : g_nextThreadID++;
+				record.actors = sorted;
+				it = g_threads.insert_or_assign(record.id, std::move(record)).first;
+			} else {
+				start = it->second;
+			}
+			it->second.status = ThreadRecord::Status::kRunning;
+			it->second.roleActors = a_actors;
+			scene.threadID = it->first;
+			if (start) {
+				// What was asked for while it was starting is done below; not twice.
+				it->second.stopWhenStarted = false;
+				it->second.stallWhenStarted.reset();
+				it->second.autoWhenStarted.reset();
+				it->second.speedWhenStarted.reset();
+				it->second.sceneWhenStarted.clear();
 			}
 		}
-		scene.threadID = hasPlayer ? 0 : start && start->threadID > 0 ? start->threadID : g_nextThreadID++;
 		if (start) {
-			scene.metadata = start->metadata;
 			scene.noAutoMode = start->noAutoMode;
 			scene.noPlayerControl = start->noPlayerControl;
 			scene.noUndress = start->noUndress;
@@ -1905,38 +2103,23 @@ namespace
 			scene.furnitureFixedSpot = furniture->fixedSpot;
 			SetFurnitureScales(scene, furniture->ref, furniture->type);
 			{
-				auto sorted = a_actors;
-				std::ranges::sort(sorted);
 				std::scoped_lock lock(g_pendingClutterLock);
-				if (g_pendingClutter && g_pendingClutter->actors == sorted) {
-					scene.clutter = std::move(g_pendingClutter->items);
+				if (auto clutter = g_pendingClutter.Take(a_actors)) {
+					scene.clutter = std::move(clutter->items);
 				}
-				g_pendingClutter.reset();
 			}
 			BlockFurniture(furniture->ref);
 			IgnoreFurnitureCollision(furniture->ref, a_actors, furniture->type);
-			auto sorted = a_actors;
-			std::ranges::sort(sorted);
-			if (g_furnitureSpots && g_furnitureSpots->actors == sorted) {
-				scene.furnitureSpots = std::move(g_furnitureSpots);
-			}
-			g_furnitureSpots.reset();
+			scene.furnitureSpots = g_furnitureSpots.Take(a_actors);
 			REX::INFO("Scene \"{}\": on furniture {:08X} ({})", a_sceneID, furniture->ref, furniture->type);
 		}
 		{
 			std::scoped_lock lock(g_pendingSequenceLock);
-			if (g_pendingSequence) {
-				auto sorted = a_actors;
-				auto wanted = g_pendingSequence->actors;
-				std::ranges::sort(sorted);
-				std::ranges::sort(wanted);
-				const auto& first = g_pendingSequence->sequence->entries.front();
-				if (sorted == wanted) {
-					if (_stricmp(first.scene.c_str(), a_sceneID.c_str()) == 0) {
-						scene.sequence = g_pendingSequence->sequence;
-						REX::INFO("Sequence \"{}\": started ({} scene(s))", scene.sequence->id, scene.sequence->entries.size());
-					}
-					g_pendingSequence.reset();
+			if (const auto pending = g_pendingSequence.Take(a_actors)) {
+				const auto& first = pending->sequence->entries.front();
+				if (_stricmp(first.scene.c_str(), a_sceneID.c_str()) == 0) {
+					scene.sequence = pending->sequence;
+					REX::INFO("Sequence \"{}\": started ({} scene(s))", scene.sequence->id, scene.sequence->entries.size());
 				}
 			}
 		}
@@ -2012,12 +2195,7 @@ namespace
 		std::optional<PendingResume> resume;
 		{
 			std::scoped_lock lock(g_pendingResumeLock);
-			auto sorted = added.actors;
-			std::ranges::sort(sorted);
-			if (g_pendingResume && g_pendingResume->actors == sorted) {
-				resume = std::move(g_pendingResume);
-				g_pendingResume.reset();
-			}
+			resume = g_pendingResume.Take(added.actors);
 		}
 		if (resume) {
 			for (const auto& [id, value] : resume->excitement) {
@@ -2030,6 +2208,32 @@ namespace
 				PlayOnActiveScene(added, added.sceneID, resume->speed);
 			}
 			REX::INFO("Save data: \"{}\" running again (speed {}, auto mode {})", added.sceneID, resume->speed + 1, resume->autoMode);
+		}
+		// What a mod asked of the thread while it was starting.
+		if (start) {
+			if (start->stallWhenStarted) {
+				for (const auto id : added.actors) {
+					Excitement::SetStalled(id, *start->stallWhenStarted);
+				}
+			}
+			if (start->autoWhenStarted && *start->autoWhenStarted != added.autoMode.on) {
+				*start->autoWhenStarted ? StartAutoMode(added) : StopAutoMode(added);
+			}
+			if (!start->sceneWhenStarted.empty() || start->speedWhenStarted) {
+				const auto to = SceneRegistry::Find(start->sceneWhenStarted.empty() ? added.sceneID : start->sceneWhenStarted);
+				if (to && to->actors.size() == added.actors.size()) {
+					const int speed = std::clamp(start->speedWhenStarted.value_or(added.speed), 0, std::max(static_cast<int>(to->speeds.size()) - 1, 0));
+					if (to->id != added.sceneID) {
+						added.sequence.reset();
+					}
+					if (PlayOnActiveScene(added, to->id, speed)) {
+						ArmAutoplay(added);
+					}
+				}
+			}
+			if (start->stopWhenStarted) {
+				EndActiveScene(added, "asked by another mod while it was starting (FourThread.Stop)");
+			}
 		}
 	}
 
@@ -2049,7 +2253,6 @@ namespace
 		for (const auto id : ended.actors) {
 			Undress::Block(id, false);
 		}
-		ForgetActorMeta(ended.actors);
 		FreeFurniture(ended);
 		UnlockActors(ended.actors);
 		MoveApart(ended);
@@ -2070,7 +2273,25 @@ namespace
 		for (const auto id : ended.actors) {
 			Undress::Redress(id, false, true);
 		}
-		SceneEvents::SceneEnded(ended.actors, ended.sceneID, ended.threadID, ended.metadata);
+		SceneEvents::SceneStopped(ended.actors);
+		// The thread ends; its end event waits until Papyrus has let its
+		// actors go (SceneReleased, FourStimScene's EndPairScene /
+		// EndGroupScene), or RELEASE_WAIT if that never comes. Until then
+		// FourThread.GetMetadata and the actors' metadata still answer, as
+		// OStim's do inside its end event.
+		EndedThread done{ ended.threadID, ended.sceneID, ended.actors, {} };
+		{
+			std::scoped_lock lock(g_threadsLock);
+			if (const auto it = g_threads.find(ended.threadID); it != g_threads.end() && it->second.status == ThreadRecord::Status::kRunning) {
+				done.metadata = it->second.metadata;
+				it->second.status = ThreadRecord::Status::kEnded;
+			}
+		}
+		g_endedThreads.push_back(std::move(done));
+		std::thread([actors = ended.actors]() {
+			std::this_thread::sleep_for(RELEASE_WAIT);
+			F4SE::GetTaskInterface()->AddTask([actors]() { SendEndedFor(actors, true); });
+		}).detach();
 	}
 
 	// A scene moved on by someone else (navigation, a speed key). Leaving
@@ -4090,7 +4311,7 @@ namespace
 	void QueueSequence(std::shared_ptr<const SceneRegistry::Sequence> a_sequence, std::vector<std::uint32_t> a_actors)
 	{
 		std::scoped_lock lock(g_pendingSequenceLock);
-		g_pendingSequence = PendingSequence{ std::move(a_sequence), std::move(a_actors) };
+		g_pendingSequence.Put(a_actors, PendingSequence{ std::move(a_sequence), a_actors });
 	}
 
 	bool IsPlayer(const RE::Actor* a_actor)
@@ -4186,6 +4407,7 @@ namespace
 			return;
 		}
 		REX::WARN("Start failed ({}): letting {} actor(s) go again", a_why, a_ids.size());
+		DropStartingThreadOf(a_ids, a_why);
 		g_failedStartAt = NowMs();
 		g_focusNextScene = false;
 		std::thread([ids = std::move(a_ids)]() {
@@ -4929,6 +5151,20 @@ namespace
 	bool IsInScene(std::monostate, RE::Actor* a_actor)
 	{
 		return a_actor && FindActiveScene(a_actor->GetFormID()) != nullptr;
+	}
+
+	// FourStimScene's EndPairScene / EndGroupScene, once they've let the
+	// actors go: the end event of the scene they were in goes out now
+	// (SendEndedFor).
+	void SceneReleased(std::monostate, std::vector<RE::Actor*> a_actors)
+	{
+		std::vector<std::uint32_t> ids;
+		for (const auto actor : a_actors) {
+			if (actor) {
+				ids.push_back(actor->GetFormID());
+			}
+		}
+		F4SE::GetTaskInterface()->AddTask([ids = std::move(ids)]() { SendEndedFor(ids, false); });
 	}
 
 	void SetAutoMode(std::monostate, RE::Actor* a_actor, bool a_on)
@@ -7026,7 +7262,7 @@ namespace
 			}
 			{
 				std::scoped_lock lock(g_pendingFurnitureLock);
-				g_pendingFurniture.reset();
+				g_pendingFurniture.Erase(cast);
 				int choice;
 				{
 					std::scoped_lock castLock(g_castLock);
@@ -7041,7 +7277,7 @@ namespace
 					pending.fixedSpot = piece.spot;
 					std::ranges::sort(pending.actors);
 					REX::INFO("Picker: \"{}\" goes on {:08X} ({}, {:.0f} away)", a_sceneID, piece.ref, piece.type, piece.distance);
-					g_pendingFurniture = std::move(pending);
+					g_pendingFurniture.Put(pending.actors, pending);
 				}
 			}
 
@@ -7720,6 +7956,12 @@ namespace
 		if (FindActiveScene(a_actor->GetFormID())) {
 			return "already in a scene";
 		}
+		if (InStartingThread(a_actor->GetFormID())) {
+			return "already in a scene that's starting";
+		}
+		if (!a_actor->Get3D()) {
+			return "not loaded";  // OStim's ThreadStarter: unloaded actors can't start
+		}
 		return {};
 	}
 
@@ -7731,7 +7973,8 @@ namespace
 		std::uint32_t                             furniture = 0;
 		bool                                      noFurniture = false;
 		float                                     duration = 0.0F;
-		std::vector<SceneRegistry::SequenceEntry> starting;  // starting scenes / sequence
+		std::vector<SceneRegistry::SequenceEntry> starting;    // starting scenes / sequence
+		std::vector<bool>                         navigateTo;  // per entry of starting: OStim's navigateTo (the way there from the one before)
 		bool                                      endAfterSequence = false;
 		bool                                      undress = false;
 		bool                                      noAutoMode = false;
@@ -7775,41 +8018,121 @@ namespace
 		return true;
 	}
 
-	// Starts a scene from a builder (OStim's Start). Returns the thread ID it
-	// will have (0 for the player's), or -1. The scene itself starts a moment
-	// later (Papyrus places the actors); IsRunning says once it has.
+	// OStim's Node::getRoute: the scenes from a_from to a_to through
+	// navigations (transitions on the way included), at most a_steps
+	// navigations, each fitting a_cast in role order; transitions play for
+	// their length, other scenes on the way half a second (as OStim's 500
+	// ms). Empty if there's no way.
+	std::vector<SceneRegistry::SequenceEntry> RouteBetween(const std::shared_ptr<const SceneRegistry::Scene>& a_from, const std::shared_ptr<const SceneRegistry::Scene>& a_to,
+		std::span<const SceneRegistry::ActorCondition> a_cast, int a_steps)
+	{
+		using Route = std::vector<std::shared_ptr<const SceneRegistry::Scene>>;
+		std::vector<std::string>                                                   visited{ a_from->id };
+		std::vector<std::pair<std::shared_ptr<const SceneRegistry::Scene>, Route>> frontier{ { a_from, {} } };
+		for (int step = 0; step < a_steps && !frontier.empty(); ++step) {
+			std::vector<std::pair<std::shared_ptr<const SceneRegistry::Scene>, Route>> next;
+			for (const auto& [scene, route] : frontier) {
+				for (const auto& nav : scene->navigations) {
+					auto  dest = SceneRegistry::Find(nav.to);
+					Route path = route;
+					for (int hop = 0; dest && hop < 8; ++hop) {
+						path.push_back(dest);
+						if (!dest->IsTransition()) {
+							break;
+						}
+						dest = SceneRegistry::Find(dest->destination);
+					}
+					if (!dest || dest->IsTransition() || !SceneRegistry::Fits(dest->actors, a_cast) || std::ranges::find(visited, dest->id) != visited.end()) {
+						continue;
+					}
+					visited.push_back(dest->id);
+					if (dest->id == a_to->id) {
+						std::vector<SceneRegistry::SequenceEntry> out;
+						for (const auto& s : path) {
+							out.push_back({ s->id, s->IsTransition() ? std::max(s->length, 0.5F) : 0.5F, 0 });
+						}
+						return out;
+					}
+					next.emplace_back(dest, std::move(path));
+				}
+			}
+			frontier = std::move(next);
+		}
+		return {};
+	}
+
+	// A starting entry with no time plays for its scene's length (OStim's
+	// animationLengthMs; FourThreadBuilder.AddStartingAnimation's duration
+	// is optional). A scene without a length gets this.
+	constexpr float STARTING_NO_LENGTH = 10.0F;
+
+	// Starts a scene from a builder (OStim's Start). Returns the thread ID
+	// (0 for the player's), or -1. As OStim's, the thread exists from here
+	// on (FourThread.IsRunning, metadata, GetActors...), while Papyrus places
+	// the actors a moment later; changes that need the scene playing (speed,
+	// navigation, stop) are done once it is. A start that fails after this
+	// (no scene fits, Papyrus gives up) drops the thread and logs why.
 	std::int32_t StartThread(ThreadBuilder a_builder)
 	{
 		const auto player = RE::PlayerCharacter::GetSingleton();
 		bool       withPlayer = false;
-		for (const auto id : a_builder.actors) {
+		for (std::size_t i = 0; i < a_builder.actors.size(); ++i) {
+			const auto id = a_builder.actors[i];
 			const auto actor = RE::TESForm::GetFormByID<RE::Actor>(id);
 			if (const auto why = CantUse(actor); !why.empty()) {
 				REX::WARN("ThreadBuilder.Start: {:08X} can't be in a scene ({})", id, why);
 				return -1;
 			}
-			withPlayer = withPlayer || (player && id == player->GetFormID());
-		}
-		if (!a_builder.starting.empty()) {
-			const auto first = SceneRegistry::Find(a_builder.starting.front().scene);
-			if (!first || first->actors.size() != a_builder.actors.size()) {
-				REX::WARN("ThreadBuilder.Start: \"{}\" isn't a scene for {} actor(s)", a_builder.starting.front().scene, a_builder.actors.size());
+			if (std::ranges::find(a_builder.actors.begin(), a_builder.actors.begin() + static_cast<std::ptrdiff_t>(i), id) != a_builder.actors.begin() + static_cast<std::ptrdiff_t>(i)) {
+				REX::WARN("ThreadBuilder.Start: {:08X} is given twice", id);  // as OStim's ThreadStarter
 				return -1;
 			}
+			withPlayer = withPlayer || (player && id == player->GetFormID());
 		}
 		std::int32_t threadID = 0;
-		if (!withPlayer) {
-			std::scoped_lock lock(g_pendingStartLock);
-			threadID = g_nextThreadID++;
+		{
+			std::scoped_lock lock(g_threadsLock);
+			PruneStartingLocked();
+			if (withPlayer && g_threads.contains(0) && g_threads.at(0).status != ThreadRecord::Status::kEnded) {
+				REX::WARN("ThreadBuilder.Start: the player's scene is already starting");
+				return -1;
+			}
+			threadID = withPlayer ? 0 : g_nextThreadID++;
+			ThreadRecord record;
+			record.id = threadID;
+			record.actors = ActorSlots<int>::Key(a_builder.actors);
+			record.roleActors = a_builder.actors;
+			record.duration = a_builder.duration;
+			record.undressAtStart = a_builder.undress;
+			record.noAutoMode = a_builder.noAutoMode;
+			record.noPlayerControl = a_builder.noPlayerControl;
+			record.noUndress = a_builder.noUndress;
+			record.endAfterSequence = a_builder.endAfterSequence;
+			record.metadata = a_builder.metadata;
+			g_threads.insert_or_assign(threadID, std::move(record));
 		}
 		F4SE::GetTaskInterface()->AddTask([builder = std::move(a_builder), threadID, withPlayer]() {
-			// OStim's order: the dominant actors first, then those with a penis.
 			auto cast = builder.actors;
-			std::ranges::stable_sort(cast, [](std::uint32_t a, std::uint32_t b) { return ActorProperties::Cached(a).penis && !ActorProperties::Cached(b).penis; });
-			std::ranges::stable_partition(cast, [&](std::uint32_t id) { return std::ranges::find(builder.dominant, id) != builder.dominant.end(); });
+			auto starting = builder.starting;
+			// As OStim's: with starting scenes the caller's order is the role
+			// order; if the first doesn't fit the actors in that order, a start
+			// scene is picked instead (ThreadStarter.cpp).
+			if (!starting.empty()) {
+				const auto first = SceneRegistry::Find(starting.front().scene);
+				if (!first || !SceneRegistry::Fits(first->actors, ConditionsOf(cast))) {
+					REX::WARN("ThreadBuilder: thread {}: \"{}\" doesn't fit its actors in the order given; picking a start scene instead", threadID, starting.front().scene);
+					starting.clear();
+				}
+			}
+			if (starting.empty()) {
+				// OStim's order: the dominant actors first, then those with a penis.
+				std::ranges::stable_sort(cast, [](std::uint32_t a, std::uint32_t b) { return ActorProperties::Cached(a).penis && !ActorProperties::Cached(b).penis; });
+				std::ranges::stable_partition(cast, [&](std::uint32_t id) { return std::ranges::find(builder.dominant, id) != builder.dominant.end(); });
+			}
 
 			// Where: the furniture given, else (unless NoFurniture) the nearest
-			// that has a scene for them, as OStim's thread starters.
+			// that has a scene for them (with a starting scene: one that takes
+			// it), as OStim's thread starters.
 			std::optional<Furniture::Found> piece;
 			if (builder.furniture) {
 				if (const auto ref = RE::TESForm::GetFormByID<RE::TESObjectREFR>(builder.furniture)) {
@@ -7822,11 +8145,12 @@ namespace
 						piece = Furniture::Found{ type, {}, builder.furniture, 0.0F, std::nullopt };
 					}
 				}
-			} else if (!builder.noFurniture && g_settings.useFurniture && builder.starting.empty()) {
-				const auto first = RE::TESForm::GetFormByID<RE::Actor>(cast.front());
-				if (first) {
-					for (const auto& found : FurnitureNear(first->data.location, first)) {
-						if (!ScenesForActors(cast, found.type).empty()) {
+			} else if (!builder.noFurniture && g_settings.useFurniture) {
+				const auto firstActor = RE::TESForm::GetFormByID<RE::Actor>(cast.front());
+				const auto firstScene = starting.empty() ? nullptr : SceneRegistry::Find(starting.front().scene);
+				if (firstActor) {
+					for (const auto& found : FurnitureNear(firstActor->data.location, firstActor)) {
+						if (firstScene ? (!firstScene->furniture.empty() && SceneFitsFurniture(*firstScene, found.type)) : !ScenesForActors(cast, found.type).empty()) {
 							piece = found;
 							break;
 						}
@@ -7836,8 +8160,12 @@ namespace
 			const std::string here = piece ? piece->type : std::string{};
 
 			std::shared_ptr<const SceneRegistry::Scene> scene;
-			if (!builder.starting.empty()) {
-				scene = SceneRegistry::Find(builder.starting.front().scene);
+			std::vector<std::int32_t>                   ordered;
+			if (!starting.empty()) {
+				scene = SceneRegistry::Find(starting.front().scene);
+				for (const auto id : cast) {
+					ordered.push_back(static_cast<std::int32_t>(id));
+				}
 			} else {
 				std::string why;
 				scene = PickStartScene(ScenesForActors(cast, here), here, withPlayer, why);
@@ -7845,60 +8173,82 @@ namespace
 					piece.reset();  // nothing fits there: right here instead
 					scene = PickStartScene(ScenesForActors(cast, {}), {}, withPlayer, why);
 				}
+				if (!scene) {
+					DropStartingThread(threadID, std::format("no scene for {} actor(s){}", cast.size(), here.empty() ? std::string{} : " on " + here));
+					return;
+				}
+				// Who takes which role.
+				const auto order = SceneRegistry::AssignRoles(scene->actors, ConditionsOf(cast));
+				if (order.size() != cast.size()) {
+					DropStartingThread(threadID, std::format("its actors don't fit \"{}\"'s roles", scene->id));
+					return;
+				}
+				std::vector<std::uint32_t> roleOrder;
+				for (const auto index : order) {
+					ordered.push_back(static_cast<std::int32_t>(cast[index]));
+					roleOrder.push_back(cast[index]);
+				}
+				cast = std::move(roleOrder);
 			}
-			if (!scene) {
-				REX::WARN("ThreadBuilder: no scene for {} actor(s){}", cast.size(), here.empty() ? std::string{} : " on " + here);
-				return;
+			{
+				std::scoped_lock lock(g_threadsLock);
+				if (const auto record = ThreadRecordLocked(threadID)) {
+					record->roleActors = cast;
+				}
 			}
-
-			// Who takes which role.
-			auto order = SceneRegistry::AssignRoles(scene->actors, ConditionsOf(cast));
-			if (order.size() != cast.size()) {
-				REX::WARN("ThreadBuilder: these actors don't fit \"{}\"'s roles", scene->id);
-				return;
-			}
-			std::vector<std::int32_t>  ordered;
-			std::vector<std::uint32_t> sorted;
-			for (const auto index : order) {
-				ordered.push_back(static_cast<std::int32_t>(cast[index]));
-				sorted.push_back(cast[index]);
-			}
-			std::ranges::sort(sorted);
 
 			if (piece) {
-				PendingFurniture pending{ piece->ref, piece->type, sorted };
+				PendingFurniture pending{ piece->ref, piece->type, ActorSlots<int>::Key(cast) };
 				pending.offset = scene->furnitureOffset;
 				pending.floorScene = scene->furniture.empty();
 				pending.fixedSpot = piece->spot;
-				std::scoped_lock lock(g_pendingFurnitureLock);
-				g_pendingFurniture = std::move(pending);
+				SetPendingFurniture(std::move(pending));
 			}
-			if (builder.starting.size() > 1 || (builder.starting.size() == 1 && builder.starting.front().duration > 0.0F)) {
-				auto sequence = std::make_shared<SceneRegistry::Sequence>();
-				sequence->id = std::format("thread {}", threadID);
-				sequence->actorCount = cast.size();
-				sequence->entries = builder.starting;
-				QueueSequence(std::move(sequence), sorted);
-			}
-			{
-				std::scoped_lock lock(g_pendingStartLock);
-				PendingStart start;
-				start.actors = sorted;
-				start.threadID = threadID;
-				start.duration = builder.duration;
-				start.undressAtStart = builder.undress;
-				start.noAutoMode = builder.noAutoMode;
-				start.noPlayerControl = builder.noPlayerControl;
-				start.noUndress = builder.noUndress;
-				start.endAfterSequence = builder.endAfterSequence;
-				start.metadata = builder.metadata;
-				g_pendingStart = std::move(start);
+			// Starting scenes after the first: a sequence, as OStim's starting
+			// nodes. An entry without a time plays for its scene's length;
+			// navigateTo puts in the way there from the entry before. One
+			// starting scene is a plain start, as OStim's (no sequence, no
+			// sequence end).
+			if (starting.size() > 1) {
+				const auto conditions = ConditionsOf(cast);
+				std::vector<SceneRegistry::SequenceEntry> entries;
+				for (std::size_t i = 0; i < starting.size(); ++i) {
+					auto       entry = starting[i];
+					const auto at = SceneRegistry::Find(entry.scene);
+					if (!at || at->actors.size() != cast.size()) {
+						REX::WARN("ThreadBuilder: thread {}: starting scene \"{}\" left out (no such scene for {} actor(s))", threadID, entry.scene, cast.size());
+						continue;
+					}
+					if (i > 0 && i < builder.navigateTo.size() && builder.navigateTo[i] && !entries.empty()) {
+						const auto from = SceneRegistry::Find(entries.back().scene);
+						if (from && from->id != at->id) {
+							auto route = RouteBetween(from, at, conditions, g_autoConfig.maxSteps);
+							if (!route.empty()) {
+								route.pop_back();  // the entry itself, with its own time, below
+								entries.insert(entries.end(), route.begin(), route.end());
+							}
+						}
+					}
+					if (entry.duration <= 0.0F) {
+						entry.duration = at->length > 0.0F ? at->length : STARTING_NO_LENGTH;
+					}
+					entries.push_back(std::move(entry));
+				}
+				if (entries.size() > 1) {
+					auto sequence = std::make_shared<SceneRegistry::Sequence>();
+					sequence->id = std::format("thread {}", threadID);
+					sequence->actorCount = cast.size();
+					sequence->entries = std::move(entries);
+					QueueSequence(std::move(sequence), cast);
+				}
 			}
 			REX::INFO("ThreadBuilder: thread {} starting \"{}\"{}", threadID, scene->id, here.empty() ? std::string{} : " on " + here);
 			if (g_vm) {
 				RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
 				const std::int32_t anchor = withPlayer ? 0 : static_cast<std::int32_t>(cast.front());
 				Compat::DispatchStaticCall(g_vm, "FourStimMenu"sv, "StartPickedCast"sv, callback, scene->id, ordered, anchor);
+			} else {
+				DropStartingThread(threadID, "no script engine");
 			}
 		});
 		return threadID;
@@ -7925,13 +8275,35 @@ namespace
 	{
 		WithBuilder(a_id, [&](ThreadBuilder& b) { b.duration = std::max(a_seconds, 0.0F); });
 	}
+	// As OStim's ThreadStartParams: an unknown scene is left out, with a warning.
+	bool KnownStartingScene(const std::string& a_scene, std::string_view a_what)
+	{
+		if (SceneRegistry::Find(a_scene)) {
+			return true;
+		}
+		REX::WARN("ThreadBuilder.{}: no scene \"{}\", left out", a_what, a_scene);
+		return false;
+	}
 	void TB_SetStartingAnimation(std::monostate, std::int32_t a_id, std::string a_scene)
 	{
-		WithBuilder(a_id, [&](ThreadBuilder& b) { b.starting = { SceneRegistry::SequenceEntry{ a_scene, 0.0F, 0 } }; });
+		if (!KnownStartingScene(a_scene, "SetStartingAnimation")) {
+			return;
+		}
+		WithBuilder(a_id, [&](ThreadBuilder& b) {
+			b.starting = { SceneRegistry::SequenceEntry{ a_scene, 0.0F, 0 } };
+			b.navigateTo = { false };
+		});
 	}
-	void TB_AddStartingAnimation(std::monostate, std::int32_t a_id, std::string a_scene, float a_duration, bool)
+	void TB_AddStartingAnimation(std::monostate, std::int32_t a_id, std::string a_scene, float a_duration, bool a_navigateTo)
 	{
-		WithBuilder(a_id, [&](ThreadBuilder& b) { b.starting.push_back(SceneRegistry::SequenceEntry{ a_scene, a_duration, 0 }); });
+		if (!KnownStartingScene(a_scene, "AddStartingAnimation")) {
+			return;
+		}
+		WithBuilder(a_id, [&](ThreadBuilder& b) {
+			b.navigateTo.resize(b.starting.size(), false);
+			b.starting.push_back(SceneRegistry::SequenceEntry{ a_scene, a_duration, 0 });
+			b.navigateTo.push_back(a_navigateTo);
+		});
 	}
 	void TB_SetStartingSequence(std::monostate, std::int32_t a_id, std::string a_sequence)
 	{
@@ -7940,16 +8312,24 @@ namespace
 			REX::WARN("ThreadBuilder.SetStartingSequence: no sequence \"{}\"", a_sequence);
 			return;
 		}
-		WithBuilder(a_id, [&](ThreadBuilder& b) { b.starting = sequence->entries; });
+		WithBuilder(a_id, [&](ThreadBuilder& b) {
+			b.starting = sequence->entries;
+			b.navigateTo.assign(b.starting.size(), false);
+		});
 	}
-	void TB_ConcatStartingSequence(std::monostate, std::int32_t a_id, std::string a_sequence, bool)
+	void TB_ConcatStartingSequence(std::monostate, std::int32_t a_id, std::string a_sequence, bool a_navigateTo)
 	{
 		const auto sequence = SceneRegistry::FindSequence(a_sequence);
 		if (!sequence) {
 			REX::WARN("ThreadBuilder.ConcatStartingSequence: no sequence \"{}\"", a_sequence);
 			return;
 		}
-		WithBuilder(a_id, [&](ThreadBuilder& b) { b.starting.insert(b.starting.end(), sequence->entries.begin(), sequence->entries.end()); });
+		WithBuilder(a_id, [&](ThreadBuilder& b) {
+			b.navigateTo.resize(b.starting.size(), false);
+			b.starting.insert(b.starting.end(), sequence->entries.begin(), sequence->entries.end());
+			b.navigateTo.push_back(a_navigateTo);  // the way to its first scene
+			b.navigateTo.resize(b.starting.size(), false);
+		});
 	}
 	void TB_EndAfterSequence(std::monostate, std::int32_t a_id) { WithBuilder(a_id, [](ThreadBuilder& b) { b.endAfterSequence = true; }); }
 	void TB_UndressActors(std::monostate, std::int32_t a_id) { WithBuilder(a_id, [](ThreadBuilder& b) { b.undress = true; }); }
@@ -8006,18 +8386,67 @@ namespace
 		}
 		return TB_Start({}, id);
 	}
-	bool T_IsRunning(std::monostate, std::int32_t a_id) { return FindThread(a_id) != nullptr; }
+	// The thread's record, under its lock, for a_do; false if there's no
+	// such thread (starting, running, or ended with its event not sent).
+	template <class F>
+	bool WithRecord(std::int32_t a_id, F a_do)
+	{
+		std::scoped_lock lock(g_threadsLock);
+		const auto record = ThreadRecordLocked(a_id);
+		if (!record) {
+			return false;
+		}
+		a_do(*record);
+		return true;
+	}
+
+	bool IsLive(const ThreadRecord& a_record) { return a_record.status != ThreadRecord::Status::kEnded; }
+
+	// As OStim's: a thread exists as soon as Start returned it (its actors
+	// are still being placed), until its scene ends.
+	bool T_IsRunning(std::monostate, std::int32_t a_id)
+	{
+		bool live = false;
+		WithRecord(a_id, [&](ThreadRecord& r) { live = IsLive(r); });
+		return live;
+	}
+	// Changes that need the running scene: done on the main thread, or kept
+	// for when it runs if it's still starting (a_whenStarting).
+	template <class F, class G>
+	void ThreadDo(std::int32_t a_id, F a_running, G a_whenStarting)
+	{
+		bool starting = false;
+		WithRecord(a_id, [&](ThreadRecord& r) {
+			if (r.status == ThreadRecord::Status::kStarting) {
+				a_whenStarting(r);
+				starting = true;
+			}
+		});
+		if (!starting) {
+			WithThread(a_id, std::move(a_running));
+		}
+	}
 	void T_Stop(std::monostate, std::int32_t a_id)
 	{
-		WithThread(a_id, [](ActiveScene& a) { EndActiveScene(a, "asked by another mod (FourThread.Stop)"); });
+		ThreadDo(
+			a_id, [](ActiveScene& a) { EndActiveScene(a, "asked by another mod (FourThread.Stop)"); },
+			[](ThreadRecord& r) { r.stopWhenStarted = true; });
 	}
-	std::int32_t T_GetThreadCount(std::monostate) { return static_cast<std::int32_t>(g_activeScenes.size()); }
+	std::int32_t T_GetThreadCount(std::monostate)
+	{
+		std::scoped_lock lock(g_threadsLock);
+		return static_cast<std::int32_t>(std::ranges::count_if(g_threads, [](const auto& a_entry) { return IsLive(a_entry.second); }));
+	}
 	std::vector<std::int32_t> T_GetAllThreadIDs(std::monostate)
 	{
 		std::vector<std::int32_t> ids;
-		for (const auto& a : g_activeScenes) {
-			ids.push_back(a.threadID);
+		std::scoped_lock lock(g_threadsLock);
+		for (const auto& [id, record] : g_threads) {
+			if (IsLive(record)) {
+				ids.push_back(id);
+			}
 		}
+		std::ranges::sort(ids);
 		return ids;
 	}
 	std::string T_GetScene(std::monostate, std::int32_t a_id)
@@ -8029,25 +8458,28 @@ namespace
 	// running finishes first; WarpTo goes there at once.
 	void ThreadGoTo(std::int32_t a_id, std::string a_scene, bool a_warp)
 	{
-		WithThread(a_id, [a_scene, a_warp](ActiveScene& a) {
-			const auto to = SceneRegistry::Find(a_scene);
-			if (!to || to->actors.size() != a.actors.size()) {
-				REX::WARN("FourThread: thread {} can't go to \"{}\"", a.threadID, a_scene);
-				return;
-			}
-			const auto from = SceneRegistry::Find(a.sceneID);
-			if (!a_warp && from && from->IsTransition()) {
-				a.queuedScene = to->id;
-				return;
-			}
-			if (a.sequence) {
-				a.sequence.reset();  // another mod took over
-			}
-			const int speed = std::min(a.speed, static_cast<int>(to->speeds.size()) - 1);
-			if (PlayOnActiveScene(a, to->id, std::max(speed, 0))) {
-				ArmAutoplay(a);
-			}
-		});
+		ThreadDo(
+			a_id,
+			[a_scene, a_warp](ActiveScene& a) {
+				const auto to = SceneRegistry::Find(a_scene);
+				if (!to || to->actors.size() != a.actors.size()) {
+					REX::WARN("FourThread: thread {} can't go to \"{}\"", a.threadID, a_scene);
+					return;
+				}
+				const auto from = SceneRegistry::Find(a.sceneID);
+				if (!a_warp && from && from->IsTransition()) {
+					a.queuedScene = to->id;
+					return;
+				}
+				if (a.sequence) {
+					a.sequence.reset();  // another mod took over
+				}
+				const int speed = std::min(a.speed, static_cast<int>(to->speeds.size()) - 1);
+				if (PlayOnActiveScene(a, to->id, std::max(speed, 0))) {
+					ArmAutoplay(a);
+				}
+			},
+			[a_scene](ThreadRecord& r) { r.sceneWhenStarted = a_scene; });
 	}
 	void T_NavigateTo(std::monostate, std::int32_t a_id, std::string a_scene) { ThreadGoTo(a_id, std::move(a_scene), false); }
 	void T_WarpTo(std::monostate, std::int32_t a_id, std::string a_scene, bool) { ThreadGoTo(a_id, std::move(a_scene), true); }
@@ -8058,59 +8490,85 @@ namespace
 	}
 	void T_SetSpeed(std::monostate, std::int32_t a_id, std::int32_t a_speed)
 	{
-		WithThread(a_id, [a_speed](ActiveScene& a) {
-			const auto scene = SceneRegistry::Find(a.sceneID);
-			if (!scene || scene->speeds.empty()) {
-				return;
-			}
-			const int speed = std::clamp(a_speed, 0, static_cast<int>(scene->speeds.size()) - 1);
-			if (speed != a.speed) {
-				PlayOnActiveScene(a, a.sceneID, speed);
+		ThreadDo(
+			a_id,
+			[a_speed](ActiveScene& a) {
+				const auto scene = SceneRegistry::Find(a.sceneID);
+				if (!scene || scene->speeds.empty()) {
+					return;
+				}
+				const int speed = std::clamp(a_speed, 0, static_cast<int>(scene->speeds.size()) - 1);
+				if (speed != a.speed) {
+					PlayOnActiveScene(a, a.sceneID, speed);
+				}
+			},
+			[a_speed](ThreadRecord& r) { r.speedWhenStarted = a_speed; });
+	}
+	// The actors in role order; while starting, in the order they were given.
+	std::vector<std::uint32_t> ThreadActors(std::int32_t a_id)
+	{
+		if (const auto a = FindThread(a_id)) {
+			return a->actors;
+		}
+		std::vector<std::uint32_t> out;
+		WithRecord(a_id, [&](ThreadRecord& r) {
+			if (IsLive(r)) {
+				out = r.roleActors;
 			}
 		});
+		return out;
 	}
 	std::vector<RE::Actor*> T_GetActors(std::monostate, std::int32_t a_id)
 	{
 		std::vector<RE::Actor*> out;
-		if (const auto a = FindThread(a_id)) {
-			for (const auto id : a->actors) {
-				out.push_back(RE::TESForm::GetFormByID<RE::Actor>(id));
-			}
+		for (const auto id : ThreadActors(a_id)) {
+			out.push_back(RE::TESForm::GetFormByID<RE::Actor>(id));
 		}
 		return out;
 	}
 	RE::Actor* T_GetActor(std::monostate, std::int32_t a_id, std::int32_t a_index)
 	{
-		const auto a = FindThread(a_id);
-		return a && a_index >= 0 && static_cast<std::size_t>(a_index) < a->actors.size() ? RE::TESForm::GetFormByID<RE::Actor>(a->actors[a_index]) : nullptr;
+		const auto actors = ThreadActors(a_id);
+		return a_index >= 0 && static_cast<std::size_t>(a_index) < actors.size() ? RE::TESForm::GetFormByID<RE::Actor>(actors[a_index]) : nullptr;
 	}
 	std::int32_t T_GetActorPosition(std::monostate, std::int32_t a_id, RE::Actor* a_actor)
 	{
-		const auto a = FindThread(a_id);
-		if (!a || !a_actor) {
+		if (!a_actor) {
 			return -1;
 		}
-		const auto it = std::ranges::find(a->actors, a_actor->GetFormID());
-		return it != a->actors.end() ? static_cast<std::int32_t>(it - a->actors.begin()) : -1;
+		const auto actors = ThreadActors(a_id);
+		const auto it = std::ranges::find(actors, a_actor->GetFormID());
+		return it != actors.end() ? static_cast<std::int32_t>(it - actors.begin()) : -1;
 	}
 	void T_StallClimax(std::monostate, std::int32_t a_id)
 	{
-		WithThread(a_id, [](ActiveScene& a) {
-			for (const auto id : a.actors) {
-				Excitement::SetStalled(id, true);
-			}
-		});
+		ThreadDo(
+			a_id,
+			[](ActiveScene& a) {
+				for (const auto id : a.actors) {
+					Excitement::SetStalled(id, true);
+				}
+			},
+			[](ThreadRecord& r) { r.stallWhenStarted = true; });
 	}
 	void T_PermitClimax(std::monostate, std::int32_t a_id, bool)
 	{
-		WithThread(a_id, [](ActiveScene& a) {
-			for (const auto id : a.actors) {
-				Excitement::SetStalled(id, false);
-			}
-		});
+		ThreadDo(
+			a_id,
+			[](ActiveScene& a) {
+				for (const auto id : a.actors) {
+					Excitement::SetStalled(id, false);
+				}
+			},
+			[](ThreadRecord& r) { r.stallWhenStarted = false; });
 	}
 	bool T_IsClimaxStalled(std::monostate, std::int32_t a_id)
 	{
+		bool stalled = false;
+		WithRecord(a_id, [&](ThreadRecord& r) { stalled = r.status == ThreadRecord::Status::kStarting && r.stallWhenStarted.value_or(false); });
+		if (stalled) {
+			return true;
+		}
 		const auto a = FindThread(a_id);
 		return a && std::ranges::any_of(a->actors, [](std::uint32_t id) { return Excitement::IsStalled(id); });
 	}
@@ -8126,78 +8584,94 @@ namespace
 	}
 	bool T_IsInAutoMode(std::monostate, std::int32_t a_id)
 	{
+		bool queued = false;
+		WithRecord(a_id, [&](ThreadRecord& r) { queued = r.status == ThreadRecord::Status::kStarting && r.autoWhenStarted.value_or(false); });
 		const auto a = FindThread(a_id);
-		return a && a->autoMode.on;
+		return queued || (a && a->autoMode.on);
 	}
 	void T_StartAutoMode(std::monostate, std::int32_t a_id)
 	{
-		WithThread(a_id, [](ActiveScene& a) {
-			if (!a.autoMode.on) {
-				StartAutoMode(a);
-			}
-		});
+		ThreadDo(
+			a_id,
+			[](ActiveScene& a) {
+				if (!a.autoMode.on) {
+					StartAutoMode(a);
+				}
+			},
+			[](ThreadRecord& r) { r.autoWhenStarted = true; });
 	}
 	void T_StopAutoMode(std::monostate, std::int32_t a_id)
 	{
-		WithThread(a_id, [](ActiveScene& a) {
-			if (a.autoMode.on) {
-				StopAutoMode(a);
-			}
-		});
+		ThreadDo(
+			a_id,
+			[](ActiveScene& a) {
+				if (a.autoMode.on) {
+					StopAutoMode(a);
+				}
+			},
+			[](ThreadRecord& r) { r.autoWhenStarted = false; });
 	}
+	// Metadata: read and written at once (OStim's are), from the record, so
+	// a starting thread has it too, and an ended one until its end event.
 	bool T_HasMetadata(std::monostate, std::int32_t a_id, std::string a_meta)
 	{
-		const auto a = FindThread(a_id);
-		return a && std::ranges::find(a->metadata, LowerCopy(a_meta)) != a->metadata.end();
+		bool has = false;
+		WithRecord(a_id, [&, meta = LowerCopy(a_meta)](ThreadRecord& r) { has = std::ranges::find(r.metadata, meta) != r.metadata.end(); });
+		return has;
 	}
 	void T_AddMetadata(std::monostate, std::int32_t a_id, std::string a_meta)
 	{
-		WithThread(a_id, [meta = LowerCopy(a_meta)](ActiveScene& a) {
-			if (std::ranges::find(a.metadata, meta) == a.metadata.end()) {
-				a.metadata.push_back(meta);
+		WithRecord(a_id, [meta = LowerCopy(a_meta)](ThreadRecord& r) {
+			if (std::ranges::find(r.metadata, meta) == r.metadata.end()) {
+				r.metadata.push_back(meta);
 			}
 		});
 	}
 	std::vector<std::string> T_GetMetadata(std::monostate, std::int32_t a_id)
 	{
-		const auto a = FindThread(a_id);
-		return a ? a->metadata : std::vector<std::string>{};
+		std::vector<std::string> out;
+		WithRecord(a_id, [&](ThreadRecord& r) { out = r.metadata; });
+		return out;
 	}
 	bool T_HasMetaFloat(std::monostate, std::int32_t a_id, std::string a_key)
 	{
-		const auto a = FindThread(a_id);
-		return a && a->metaFloat.contains(LowerCopy(a_key));
+		bool has = false;
+		WithRecord(a_id, [&, key = LowerCopy(a_key)](ThreadRecord& r) { has = r.metaFloat.contains(key); });
+		return has;
 	}
 	float T_GetMetaFloat(std::monostate, std::int32_t a_id, std::string a_key)
 	{
-		const auto a = FindThread(a_id);
-		if (!a) {
-			return 0.0F;
-		}
-		const auto it = a->metaFloat.find(LowerCopy(a_key));
-		return it != a->metaFloat.end() ? it->second : 0.0F;
+		float value = 0.0F;
+		WithRecord(a_id, [&, key = LowerCopy(a_key)](ThreadRecord& r) {
+			if (const auto it = r.metaFloat.find(key); it != r.metaFloat.end()) {
+				value = it->second;
+			}
+		});
+		return value;
 	}
 	void T_SetMetaFloat(std::monostate, std::int32_t a_id, std::string a_key, float a_value)
 	{
-		WithThread(a_id, [key = LowerCopy(a_key), a_value](ActiveScene& a) { a.metaFloat[key] = a_value; });
+		WithRecord(a_id, [key = LowerCopy(a_key), a_value](ThreadRecord& r) { r.metaFloat[key] = a_value; });
 	}
 	bool T_HasMetaString(std::monostate, std::int32_t a_id, std::string a_key)
 	{
-		const auto a = FindThread(a_id);
-		return a && a->metaString.contains(LowerCopy(a_key));
+		bool has = false;
+		WithRecord(a_id, [&, key = LowerCopy(a_key)](ThreadRecord& r) { has = r.metaString.contains(key); });
+		return has;
 	}
 	std::string T_GetMetaString(std::monostate, std::int32_t a_id, std::string a_key)
 	{
-		const auto a = FindThread(a_id);
-		if (!a) {
-			return {};
-		}
-		const auto it = a->metaString.find(LowerCopy(a_key));
-		return it != a->metaString.end() ? it->second : std::string{};
+		std::string value;
+		WithRecord(a_id, [&, key = LowerCopy(a_key)](ThreadRecord& r) {
+			if (const auto it = r.metaString.find(key); it != r.metaString.end()) {
+				value = it->second;
+			}
+		});
+		return value;
 	}
 	void T_SetMetaString(std::monostate, std::int32_t a_id, std::string a_key, std::string a_value)
 	{
-		WithThread(a_id, [key = LowerCopy(a_key), value = std::move(a_value)](ActiveScene& a) { a.metaString[key] = value; });
+		WithRecord(a_id, [key = LowerCopy(a_key), value = std::move(a_value)](ThreadRecord& r) { r.metaString[key] = value; });
 	}
 	bool T_PlaySequence(std::monostate, std::int32_t a_id, std::string a_sequence, bool, bool)
 	{
@@ -8209,7 +8683,23 @@ namespace
 		F4SE::GetTaskInterface()->AddTask([actor = a->actors.front(), sequence]() { StartSequenceOnScene(actor, sequence); });
 		return true;
 	}
-	std::int32_t A_GetThreadID(std::monostate, RE::Actor* a_actor) { return a_actor ? ThreadIDOf(a_actor->GetFormID()) : -1; }
+	// The actor's thread, a starting one too (OStim's threads exist from Start).
+	std::int32_t A_GetThreadID(std::monostate, RE::Actor* a_actor)
+	{
+		if (!a_actor) {
+			return -1;
+		}
+		if (const auto id = ThreadIDOf(a_actor->GetFormID()); id >= 0) {
+			return id;
+		}
+		std::scoped_lock lock(g_threadsLock);
+		for (const auto& [id, record] : g_threads) {
+			if (record.status == ThreadRecord::Status::kStarting && std::ranges::find(record.actors, a_actor->GetFormID()) != record.actors.end()) {
+				return id;
+			}
+		}
+		return -1;
+	}
 
 	// ---- OStim's OLibrary, OMetadata, OActor, OFurniture (docs/API.md) ----
 
@@ -9080,6 +9570,7 @@ namespace
 		a_vm->BindNativeMethod(SCRIPT_NAME, "Mute"sv, Mute);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "Unmute"sv, Unmute);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "IsMuted"sv, IsMuted);
+		a_vm->BindNativeMethod(SCRIPT_NAME, "SceneReleased"sv, SceneReleased);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "GetVoiceSetPairs"sv, GetVoiceSetPairs);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "GetVoiceSetName"sv, GetVoiceSetName);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "SetVoiceSet"sv, SetVoiceSet);
@@ -9627,7 +10118,7 @@ namespace
 			for (std::size_t i = 0; i < a_saved.actors.size(); ++i) {
 				resume.excitement.emplace_back(a_saved.actors[i], a_saved.excitement[i]);
 			}
-			g_pendingResume = std::move(resume);
+			g_pendingResume.Put(sorted, std::move(resume));
 		}
 		if (a_saved.furnitureRef || a_saved.furnitureFixedSpot) {
 			std::scoped_lock lock(g_pendingFurnitureLock);
@@ -9635,7 +10126,7 @@ namespace
 			pending.offset = scene->furnitureOffset;
 			pending.floorScene = scene->furniture.empty();
 			pending.fixedSpot = a_saved.furnitureFixedSpot;
-			g_pendingFurniture = std::move(pending);
+			g_pendingFurniture.Put(sorted, std::move(pending));
 		}
 		// Still blocked from before the save: 4Stim's to unblock when the
 		// scene leaves it (FourStimFurniture.Block leaves blocked furniture be).
@@ -9646,7 +10137,7 @@ namespace
 		// The clutter as it lay before the scene, not as the scene left it.
 		if (!a_saved.clutter.empty()) {
 			std::scoped_lock lock(g_pendingClutterLock);
-			g_pendingClutter = PendingClutter{ sorted, a_saved.clutter, true };
+			g_pendingClutter.Put(sorted, PendingClutter{ sorted, a_saved.clutter, true });
 		}
 		const bool   withPlayer = std::ranges::any_of(a_saved.actors, [](std::uint32_t id) { return IsPlayer(RE::TESForm::GetFormByID<RE::Actor>(id)); });
 		std::vector<std::int32_t> ids(a_saved.actors.begin(), a_saved.actors.end());
@@ -9715,8 +10206,22 @@ namespace
 				}
 				{
 					std::scoped_lock lock(g_pendingClutterLock);
-					g_pendingClutter.reset();
+					g_pendingClutter.Clear();
 				}
+				{
+					std::scoped_lock lock(g_pendingFurnitureLock);
+					g_pendingFurniture.Clear();
+				}
+				g_furnitureSpots.Clear();
+				{
+					std::scoped_lock lock(g_pendingResumeLock);
+					g_pendingResume.Clear();
+				}
+				{
+					std::scoped_lock lock(g_threadsLock);
+					g_threads.clear();  // threads end with the old game
+				}
+				g_endedThreads.clear();
 				Excitement::Clear();
 				Expressions::Clear();
 				Sounds::Clear();
@@ -9739,7 +10244,7 @@ namespace
 			});
 			{
 				std::scoped_lock lock(g_pendingSequenceLock);
-				g_pendingSequence.reset();
+				g_pendingSequence.Clear();
 			}
 			break;
 		case F4SE::MessagingInterface::kPostLoadGame:

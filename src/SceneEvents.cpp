@@ -133,9 +133,13 @@ namespace SceneEvents
 		ModEvents::SpeedChanged(a_threadID, a_sceneID, a_level);
 	}
 
-	void SceneEnded(const std::vector<std::uint32_t>& a_actors, const std::string& a_sceneID, std::int32_t a_threadID, const std::vector<std::string>& a_metadata)
+	void SceneStopped(const std::vector<std::uint32_t>& a_actors)
 	{
 		Physics::SceneEnded(a_actors);
+	}
+
+	void SceneEnded(const std::vector<std::uint32_t>& a_actors, const std::string& a_sceneID, std::int32_t a_threadID, const std::vector<std::string>& a_metadata)
+	{
 		Native(Kind::kEnd, a_actors);
 		Send("FourStim_OnSceneEnd"sv, FourStim::ResolveActors(a_actors), a_sceneID);
 		if (WithoutPlayer(a_actors)) {

@@ -155,6 +155,9 @@ Function LockForScene(Actor akActor) Global
 EndFunction
 
 Function ReleaseFromScene(Actor akActor) Global
+	if FourStim.IsInScene(akActor)
+		return  ; in a new scene already (started on the end): that scene holds them
+	endif
 	akActor.SetAnimationVariableBool("bHumanoidFootIKDisable", false)  ; as OStim's unlock
 	akActor.SetHeadTracking(true)
 	if IsPlayer(akActor)
@@ -247,7 +250,7 @@ Function PlaySoundForm(int aiSoundID, int aiActorID) Global
 EndFunction
 
 Function RestoreActorInteraction(Actor akActor) Global
-	if !IsPlayer(akActor)
+	if !IsPlayer(akActor) && !FourStim.IsInScene(akActor)
 		FourStim.RestoreInteraction(akActor)
 	endif
 EndFunction
@@ -301,6 +304,9 @@ Function EndScene(Actor akTarget) Global
 	ReleaseFromScene(akTarget)
 	Utility.Wait(1.0)
 	RestoreActorInteraction(akTarget)
+	Actor[] released = new Actor[1]
+	released[0] = akTarget
+	FourStim.SceneReleased(released)  ; the end event to other mods, now they're free
 EndFunction
 
 ; ---- Two-actor scenes ----
@@ -432,6 +438,7 @@ Function EndGroupScene(Actor[] akActors, bool abEndCamera = true) Global
 		RestoreActorInteraction(akActors[i])
 		i += 1
 	endwhile
+	FourStim.SceneReleased(akActors)  ; the end event to other mods, now they're free
 EndFunction
 
 ; ---- Sequences ----
@@ -473,6 +480,10 @@ Function EndPairScene(Actor akActor0, Actor akActor1) Global
 	Utility.Wait(1.0)
 	RestoreActorInteraction(akActor0)
 	RestoreActorInteraction(akActor1)
+	Actor[] released = new Actor[2]
+	released[0] = akActor0
+	released[1] = akActor1
+	FourStim.SceneReleased(released)  ; the end event to other mods, now they're free
 EndFunction
 
 ; The High Heels System's height for aiActorID off (abOn false: feet not on

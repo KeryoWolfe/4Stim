@@ -48,6 +48,13 @@ namespace SceneEvents
 	void SceneStarted(const std::vector<std::uint32_t>& a_actors, const std::string& a_sceneID, std::int32_t a_threadID, int a_speed);
 	void SceneChanged(const std::vector<std::uint32_t>& a_actors, const std::string& a_oldID, const std::string& a_newID, std::int32_t a_threadID, int a_speed);
 	void SpeedChanged(const std::vector<std::uint32_t>& a_actors, const std::string& a_sceneID, int a_level, int a_count, std::int32_t a_threadID);
+	// A scene stopped: 4Stim's own follow-ups (the physics swap back). At
+	// once, from the stop.
+	void SceneStopped(const std::vector<std::uint32_t>& a_actors);
+	// A scene ended and its actors are free again (OStim's Thread::close
+	// sends its end event after freeing everyone): the end event to other
+	// mods, scripts and plugins. After Papyrus has released the actors, so a
+	// scene a listener starts with them isn't undone by that release.
 	// a_metadata: the thread's, for the end event's JSON.
 	void SceneEnded(const std::vector<std::uint32_t>& a_actors, const std::string& a_sceneID, std::int32_t a_threadID, const std::vector<std::string>& a_metadata);
 	// A sequence played to its end (the scene goes on, on its last scene).
