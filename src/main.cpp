@@ -117,6 +117,8 @@ namespace
 	{
 		std::chrono::steady_clock::time_point last{};
 		int                                   count = 0;
+		std::uint32_t                         takenOutOf = 0;  // the furniture they were last taken out of
+		bool                                  staleLogged = false;
 	};
 	std::unordered_map<std::uint32_t, GuardKicks> g_guardKicks;
 	std::unordered_map<std::uint32_t, GuardKicks> g_holsterKicks;  // the scene guard's weapons put away, per actor, this scene
@@ -187,7 +189,7 @@ namespace
 		bool          hudEnabled = true;
 		bool          hudColumns = false;     // sHUDControls=Columns: OStim's control scheme (Left / Right between the list and the tab buttons)
 		bool          logAnimEvents = false;  // log scene actors' animation events (for authors)
-		bool          collisionWatch = false; // bCollisionWatch: the guard's look at what scene actors touch (off: it crashed the game)
+		bool          collisionWatch = false; // bCollisionWatch: log where scene actors' controllers and bodies are against their spots
 		bool          furnitureOutOfWay = true; // bFurnitureOutOfTheWay: scene furniture doesn't collide with the scene's actors
 		float         transitionLead = 0.0F;   // seconds before a transition's length to move on (see 4Stim.ini)
 		bool          matchSex = true;         // SetOnlyGayAnimsInGayScenes (OStim's intended sex only): a role's sex must be the actor's
@@ -1761,10 +1763,19 @@ namespace
 	// on, the ground and other actors joins the scene's collision group, as
 	// the furniture does. If they still touch it after that, it's set to
 	// collide with nothing for the scene. All put back when the actor's
-	// collision is (RestoreCollisionNow). For the owner's chair-in-a-corner
-	// test, where the player still shook with the chair out of the way:
-	// the window wall behind the chair, or the group not working on the
-	// chair, and this says which.
+	// collision is (RestoreCollisionNow). For a chair by a wall or in a
+	// corner (the owner's tests, 0.4.0 and 4 November): with the chair out
+	// of the way the player still shook against the wall behind it.
+	//
+	// With bFurnitureOutOfTheWay (on by default). Until 0.5.0 this was off
+	// (bCollisionWatch) after it crashed the owner's game: it named each
+	// touched body with bhkNPCollisionObject::Getbhk, whose Havok read check
+	// faulted, as the guard runs alongside the physics step. It no longer
+	// calls Getbhk: the touched bodies are matched against the collision
+	// objects of the references around the actor (their 3D, as the furniture
+	// change reads it from the same task queue without trouble). A body no
+	// reference near them owns (a precombined wall) is logged and left.
+	// bCollisionWatch now only adds the position lines.
 	struct TouchedBody
 	{
 		RE::NiPointer<RE::bhkNPCollisionObject> object;
@@ -1774,22 +1785,75 @@ namespace
 	std::unordered_map<std::uint32_t, std::vector<TouchedBody>>        g_touched;      // actor -> bodies changed for them (main thread)
 	std::unordered_map<std::uint32_t, std::unordered_set<const void*>> g_touchLogged;  // actor -> bodies logged this scene
 
+	// The collision objects of the references around an actor, looked up
+	// again at most every 5 seconds (main thread).
+	struct NearbyBodies
+	{
+		struct Entry
+		{
+			RE::NiPointer<RE::bhkNPCollisionObject> object;
+			std::uint32_t                           ref = 0;
+			std::uint32_t                           base = 0;
+			std::uint8_t                            type = 0;
+		};
+		std::chrono::steady_clock::time_point built{};
+		std::vector<Entry>                    entries;
+	};
+	std::unordered_map<std::uint32_t, NearbyBodies> g_nearbyBodies;  // actor -> what's around them
+
+	constexpr float WATCH_RADIUS = 160.0F;  // references this close to the actor are looked through
+
+	const NearbyBodies::Entry* OwnerOf(RE::Actor* a_actor, const RE::hknpBody* a_body)
+	{
+		auto&      nearby = g_nearbyBodies[a_actor->GetFormID()];
+		const auto now = std::chrono::steady_clock::now();
+		const auto find = [&]() -> const NearbyBodies::Entry* {
+			for (const auto& entry : nearby.entries) {
+				if (entry.object && entry.object->GetBody() == a_body) {
+					return &entry;
+				}
+			}
+			return nullptr;
+		};
+		if (const auto found = find()) {
+			return found;
+		}
+		if (now - nearby.built < std::chrono::seconds(5)) {
+			return nullptr;
+		}
+		nearby.built = now;
+		nearby.entries.clear();
+		std::size_t refs = 0;
+		Compat::ForEachReferenceInRange(a_actor->data.location, WATCH_RADIUS, [&](RE::TESObjectREFR* a_ref) {
+			const auto base = a_ref ? a_ref->GetObjectReference() : nullptr;
+			if (!base || a_ref->IsDisabled() || a_ref->IsDeleted() || base->GetFormType() == RE::ENUM_FORM_ID::kNPC_) {
+				return RE::BSContainer::ForEachResult::kContinue;
+			}
+			std::vector<RE::bhkNPCollisionObject*> objects;
+			CollectBodies(a_ref->Get3D(), objects, 16);
+			for (const auto object : objects) {
+				nearby.entries.push_back({ RE::NiPointer<RE::bhkNPCollisionObject>(object), a_ref->GetFormID(), base->GetFormID(), std::to_underlying(base->GetFormType()) });
+			}
+			return ++refs < 96 ? RE::BSContainer::ForEachResult::kContinue : RE::BSContainer::ForEachResult::kStop;
+		});
+		return find();
+	}
+
 	void WatchCollisions(RE::Actor* a_actor, const std::string& a_sceneID)
 	{
 		if (!Compat::CanReadCollisionBodies()) {
 			return;  // 1.10.163 without Getbhk / GetBody: no watch (compat/Fallbacks.h)
 		}
 		const auto controller = GetCharController(a_actor);
-		const auto world = controller ? controller->GetWorldImpl() : nullptr;
 		const auto own = controller ? controller->GetBodyImpl() : nullptr;
-		if (!world || !own) {
+		if (!own) {
 			return;
 		}
 		// Where the controller and the drawn body are, against where the
 		// actor is (the lock's spot): a shake that the lock watchdog never
 		// saw (no "Scene lock:" in the owner's log) is one of these. At most
 		// once a second, ten times a scene.
-		{
+		if (g_settings.collisionWatch) {
 			struct Seen
 			{
 				std::chrono::steady_clock::time_point last{};
@@ -1825,79 +1889,79 @@ namespace
 				}
 			}
 		}
+		if (!g_lockScenes || !g_settings.furnitureOutOfWay) {
+			return;
+		}
 		RE::CFilter ownFilter{};
 		ownFilter.filter = own->m_collisionFilterInfo;
 		const auto                            group = ownFilter.GetSystemGroup();
 		RE::BSScrapArray<const RE::hknpBody*> bodies;
-		if (!controller->GetCurrentCollisionsImpl(bodies)) {
+		if (group == 0 || !controller->GetCurrentCollisionsImpl(bodies)) {
 			return;
 		}
 		const auto id = a_actor->GetFormID();
 		const auto support = controller->supportBody.get();
+		const auto supportBody = support ? support->GetBody() : nullptr;
 		for (const auto body : bodies) {
-			if (!body || body == own) {
+			if (!body || body == own || body == supportBody) {
 				continue;
 			}
 			RE::CFilter filter{};
 			filter.filter = body->m_collisionFilterInfo;
 			const auto layer = filter.GetCollisionLayer();
-			if (layer == RE::COL_LAYER::kCharController || layer == RE::COL_LAYER::kBiped) {
-				continue;  // actors (the scene's share a group already)
+			if (layer == RE::COL_LAYER::kCharController || layer == RE::COL_LAYER::kBiped || layer == RE::COL_LAYER::kTerrain || layer == RE::COL_LAYER::kGround) {
+				continue;  // actors (the scene's share a group already), and the ground
 			}
-			auto       bodyID = body->m_id;
-			const auto object = RE::bhkNPCollisionObject::Getbhk(world, bodyID);
-			if (!object) {
+			const auto owner = OwnerOf(a_actor, body);
+			if (!owner) {
+				if (g_touchLogged[id].insert(body).second) {
+					REX::INFO("Collision watch: {:08X} in \"{}\" touches a body no reference near them owns (layer {}, filter {:08X}; a precombined wall?): left as it is",
+						id, a_sceneID, std::to_underlying(layer), filter.filter);
+				}
 				continue;
 			}
-			const auto node = object->GetSceneGraphObject();
-			const auto ref = node ? RE::TESObjectREFR::FindReferenceFor3D(node) : nullptr;
-			const auto base = ref ? ref->GetObjectReference() : nullptr;
-			const bool supporting = object == support;
-			const bool ground = layer == RE::COL_LAYER::kTerrain || layer == RE::COL_LAYER::kGround;
+			const auto object = owner->object.get();
 			if (g_touchLogged[id].insert(object).second) {
-				REX::INFO("Collision watch: {:08X} in \"{}\" touches {:08X} (base {:08X}, type {}, node \"{}\", layer {}, filter {:08X}){}", id, a_sceneID,
-					ref ? ref->GetFormID() : 0, base ? base->GetFormID() : 0, base ? std::to_underlying(base->GetFormType()) : 0,
-					node ? node->name.c_str() : "", std::to_underlying(layer), filter.filter,
-					supporting ? ", standing on it" : ground ? ", the ground" : "");
-			}
-			if (supporting || ground || !g_lockScenes || group == 0) {
-				continue;
+				REX::INFO("Collision watch: {:08X} in \"{}\" touches {:08X} (base {:08X}, type {}, layer {}, filter {:08X})", id, a_sceneID, owner->ref, owner->base,
+					owner->type, std::to_underlying(layer), filter.filter);
 			}
 			// Furniture already out of the way and still touched: the group
 			// isn't enough there; no collision at all (its own filter is the
 			// furniture's saved one).
 			{
 				std::scoped_lock lock(g_furnitureFiltersLock);
-				for (const auto& [furniture, saved] : g_furnitureFilters) {
+				bool             furniture = false;
+				for (const auto& [ref, saved] : g_furnitureFilters) {
 					if (std::ranges::any_of(saved, [&](const SavedBody& a_saved) { return a_saved.object.get() == object; })) {
+						furniture = true;
 						if (!filter.QNoCollision()) {
 							filter.SetNoCollision(true);
 							const auto ok = object->SetCollisionFilterInfo(filter);
 							REX::WARN("Collision watch: {:08X} still touches furniture {:08X} in its collision group: no collision for it this scene ({})", id,
-								ref ? ref->GetFormID() : 0, ok);
+								owner->ref, ok);
 						}
-						goto next;
+						break;
 					}
 				}
-			}
-			{
-				auto&      list = g_touched[id];
-				const auto it = std::ranges::find_if(list, [&](const TouchedBody& a_touched) { return a_touched.object.get() == object; });
-				if (it == list.end()) {
-					RE::CFilter changed = filter;
-					changed.SetSystemGroup(group);
-					if (object->SetCollisionFilterInfo(changed)) {
-						list.push_back({ RE::NiPointer<RE::bhkNPCollisionObject>(object), filter.filter, false });
-						REX::INFO("Collision watch: {:08X} ({:08X}) put in {:08X}'s collision group for the scene", ref ? ref->GetFormID() : 0, filter.filter, id);
-					}
-				} else if (!it->noCollision) {
-					filter.SetNoCollision(true);
-					it->noCollision = true;
-					const auto ok = object->SetCollisionFilterInfo(filter);
-					REX::WARN("Collision watch: {:08X} still touches {:08X} in its collision group: no collision for it this scene ({})", id, ref ? ref->GetFormID() : 0, ok);
+				if (furniture) {
+					continue;
 				}
 			}
-		next:;
+			auto&      list = g_touched[id];
+			const auto it = std::ranges::find_if(list, [&](const TouchedBody& a_touched) { return a_touched.object.get() == object; });
+			if (it == list.end()) {
+				RE::CFilter changed = filter;
+				changed.SetSystemGroup(group);
+				if (object->SetCollisionFilterInfo(changed)) {
+					list.push_back({ owner->object, filter.filter, false });
+					REX::INFO("Collision watch: {:08X} ({:08X}) put in {:08X}'s collision group for the scene", owner->ref, filter.filter, id);
+				}
+			} else if (!it->noCollision) {
+				filter.SetNoCollision(true);
+				it->noCollision = true;
+				const auto ok = object->SetCollisionFilterInfo(filter);
+				REX::WARN("Collision watch: {:08X} still touches {:08X} in its collision group: no collision for it this scene ({})", id, owner->ref, ok);
+			}
 		}
 	}
 
@@ -1906,6 +1970,7 @@ namespace
 	void RestoreTouched(std::uint32_t a_actor)
 	{
 		g_touchLogged.erase(a_actor);
+		g_nearbyBodies.erase(a_actor);
 		const auto it = g_touched.find(a_actor);
 		if (it == g_touched.end()) {
 			return;
@@ -2018,6 +2083,7 @@ namespace
 		for (const auto id : a_actors) {
 			g_visibilityLast.erase(id);  // the visibility check logs them afresh
 			g_touchLogged.erase(id);     // and the collision watch
+			g_nearbyBodies.erase(id);
 			if (!IsPlayer(RE::TESForm::GetFormByID<RE::Actor>(id))) {
 				ScenePackage::Add(id);  // scenes resumed from a save, too (SuppressInteraction adds the rest earlier)
 			}
@@ -3335,6 +3401,7 @@ namespace
 			const auto base = furniture->GetObjectReference();
 			REX::INFO("Furniture use: {:08X} is using {:08X} (base {:08X} \"{}\"), taking them out", a_actor->GetFormID(), furniture->GetFormID(),
 				base ? base->GetFormID() : 0, base && base->GetFormEditorID() ? base->GetFormEditorID() : "");
+			g_guardKicks[a_actor->GetFormID()].takenOutOf = furniture->GetFormID();
 			if (Compat::CanStopInteractingQuick()) {
 				a_actor->StopInteractingQuick(true, false, true);
 			} else if (g_vm) {
@@ -3667,11 +3734,9 @@ namespace
 						}
 					}
 				}
-				// Off by default: it reads the Havok world from the scene clock,
-				// which runs in a job alongside the physics step, and it crashed
-				// the owner's game there (1 November: Getbhk's read-access check,
-				// on the scene's first settled tick).
-				if (actor && settled && g_settings.collisionWatch) {
+				// Without Getbhk since 0.5.0 (it crashed the owner's game from
+				// here, 1 November): see WatchCollisions.
+				if (actor && settled) {
 					WatchCollisions(actor, active.sceneID);
 				}
 				if (!actor || IsPlayer(actor)) {
@@ -3736,7 +3801,18 @@ namespace
 					}
 					continue;
 				}
-				if (auto& kicks = g_guardKicks[id]; kicks.count < 3 && now - kicks.last > std::chrono::seconds(5) && FurnitureOf(actor)) {
+				// The same furniture again after StopInteractingQuick took them
+				// out of it: the process keeps a stale handle (the owner's Ana
+				// and a garden idle marker, 4 November: "taken out" three times,
+				// she never went back, and each replay restarted the scene).
+				// Not replayed for it; the lock holds them on their spot.
+				const auto inFurniture = FurnitureOf(actor);
+				if (auto& kicks = g_guardKicks[id]; inFurniture && Compat::CanStopInteractingQuick() && inFurniture->GetFormID() == kicks.takenOutOf) {
+					if (!kicks.staleLogged) {
+						kicks.staleLogged = true;
+						REX::INFO("Scene guard: {:08X} still shows {:08X}, which they were taken out of: a stale handle, left be", id, kicks.takenOutOf);
+					}
+				} else if (inFurniture && kicks.count < 3 && now - kicks.last > std::chrono::seconds(5)) {
 					kicks.last = now;
 					if (++kicks.count == 3) {
 						REX::WARN("Scene guard: {:08X} keeps going back into furniture; leaving it be for this scene", id);
