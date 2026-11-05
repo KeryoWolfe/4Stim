@@ -783,6 +783,22 @@ namespace SceneRegistry
 
 		// Checks the raw sequences against the loaded scenes. Returns the
 		// number kept.
+		// A scene by an id a link names. 0.5.0 moved the base scenes from the
+		// old test pack's "4StimTest_<OStim id>" to OStim's own ids; packs
+		// converted against the old test pack (hubs from make-hubs.py,
+		// transitions back to a base scene) still name the old ones, so an
+		// unknown "4StimTest_X" finds X.
+		std::unordered_map<std::string, Scene>::iterator FindLinked(std::string_view a_id)
+		{
+			auto key = Lower(a_id);
+			auto it = g_scenes.find(key);
+			constexpr std::string_view OLD_PREFIX = "4stimtest_";
+			if (it == g_scenes.end() && key.starts_with(OLD_PREFIX)) {
+				it = g_scenes.find(key.substr(OLD_PREFIX.size()));
+			}
+			return it;
+		}
+
 		int BuildSequences(std::unordered_map<std::string, std::shared_ptr<const Sequence>>& a_out)
 		{
 			int kept = 0;
@@ -793,7 +809,7 @@ namespace SceneRegistry
 				for (const auto& e : raw.entries) {
 					++index;
 					const auto sceneID = e.is_object() ? e.value("id", std::string{}) : e.is_string() ? e.get<std::string>() : std::string{};
-					const auto it = g_scenes.find(Lower(sceneID));
+					const auto it = FindLinked(sceneID);
 					if (it == g_scenes.end()) {
 						problem = std::format("entry {}: no scene \"{}\"", index, sceneID);
 						break;
@@ -917,8 +933,8 @@ namespace SceneRegistry
 			// OStim does (stable: file order otherwise).
 			int dropped = 0;
 			for (auto& raw : g_rawNavigations) {
-				const auto origin = g_scenes.find(Lower(raw.origin));
-				const auto dest = g_scenes.find(Lower(raw.nav.to));
+				const auto origin = FindLinked(raw.origin);
+				const auto dest = FindLinked(raw.nav.to);
 				if (origin == g_scenes.end() || dest == g_scenes.end()) {
 					// OStim's noWarnings: a link to a scene that may not be
 					// installed (another pack's) goes quietly. 4Stim's addition:
@@ -929,7 +945,7 @@ namespace SceneRegistry
 					const bool base = Lower(missing).starts_with("ostim");
 					if (!raw.nav.noWarnings || base) {
 						REX::WARN("Scenes: {}: navigation \"{}\" -> \"{}\" dropped (no scene \"{}\"{})", raw.file, raw.origin, raw.nav.to, missing,
-							base ? ": an OStim base scene, so the base scenes aren't installed or are under other ids" : "");
+							base ? ": an OStim base scene, not installed (the test pack has only those it has animations for)" : "");
 					}
 					++dropped;
 					continue;
@@ -954,7 +970,7 @@ namespace SceneRegistry
 			// Auto transitions (climax scenes...): a loaded scene with the same actors.
 			for (auto& [key, scene] : g_scenes) {
 				std::erase_if(scene.autoTransitions, [&](auto& a_entry) {
-					const auto dest = g_scenes.find(Lower(a_entry.second));
+					const auto dest = FindLinked(a_entry.second);
 					if (dest == g_scenes.end() || dest->second.actors.size() != scene.actors.size()) {
 						REX::WARN("Scenes: {}: scene \"{}\" {} scene \"{}\" dropped (no such scene, or a different number of actors)",
 							scene.sourceFile, scene.id, a_entry.first, a_entry.second);
@@ -965,7 +981,7 @@ namespace SceneRegistry
 				});
 				for (auto& role : scene.actors) {
 					std::erase_if(role.autoTransitions, [&](auto& a_entry) {
-						const auto dest = g_scenes.find(Lower(a_entry.second));
+						const auto dest = FindLinked(a_entry.second);
 						if (dest == g_scenes.end() || dest->second.actors.size() != scene.actors.size()) {
 							REX::WARN("Scenes: {}: scene \"{}\" {} scene \"{}\" dropped (no such scene, or a different number of actors)",
 								scene.sourceFile, scene.id, a_entry.first, a_entry.second);
@@ -983,7 +999,7 @@ namespace SceneRegistry
 				if (!scene.IsTransition()) {
 					continue;
 				}
-				const auto dest = g_scenes.find(Lower(scene.destination));
+				const auto dest = FindLinked(scene.destination);
 				std::string problem;
 				if (dest == g_scenes.end()) {
 					problem = "no such scene";

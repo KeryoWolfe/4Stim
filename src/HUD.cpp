@@ -149,7 +149,13 @@ namespace HUD
 			if (a_icon.empty()) {
 				return {};
 			}
-			auto path = std::string(ICON_DIR) + Slashes(a_icon);
+			auto icon = Slashes(a_icon);
+			// OStim's own scene files name their icons "OStim/...": 4Stim ships
+			// OStim's icons under "4Stim/" (as Options.cpp maps them too).
+			if (icon.size() >= 6 && _strnicmp(icon.c_str(), "ostim/", 6) == 0) {
+				icon = "4Stim/" + icon.substr(6);
+			}
+			auto path = std::string(ICON_DIR) + icon;
 			const auto slash = path.find_last_of('/');
 			if (path.find('.', slash == std::string::npos ? 0 : slash) == std::string::npos) {
 				path += ".dds";
