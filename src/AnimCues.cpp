@@ -2,7 +2,11 @@
 
 #include <algorithm>
 #include <atomic>
+#include <chrono>
 #include <cstring>
+#include <fstream>
+#include <thread>
+#include <unordered_set>
 #include <memory>
 #include <mutex>
 #include <unordered_map>
@@ -29,7 +33,8 @@ namespace AnimCues
 
 		struct Playing
 		{
-			std::shared_ptr<const Clip> clip;
+			std::shared_ptr<const Clip> clip;     // null while the file is being read
+			std::string                 key;      // its file, lowercase
 			bool                        loops = false;
 			float                       time = 0.0F;  // in the clip
 			std::size_t                 next = 0;     // the next cue to fire
@@ -37,6 +42,7 @@ namespace AnimCues
 
 		std::mutex                                                     g_lock;
 		std::unordered_map<std::string, std::shared_ptr<const Clip>>   g_clips;    // by file (lowercase)
+		std::unordered_set<std::string>                                g_reading;  // files a worker is reading
 		std::unordered_map<std::uint32_t, Playing>                     g_playing;  // by actor
 		std::atomic<bool>                                              g_engine = false;
 
@@ -168,40 +174,64 @@ namespace AnimCues
 			return clip;
 		}
 
-		std::shared_ptr<const Clip> Load(const std::string& a_file)
+		std::string Key(const std::string& a_file)
 		{
 			std::string key = a_file;
 			std::ranges::transform(key, key.begin(), [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+			return key;
+		}
+
+		// Reads and parses a_file on a worker thread: never on the main
+		// thread, and never through the game's own file system first. The
+		// first build read it on the main thread with BSResourceNiBinaryStream
+		// right after PlayIdle had asked the game to load the same file, and
+		// froze the game (the owner's "Turn around" from a standing hold, 5
+		// November: the log stopped there, no crash). Loose files (Mod
+		// Organizer's virtual Data folder included) are read with plain file
+		// reads; the game's file system is only tried for a file that isn't
+		// loose (one in a .ba2), and only here, off the main thread.
+		void ReadAsync(const std::string& a_file, const std::string& a_key)
+		{
 			{
 				std::scoped_lock lock(g_lock);
-				if (const auto it = g_clips.find(key); it != g_clips.end()) {
-					return it->second;
+				if (g_clips.contains(a_key) || !g_reading.insert(a_key).second) {
+					return;
 				}
 			}
-			std::vector<char>            bytes;
-			RE::BSResourceNiBinaryStream stream(("Meshes\\" + a_file).c_str());
-			if (stream) {
-				std::vector<char> chunk(1 << 16);
-				while (bytes.size() < (16u << 20)) {
-					const auto read = stream.binary_read(chunk.data(), chunk.size());
-					if (read == 0) {
-						break;
+			std::thread([a_file, a_key]() {
+				std::vector<char> bytes;
+				bool              opened = false;
+				if (std::ifstream in("Data\\Meshes\\" + a_file, std::ios::binary); in) {
+					opened = true;
+					bytes.assign(std::istreambuf_iterator<char>(in), std::istreambuf_iterator<char>());
+				} else {
+					RE::BSResourceNiBinaryStream stream(("Meshes\\" + a_file).c_str());
+					if (stream) {
+						opened = true;
+						std::vector<char> chunk(1 << 16);
+						while (bytes.size() < (16u << 20)) {
+							const auto read = stream.binary_read(chunk.data(), chunk.size());
+							if (read == 0) {
+								break;
+							}
+							bytes.insert(bytes.end(), chunk.data(), chunk.data() + read);
+						}
 					}
-					bytes.insert(bytes.end(), chunk.data(), chunk.data() + read);
 				}
-			}
-			auto clip = std::make_shared<Clip>(Parse(bytes));
-			if (!stream) {
-				REX::WARN("Animation cues: Meshes\\{} couldn't be opened", a_file);
-			} else if (!clip->cues.empty()) {
-				std::string list;
-				for (const auto& cue : clip->cues) {
-					list += std::format("{}{}{}{} at {:.2f}s", list.empty() ? "" : ", ", cue.tag, cue.payload.empty() ? "" : ".", cue.payload, cue.time);
+				auto clip = std::make_shared<Clip>(Parse(bytes));
+				if (!opened) {
+					REX::WARN("Animation cues: Meshes\\{} couldn't be opened", a_file);
+				} else if (!clip->cues.empty()) {
+					std::string list;
+					for (const auto& cue : clip->cues) {
+						list += std::format("{}{}{}{} at {:.2f}s", list.empty() ? "" : ", ", cue.tag, cue.payload.empty() ? "" : ".", cue.payload, cue.time);
+					}
+					REX::INFO("Animation cues: {} ({:.2f}s): {}", a_file, clip->duration, list);
 				}
-				REX::INFO("Animation cues: {} ({:.2f}s): {}", a_file, clip->duration, list);
-			}
-			std::scoped_lock lock(g_lock);
-			return g_clips.emplace(std::move(key), std::move(clip)).first->second;
+				std::scoped_lock lock(g_lock);
+				g_clips.emplace(a_key, std::move(clip));
+				g_reading.erase(a_key);
+			}).detach();
 		}
 	}
 
@@ -212,13 +242,20 @@ namespace AnimCues
 			Stop({ a_actor });
 			return;
 		}
-		auto clip = Load(file);
-		std::scoped_lock lock(g_lock);
-		if (clip->cues.empty()) {
-			g_playing.erase(a_actor);
-			return;
+		const auto key = Key(file);
+		{
+			std::scoped_lock lock(g_lock);
+			const auto it = g_clips.find(key);
+			if (it != g_clips.end() && it->second->cues.empty()) {
+				g_playing.erase(a_actor);
+				return;
+			}
+			g_playing[a_actor] = { it != g_clips.end() ? it->second : nullptr, key, a_loops, 0.0F, 0 };
+			if (it != g_clips.end()) {
+				return;
+			}
 		}
-		g_playing[a_actor] = { std::move(clip), a_loops, 0.0F, 0 };
+		ReadAsync(file, key);  // the clock counts from now; its cues start once it's read
 	}
 
 	void Stop(const std::vector<std::uint32_t>& a_actors)
@@ -244,9 +281,35 @@ namespace AnimCues
 		std::scoped_lock lock(g_lock);
 		for (auto it = g_playing.begin(); it != g_playing.end();) {
 			auto&       p = it->second;
+			const float advance = a_seconds * std::max(a_rate(it->first), 0.0F);
+			bool        counted = false;
+			if (!p.clip) {
+				// Still being read: count the time. Once it's in, cues already
+				// more than a moment behind are skipped, not fired in a burst.
+				p.time += advance;
+				counted = true;
+				const auto found = g_clips.find(p.key);
+				if (found == g_clips.end()) {
+					++it;
+					continue;
+				}
+				if (found->second->cues.empty()) {
+					it = g_playing.erase(it);
+					continue;
+				}
+				p.clip = found->second;
+				if (p.clip->duration > 0.0F && p.loops) {
+					p.time = std::fmod(p.time, p.clip->duration);
+				}
+				while (p.next < p.clip->cues.size() && p.clip->cues[p.next].time < p.time - 0.1F) {
+					++p.next;
+				}
+			}
 			const auto& cues = p.clip->cues;
 			const float duration = p.clip->duration;
-			p.time += a_seconds * std::max(a_rate(it->first), 0.0F);
+			if (!counted) {
+				p.time += advance;
+			}
 			bool done = false;
 			// At most a few laps a tick (a very short clip at a high rate).
 			for (int lap = 0; lap < 4; ++lap) {
