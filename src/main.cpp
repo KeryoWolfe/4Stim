@@ -1832,7 +1832,7 @@ namespace
 			std::vector<RE::bhkNPCollisionObject*> objects;
 			CollectBodies(a_ref->Get3D(), objects, 16);
 			for (const auto object : objects) {
-				nearby.entries.push_back({ RE::NiPointer<RE::bhkNPCollisionObject>(object), a_ref->GetFormID(), base->GetFormID(), std::to_underlying(base->GetFormType()) });
+				nearby.entries.push_back({ RE::NiPointer<RE::bhkNPCollisionObject>(object), a_ref->GetFormID(), base->GetFormID(), static_cast<std::uint8_t>(base->GetFormType()) });
 			}
 			return ++refs < 96 ? RE::BSContainer::ForEachResult::kContinue : RE::BSContainer::ForEachResult::kStop;
 		});
