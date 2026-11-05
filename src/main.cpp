@@ -1866,7 +1866,7 @@ namespace
 				g_touchLogged[a_actor->GetFormID()];
 			}
 			const auto now = std::chrono::steady_clock::now();
-			if (entry.count < 10 && now - entry.last > std::chrono::seconds(1)) {
+			if (entry.count < 20 && now - entry.last > std::chrono::milliseconds(200)) {
 				RE::hkVector4f at{};
 				controller->GetPositionImpl(at, false);
 				constexpr float HAVOK_TO_GAME = 69.99125F;  // Fallout 4's Havok scale (1 / 0.0142875)
@@ -1880,12 +1880,22 @@ namespace
 				const auto         dy = controllerAt.y - a_actor->data.location.y;
 				const float        offController = std::sqrt(dx * dx + dy * dy);
 				const float        offDrawn = drawnAt.GetDistance(a_actor->data.location);
-				if (offController > 4.0F || offDrawn > 4.0F) {
+				// Every check while it lasts (20 a scene), not only when off: the
+				// owner's chair shake (4 November) bounced the player a few
+				// pixels up and down with nothing past 4 units here. With what
+				// the controller stands on and how much it collides with.
+				(void)offController;
+				(void)offDrawn;
+				{
 					entry.last = now;
 					++entry.count;
-					REX::INFO("Collision watch: {:08X} in \"{}\" at ({:.1f}, {:.1f}, {:.1f}); controller at ({:.1f}, {:.1f}, {:.1f}) ({:.1f} off across the ground), body drawn at ({:.1f}, {:.1f}, {:.1f}) ({:.1f} off)",
+					const auto support = controller->supportBody.get();
+					const auto supportNode = support ? support->GetSceneGraphObject() : nullptr;
+					const auto supportRef = supportNode ? RE::TESObjectREFR::FindReferenceFor3D(supportNode) : nullptr;
+					REX::INFO("Collision watch: {:08X} in \"{}\" at ({:.1f}, {:.1f}, {:.1f}); controller at ({:.1f}, {:.1f}, {:.1f}) ({:.1f} off across the ground), body drawn at ({:.1f}, {:.1f}, {:.1f}) ({:.1f} off); stands on {:08X} (layer {}), {} collision(s), state {}, fall time {:.2f}",
 						a_actor->GetFormID(), a_sceneID, a_actor->data.location.x, a_actor->data.location.y, a_actor->data.location.z, controllerAt.x, controllerAt.y,
-						controllerAt.z, offController, drawnAt.x, drawnAt.y, drawnAt.z, offDrawn);
+						controllerAt.z, offController, drawnAt.x, drawnAt.y, drawnAt.z, offDrawn, supportRef ? supportRef->GetFormID() : 0,
+						std::to_underlying(controller->supportLayer.get()), controller->numCollisions, std::to_underlying(controller->wantState.get()), controller->fallTime);
 				}
 			}
 		}
