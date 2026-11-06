@@ -4512,8 +4512,26 @@ namespace
 			}
 			if (why.empty() && !withPlayer && player) {
 				const auto first = RE::TESForm::GetFormByID<RE::Actor>(active.actors.front());
-				if (first && first->parentCell != player->parentCell) {
-					why = "the player isn't in its cell";
+				// OStim (Thread::loop) ends an NPC scene when its first actor
+				// and the player aren't in the same cell. Outdoors that's
+				// wrong for Fallout 4: exterior cells are 4096 units, so a
+				// player standing beside an NPC scene in a settlement is often
+				// one cell over, and the owner's NPC scenes ended within
+				// seconds (5 November). Indoors 4Stim compares cells as OStim
+				// does; outdoors, same worldspace and the scene's cell still
+				// attached (in the loaded grid around the player) and its
+				// actor's 3D still there.
+				const auto sceneCell = first ? first->parentCell : nullptr;
+				const auto playerCell = player->parentCell;
+				if (first && sceneCell != playerCell) {
+					const bool outdoors = sceneCell && playerCell && sceneCell->IsExterior() && playerCell->IsExterior();
+					if (!outdoors) {
+						why = "the player isn't in its cell";
+					} else if (sceneCell->worldSpace != playerCell->worldSpace) {
+						why = "the player isn't in its worldspace";
+					} else if (!sceneCell->IsAttached() || !first->Get3D()) {
+						why = "its cell isn't loaded around the player any more";
+					}
 				}
 			}
 			if (!why.empty()) {
