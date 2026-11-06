@@ -6,6 +6,7 @@
 #include <unordered_map>
 
 #include "Actions.h"
+#include "StimOverrides.h"
 
 namespace Excitement
 {
@@ -60,6 +61,12 @@ namespace Excitement
 		const auto speeds = std::max<std::size_t>(a_scene.speeds.size(), 1);
 		const float speedMod = 1.0F + static_cast<float>(std::clamp(a_speed, 0, static_cast<int>(speeds) - 1)) / static_cast<float>(speeds);
 
+		// OStim's ActionAttributes::getStimulation(role, actor): an actor's
+		// own stimulation for an action, if one is set (by their base).
+		std::vector<std::uint32_t> bases;
+		for (const auto id : a_ids) {
+			bases.push_back(StimOverrides::BaseOf(id));
+		}
 		std::scoped_lock lock(g_lock);
 		for (std::size_t role = 0; role < a_ids.size(); ++role) {
 			auto& state = g_states[a_ids[role]];
@@ -72,15 +79,21 @@ namespace Excitement
 			std::vector<float> stimulations;
 			float              ceiling = 0.0F;
 			for (const auto& action : a_scene.actions) {
-				auto take = [&](std::size_t a_role, const Actions::Side& a_side) {
-					if (a_role == role && a_side.stimulation != 0.0F) {
-						stimulations.push_back(a_side.stimulation);
-						ceiling = std::max(ceiling, a_side.maxStimulation);
+				auto take = [&](std::size_t a_role, const Actions::Side& a_side, int a_side_bit) {
+					if (a_role != role) {
+						return;
+					}
+					const auto& type = action.type->id;
+					const float stim = StimOverrides::Stimulation(StimOverrides::Kind::kAction, a_side_bit, bases[role], type).value_or(a_side.stimulation);
+					const float max = StimOverrides::MaxStimulation(StimOverrides::Kind::kAction, a_side_bit, bases[role], type).value_or(a_side.maxStimulation);
+					if (stim != 0.0F) {
+						stimulations.push_back(stim);
+						ceiling = std::max(ceiling, max);
 					}
 				};
-				take(action.actor, action.type->actor);
-				take(action.target, action.type->target);
-				take(action.performer, action.type->performer);
+				take(action.actor, action.type->actor, StimOverrides::kActor);
+				take(action.target, action.type->target, StimOverrides::kTarget);
+				take(action.performer, action.type->performer, StimOverrides::kPerformer);
 			}
 			std::ranges::sort(stimulations, std::greater<>());
 			float base = 0.0F;

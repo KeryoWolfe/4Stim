@@ -60,6 +60,8 @@ namespace Sounds
 			std::string name;
 			ReactionSet moan;
 			ReactionSet climax;
+			ReactionSet climaxCommentSelf;   // OStim's: after their own climax (NPCs)
+			ReactionSet climaxCommentOther;  // OStim's: after a partner's climax
 			// OStim's event reactions, by event id.
 			std::unordered_map<std::string, ReactionSet> eventActorReactions;
 			std::unordered_map<std::string, ReactionSet> eventTargetReactions;
@@ -79,7 +81,8 @@ namespace Sounds
 			Playing                               sound;
 			bool                                  eventExpression = false;
 			const ReactionSet*                    reaction = nullptr;  // an event reaction waiting...
-			float                                 reactionIn = 0.0F;   // ...this long
+			float                                 reactionIn = 0.0F;   // ...this long, counted once the sound playing has ended (OStim's eventTimer)
+			bool                                  heldForClimax = false;  // OStim's awaitingClimaxInner: nothing new starts
 			std::vector<std::string>              actions;  // action type ids the actor takes part in
 			std::uint32_t                         partner = 0;  // OStim's primary partner (conditions' target); 0 = themselves
 		};
@@ -254,6 +257,8 @@ namespace Sounds
 					voice->name = Translations::Localize(root.value("name", e.path().stem().string()));  // translated, as OStim
 					voice->moan = ReadReaction(root, "moan");
 					voice->climax = ReadReaction(root, "climax");
+					voice->climaxCommentSelf = ReadReaction(root, "climaxCommentSelf");
+					voice->climaxCommentOther = ReadReaction(root, "climaxCommentOther");
 					voice->eventActorReactions = ReadReactionMap(root, "eventActorReactions");
 					voice->eventTargetReactions = ReadReactionMap(root, "eventTargetReactions");
 					voice->eventPerformerReactions = ReadReactionMap(root, "eventPerformerReactions");
@@ -687,38 +692,59 @@ namespace Sounds
 		}
 	}
 
-	void Climax(std::uint32_t a_id)
+	void Climax(std::uint32_t a_id, const std::vector<std::uint32_t>& a_actors, bool a_isPlayer)
 	{
+		// As OStim's reactToClimax: the others comment on it 0.75 s on (once
+		// what they're saying has ended).
+		for (const auto other : a_actors) {
+			if (other == a_id) {
+				continue;
+			}
+			const auto o = g_states.find(other);
+			if (o != g_states.end() && o->second.voice && !o->second.voice->climaxCommentOther.sound.empty()) {
+				o->second.reaction = &o->second.voice->climaxCommentOther;
+				o->second.reactionIn = 0.75F;
+			}
+		}
 		const auto it = g_states.find(a_id);
 		if (it == g_states.end()) {
 			Expressions::SetEvent(a_id, "climax", true);
 			return;
 		}
 		auto& state = it->second;
-		StopSound(a_id, state);
+		state.heldForClimax = false;
+		StopSound(a_id, state);  // nothing's playing by now (the climax waited); this clears the face
 		state.reaction = nullptr;
 		if (state.voice && !state.mutedByHand) {
 			StartReaction(a_id, state, state.voice->climax, "climax");
 		} else {
 			Expressions::SetEvent(a_id, "climax", true);
 		}
+		// Their own comment, 1 s after the climax sound (OStim: not the
+		// player's, whose comment would cut the climax off).
+		if (!a_isPlayer && state.voice && !state.voice->climaxCommentSelf.sound.empty()) {
+			state.reaction = &state.voice->climaxCommentSelf;
+			state.reactionIn = 1.0F;
+		}
+	}
+
+	bool IsMakingSound(std::uint32_t a_id)
+	{
+		const auto it = g_states.find(a_id);
+		return it != g_states.end() && it->second.playing && it->second.sound.IsPlaying();
+	}
+
+	void HoldForClimax(std::uint32_t a_id, bool a_hold)
+	{
+		if (const auto it = g_states.find(a_id); it != g_states.end()) {
+			it->second.heldForClimax = a_hold;
+		}
 	}
 
 	void Tick(float a_seconds)
 	{
 		for (auto& [id, state] : g_states) {
-			// An event reaction (OStim's eventTimer): when it's due, it cuts
-			// in over a moan.
-			if (state.reaction && (state.reactionIn -= a_seconds) <= 0.0F) {
-				const auto reaction = state.reaction;
-				state.reaction = nullptr;
-				if (state.mutedByHand) {
-					continue;
-				}
-				StopSound(id, state);  // the moan's face too, in case the reaction plays nothing
-				StartReaction(id, state, *reaction, nullptr);
-				continue;
-			}
+			// As OStim's loopSound: what's playing plays to its end first.
 			if (state.playing) {
 				if (state.sound.IsPlaying()) {
 					continue;
@@ -727,6 +753,22 @@ namespace Sounds
 				if (state.eventExpression) {
 					state.eventExpression = false;
 					Expressions::ClearEvent(id);
+				}
+				continue;
+			}
+			if (state.heldForClimax) {
+				continue;  // their climax goes next
+			}
+			// An event reaction (OStim's eventTimer): counted down once the
+			// sound before it has ended, then it plays; no moan meanwhile.
+			if (state.reaction) {
+				if ((state.reactionIn -= a_seconds) <= 0.0F) {
+					const auto reaction = state.reaction;
+					state.reaction = nullptr;
+					if (!state.mutedByHand) {
+						StopSound(id, state);  // the moan's face, in case the reaction plays nothing
+						StartReaction(id, state, *reaction, nullptr);
+					}
 				}
 				continue;
 			}

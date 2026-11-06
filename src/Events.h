@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <string>
+#include <utility>
 #include <vector>
 
 // Events (docs/EVENTS.md), as OStim's: something that happens in a scene, like
@@ -20,6 +21,11 @@ namespace Events
 
 	// The ids of all loaded events (lowercase).
 	std::vector<std::string> List();
+
+	// An event's own stimulation and max stimulation for a side (0 actor,
+	// 1 target, 2 performer), its supertypes' where it has none: what
+	// OStim's OData.GetEventDefaultStimulation gives.
+	std::pair<float, float> DefaultStimulation(const std::string& a_event, int a_role);
 
 	// Whether a_event is a_parent or has it among its supertypes
 	// (OStim's Event::isChildOf). Case-insensitive.

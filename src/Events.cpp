@@ -1,4 +1,5 @@
 #include "Events.h"
+#include "StimOverrides.h"
 
 #include <algorithm>
 #include <cctype>
@@ -187,6 +188,20 @@ namespace Events
 		});
 	}
 
+	std::pair<float, float> DefaultStimulation(const std::string& a_event, int a_role)
+	{
+		std::unique_lock lock(g_lock);
+		if (!g_loaded) {
+			LoadLocked();
+		}
+		const auto it = g_events.find(Lower(a_event));
+		if (it == g_events.end() || a_role < 0 || a_role > 2) {
+			return { 0.0F, 100.0F };
+		}
+		const auto chain = Chain(&it->second);
+		return { RoleValue(chain, a_role, &EventRole::stimulation).value_or(0.0F), RoleValue(chain, a_role, &EventRole::maxStimulation).value_or(100.0F) };
+	}
+
 	Effects Fire(const std::string& a_event, const std::vector<std::uint32_t>& a_actors, int a_actor, int a_target, int a_performer)
 	{
 		std::unique_lock lock(g_lock);
@@ -235,6 +250,15 @@ namespace Events
 			roles[r].reactionDelay = RoleValue(chain, r, &EventRole::reactionDelay).value_or(0.0F);
 		}
 		lock.unlock();
+		// OStim's per-actor event stimulation (OData.SetEventStimulation).
+		constexpr int BITS[3] = { StimOverrides::kActor, StimOverrides::kTarget, StimOverrides::kPerformer };
+		for (int r = 0; r < 3; ++r) {
+			if (roles[r].id) {
+				const auto base = StimOverrides::BaseOf(roles[r].id);
+				roles[r].stimulation = StimOverrides::Stimulation(StimOverrides::Kind::kEvent, BITS[r], base, id).value_or(roles[r].stimulation);
+				roles[r].maxStimulation = StimOverrides::MaxStimulation(StimOverrides::Kind::kEvent, BITS[r], base, id).value_or(roles[r].maxStimulation);
+			}
+		}
 
 		REX::INFO("Events: \"{}\" (actor {:08X}, target {:08X}, performer {:08X})", id, roles[0].id, roles[1].id, roles[2].id);
 

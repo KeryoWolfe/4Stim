@@ -24,6 +24,7 @@
 #include "Scaling.h"
 #include "Expressions.h"
 #include "Sounds.h"
+#include "StimOverrides.h"
 #include "Events.h"
 #include "Peaks.h"
 #include "Lights.h"
@@ -1428,6 +1429,9 @@ namespace
 			std::uint32_t actor = 0;
 			std::string   sceneID;            // the climax animation's scene
 			bool          annotated = false;  // its 4StimClimax annotation came
+			// OStim's awaitingClimaxInner: due, but their moan is still
+			// playing; the climax waits for it to end.
+			bool          afterSound = false;
 		};
 		std::vector<AwaitingClimax> awaitingClimax;
 
@@ -4238,7 +4242,9 @@ namespace
 	// The player's climax effects: shake, blur, glow, rumble, slow motion
 	// (Excitement::Config). Slow motion only in scenes with the player, as
 	// OStim's (its player thread); the rest also in a scene being watched.
-	void PlayClimaxEffects(bool a_withPlayer)
+	// a_playerClimax: the player is the one climaxing; OStim blurs only then
+	// (its OStimNutEffect), the other effects for anyone's climax.
+	void PlayClimaxEffects(bool a_withPlayer, bool a_playerClimax)
 	{
 		const auto& config = Excitement::Settings();
 		const bool  freeCamera = FreeCamera() != nullptr;
@@ -4254,7 +4260,7 @@ namespace
 			}
 			StartAutoplayTicks();
 		}
-		if (config.blurOn && config.blur > 0.0F) {
+		if (config.blurOn && config.blur > 0.0F && a_playerClimax) {
 			// Depth of field with no in-focus range: everything blurs, for
 			// a moment.
 			RE::ImageSpaceModifierInstanceDOF::Trigger(0.0F, 0.0F, 0.0F, 0.0F,
@@ -4381,13 +4387,17 @@ namespace
 	// a_actorID, in a_active, climaxes now (OStim's climaxInner): counts it,
 	// a man drops to the slowest speed, other mods are told, the player sees
 	// the effects, and the scene ends if the settings say so.
-	void ClimaxNow(ActiveScene& a_active, std::uint32_t a_actorID)
+	// OStim's climaxInner: the climax itself.
+	void ClimaxInner(ActiveScene& a_active, std::uint32_t a_actorID)
 	{
 		const auto& config = Excitement::Settings();
 		std::erase_if(a_active.awaitingClimax, [&](const auto& a_entry) { return a_entry.actor == a_actorID; });
+		Sounds::HoldForClimax(a_actorID, false);
 		Excitement::Climaxed(a_actorID);
 		SexToys::Climax(a_actorID);
-		if (a_active.autoMode.on && a_active.autoMode.stage == ActiveScene::Auto::Stage::kPullout) {
+		// As OStim's setAutoModeToMainStage: any climax moves auto mode on
+		// to its main stage, from foreplay too.
+		if (a_active.autoMode.on && a_active.autoMode.stage != ActiveScene::Auto::Stage::kMain) {
 			a_active.autoMode.stage = ActiveScene::Auto::Stage::kMain;
 			a_active.autoMode.cooldown = std::min(a_active.autoMode.cooldown, 3.0F);
 		}
@@ -4414,28 +4424,54 @@ namespace
 		if (scene) {
 			ApiForms::Climaxed(a_actorID, a_active.actors, *scene, times, a_active.threadID == 0);
 		}
-		Sounds::Climax(a_actorID);  // OStim's playClimaxSound, with the climax expression
+		// As OStim: climaxing takes it out of them (its 250 Stamina; Fallout
+		// 4's is Action Points).
+		if (const auto values = RE::ActorValue::GetSingleton(); actor && values && values->actionPoints) {
+			actor->ModActorValue(RE::ACTOR_VALUE_MODIFIER::kDamage, *values->actionPoints, -250.0F);
+		}
+
+		// OStim's playClimaxSound: their climax sound, and the others'
+		// climaxCommentOther, their own climaxCommentSelf after it.
+		Sounds::Climax(a_actorID, a_active.actors, IsPlayer(actor));
 
 		const bool withPlayer = std::ranges::any_of(a_active.actors, [](std::uint32_t id) { return IsPlayer(RE::TESForm::GetFormByID<RE::Actor>(id)); });
 		const auto focused = GetPlayerScene();
 		const bool watched = focused.Active() && focused.role0 == a_active.actors[0];
 		if (withPlayer || watched) {
-			PlayClimaxEffects(withPlayer);
+			PlayClimaxEffects(withPlayer, IsPlayer(actor));
 		}
 
+		// As OStim's climaxInner: the all / player / male / female rules in
+		// every scene, and endNPCSceneOnOrgasm on top for scenes without the
+		// player. Each climax that counts sets the end timer again.
 		bool end = false;
-		if (!withPlayer) {
-			end = config.endNPCScenes;
-		} else if (config.endOnAll) {
+		if (config.endOnAll) {
 			end = std::ranges::all_of(a_active.actors, [](std::uint32_t id) { return Excitement::TimesClimaxed(id) > 0; });
 		} else {
 			end = (IsPlayer(actor) && config.endOnPlayer) ||
 			      (maleClimax && config.endOnMale) ||
 			      (!maleClimax && config.endOnFemale);
 		}
-		if (end && a_active.endIn < 0.0F) {
+		if (!withPlayer && config.endNPCScenes) {
+			end = true;
+		}
+		if (end && (a_active.endIn < 0.0F || a_active.endIn < config.endDelay)) {
 			a_active.endIn = config.endDelay;
 		}
+	}
+
+	// OStim's climax: at once, or once the moan they're making has ended
+	// (awaitingClimaxInner; ResolveAwaitingClimaxes checks).
+	void ClimaxNow(ActiveScene& a_active, std::uint32_t a_actorID)
+	{
+		if (Sounds::IsMakingSound(a_actorID)) {
+			std::erase_if(a_active.awaitingClimax, [&](const auto& a_entry) { return a_entry.actor == a_actorID; });
+			a_active.awaitingClimax.push_back({ a_actorID, a_active.sceneID, false, true });
+			Sounds::HoldForClimax(a_actorID, true);  // no new moan or reaction meanwhile
+			REX::INFO("Climax: {:08X} waits for their moan to end (as OStim)", a_actorID);
+			return;
+		}
+		ClimaxInner(a_active, a_actorID);
 	}
 
 	// a_actorID, in a_active, reached 100 (OStim's orgasm): with a climax
@@ -4471,10 +4507,18 @@ namespace
 	void ResolveAwaitingClimaxes(ActiveScene& a_active)
 	{
 		std::vector<std::uint32_t> due;
+		std::vector<std::uint32_t> soundDone;
 		for (const auto& entry : a_active.awaitingClimax) {
-			if (entry.annotated || _stricmp(entry.sceneID.c_str(), a_active.sceneID.c_str()) != 0) {
+			if (entry.afterSound) {
+				if (!Sounds::IsMakingSound(entry.actor)) {
+					soundDone.push_back(entry.actor);
+				}
+			} else if (entry.annotated || _stricmp(entry.sceneID.c_str(), a_active.sceneID.c_str()) != 0) {
 				due.push_back(entry.actor);
 			}
+		}
+		for (const auto id : soundDone) {
+			ClimaxInner(a_active, id);
 		}
 		for (const auto id : due) {
 			ClimaxNow(a_active, id);
@@ -5868,6 +5912,82 @@ namespace
 		const auto base = static_cast<std::uint32_t>(a_formID);
 		Sounds::SetVoiceSet(base, a_voice);
 		F4SE::GetTaskInterface()->AddTask([base]() { Sounds::ApplyVoiceSet(base); });
+	}
+
+	// OStim's OData action and event stimulation: per actor base, for a
+	// side of an action or event (aiRole 1 actor, 2 target, 4 performer),
+	// in place of its own (docs/EXCITEMENT.md). Saved with the game.
+	std::vector<std::string> GetActions(std::monostate)
+	{
+		auto list = Actions::List();
+		std::ranges::sort(list);
+		return list;
+	}
+
+	// The side's own values: the action's, or the event's (its supertypes').
+	std::pair<float, float> DefaultStim(StimOverrides::Kind a_kind, std::int32_t a_role, const std::string& a_id)
+	{
+		const int index = a_role == StimOverrides::kActor ? 0 : a_role == StimOverrides::kTarget ? 1 : a_role == StimOverrides::kPerformer ? 2 : -1;
+		if (index < 0) {
+			return { 0.0F, 0.0F };
+		}
+		if (a_kind == StimOverrides::Kind::kEvent) {
+			return Events::DefaultStimulation(a_id, index);
+		}
+		const auto type = Actions::Find(a_id);
+		if (!type) {
+			return { 0.0F, 0.0F };
+		}
+		const auto& side = index == 0 ? type->actor : index == 1 ? type->target : type->performer;
+		return { side.stimulation, side.maxStimulation };
+	}
+
+	template <StimOverrides::Kind K>
+	float GetStim(std::monostate, std::int32_t a_role, std::int32_t a_formID, std::string a_id)
+	{
+		return StimOverrides::Stimulation(K, a_role, static_cast<std::uint32_t>(a_formID), a_id).value_or(DefaultStim(K, a_role, a_id).first);
+	}
+
+	template <StimOverrides::Kind K>
+	float GetMaxStim(std::monostate, std::int32_t a_role, std::int32_t a_formID, std::string a_id)
+	{
+		return StimOverrides::MaxStimulation(K, a_role, static_cast<std::uint32_t>(a_formID), a_id).value_or(DefaultStim(K, a_role, a_id).second);
+	}
+
+	template <StimOverrides::Kind K>
+	void SetStim(std::monostate, std::int32_t a_role, std::int32_t a_formID, std::string a_id, float a_value)
+	{
+		StimOverrides::SetStimulation(K, a_role, static_cast<std::uint32_t>(a_formID), a_id, a_value);
+	}
+
+	template <StimOverrides::Kind K>
+	void SetMaxStim(std::monostate, std::int32_t a_role, std::int32_t a_formID, std::string a_id, float a_value)
+	{
+		StimOverrides::SetMaxStimulation(K, a_role, static_cast<std::uint32_t>(a_formID), a_id, a_value);
+	}
+
+	template <StimOverrides::Kind K>
+	float GetDefaultStim(std::monostate, std::int32_t a_role, std::string a_id)
+	{
+		return DefaultStim(K, a_role, a_id).first;
+	}
+
+	template <StimOverrides::Kind K>
+	float GetDefaultMaxStim(std::monostate, std::int32_t a_role, std::string a_id)
+	{
+		return DefaultStim(K, a_role, a_id).second;
+	}
+
+	template <StimOverrides::Kind K>
+	void ResetStim(std::monostate, std::int32_t a_role, std::int32_t a_formID, std::string a_id)
+	{
+		StimOverrides::ResetStimulation(K, a_role, static_cast<std::uint32_t>(a_formID), a_id);
+	}
+
+	template <StimOverrides::Kind K>
+	void ResetMaxStim(std::monostate, std::int32_t a_role, std::int32_t a_formID, std::string a_id)
+	{
+		StimOverrides::ResetMaxStimulation(K, a_role, static_cast<std::uint32_t>(a_formID), a_id);
 	}
 
 	// 4Stim's: the same for an actor (their base), for the HUD's options.
@@ -12080,6 +12200,26 @@ namespace
 		a_vm->BindNativeMethod(SCRIPT_NAME, "IsMuted"sv, IsMuted);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "SceneReleased"sv, SceneReleased);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "GetVoiceSetPairs"sv, GetVoiceSetPairs);
+		{
+			using K = StimOverrides::Kind;
+			a_vm->BindNativeMethod(SCRIPT_NAME, "GetActions"sv, GetActions);
+			a_vm->BindNativeMethod(SCRIPT_NAME, "GetActionStimulation"sv, GetStim<K::kAction>);
+			a_vm->BindNativeMethod(SCRIPT_NAME, "SetActionStimulation"sv, SetStim<K::kAction>);
+			a_vm->BindNativeMethod(SCRIPT_NAME, "GetActionMaxStimulation"sv, GetMaxStim<K::kAction>);
+			a_vm->BindNativeMethod(SCRIPT_NAME, "SetActionMaxStimulation"sv, SetMaxStim<K::kAction>);
+			a_vm->BindNativeMethod(SCRIPT_NAME, "GetActionDefaultStimulation"sv, GetDefaultStim<K::kAction>);
+			a_vm->BindNativeMethod(SCRIPT_NAME, "GetActionDefaultMaxStimulation"sv, GetDefaultMaxStim<K::kAction>);
+			a_vm->BindNativeMethod(SCRIPT_NAME, "ResetActionStimulation"sv, ResetStim<K::kAction>);
+			a_vm->BindNativeMethod(SCRIPT_NAME, "ResetActionMaxStimulation"sv, ResetMaxStim<K::kAction>);
+			a_vm->BindNativeMethod(SCRIPT_NAME, "GetEventStimulation"sv, GetStim<K::kEvent>);
+			a_vm->BindNativeMethod(SCRIPT_NAME, "SetEventStimulation"sv, SetStim<K::kEvent>);
+			a_vm->BindNativeMethod(SCRIPT_NAME, "GetEventMaxStimulation"sv, GetMaxStim<K::kEvent>);
+			a_vm->BindNativeMethod(SCRIPT_NAME, "SetEventMaxStimulation"sv, SetMaxStim<K::kEvent>);
+			a_vm->BindNativeMethod(SCRIPT_NAME, "GetEventDefaultStimulation"sv, GetDefaultStim<K::kEvent>);
+			a_vm->BindNativeMethod(SCRIPT_NAME, "GetEventDefaultMaxStimulation"sv, GetDefaultMaxStim<K::kEvent>);
+			a_vm->BindNativeMethod(SCRIPT_NAME, "ResetEventStimulation"sv, ResetStim<K::kEvent>);
+			a_vm->BindNativeMethod(SCRIPT_NAME, "ResetEventMaxStimulation"sv, ResetMaxStim<K::kEvent>);
+		}
 		a_vm->BindNativeMethod(SCRIPT_NAME, "GetVoiceSetName"sv, GetVoiceSetName);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "SetVoiceSet"sv, SetVoiceSet);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "SetActorVoiceSet"sv, SetActorVoiceSet);
@@ -12251,6 +12391,8 @@ namespace
 	constexpr std::uint32_t CHOICES_VERSION = 1;
 	constexpr std::uint32_t VOICES_RECORD = 'VOIC';  // voice sets chosen per actor base (OStim's Serialization voice sets)
 	constexpr std::uint32_t VOICES_VERSION = 1;
+	constexpr std::uint32_t STIM_RECORD = 'STIM';  // per actor base stimulation overrides (OStim's Serialization action / event stimulation)
+	constexpr std::uint32_t STIM_VERSION = 1;
 	constexpr std::uint32_t SCENES_VERSION = 6;  // 2: each actor's own scale (alignment scales them); 3: equip objects given; 4: wall spot, furniture blocked, clutter; 5: weapon taken off; 6: erect bodysuit given
 
 	struct SavedScene
@@ -12292,6 +12434,43 @@ namespace
 	}
 
 	void WriteVoices(const F4SE::SerializationInterface* a_intfc);
+
+	void WriteStimOverrides(const F4SE::SerializationInterface* a_intfc)
+	{
+		const auto entries = StimOverrides::All();
+		if (entries.empty() || !a_intfc->OpenRecord(STIM_RECORD, STIM_VERSION)) {
+			return;
+		}
+		a_intfc->WriteRecordData(static_cast<std::uint32_t>(entries.size()));
+		for (const auto& e : entries) {
+			a_intfc->WriteRecordData(e.kind);
+			a_intfc->WriteRecordData(e.role);
+			a_intfc->WriteRecordData(e.max);
+			a_intfc->WriteRecordData(e.base);
+			WriteString(a_intfc, e.id);
+			a_intfc->WriteRecordData(e.value);
+		}
+	}
+
+	void ReadStimOverrides(const F4SE::SerializationInterface* a_intfc)
+	{
+		std::uint32_t count = 0;
+		a_intfc->ReadRecordData(count);
+		std::vector<StimOverrides::Entry> entries;
+		for (std::uint32_t i = 0; i < count && i < 100000; ++i) {
+			StimOverrides::Entry e;
+			if (!a_intfc->ReadRecordData(e.kind) || !a_intfc->ReadRecordData(e.role) || !a_intfc->ReadRecordData(e.max) ||
+				!a_intfc->ReadRecordData(e.base) || !ReadString(a_intfc, e.id) || !a_intfc->ReadRecordData(e.value)) {
+				break;
+			}
+			e.base = a_intfc->ResolveFormID(e.base).value_or(0);  // its plugin gone: dropped
+			if (e.base) {
+				entries.push_back(std::move(e));
+			}
+		}
+		StimOverrides::Restore(entries);
+		REX::INFO("Save data: {} stimulation override(s)", entries.size());
+	}
 
 	void OnGameSaved(const F4SE::SerializationInterface* a_intfc)
 	{
@@ -12365,6 +12544,7 @@ namespace
 			}
 		}
 		WriteVoices(a_intfc);
+		WriteStimOverrides(a_intfc);
 	}
 
 	// The VOICES_RECORD: actor base -> voice set key. A key that's a form ID
@@ -12465,6 +12645,10 @@ namespace
 			}
 			if (type == VOICES_RECORD && version == VOICES_VERSION) {
 				ReadVoices(a_intfc);
+				continue;
+			}
+			if (type == STIM_RECORD && version == STIM_VERSION) {
+				ReadStimOverrides(a_intfc);
 				continue;
 			}
 			if (type != SCENES_RECORD || version < 1 || version > SCENES_VERSION) {
@@ -12583,6 +12767,7 @@ namespace
 	{
 		EquipObjects::ClearChosen();  // before a save's are read, or a new game
 		Sounds::ClearVoiceChoices();
+		StimOverrides::Clear();
 		std::scoped_lock lock(g_savedLock);
 		g_loadedScenes.clear();
 	}

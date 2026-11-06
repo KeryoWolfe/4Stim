@@ -24,6 +24,7 @@ Voice sets are in `Data\F4SE\Plugins\4Stim\Voice Sets\`, one per file, in OStim'
 
 - `target`: who uses it: an NPC or a voice type, by plugin and form ID. As in OStim, form ID `0x000000` is the default set for men and `0x000001` for women. `aliases` can list more NPCs or voice types.
 - An actor gets, as in OStim: the set chosen for them (below), else their NPC's, else their voice type's (an NPC without one has their race's default voice for their sex), else their race's, else the default for their sex. The defaults are for humans only (an adult with the `ActorTypeNPC` keyword), so a creature with no set of its own makes no sound, as in OStim. `4Stim.log` says which set each actor got and why.
+- `climaxCommentSelf` / `climaxCommentOther`: OStim's climax comments, the sound part (`sound`, `soundMuffled`). An actor's `climaxCommentOther` plays 0.75 s after a partner climaxes, their `climaxCommentSelf` 1 s after their own climax sound (not for the player, as OStim). Each waits for the sound before it to end.
 - `moan` / `climax`: what plays. `sound` normally, `soundMuffled` while the actor's mouth is busy (an action that has them `muffled`, such as oral). As in OStim, the **first** entry that fits plays: list specific entries first and a catch-all last. Variety comes from inside an entry (a folder of files, or a sound descriptor's own).
 
 Each entry is one of:
@@ -65,7 +66,7 @@ They play on the action's actor at `soundVolume` (0-1, OStim's setting). A scene
 
 ## Event reactions
 
-A voice set can react to events (docs/EVENTS.md), as OStim's: `eventActorReactions`, `eventTargetReactions` and `eventPerformerReactions` map an event id to a reaction set like `moan`'s (`sound`, `soundMuffled`, with an `expression`). The reaction plays after the event's `reactionDelay`, cutting in over a moan (a difference: OStim's waits for the moan to end; parity audit, tier 3); an event with no reaction of its own uses its supertype's. The default sets have none, as OStim's.
+A voice set can react to events (docs/EVENTS.md), as OStim's: `eventActorReactions`, `eventTargetReactions` and `eventPerformerReactions` map an event id to a reaction set like `moan`'s (`sound`, `soundMuffled`, with an `expression`). The reaction's `reactionDelay` counts down once the actor's current moan has ended, then it plays, as OStim's; an event with no reaction of its own uses its supertype's. The default sets have none, as OStim's.
 
 ```json
 "eventTargetReactions": {
@@ -79,7 +80,7 @@ A voice set can react to events (docs/EVENTS.md), as OStim's: `eventActorReactio
 
 ## Not in yet
 
-Dialogue (comments, climax comments, post-scene lines), `talk`.
+Dialogue (comments, the dialogue part of climax comments, post-scene lines), `talk`.
 
 ## Choosing a voice set
 

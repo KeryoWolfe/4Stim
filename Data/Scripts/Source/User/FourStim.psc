@@ -105,6 +105,30 @@ bool Function IsMuted(Actor akActor) Global Native
 String[] Function GetVoiceSetPairs() Global Native
 String Function GetVoiceSetName(int aiFormID) Global Native
 Function SetVoiceSet(int aiFormID, String asVoice) Global Native
+; OStim's OData action and event stimulation: an actor base's own
+; stimulation and max stimulation for one side of an action or event, in
+; place of the action's or event's (docs\EXCITEMENT.md), saved with the game.
+; aiRole: 1 actor, 2 target, 4 performer (OStim's role bits); aiFormID: the
+; actor's base form ID. Get gives the actor's value, or the default if none
+; is set; Reset goes back to the default. Event ids are GetEvents' above.
+String[] Function GetActions() Global Native
+float Function GetActionStimulation(int aiRole, int aiFormID, String asAction) Global Native
+Function SetActionStimulation(int aiRole, int aiFormID, String asAction, float afStimulation) Global Native
+float Function GetActionMaxStimulation(int aiRole, int aiFormID, String asAction) Global Native
+Function SetActionMaxStimulation(int aiRole, int aiFormID, String asAction, float afStimulation) Global Native
+float Function GetActionDefaultStimulation(int aiRole, String asAction) Global Native
+float Function GetActionDefaultMaxStimulation(int aiRole, String asAction) Global Native
+Function ResetActionStimulation(int aiRole, int aiFormID, String asAction) Global Native
+Function ResetActionMaxStimulation(int aiRole, int aiFormID, String asAction) Global Native
+float Function GetEventStimulation(int aiRole, int aiFormID, String asEvent) Global Native
+Function SetEventStimulation(int aiRole, int aiFormID, String asEvent, float afStimulation) Global Native
+float Function GetEventMaxStimulation(int aiRole, int aiFormID, String asEvent) Global Native
+Function SetEventMaxStimulation(int aiRole, int aiFormID, String asEvent, float afStimulation) Global Native
+float Function GetEventDefaultStimulation(int aiRole, String asEvent) Global Native
+float Function GetEventDefaultMaxStimulation(int aiRole, String asEvent) Global Native
+Function ResetEventStimulation(int aiRole, int aiFormID, String asEvent) Global Native
+Function ResetEventMaxStimulation(int aiRole, int aiFormID, String asEvent) Global Native
+
 ; 4Stim's: the same by actor (their base).
 Function SetActorVoiceSet(Actor akActor, String asVoice) Global Native
 String Function GetActorVoiceSetName(Actor akActor) Global Native

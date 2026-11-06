@@ -70,12 +70,12 @@ The short answer to "are we missing anything": yes, and it falls into five patte
 
 **Actions**
 - Action tags: done in 0.5.0 for what OStim's carry (their API forms, inverted `-tag` included); action custom data done in 0.5.0 (read from action files, FourMetadata's custom functions). Was: action tags aren't implemented (no `action tags` files, no inverted `-tag`), action custom data (`ints`, `floats`, `strings`, used by OCum and OEndurance) isn't read, and `Default.json` drifted from OStim's data (male masturbation peaks inverted, bathing lost its water requirement...) (3 §4-5, §13).
-- Per-actor action stimulation overrides (OData) are missing (2 §9).
+- **Done in 0.5.0 (not yet built or tested):** per-actor action and event stimulation overrides, OStim's OData functions on `FourStim`, saved with the game. Still open: OStim's MCM page for them (Papyrus only). Was: missing (2 §9).
 
 **Climax**
-- A climax and event reactions cut the current moan off; OStim waits for it to end (2 §8, 4 §6). SOUND.md calls the cut-in "as OStim's".
-- NPC-only scenes ignore `SetEndOnOrgasm` and friends (2 §7, 1 §15). The climax blur plays for anyone's climax, OStim's only for the player's (2 §12, 5 §15). Climax doesn't drain stamina (2 §13).
-- Climax comments (`climaxCommentSelf` / `Other`, including the sound-only kind) are missing (4 §4). Dialogue / `talk` isn't in (4 §5, documented).
+- **Done in 0.5.0 (not yet built or tested):** a climax and event reactions wait for the current moan to end, as OStim's. Was: they cut it off (2 §8, 4 §6).
+- **Done in 0.5.0 (not yet built or tested):** OStim's end rules in every scene (with `endNPCSceneOnOrgasm` on top for NPC scenes) and the end delay restarted by each climax, auto mode's main stage after any climax, the blur only for the player's climax, and 250 Action Points taken per climax (OStim's Stamina). Was: (2 §7, §12, §13, 1 §15, 5 §15).
+- **Done in 0.5.0 (not yet built or tested):** climax comments (`climaxCommentSelf` / `climaxCommentOther`), their sound part. Still open: dialogue / `talk` (4 §5, documented), so their dialogue part too.
 
 **Furniture**
 - OStim's furniture `rotation` is radians; 4Stim reads degrees, so 180° becomes about 3° (3 §10).

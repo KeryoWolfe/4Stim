@@ -82,8 +82,19 @@ namespace Sounds
 	// order). Main thread.
 	void Enter(std::uint32_t a_id, const SceneRegistry::Scene& a_scene, std::size_t a_role, const std::vector<std::uint32_t>& a_actors);
 
-	// a_id climaxed: their climax sound (OStim's playClimaxSound). Main thread.
-	void Climax(std::uint32_t a_id);
+	// a_id climaxed (in a scene with a_actors): their climax sound and, as
+	// OStim's playClimaxSound, every other actor's climaxCommentOther 0.75 s
+	// later and their own climaxCommentSelf 1 s after the climax sound ends
+	// (not for the player, as OStim). Main thread.
+	void Climax(std::uint32_t a_id, const std::vector<std::uint32_t>& a_actors, bool a_isPlayer);
+
+	// Whether a_id is making a sound now (a moan, a reaction, a climax), as
+	// OStim's lastMoan: their climax waits for it. Main thread.
+	[[nodiscard]] bool IsMakingSound(std::uint32_t a_id);
+
+	// While a_id's climax waits for their sound to end (OStim's
+	// awaitingClimaxInner): no new moan or reaction starts. Main thread.
+	void HoldForClimax(std::uint32_t a_id, bool a_hold);
 
 	// Advances the moan timers. Main thread (the scene clock).
 	void Tick(float a_seconds);

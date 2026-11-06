@@ -2,6 +2,17 @@
 
 ## 0.5.0 alpha (in progress)
 
+### Climax and stimulation, as OStim's (parity audit Tier 3)
+- **A climax waits for the moan the actor is making to end**, as OStim's, and so do event reactions: no more moans cut off mid-sound.
+- **Climax comments**: voice sets' `climaxCommentSelf` and `climaxCommentOther` (their sound part) play after a climax (docs/SOUND.md).
+- **Scene end rules as OStim's**: `endOnPlayerOrgasm`, `SetEndOnOrgasm`, `SetEndOnSubOrgasm` and `SetEndOnBothOrgasm` count in NPC scenes too, with `endNPCSceneOnOrgasm` on top; each counting climax restarts the end delay.
+- **Auto mode goes to its main stage after any climax**, foreplay included.
+- **The climax blur is only for the player's own climax**, as OStim's.
+- **A climax takes 250 Action Points** (OStim's 250 Stamina).
+- **Per-actor stimulation**: OStim's OData functions on `FourStim` (`Get/Set/ResetActionStimulation`, `...MaxStimulation`, the same for events, `GetActions`), saved with the game (docs/EXCITEMENT.md).
+
+Needs the plugin rebuilt and `FourStim.psc` compiled.
+
 ### Scenes and transitions, as OStim's (parity audit Tier 3)
 - Transitions keep using the scene they go to's per-role values and alignment (tried OStim's own-values rule; it brought back the bounce at both ends of each transition).
 - **OStim's nine missing annotations**: `4StimUndress`, `4StimRedress`, `4StimUndressPartial.<mask>`, `4StimRedressPartial.<mask>`, `4StimRemoveWeapons`, `4StimAddWeapons`, `4StimSetLooking.<left>[,<up>]`, `4StimUnsetLooking`, `4StimResetLooking` (docs/EVENTS.md). The partial masks take Fallout 4's slots.
