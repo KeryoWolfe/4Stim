@@ -28,6 +28,30 @@ rule("4stim.plugin", function()
     add_deps("commonlib.plugin")
 
     on_load(function(target)
+        -- Dear Modding's CommonLibF4 (c71da99) gives Papyrus natives their
+        -- parameter types from each class's TYPE_ID, and RE::Actor has none,
+        -- so it inherits TESObjectREFR's (ObjectReference): every native
+        -- taking an Actor was then registered with an ObjectReference
+        -- parameter and refused to bind ("does not match existing
+        -- signature"). Give Actor its own (BSScript::kActor, 65, the same
+        -- number as the old FORM_ID kACHR) before anything compiles, until
+        -- the fork has it.
+        local actorh = path.join(os.projectdir(), "lib/commonlibf4/include/RE/A/Actor.h")
+        if os.isfile(actorh) then
+            local text = io.readfile(actorh)
+            if not text:find("TYPE_ID{ BSScript::kActor }", 1, true) then
+                local anchor = "static constexpr auto FORM_ID{ ENUM_FORM_ID::kACHR };"
+                local s, e = text:find(anchor, 1, true)
+                if s then
+                    text = text:sub(1, e) .. "\n\t\tstatic constexpr auto TYPE_ID{ BSScript::kActor };" .. text:sub(e + 1)
+                    io.writefile(actorh, text)
+                    print("4Stim: added RE::Actor::TYPE_ID to CommonLibF4 (lib/commonlibf4/include/RE/A/Actor.h)")
+                else
+                    raise("4Stim: CommonLibF4's Actor.h has no TYPE_ID and no FORM_ID line to put one after; Actor natives would not bind")
+                end
+            end
+        end
+
         target:data_set("commonlib.plugin.config", target:extraconf("rules", "4stim.plugin"))
         target:data_set("commonlib.plugin.package", { prefixdir = "Data" })
     end)
