@@ -17,10 +17,16 @@ package hud
 		private static const ROW_GAP:Number = 6;
 		private static const SPEED_GAP:Number = 20;
 		private static const SPEED_W:Number = 9;
-		// More than ROWS actors: columns of ROWS, each bar half as wide, the
-		// first column nearest the HUD's corner (4Stim's layout for group scenes).
+		// More than ROWS actors: two columns, each bar half as wide, the first
+		// column nearest the HUD's corner (4Stim's layout for group scenes):
+		// three rows a column up to six actors, more rows past that, drawn
+		// tighter (COMPACT_*) so they still fit under the HUD's line.
 		private static const ROWS:int = 3;
+		private static const COLS:int = 2;
 		private static const COL_GAP:Number = 14;
+		private static const COMPACT_NAME_H:Number = 16;
+		private static const COMPACT_BAR_H:Number = 6;
+		private static const COMPACT_ROW_GAP:Number = 3;
 
 		private var _theme:Theme;
 		private var _mirror:Boolean = false;
@@ -68,15 +74,26 @@ package hud
 			redraw();
 		}
 
+		// Rows in a column: all the actors up to ROWS, then half of them (two columns).
+		private function rowCount():int
+		{
+			return _actors.length <= ROWS ? Math.max(1, _actors.length) : Math.max(ROWS, Math.ceil(_actors.length / COLS));
+		}
+
+		private function compact():Boolean { return rowCount() > ROWS; }
+		private function nameH():Number { return compact() ? COMPACT_NAME_H : NAME_H; }
+		private function barH():Number { return compact() ? COMPACT_BAR_H : BAR_H; }
+		private function rowGap():Number { return compact() ? COMPACT_ROW_GAP : ROW_GAP; }
+
 		private function rowsHeight():Number
 		{
-			var rows:int = Math.max(1, Math.min(ROWS, _actors.length));
-			return rows * (NAME_H + BAR_H) + (rows - 1) * ROW_GAP;
+			var rows:int = rowCount();
+			return rows * (nameH() + barH()) + (rows - 1) * rowGap();
 		}
 
 		private function columns():int
 		{
-			return Math.max(1, Math.ceil(_actors.length / ROWS));
+			return Math.max(1, Math.ceil(_actors.length / rowCount()));
 		}
 
 		private function barWidth():Number
@@ -106,10 +123,11 @@ package hud
 			var cols:int = columns();
 			for (var i:int = 0; i < _actors.length; i++) {
 				var actor:Object = _actors[i];
-				var col:int = int(i / ROWS);
+				var rows:int = rowCount();
+				var col:int = int(i / rows);
 				var x:Number = (_mirror ? cols - 1 - col : col) * (barW + COL_GAP);
-				var y:Number = (i % ROWS) * (NAME_H + BAR_H + ROW_GAP);
-				var name:TextField = _theme.makeText(_actors.length > ROWS ? 14 : 16, _theme.color("text"));
+				var y:Number = (i % rows) * (nameH() + barH() + rowGap());
+				var name:TextField = _theme.makeText(compact() ? 12 : _actors.length > ROWS ? 14 : 16, _theme.color("text"));
 				name.width = barW;
 				name.height = 22;
 				name.x = x;
@@ -123,13 +141,14 @@ package hud
 
 				var bar:Shape = new Shape();
 				bar.x = x;
-				bar.y = y + NAME_H;
-				Theme.fill(bar.graphics, _theme.colors("meterTrack"), 0, 0, barW, BAR_H, 0, 1, BAR_H / 2);
+				var bh:Number = barH();
+				bar.y = y + nameH();
+				Theme.fill(bar.graphics, _theme.colors("meterTrack"), 0, 0, barW, bh, 0, 1, bh / 2);
 				var value:Number = Number(actor.meter);
 				if (value > 0) {
 					var key:String = actor.sex == "male" ? "meterMale" : actor.sex == "female" ? "meterFemale" : "meterOther";
-					var w:Number = Math.max(BAR_H, barW * Math.min(1, value));
-					Theme.fill(bar.graphics, _theme.colors(key), _mirror ? barW - w : 0, 0, w, BAR_H, _mirror ? Math.PI : 0, 1, BAR_H / 2);
+					var w:Number = Math.max(bh, barW * Math.min(1, value));
+					Theme.fill(bar.graphics, _theme.colors(key), _mirror ? barW - w : 0, 0, w, bh, _mirror ? Math.PI : 0, 1, bh / 2);
 				}
 				_names.addChild(bar);
 			}
