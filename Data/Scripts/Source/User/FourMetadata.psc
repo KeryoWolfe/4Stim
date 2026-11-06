@@ -134,8 +134,8 @@ int Function GetCustomSceneActorInt(string Id, int Position, string Record, int 
 float Function GetCustomSceneActorFloat(string Id, int Position, string Record, int Op, float Start) Global Native
 
 int[] Function EmptyInts() Global
-	int[] none
-	return none
+	int[] noInts
+	return noInts
 EndFunction
 int[] Function OneInt(int Value) Global
 	int[] list = new int[1]
