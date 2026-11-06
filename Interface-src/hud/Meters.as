@@ -17,6 +17,10 @@ package hud
 		private static const ROW_GAP:Number = 6;
 		private static const SPEED_GAP:Number = 20;
 		private static const SPEED_W:Number = 9;
+		// More than ROWS actors: columns of ROWS, each bar half as wide, the
+		// first column nearest the HUD's corner (4Stim's layout for group scenes).
+		private static const ROWS:int = 3;
+		private static const COL_GAP:Number = 14;
 
 		private var _theme:Theme;
 		private var _mirror:Boolean = false;
@@ -66,8 +70,25 @@ package hud
 
 		private function rowsHeight():Number
 		{
-			var rows:int = Math.max(1, _actors.length);
+			var rows:int = Math.max(1, Math.min(ROWS, _actors.length));
 			return rows * (NAME_H + BAR_H) + (rows - 1) * ROW_GAP;
+		}
+
+		private function columns():int
+		{
+			return Math.max(1, Math.ceil(_actors.length / ROWS));
+		}
+
+		private function barWidth():Number
+		{
+			return _actors.length > ROWS ? BAR_W / 2 : BAR_W;
+		}
+
+		// The width of all the bar columns together.
+		private function namesWidth():Number
+		{
+			var cols:int = columns();
+			return cols * barWidth() + (cols - 1) * COL_GAP;
 		}
 
 		private function redraw():void
@@ -81,12 +102,17 @@ package hud
 			_names.visible = _theme.show("actorMeters");
 			_speedMeter.visible = _theme.show("speedMeter");
 
-			var y:Number = 0;
+			var barW:Number = barWidth();
+			var cols:int = columns();
 			for (var i:int = 0; i < _actors.length; i++) {
 				var actor:Object = _actors[i];
-				var name:TextField = _theme.makeText(16, _theme.color("text"));
-				name.width = BAR_W;
+				var col:int = int(i / ROWS);
+				var x:Number = (_mirror ? cols - 1 - col : col) * (barW + COL_GAP);
+				var y:Number = (i % ROWS) * (NAME_H + BAR_H + ROW_GAP);
+				var name:TextField = _theme.makeText(_actors.length > ROWS ? 14 : 16, _theme.color("text"));
+				name.width = barW;
 				name.height = 22;
+				name.x = x;
 				name.y = y - 3;
 				name.text = String(actor.name).toUpperCase();
 				var tf:TextFormat = name.getTextFormat();
@@ -96,16 +122,16 @@ package hud
 				_names.addChild(name);
 
 				var bar:Shape = new Shape();
+				bar.x = x;
 				bar.y = y + NAME_H;
-				Theme.fill(bar.graphics, _theme.colors("meterTrack"), 0, 0, BAR_W, BAR_H, 0, 1, BAR_H / 2);
+				Theme.fill(bar.graphics, _theme.colors("meterTrack"), 0, 0, barW, BAR_H, 0, 1, BAR_H / 2);
 				var value:Number = Number(actor.meter);
 				if (value > 0) {
 					var key:String = actor.sex == "male" ? "meterMale" : actor.sex == "female" ? "meterFemale" : "meterOther";
-					var w:Number = Math.max(BAR_H, BAR_W * Math.min(1, value));
-					Theme.fill(bar.graphics, _theme.colors(key), _mirror ? BAR_W - w : 0, 0, w, BAR_H, _mirror ? Math.PI : 0, 1, BAR_H / 2);
+					var w:Number = Math.max(BAR_H, barW * Math.min(1, value));
+					Theme.fill(bar.graphics, _theme.colors(key), _mirror ? barW - w : 0, 0, w, BAR_H, _mirror ? Math.PI : 0, 1, BAR_H / 2);
 				}
 				_names.addChild(bar);
-				y += NAME_H + BAR_H + ROW_GAP;
 			}
 
 			drawSpeed();
@@ -115,7 +141,7 @@ package hud
 				_names.x = SPEED_W + SPEED_GAP;
 			} else {
 				_names.x = 0;
-				_speedMeter.x = BAR_W + SPEED_GAP;
+				_speedMeter.x = namesWidth() + SPEED_GAP;
 			}
 		}
 
