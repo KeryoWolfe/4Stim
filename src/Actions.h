@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <map>
 #include <memory>
 #include <string>
 #include <string_view>
@@ -60,6 +61,16 @@ namespace Actions
 		std::vector<std::string> equipObjects;             // OStim's "equipObject": equip object types this side's actor wears ("tongue"...), lowercase
 		std::vector<std::string> toySlots;                 // OStim's "toySlot": sex toy slots this side drives ("genital", "anus"...), lowercase (SexToys.h)
 		ApiFormRefs              forms;                    // OStim's factions and stat forms, with its action tags' (Action Tags\)
+		// OStim's custom data for this side ("ints", "floats", "strings",
+		// "intLists", "floatLists", "stringLists"): for other mods, through
+		// FourMetadata's GetCustomAction... functions. Keys lowercase, as are
+		// string values.
+		std::map<std::string, int>                      ints;
+		std::map<std::string, float>                    floats;
+		std::map<std::string, std::string>              strings;
+		std::map<std::string, std::vector<int>>         intLists;
+		std::map<std::string, std::vector<float>>       floatLists;
+		std::map<std::string, std::vector<std::string>> stringLists;
 	};
 
 	// How an action's peaks (its strokes, thrusts, slaps) are found, as

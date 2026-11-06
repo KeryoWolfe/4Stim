@@ -159,6 +159,66 @@ namespace Actions
 			REX::INFO("Actions: {} action tag(s)", g_tagForms.size() / 2);
 		}
 
+		// OStim's custom role data (GraphTableActions.cpp): keys lowercase,
+		// string values too; entries of the wrong type are skipped.
+		void ParseCustomData(const nlohmann::json& a_side, Side& a_out)
+		{
+			const auto each = [&](const char* a_key, auto&& a_read) {
+				const auto it = a_side.find(a_key);
+				if (it == a_side.end() || !it->is_object()) {
+					return;
+				}
+				for (const auto& [key, value] : it->items()) {
+					a_read(Lower(key), value);
+				}
+			};
+			each("ints", [&](const std::string& k, const nlohmann::json& v) {
+				if (v.is_number()) {
+					a_out.ints[k] = v.get<int>();
+				}
+			});
+			each("floats", [&](const std::string& k, const nlohmann::json& v) {
+				if (v.is_number()) {
+					a_out.floats[k] = v.get<float>();
+				}
+			});
+			each("strings", [&](const std::string& k, const nlohmann::json& v) {
+				if (v.is_string()) {
+					a_out.strings[k] = Lower(v.get<std::string>());
+				}
+			});
+			each("intLists", [&](const std::string& k, const nlohmann::json& v) {
+				if (v.is_array()) {
+					auto& list = a_out.intLists[k];
+					for (const auto& e : v) {
+						if (e.is_number()) {
+							list.push_back(e.get<int>());
+						}
+					}
+				}
+			});
+			each("floatLists", [&](const std::string& k, const nlohmann::json& v) {
+				if (v.is_array()) {
+					auto& list = a_out.floatLists[k];
+					for (const auto& e : v) {
+						if (e.is_number()) {
+							list.push_back(e.get<float>());
+						}
+					}
+				}
+			});
+			each("stringLists", [&](const std::string& k, const nlohmann::json& v) {
+				if (v.is_array()) {
+					auto& list = a_out.stringLists[k];
+					for (const auto& e : v) {
+						if (e.is_string()) {
+							list.push_back(Lower(e.get<std::string>()));
+						}
+					}
+				}
+			});
+		}
+
 		Side ParseSide(const nlohmann::json& a_action, const char* a_key)
 		{
 			Side side;
@@ -181,6 +241,7 @@ namespace Actions
 			side.equipObjects = LowerList(*it, "equipObject");  // OStim's field name (a string or a list)
 			side.toySlots = LowerList(*it, "toySlot");          // OStim's, a string or a list
 			side.forms = ParseForms(*it);
+			ParseCustomData(*it, side);
 			if (const auto v = it->find("undressSlots"); v != it->end() && v->is_array()) {
 				for (const auto& slot : *v) {
 					if (slot.is_number_integer() && slot.get<int>() >= 30 && slot.get<int>() <= 61) {

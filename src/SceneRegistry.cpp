@@ -504,6 +504,7 @@ namespace SceneRegistry
 					std::vector<RE::TESIdleForm*> set;
 					if (const auto animation = speed.find("animation"); animation != speed.end() && animation->is_string()) {
 						const auto name = animation->get<std::string>();
+						info.animation = name;
 						for (std::size_t role = 0; role < roles; ++role) {
 							const auto editorID = name + "_" + std::to_string(animationIndex[role]);
 							const auto idle = IdleByEditorID(editorID);

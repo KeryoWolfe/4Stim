@@ -144,6 +144,7 @@ namespace SceneRegistry
 	{
 		float playbackSpeed = 1.0F;  // OStim's: how fast the animation plays (main.cpp's PlaybackSpeed scales the actors' animation updates)
 		float displaySpeed = 0.0F;   // OStim's speed label (0 = not given): kept, not shown yet
+		std::string animation;       // OStim's "animation" name (its Idles are animation_0, _1...); "" for "idles" speeds
 	};
 
 	// An animated undressing step: at `at` seconds into the scene, the actor

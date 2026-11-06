@@ -24,6 +24,9 @@ Scriptname FourStimTest extends Quest
 ;       Results in a message box and the Papyrus log ("FourStimTest:").
 ;   cgf "FourStimTest.LibraryRange" "<scene id>" 2   GetScenesInRange
 ;
+; FourMetadata (OMetadata) on a scene the player and the console-selected NPC can play:
+;   cgf "FourStimTest.Metadata"                 checks each kind of lookup
+;
 ; Low-level pieces (console-selected actor):
 ;   Lock, Unlock, Suppress, Restore, Move, StopPose
 
@@ -292,4 +295,96 @@ string Function Join(string[] akList) Global
 		i += 1
 	endwhile
 	return out
+EndFunction
+
+; ---- FourMetadata ----
+; Lookups on a scene the actors can play, checked against each other.
+Function Metadata() Global
+	Actor[] actors = LibraryActors()
+	if actors == None
+		return
+	endif
+	string id = FourLibrary.GetRandomSceneWithAction(actors, "kissing")
+	if id == ""
+		id = FourLibrary.GetRandomScene(actors)
+	endif
+	string report = ""
+	int fails = 0
+	bool ok
+
+	string[] names = FourMetadata.ScenesToNames(FourLibrary.One(id))
+	ok = names.Length == 1 && names[0] == FourMetadata.GetName(id)
+	report += LibraryLine("ScenesToNames", names[0], ok)
+	fails += (!ok) as int
+
+	report += LibraryLine("GetAnimationId speed 0 (empty for 'idles' scenes)", FourMetadata.GetAnimationId(id, 0), true)
+
+	string[] types = FourMetadata.GetActionTypes(id)
+	int[] doers = FourMetadata.GetActionActors(id)
+	int[] targets = FourMetadata.GetActionTargets(id)
+	int count = FourMetadata.GetActionCount(id)
+	ok = types.Length == count && doers.Length == count && targets.Length == count
+	report += LibraryLine("GetActionTypes / Actors / Targets: " + count + " action(s)", Join(types), ok)
+	fails += (!ok) as int
+
+	if count > 0
+		string actionType = types[0]
+		int doer = doers[0]
+		int target = targets[0]
+		int[] found = FourMetadata.FindActionsForActor(id, doer, actionType)
+		ok = found.Find(0) >= 0
+		report += LibraryLine("FindActionsForActor " + actionType + " by " + doer, found.Length + " found", ok)
+		fails += (!ok) as int
+
+		ok = FourMetadata.FindActionForActorAndTarget(id, doer, target, actionType) == 0
+		report += LibraryLine("FindActionForActorAndTarget", "", ok)
+		fails += (!ok) as int
+
+		ok = FourMetadata.FindActionForMatesAllCSV(id, doer + "," + target, actionType) == 0
+		report += LibraryLine("FindActionForMatesAllCSV", "", ok)
+		fails += (!ok) as int
+
+		ok = FourMetadata.FindActionForParticipant(id, target, actionType) >= 0
+		report += LibraryLine("FindActionForParticipant", "", ok)
+		fails += (!ok) as int
+
+		ok = FourMetadata.FindActionsSuperloadCSVv2(id, doer as string, target as string, "", "", "", "", "", actionType).Find(0) >= 0
+		report += LibraryLine("FindActionsSuperloadCSVv2 (actor, target, type)", "", ok)
+		fails += (!ok) as int
+
+		ok = FourMetadata.FindActionSuperloadCSVv2(id, "", "", "", "", "", "", "", "no_such_action_type") == -1
+		report += LibraryLine("FindActionSuperloadCSVv2 with a type it lacks: -1", "", ok)
+		fails += (!ok) as int
+
+		string[] tags = FourMetadata.GetActionTags(id, 0)
+		string[] allTags = FourMetadata.GetAllActionsTags(id)
+		ok = FourMetadata.HasAllActionTagsOverAll(id, allTags) || allTags.Length == 0
+		report += LibraryLine("GetAllActionsTags / HasAllActionTagsOverAll", Join(allTags), ok)
+		fails += (!ok) as int
+		if tags.Length > 0
+			ok = FourMetadata.HasActionTag(id, 0, tags[0]) && FourMetadata.HasAllActionTagsOnAny(id, tags) && FourMetadata.GetActionTagOverlap(id, 0, tags).Length == tags.Length
+			report += LibraryLine("HasActionTag / HasAllActionTagsOnAny / GetActionTagOverlap", tags[0], ok)
+			fails += (!ok) as int
+		endif
+	endif
+
+	string[] reqs = FourMetadata.GetActorRequirements(id, 0)
+	if reqs.Length > 0
+		ok = FourMetadata.HasRequirement(id, 0, reqs[0]) && FourMetadata.HasAllRequirements(id, 0, reqs)
+		report += LibraryLine("HasRequirement / HasAllRequirements", Join(reqs), ok)
+		fails += (!ok) as int
+	endif
+
+	string[] actorTags = FourMetadata.GetActorTags(id, 0)
+	if actorTags.Length > 0
+		ok = FourMetadata.HasAllActorTags(id, 0, actorTags) && FourMetadata.GetActorTagOverlap(id, 0, actorTags).Length == actorTags.Length
+		report += LibraryLine("HasAllActorTags / GetActorTagOverlap", Join(actorTags), ok)
+		fails += (!ok) as int
+	endif
+
+	string verdict = "all passed"
+	if fails > 0
+		verdict = fails + " FAILED"
+	endif
+	Debug.MessageBox("4Stim metadata test on " + id + ": " + verdict + "\n\n" + report)
 EndFunction
