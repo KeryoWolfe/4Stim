@@ -65,6 +65,8 @@ Times given with OStim's names are in milliseconds, as in OStim. `SetFurnitureSe
 | `SetBlurOrgasms` | 1 | | Blur at a climax |
 | `SetUseRumble` | 1 | `bClimaxRumble` | Controller rumble |
 | `SetAIControl` | 0 | `bAutoModePlayer` | Auto mode in scenes with you |
+| `SetForceAIForMasturbation` | 0 | `bAutoModeSolo` | Auto mode in your solo scenes |
+| `SetForceAIInConsensualScenes` | 0 | `bAutoModePartner` | Auto mode in your scenes with partners |
 | `autoModeAnimDurationMin` / `Max` | 7500 / 15000 ms | `fAutoModeSceneMin` / `Max` (s) | Time in each scene |
 | `autoModeForeplayChance` | 35 | `iForeplayChance` | Percent starting with foreplay |
 | `autoModeForeplayThresholdMin` / `Max` | 15 / 35 | `fForeplayEndMin` / `Max` | Excitement that ends foreplay |
@@ -72,7 +74,7 @@ Times given with OStim's names are in milliseconds, as in OStim. `SetFurnitureSe
 | `autoModePulloutThresholdMin` / `Max` | 80 / 90 | `fPulloutMin` / `Max` | Excitement to pull out at |
 | `navigationDistanceMax` | 5 | `iAutoModeMaxSteps` | Navigations auto mode walks |
 | `autoModeLimitToNavigationDistance` | 1 | `bAutoModeLimitToNavigation` | During sex, only scenes it can walk to |
-| `SetActorSpeedControl` | 1 | `bAutoSpeed` | Auto mode speeds up |
+| `SetActorSpeedControl` | 1 | `bAutoSpeed` | Your scenes speed up with excitement (NPC scenes always do) |
 | `autoSpeedControlIntervalMin` / `Max` | 2500 / 7500 ms | `fAutoSpeedIntervalMin` / `Max` (s) | How often |
 | `autoSpeedControlExcitementMin` / `Max` | 15 / 85 | `fAutoSpeedExcitementMin` / `Max` | Chance from 0 to certain |
 | `SetAlwaysUndressAtStart` | 0 | `bUndressAtStart` | Everything off at the start |

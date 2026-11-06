@@ -57,9 +57,9 @@ The short answer to "are we missing anything": yes, and it falls into five patte
 ## Tier 3: behaviour that differs from OStim (Medium)
 
 **Speed and auto mode**
-- `defaultSpeed` and speed carry-over work the other way round: OStim starts at `defaultSpeed` and maps speed proportionally between scenes; 4Stim starts at the slowest and keeps the absolute speed (1 §9, 3 §6).
-- Auto speed control only runs in auto mode; OStim's also runs in every NPC scene and in manual player scenes (1 §7). Speed events fire at other moments, and `FourThread.SetSpeed` sends none (6 F6). The speed display ignores `displaySpeed` (5 §21).
-- `NoAutoMode` is only honoured at start; `NoPlayerControl` turns auto mode on (1 §6). `SetForceAIForMasturbation` and `SetForceAIInConsensualScenes` are missing (1 §8, 5 §5).
+- **Done in 0.5.0 (built, untested):** scenes start at `defaultSpeed` and a scene moved to maps the speed proportionally, as OStim's ChangeNode (its formula as it is). Was: `defaultSpeed` and speed carry-over worked the other way round (1 §9, 3 §6).
+- **Done in 0.5.0 (built, untested):** speed control runs in every NPC scene and in the player's with `SetActorSpeedControl`, auto mode or not; `FourThread.SetSpeed` sends the speed event. Was: only in auto mode (1 §7), no event from SetSpeed (6 F6). Still open: the speed display ignores `displaySpeed` (5 §21; the HUD shows a meter, not OStim's number).
+- **Done in 0.5.0 (built, untested):** `NoAutoMode` keeps auto mode off whoever asks; `NoPlayerControl` no longer turns it on; `SetForceAIForMasturbation` and `SetForceAIInConsensualScenes` are in (ini and MCM). Was: (1 §6, 1 §8, 5 §5).
 
 **Scenes and transitions**
 - A transition uses its destination's per-role values (scale, heels, look, penis bend, offset), not its own (2 §2).
@@ -69,7 +69,7 @@ The short answer to "are we missing anything": yes, and it falls into five patte
 - Actor conditions are cached and only refreshed by the picker, so a mid-scene change (a worn penis) doesn't reach navigation (2 §5).
 
 **Actions**
-- Action tags: done in 0.5.0 for what OStim's carry (their API forms, inverted `-tag` included). Was: action tags aren't implemented (no `action tags` files, no inverted `-tag`), action custom data (`ints`, `floats`, `strings`, used by OCum and OEndurance) isn't read, and `Default.json` drifted from OStim's data (male masturbation peaks inverted, bathing lost its water requirement...) (3 §4-5, §13).
+- Action tags: done in 0.5.0 for what OStim's carry (their API forms, inverted `-tag` included); action custom data done in 0.5.0 (read from action files, FourMetadata's custom functions). Was: action tags aren't implemented (no `action tags` files, no inverted `-tag`), action custom data (`ints`, `floats`, `strings`, used by OCum and OEndurance) isn't read, and `Default.json` drifted from OStim's data (male masturbation peaks inverted, bathing lost its water requirement...) (3 §4-5, §13).
 - Per-actor action stimulation overrides (OData) are missing (2 §9).
 
 **Climax**

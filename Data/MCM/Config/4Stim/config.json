@@ -1335,6 +1335,36 @@
 					}
 				},
 				{
+					"id": "b4S_SetForceAIForMasturbation:AutoMode",
+					"text": "$4Stim_MCM_SetForceAIForMasturbation",
+					"help": "$4Stim_MCM_SetForceAIForMasturbation_Help",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "switcher",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "b4S_SetForceAIInConsensualScenes:AutoMode",
+					"text": "$4Stim_MCM_SetForceAIInConsensualScenes",
+					"help": "$4Stim_MCM_SetForceAIInConsensualScenes_Help",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "switcher",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
 					"id": "bAutoModeNPC:AutoMode",
 					"text": "$4Stim_MCM_bAutoModeNPC",
 					"help": "$4Stim_MCM_bAutoModeNPC_Help",

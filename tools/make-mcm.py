@@ -176,6 +176,8 @@ SETTINGS = {
     # AutoMode
     'SetAIControl': ('Auto mode in your scenes', 'bool'),
     'bAutoModeNPC': ('Auto mode in NPC scenes', 'bool'),
+    'SetForceAIForMasturbation': ('Auto mode in your solo scenes', 'bool'),
+    'SetForceAIInConsensualScenes': ('Auto mode in your scenes with partners', 'bool'),
     'autoModeAnimDurationMin': ('Shortest scene (seconds)', 'ms', (1, 60, 0.5)),
     'autoModeAnimDurationMax': ('Longest scene (seconds)', 'ms', (1, 120, 0.5)),
     'autoModeForeplayChance': ('Foreplay chance (%)', 'int', (0, 100, 1)),
@@ -261,7 +263,7 @@ PAGES = [
                                     'fClimaxEndDelay'])]),
     ('Climax effects', [('Excitement', ['SetSlowMoOrgasms', 'fClimaxShake', 'SetBlurOrgasms', 'fClimaxBlur', 'fClimaxFlash', 'fClimaxGlowSize',
                                         'SetUseRumble'])]),
-    ('Auto mode', [('AutoMode', ['SetAIControl', 'bAutoModeNPC', 'autoModeAnimDurationMin', 'autoModeAnimDurationMax', 'autoModeForeplayChance',
+    ('Auto mode', [('AutoMode', ['SetAIControl', 'SetForceAIForMasturbation', 'SetForceAIInConsensualScenes', 'bAutoModeNPC', 'autoModeAnimDurationMin', 'autoModeAnimDurationMax', 'autoModeForeplayChance',
                                  'autoModeForeplayThresholdMin', 'autoModeForeplayThresholdMax', 'autoModePulloutChance', 'autoModePulloutThresholdMin',
                                  'autoModePulloutThresholdMax', 'navigationDistanceMax', 'autoModeLimitToNavigationDistance', 'bAutoModeStandingOnFloor',
                                  'SetActorSpeedControl', 'autoSpeedControlIntervalMin', 'autoSpeedControlIntervalMax', 'autoSpeedControlExcitementMin',

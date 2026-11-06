@@ -291,8 +291,10 @@ namespace
 	// [AutoMode] in 4Stim.ini (see "Auto mode" below).
 	struct AutoConfig
 	{
-		bool          player = false;        // scenes with the player start in auto mode
-		bool          npc = true;            // scenes without the player do
+		bool          player = false;        // scenes with the player start in auto mode (OStim's SetAIControl)
+		bool          playerSolo = false;    // or only the player's solo ones (SetForceAIForMasturbation)
+		bool          playerPartner = false; // or only the player's with partners (SetForceAIInConsensualScenes)
+		bool          npc = true;            // scenes without the player do (OStim: always; 4Stim's switch)
 		std::uint32_t key = 0x60;            // toggles it for the scene you're in / watching (0 = no key); OStim's: numpad 0
 		float         sceneMin = 7.5F;       // seconds in each scene
 		float         sceneMax = 15.0F;
@@ -384,6 +386,8 @@ namespace
 		{ "setslowmoorgasms", { "bslowmoorgasms", OStimUnit::kSame } },
 		// Auto mode.
 		{ "setaicontrol", { "bautomodeplayer", OStimUnit::kSame } },
+		{ "setforceaiformasturbation", { "bautomodesolo", OStimUnit::kSame } },
+		{ "setforceaiinconsensualscenes", { "bautomodepartner", OStimUnit::kSame } },
 		{ "automodeanimdurationmin", { "fautomodescenemin", OStimUnit::kMilliseconds } },
 		{ "automodeanimdurationmax", { "fautomodescenemax", OStimUnit::kMilliseconds } },
 		{ "automodeforeplaychance", { "iforeplaychance", OStimUnit::kSame } },
@@ -831,6 +835,10 @@ namespace
 				// (A new chain, C1061 again.)
 				if (key == "bautomodeplayer") {
 					g_autoConfig.player = std::stoi(value) != 0;
+				} else if (key == "bautomodesolo") {
+					g_autoConfig.playerSolo = std::stoi(value) != 0;
+				} else if (key == "bautomodepartner") {
+					g_autoConfig.playerPartner = std::stoi(value) != 0;
 				} else if (key == "bautomodenpc") {
 					g_autoConfig.npc = std::stoi(value) != 0;
 				} else if (key == "iautomodekey") {
@@ -1360,9 +1368,13 @@ namespace
 		std::size_t                                    step = 0;
 		float                                          remaining = -1.0F;
 
-		// Speed from before a transition, for its destination (the
-		// transition itself has only one speed).
-		int carrySpeed = 0;
+		// OStim's relativeSpeed: where the speed is among the scene's speeds
+		// (speed / count), set by every speed played outside a transition;
+		// -1 until one is (a scene's start, which plays its defaultSpeed). A
+		// scene moved to maps it onto its own speeds (MappedSpeed), as OStim's
+		// Thread::ChangeNode, so a transition's destination, a navigation and
+		// an auto transition all keep the pace.
+		float relativeSpeed = -1.0F;
 
 		// A scene the player picked during a transition: played when the
 		// transition ends, instead of its destination.
@@ -1464,14 +1476,36 @@ namespace
 		std::vector<float> health;
 	};
 
-	// Remembers the outgoing speed when a scene enters a transition.
-	void NoteCarrySpeed(ActiveScene& a_active, const std::string& a_newSceneID)
+	// OStim's Thread::SetSpeed: a speed played outside a transition sets the
+	// relative speed (speed / number of speeds, OStim's formula as it is).
+	void NoteSpeed(ActiveScene& a_active, const std::string& a_sceneID, int a_speed)
 	{
-		const auto from = SceneRegistry::Find(a_active.sceneID);
-		const auto to = SceneRegistry::Find(a_newSceneID);
-		if (to && to->IsTransition() && !(from && from->IsTransition())) {
-			a_active.carrySpeed = a_active.speed;
+		const auto scene = SceneRegistry::Find(a_sceneID);
+		if (scene && !scene->IsTransition()) {
+			a_active.relativeSpeed = scene->speeds.empty() ? -1.0F : static_cast<float>(a_speed) / static_cast<float>(scene->speeds.size());
 		}
+	}
+
+	// OStim's Thread::ChangeNode: the speed a scene moved to starts at. One
+	// speed: it; no relative speed yet: the scene's defaultSpeed; else the
+	// relative speed over its speeds, rounded.
+	int MappedSpeed(const ActiveScene& a_active, const SceneRegistry::Scene& a_to)
+	{
+		const int count = static_cast<int>(a_to.speeds.size());
+		if (count <= 1) {
+			return 0;
+		}
+		if (a_active.relativeSpeed < 0.0F) {
+			return std::clamp(a_to.defaultSpeed, 0, count - 1);
+		}
+		return std::clamp(static_cast<int>(a_active.relativeSpeed * static_cast<float>(count - 1) + 0.5F), 0, count - 1);
+	}
+
+	// The speed a scene starts at: its defaultSpeed (OStim: a new thread's
+	// relative speed is -1, so ChangeNode plays defaultSpeed).
+	int StartSpeed(const SceneRegistry::Scene& a_scene)
+	{
+		return std::clamp(a_scene.defaultSpeed, 0, std::max(static_cast<int>(a_scene.speeds.size()) - 1, 0));
 	}
 	std::vector<ActiveScene> g_activeScenes;
 	// Each scene actor's last visibility summary and when it was checked (LogVisibility).
@@ -2225,7 +2259,7 @@ namespace
 		}
 	}
 
-	void TrackSceneStart(std::vector<std::uint32_t> a_actors, const std::string& a_sceneID)
+	void TrackSceneStart(std::vector<std::uint32_t> a_actors, const std::string& a_sceneID, int a_speed)
 	{
 		PenisBend::NoteRestPose(a_actors);  // before the scene's animation poses them
 		for (const auto id : a_actors) {
@@ -2274,6 +2308,8 @@ namespace
 			return replaced;
 		});
 		ActiveScene scene{ a_actors, a_sceneID };
+		scene.speed = a_speed;
+		NoteSpeed(scene, a_sceneID, a_speed);
 		const bool hasPlayer = std::ranges::any_of(a_actors, [](std::uint32_t id) { return IsPlayer(RE::TESForm::GetFormByID<RE::Actor>(id)); });
 		// Its thread: the one a mod asked for with these actors (thread
 		// builder), else a new one (the picker, a save's scene...).
@@ -2414,7 +2450,12 @@ namespace
 				Undress::StripAll(id, true);
 			}
 		}
-		if (added.noPlayerControl || (!added.noAutoMode && (withPlayer ? g_autoConfig.player : g_autoConfig.npc))) {
+		// OStim's Thread::evaluateAutoMode: NPC scenes always (4Stim:
+		// bAutoModeNPC), the player's with SetAIControl, else solo ones with
+		// SetForceAIForMasturbation and the rest with
+		// SetForceAIInConsensualScenes. NoAutoMode keeps it off (StartAutoMode).
+		if (!withPlayer ? g_autoConfig.npc :
+		    g_autoConfig.player || (added.actors.size() == 1 ? g_autoConfig.playerSolo : g_autoConfig.playerPartner)) {
 			StartAutoMode(added);
 		}
 		// Started again from a save: back to where it was.
@@ -2532,8 +2573,8 @@ namespace
 			return;
 		}
 		const bool moved = _stricmp(scene->sceneID.c_str(), a_sceneID.c_str()) != 0;
+		NoteSpeed(*scene, a_sceneID, a_speed);
 		if (moved) {
-			NoteCarrySpeed(*scene, a_sceneID);
 			scene->queuedScene.clear();
 			WatchAnimEvents(scene->actors, a_sceneID);
 		}
@@ -2616,7 +2657,8 @@ namespace
 			REX::WARN("Autoplay: can't play \"{}\" on this scene's {} actor(s)", a_sceneID, a_active.actors.size());
 			return false;
 		}
-		const int  speed = std::clamp(a_speed, 0, static_cast<int>(scene->speeds.size()) - 1);
+		// a_speed -1: OStim's ChangeNode speed (MappedSpeed).
+		const int  speed = a_speed < 0 ? MappedSpeed(a_active, *scene) : std::clamp(a_speed, 0, static_cast<int>(scene->speeds.size()) - 1);
 		const auto& idles = scene->speeds[speed];
 		std::string results;
 		for (std::size_t role = 0; role < a_active.actors.size(); ++role) {
@@ -2632,7 +2674,7 @@ namespace
 		WatchAnimEvents(a_active.actors, scene->id);
 		const auto previous = a_active.sceneID;
 		const int  previousSpeed = a_active.speed;
-		NoteCarrySpeed(a_active, scene->id);
+		NoteSpeed(a_active, scene->id, speed);
 		a_active.sceneID = scene->id;
 		a_active.speed = speed;
 		a_active.lastPlayed = std::chrono::steady_clock::now();
@@ -2674,7 +2716,7 @@ namespace
 				a_active.sequence.reset();
 			}
 			REX::INFO("Transition \"{}\" -> \"{}\" (picked during the transition)", a_active.sceneID, queued);
-			if (PlayOnActiveScene(a_active, queued, a_active.carrySpeed)) {
+			if (PlayOnActiveScene(a_active, queued, -1)) {
 				ArmAutoplay(a_active);
 			} else {
 				a_active.remaining = -1.0F;
@@ -2714,7 +2756,7 @@ namespace
 			return;
 		}
 		REX::INFO("Transition \"{}\" -> \"{}\"", scene->id, scene->destination);
-		if (PlayOnActiveScene(a_active, scene->destination, a_active.carrySpeed)) {
+		if (PlayOnActiveScene(a_active, scene->destination, -1)) {
 			ArmAutoplay(a_active);
 		} else {
 			a_active.remaining = -1.0F;
@@ -2872,7 +2914,7 @@ namespace
 			}
 			const bool last = i + 1 == a_route.size();
 			const float duration = scene->IsTransition() && scene->length > 0.0F ? scene->length : last ? 0.1F : 0.5F;
-			const int   speed = last ? finalSpeed : std::min(a_active.speed, static_cast<int>(scene->speeds.size()) - 1);
+			const int   speed = last ? finalSpeed : MappedSpeed(a_active, *scene);
 			sequence->entries.push_back({ scene->id, duration, speed });
 			total += duration;
 		}
@@ -2988,6 +3030,12 @@ namespace
 		if (state.on) {
 			return;
 		}
+		if (a_active.noAutoMode) {
+			// OStim's Thread::startAutoMode: a thread built with NoAutoMode
+			// never runs it, whoever asks (the key, FourThread, the C++ API).
+			REX::INFO("Auto mode: not for \"{}\", its thread was built with NoAutoMode", a_active.sceneID);
+			return;
+		}
 		if (state.stage == AutoStage::kNone) {
 			if (a_active.actors.size() == 1) {
 				state.stage = AutoStage::kMain;
@@ -3020,6 +3068,36 @@ namespace
 		}
 	}
 
+	// OStim's speed control (Thread::loopAutoControl): faster as excitement
+	// rises, every autoSpeedControlInterval, in every NPC scene and, with
+	// SetActorSpeedControl (bAutoSpeed), the player's, auto mode or not.
+	// The chance is 0 at autoSpeedControlExcitementMin, certain at Max.
+	void SpeedControlTick(ActiveScene& a_active, float a_seconds)
+	{
+		if (a_active.ending || a_active.sequence || a_active.remaining >= 0.0F || !a_active.queuedScene.empty() || a_active.endIn >= 0.0F) {
+			return;  // OStim: not while its node queue moves it (a sequence, a route, a transition)
+		}
+		const bool player = std::ranges::any_of(a_active.actors, [](std::uint32_t a) { return IsPlayer(RE::TESForm::GetFormByID<RE::Actor>(a)); });
+		if (player && !g_autoConfig.autoSpeed) {
+			return;
+		}
+		auto& cooldown = a_active.autoMode.speedCooldown;
+		if ((cooldown -= a_seconds) > 0.0F) {
+			return;
+		}
+		cooldown = AutoRandom(g_autoConfig.speedIntervalMin, g_autoConfig.speedIntervalMax);
+		const auto scene = SceneRegistry::Find(a_active.sceneID);
+		if (!scene) {
+			return;
+		}
+		const float excitement = MaxExcitement(a_active, false);
+		const float span = std::max(g_autoConfig.speedExcitementMax - g_autoConfig.speedExcitementMin, 1.0F);
+		const int   chance = static_cast<int>(std::clamp((excitement - g_autoConfig.speedExcitementMin) * 100.0F / span, 0.0F, 100.0F));
+		if (a_active.speed + 1 < static_cast<int>(scene->speeds.size()) && AutoChance(chance)) {
+			PlayOnActiveScene(a_active, scene->id, a_active.speed + 1);  // sends the speed event
+		}
+	}
+
 	void AutoModeTick(ActiveScene& a_active, float a_seconds)
 	{
 		auto& state = a_active.autoMode;
@@ -3030,18 +3108,6 @@ namespace
 		const auto scene = SceneRegistry::Find(a_active.sceneID);
 		if (!scene) {
 			return;
-		}
-
-		// Faster as excitement rises.
-		if (g_autoConfig.autoSpeed && (state.speedCooldown -= a_seconds) <= 0.0F) {
-			state.speedCooldown = AutoRandom(g_autoConfig.speedIntervalMin, g_autoConfig.speedIntervalMax);
-			const float excitement = MaxExcitement(a_active, false);
-			const float span = std::max(g_autoConfig.speedExcitementMax - g_autoConfig.speedExcitementMin, 1.0F);
-			const int   chance = static_cast<int>(std::clamp((excitement - g_autoConfig.speedExcitementMin) * 100.0F / span, 0.0F, 100.0F));
-			const int   count = static_cast<int>(scene->speeds.size());
-			if (a_active.speed + 1 < count && AutoChance(chance)) {
-				PlayOnActiveScene(a_active, scene->id, a_active.speed + 1);  // sends the speed event
-			}
 		}
 
 		if (state.stage == AutoStage::kPullout) {
@@ -3373,7 +3439,7 @@ namespace
 			a_active.sequence.reset();
 		}
 		a_active.queuedScene.clear();
-		PlayOnActiveScene(a_active, scene->id, 0);
+		PlayOnActiveScene(a_active, scene->id, -1);
 		// Everyone over there now (the scene lock follows; without it, they stay).
 		for (std::size_t role = 0; role < a_active.actors.size(); ++role) {
 			if (const auto actor = RE::TESForm::GetFormByID<RE::Actor>(a_active.actors[role])) {
@@ -4292,7 +4358,7 @@ namespace
 		// to starts slowest).
 		if (penis && scene) {
 			if (scene->IsTransition()) {
-				a_active.carrySpeed = 0;
+				a_active.relativeSpeed = 0.0F;
 			} else if (a_active.speed > 0) {
 				PlayOnActiveScene(a_active, a_active.sceneID, 0);  // sends the speed event
 			}
@@ -4341,9 +4407,9 @@ namespace
 		const auto scene = SceneRegistry::Find(a_active.sceneID);
 		const auto climaxScene = scene && role < scene->actors.size() ? scene->actors[role].AutoTransition("climax") : std::string{};
 		if (config.climaxScenes && scene && !scene->IsTransition() && !climaxScene.empty() && a_active.queuedScene.empty() && !a_active.sequence &&
-			PlayOnActiveScene(a_active, climaxScene, 0)) {
+			PlayOnActiveScene(a_active, climaxScene, -1)) {
 			if (ActorProperties::HasPenis(RE::TESForm::GetFormByID<RE::Actor>(a_actorID))) {
-				a_active.carrySpeed = 0;  // back at the slowest speed after it
+				a_active.relativeSpeed = 0.0F;  // back at the slowest speed after it
 			}
 			ArmAutoplay(a_active);
 			a_active.awaitingClimax.push_back({ a_actorID, a_active.sceneID, false });
@@ -4424,6 +4490,7 @@ namespace
 			Undress::Tick(elapsed);
 			EquipObjects::Tick(elapsed);
 			for (auto& active : g_activeScenes) {
+				SpeedControlTick(active, elapsed);
 				AutoModeTick(active, elapsed);
 			}
 			EndBrokenScenes(elapsed);
@@ -4732,14 +4799,15 @@ namespace
 			ReleaseFailedStart({ a_actor->GetFormID() }, "no such scene");
 			return;
 		}
-		const auto idle = scene->speeds[0][0];
+		const int  speed = StartSpeed(*scene);  // OStim: a new thread starts at the scene's defaultSpeed
+		const auto idle = scene->speeds[speed][0];
 		const auto sceneID = scene->id;
 
-		REX::INFO("StartScene: {:08X} <- scene \"{}\" (idle {:08X})", a_actor->GetFormID(), scene->id, idle->GetFormID());
+		REX::INFO("StartScene: {:08X} <- scene \"{}\" speed {} (idle {:08X})", a_actor->GetFormID(), scene->id, speed + 1, idle->GetFormID());
 		PlaceOnPendingFurniture({ a_actor });
 
 		// Papyrus calls arrive on a script thread; run engine animation code on the main thread.
-		F4SE::GetTaskInterface()->AddTask([a_actor, idle, sceneID]() {
+		F4SE::GetTaskInterface()->AddTask([a_actor, idle, sceneID, speed]() {
 			const auto process = a_actor->currentProcess;
 			if (!process) {
 				REX::WARN("StartScene: actor has no AI process");
@@ -4756,9 +4824,9 @@ namespace
 			}
 			const bool focus = g_focusNextScene.exchange(false) || IsPlayer(a_actor);
 			if (ok) {
-				TrackSceneStart({ a_actor->GetFormID() }, sceneID);
+				TrackSceneStart({ a_actor->GetFormID() }, sceneID, speed);
 				if (focus) {
-					PlayerScene focused{ a_actor->GetFormID(), 0, sceneID, 0 };
+					PlayerScene focused{ a_actor->GetFormID(), 0, sceneID, speed };
 					if (const auto active = FindActiveScene(a_actor->GetFormID())) {
 						focused.furniture = active->furnitureType;
 					}
@@ -5117,14 +5185,15 @@ namespace
 			ReleaseFailedStart({ a_actor0->GetFormID(), a_actor1->GetFormID() }, "no such scene");
 			return;
 		}
-		const auto idle0 = scene->speeds[0][0];
-		const auto idle1 = scene->speeds[0][1];
+		const int  speed = StartSpeed(*scene);  // OStim: a new thread starts at the scene's defaultSpeed
+		const auto idle0 = scene->speeds[speed][0];
+		const auto idle1 = scene->speeds[speed][1];
 		const auto sceneID = scene->id;
 
 		REX::INFO("PlaySceneIdles: scene \"{}\": {:08X} <- {:08X}, {:08X} <- {:08X}",
 			scene->id, a_actor0->GetFormID(), idle0->GetFormID(), a_actor1->GetFormID(), idle1->GetFormID());
 
-		F4SE::GetTaskInterface()->AddTask([a_actor0, idle0, a_actor1, idle1, sceneID]() {
+		F4SE::GetTaskInterface()->AddTask([a_actor0, idle0, a_actor1, idle1, sceneID, speed]() {
 			const auto p0 = a_actor0->currentProcess;
 			const auto p1 = a_actor1->currentProcess;
 			if (!p0 || !p1) {
@@ -5151,9 +5220,9 @@ namespace
 				ReleaseFailedStart({ a_actor0->GetFormID(), a_actor1->GetFormID() }, "the game refused both animations");
 				return;
 			}
-			TrackSceneStart({ a_actor0->GetFormID(), a_actor1->GetFormID() }, sceneID);
+			TrackSceneStart({ a_actor0->GetFormID(), a_actor1->GetFormID() }, sceneID, speed);
 			if (focus) {
-				PlayerScene focused{ a_actor0->GetFormID(), a_actor1->GetFormID(), sceneID, 0 };
+				PlayerScene focused{ a_actor0->GetFormID(), a_actor1->GetFormID(), sceneID, speed };
 				if (const auto active = FindActiveScene(a_actor0->GetFormID())) {
 					focused.furniture = active->furnitureType;
 				}
@@ -5519,7 +5588,7 @@ namespace
 			return false;
 		}
 		F4SE::GetTaskInterface()->AddTask([id = a_actor->GetFormID(), dest]() {
-			if (const auto active = FindActiveScene(id); active && PlayOnActiveScene(*active, dest, 0)) {
+			if (const auto active = FindActiveScene(id); active && PlayOnActiveScene(*active, dest, -1)) {
 				ArmAutoplay(*active);
 			}
 		});
@@ -6066,13 +6135,14 @@ namespace
 			ReleaseFailedStart(std::move(failed), "no such scene");
 			return;
 		}
-		const auto idles = scene->speeds[0];
+		const int  speed = StartSpeed(*scene);  // OStim: a new thread starts at the scene's defaultSpeed
+		const auto idles = scene->speeds[speed];
 		const auto sceneID = scene->id;
 		std::vector<std::uint32_t> ids;
 		for (const auto actor : a_actors) {
 			ids.push_back(actor->GetFormID());
 		}
-		F4SE::GetTaskInterface()->AddTask([ids, idles, sceneID]() {
+		F4SE::GetTaskInterface()->AddTask([ids, idles, sceneID, speed]() {
 			bool        any = false;
 			bool        withPlayer = false;
 			std::string results;
@@ -6093,9 +6163,10 @@ namespace
 				ReleaseFailedStart(ids, "the game refused every animation");
 				return;
 			}
-			TrackSceneStart(ids, sceneID);
+			TrackSceneStart(ids, sceneID, speed);
 			if (focus) {
 				auto focused = FocusFor(ids, sceneID);
+				focused.speed = speed;
 				if (const auto active = FindActiveScene(ids.front())) {
 					focused.furniture = active->furnitureType;
 				}
@@ -6589,7 +6660,8 @@ namespace
 			});
 			return true;
 		}
-		const int speed = std::min(current.speed, static_cast<int>(to->speeds.size()) - 1);
+		const auto active = FindActiveScene(current.role0);
+		const int  speed = active ? MappedSpeed(*active, *to) : std::min(current.speed, static_cast<int>(to->speeds.size()) - 1);
 		PlayPlayerScene(*to, speed, current);
 		return true;
 	}
@@ -8887,8 +8959,7 @@ namespace
 				if (a.sequence) {
 					a.sequence.reset();  // another mod took over
 				}
-				const int speed = std::min(a.speed, static_cast<int>(to->speeds.size()) - 1);
-				if (PlayOnActiveScene(a, to->id, std::max(speed, 0))) {
+				if (PlayOnActiveScene(a, to->id, -1)) {
 					ArmAutoplay(a);
 				}
 			},
@@ -11563,7 +11634,8 @@ namespace
 			bool autoMode = false;
 			line(scenes->TryGetAutoMode("4StimSelfTest", id, &autoMode) == NG::Scene::APIResult::OK && autoMode == threads->IsAutoMode(id), "Scene API TryGetAutoMode");
 			NG::Thread::ActorAlignmentData align{};
-			line(threads->GetActorAlignment(id, 0, &align), std::format("GetActorAlignment 0: {:.1f} {:.1f} {:.1f}, scale {:.2f}, rotation {:.1f}, bend {:.1f}", align.offsetX, align.offsetY, align.offsetZ, align.scale, align.rotation, align.sosBend));
+			const bool aligned = threads->GetActorAlignment(id, 0, &align);  // before the text: argument order isn't left to right
+			line(aligned, std::format("GetActorAlignment 0: {:.1f} {:.1f} {:.1f}, scale {:.2f}, rotation {:.1f}, bend {:.1f}", align.offsetX, align.offsetY, align.offsetZ, align.scale, align.rotation, align.sosBend));
 			NG::Thread::SceneSearchResult found[8]{};
 			const auto hits = threads->SearchScenes("a", found, 8);
 			line(true, std::format("SearchScenes \"a\": {}{}", hits, hits ? std::format(" (first: {})", found[0].name) : ""));
