@@ -46,7 +46,7 @@ The function gets, as OStim's: `(String asState)`, on an actor's page or a per-a
 
 Which state shows: OStim shows the first (its `stateFaction` isn't used in OStim NG either), and an `equipObject` option's `toggle` / `object`. 4Stim adds `"state"` on an option, to show `"on"` or `"off"` by what's true now: `"stripped"` (undressed by 4Stim), `"muted"`, or `"equipped:<type>"` (wearing an equip object of that type). The state's function decides what to do (4Stim's `FourStimOptions.psc` toggles).
 
-Texts starting with `$4Stim_` are translated (TRANSLATIONS.md); a file's `"english"` (key to text) gives their English. A `$` text of another mod's is shown as it is.
+Texts starting with `$4stim_` are translated (TRANSLATIONS.md); a file's `"english"` (key to text) gives their English. A `$` text of another mod's is shown as it is.
 
 ## Papyrus for options
 

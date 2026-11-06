@@ -25,10 +25,10 @@ package hud
 		private static const METERS:Object = { x: 172, y: -104, w: 249 };
 
 		private static const TAB_LIST:Array = [
-			{ id: "search", label: "Search", key: "$4Stim_TabSearch", icon: "Search" },
-			{ id: "align", label: "Align", key: "$4Stim_TabAlign", icon: "Align" },
-			{ id: "utility", label: "Utility", key: "$4Stim_TabUtility", icon: "Utility" },
-			{ id: "navigation", label: "Navigation", key: "$4Stim_TabNavigation", icon: "Navigation" }
+			{ id: "search", label: "Search", key: "$4stim_tab_search", icon: "Search" },
+			{ id: "align", label: "Align", key: "$4stim_tab_align", icon: "Align" },
+			{ id: "utility", label: "Utility", key: "$4stim_tab_utility", icon: "Utility" },
+			{ id: "navigation", label: "Navigation", key: "$4stim_tab_navigation", icon: "Navigation" }
 		];
 
 		private var _theme:Theme = new Theme(null);
@@ -120,7 +120,7 @@ package hud
 			_glow.play(a_strength, _screen, a_size);
 		}
 
-		// Optional (HUD_API.md): the plugin's translations, { "$4Stim_...": text }.
+		// Optional (HUD_API.md): the plugin's translations, { "$4stim_...": text }.
 		public function SetStrings(a_table:Object):void
 		{
 			Strings.set(a_table);
@@ -630,19 +630,19 @@ package hud
 		{
 			switch (_tabs.selectedID) {
 				case "navigation":
-					_list.setTitle(Strings.t("$4Stim_TabNavigation", "Navigation"));
+					_list.setTitle(Strings.t("$4stim_tab_navigation", "Navigation"));
 					_list.setEntries(_navigation, "", a_keepSelection);
 					break;
 				case "utility":
-					_list.setTitle(Strings.t("$4Stim_TabUtility", "Utility"));
-					_list.setEntries(_utility, Strings.t("$4Stim_NoUtility", "No Utility options installed"), a_keepSelection);
+					_list.setTitle(Strings.t("$4stim_tab_utility", "Utility"));
+					_list.setEntries(_utility, Strings.t("$4stim_no_utility", "No Utility options installed"), a_keepSelection);
 					break;
 				case "search":
-					_list.setTitle(Strings.t("$4Stim_TabSearch", "Search"));
-					_list.setEntries([{ id: "search", label: Strings.t("$4Stim_BrowseAllScenes", "Browse all scenes"), icon: "", kind: "search" }], "", false);
+					_list.setTitle(Strings.t("$4stim_tab_search", "Search"));
+					_list.setEntries([{ id: "search", label: Strings.t("$4stim_browse_all_scenes", "Browse all scenes"), icon: "", kind: "search" }], "", false);
 					break;
 				case "align":
-					_list.setTitle(Strings.t("$4Stim_TabAlign", "Align"));
+					_list.setTitle(Strings.t("$4stim_tab_align", "Align"));
 					_list.setEntries(alignEntries(), "", a_keepSelection);
 					break;
 			}
@@ -661,22 +661,22 @@ package hud
 		private function alignEntries():Array
 		{
 			if (_align == null || _align.available !== true) {
-				return [{ id: "align_none", label: Strings.t("$4Stim_NothingToAlign", "Nothing to align"), icon: "", kind: "disabled" }];
+				return [{ id: "align_none", label: Strings.t("$4stim_nothing_to_align", "Nothing to align"), icon: "", kind: "disabled" }];
 			}
 			var name:String = String(_align.name);
 			var count:int = int(_align.roleCount);
 			var sex:String = String(_align.sex) == "male" ? "M" : String(_align.sex) == "female" ? "F" : "*";
 			var digits:int = stepDigits();
 			return [
-				{ id: "align_actor", label: "< " + name + " >   " + Strings.t("$4Stim_AlignRole", "Role") + " " + int(_align.role) + (count > 1 ? "/" + (count - 1) : "") + "  " + sex, icon: "", kind: "alignActor" },
-				{ id: "align_x", label: Strings.t("$4Stim_AlignX", "Left / right") + "   " + signed(Number(_align.x), digits), icon: "", kind: "alignValue", field: "x" },
-				{ id: "align_y", label: Strings.t("$4Stim_AlignY", "Back / forward") + "   " + signed(Number(_align.y), digits), icon: "", kind: "alignValue", field: "y" },
-				{ id: "align_z", label: Strings.t("$4Stim_AlignZ", "Down / up") + "   " + signed(Number(_align.z), digits), icon: "", kind: "alignValue", field: "z" },
-				{ id: "align_scale", label: Strings.t("$4Stim_AlignSize", "Size") + "   " + Number(_align.scale).toFixed(Math.max(2, digits)), icon: "", kind: "alignValue", field: "scale" },
-				{ id: "align_rot", label: Strings.t("$4Stim_AlignTurn", "Turn") + "   " + signed(Number(_align.rot), digits) + " " + Strings.t("$4Stim_Degrees", "deg"), icon: "", kind: "alignValue", field: "rot" },
-				{ id: "align_bend", label: Strings.t("$4Stim_AlignBend", "Penis bend") + "   " + signed(Number(_align.bend), 0), icon: "", kind: "alignValue", field: "bend" },
-				{ id: "align_step", label: Strings.t("$4Stim_AlignStep", "Step") + "   < " + stepText() + " >", icon: "", kind: "alignStep" },
-				{ id: "align_reset", label: Strings.t("$4Stim_AlignReset", "Reset") + " " + name, icon: "", kind: "alignReset" }
+				{ id: "align_actor", label: "< " + name + " >   " + Strings.t("$4stim_align_role", "Role") + " " + int(_align.role) + (count > 1 ? "/" + (count - 1) : "") + "  " + sex, icon: "", kind: "alignActor" },
+				{ id: "align_x", label: Strings.t("$4stim_align_x", "Left / right") + "   " + signed(Number(_align.x), digits), icon: "", kind: "alignValue", field: "x" },
+				{ id: "align_y", label: Strings.t("$4stim_align_y", "Back / forward") + "   " + signed(Number(_align.y), digits), icon: "", kind: "alignValue", field: "y" },
+				{ id: "align_z", label: Strings.t("$4stim_align_z", "Down / up") + "   " + signed(Number(_align.z), digits), icon: "", kind: "alignValue", field: "z" },
+				{ id: "align_scale", label: Strings.t("$4stim_align_size", "Size") + "   " + Number(_align.scale).toFixed(Math.max(2, digits)), icon: "", kind: "alignValue", field: "scale" },
+				{ id: "align_rot", label: Strings.t("$4stim_align_turn", "Turn") + "   " + signed(Number(_align.rot), digits) + " " + Strings.t("$4stim_degrees", "deg"), icon: "", kind: "alignValue", field: "rot" },
+				{ id: "align_bend", label: Strings.t("$4stim_align_bend", "Penis bend") + "   " + signed(Number(_align.bend), 0), icon: "", kind: "alignValue", field: "bend" },
+				{ id: "align_step", label: Strings.t("$4stim_align_step", "Step") + "   < " + stepText() + " >", icon: "", kind: "alignStep" },
+				{ id: "align_reset", label: Strings.t("$4stim_align_reset", "Reset") + " " + name, icon: "", kind: "alignReset" }
 			];
 		}
 

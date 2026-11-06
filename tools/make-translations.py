@@ -1,12 +1,12 @@
 """
 Writes Data/Interface/Translations/4Stim_en.txt (docs/TRANSLATIONS.md): every
-"$4Stim_..." text with its English, from
+"$4stim_..." text with its English, from
 
-  - the plugin's TR("$4Stim_Key", "English") / TRF(...) calls (src/),
-  - the movies' Strings.t("$4Stim_Key", "English") (Interface-src/),
+  - the plugin's TR("$4stim_key", "English") / TRF(...) calls (src/),
+  - the movies' Strings.t("$4stim_key", "English") (Interface-src/),
   - the MCM page's labels (tools/mcm-texts.json, from make-mcm.py),
   - the HUD options files (Data/F4SE/Plugins/4Stim/Options/*.json: their
-    "$4Stim_..." names and descriptions, with the English in "english").
+    "$4stim_..." names and descriptions, with the English in "english").
 
 As Fallout 4's translation files: UTF-16 LE with a byte order mark,
 "$key<tab>text" lines. A translation is a copy named 4Stim_<language>.txt
@@ -23,7 +23,7 @@ import sys
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, 'Data', 'Interface', 'Translations', '4Stim_en.txt')
 
-CALL = re.compile(r'\b(?:TR|TRF|Strings\.t)\(\s*"(\$4Stim_[A-Za-z0-9_]+)"\s*,\s*"((?:[^"\\]|\\.)*)"')
+CALL = re.compile(r'\b(?:TR|TRF|Strings\.t)\(\s*"(\$4stim_[A-Za-z0-9_]+)"\s*,\s*"((?:[^"\\]|\\.)*)"')
 
 
 def unescape(text):

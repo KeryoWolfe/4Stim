@@ -3410,7 +3410,7 @@ namespace
 		}
 		if (!scene) {
 			REX::WARN("Furniture change: no scene fits these {} actor(s) on {}", a_active.actors.size(), a_piece.type);
-			Notify(TR("$4Stim_NoSceneThere", "No scene fits them there"));
+			Notify(TR("$4stim_no_scene_there", "No scene fits them there"));
 			return false;
 		}
 		REX::INFO("Furniture change: \"{}\" from {} ({:08X}) to {} ({:08X}) with \"{}\" ({})", a_active.sceneID,
@@ -5902,7 +5902,7 @@ namespace
 	bool ExportSettings(std::monostate)
 	{
 		const bool ok = MCM::Export();
-		Notify(ok ? TR("$4Stim_SettingsExported", "4Stim: settings exported") : TR("$4Stim_SettingsNotExported", "4Stim: couldn't export the settings"));
+		Notify(ok ? TR("$4stim_settings_exported", "4Stim: settings exported") : TR("$4stim_settings_not_exported", "4Stim: couldn't export the settings"));
 		return ok;
 	}
 
@@ -5912,7 +5912,7 @@ namespace
 		if (ok) {
 			ReloadSettings({});
 		}
-		Notify(ok ? TR("$4Stim_SettingsImported", "4Stim: settings imported") : TR("$4Stim_SettingsNotImported", "4Stim: no exported settings to import"));
+		Notify(ok ? TR("$4stim_settings_imported", "4Stim: settings imported") : TR("$4stim_settings_not_imported", "4Stim: no exported settings to import"));
 		return ok;
 	}
 
@@ -5920,7 +5920,7 @@ namespace
 	{
 		MCM::UseIni();
 		ReloadSettings({});
-		Notify(TR("$4Stim_SettingsFromIni", "4Stim: back to 4Stim.ini's settings"));
+		Notify(TR("$4stim_settings_from_ini", "4Stim: back to 4Stim.ini's settings"));
 	}
 
 	// A scene key's action by name (the MCM's hotkeys): hotkey, npcscene,
@@ -6754,7 +6754,7 @@ namespace
 			return;
 		}
 		if (PlayerInAScene()) {
-			Notify(TR("$4Stim_InSceneCantWatch", "4Stim: you're in a scene; end it to watch another"));
+			Notify(TR("$4stim_in_scene_cant_watch", "4Stim: you're in a scene; end it to watch another"));
 			return;
 		}
 		auto focus = FocusFor(active->actors, active->sceneID);
@@ -6782,14 +6782,14 @@ namespace
 	{
 		const auto active = FindActiveScene(a_role0);
 		if (!active) {
-			Notify(TR("$4Stim_SceneEnded", "4Stim: that scene has ended"));
+			Notify(TR("$4stim_scene_ended", "4Stim: that scene has ended"));
 			return;
 		}
 		if (a_command == "@watch") {
 			WatchScene(a_role0);
 		} else if (a_command == "@auto") {
 			active->autoMode.on ? StopAutoMode(*active) : StartAutoMode(*active);
-			Notify(active->autoMode.on ? TR("$4Stim_AutoModeOn", "Auto mode on") : TR("$4Stim_AutoModeOff", "Auto mode off"));
+			Notify(active->autoMode.on ? TR("$4stim_auto_mode_on", "Auto mode on") : TR("$4stim_auto_mode_off", "Auto mode off"));
 		} else if (a_command == "@endscene") {
 			EndActiveScene(*active, "ended from the picker");
 		}
@@ -7270,7 +7270,7 @@ namespace
 			auto scenes = SceneRegistry::ListSequences(actorCount, filter);
 			for (auto& seq : scenes) {
 				seq.id = std::string(SEQUENCE_PREFIX) + seq.id;
-				seq.name = TRF("$4Stim_SequenceName", "Sequence: {}", seq.name);
+				seq.name = TRF("$4stim_sequence_name", "Sequence: {}", seq.name);
 				seq.tags = seq.tags.empty() ? "sequence" : "sequence, " + seq.tags;
 			}
 			std::ranges::move(SceneRegistry::List(actorCount, filter), std::back_inserter(scenes));
@@ -7320,15 +7320,15 @@ namespace
 				list.PushBack(entry);
 			}
 
-			const std::string title = search ? (g_searchQuery.empty() ? TR("$4Stim_SearchTitle", "Search: type a scene's name") :
-			                                                            TRF("$4Stim_SearchTitleQuery", "Search: {}_", g_searchQuery)) :
+			const std::string title = search ? (g_searchQuery.empty() ? TR("$4stim_search_title", "Search: type a scene's name") :
+			                                                            TRF("$4stim_search_title_query", "Search: {}_", g_searchQuery)) :
 			                          solo ? "Solo scenes" : std::format("Scenes for {}", actorCount);
 			Scaleform::GFx::Value args[2];
 			args[0] = list;
 			args[1] = title.c_str();
 			menuObj.Invoke("SetScenes", nullptr, args, 2);
 			if (search && menuObj.HasMember("SetFooter")) {
-				Scaleform::GFx::Value footer(TR("$4Stim_SearchFooter", "Type to filter   Backspace: delete   Esc: close").c_str());
+				Scaleform::GFx::Value footer(TR("$4stim_search_footer", "Type to filter   Backspace: delete   Esc: close").c_str());
 				menuObj.Invoke("SetFooter", nullptr, &footer, 1);
 			}
 			REX::INFO("Picker: sent {} scene(s) and {} sequence(s) ({}{} actor(s)), {} furniture piece(s) near", scenes.size() - sequencesLeft, sequencesLeft, search ? "search, " : "", actorCount, found.size());
@@ -7364,38 +7364,38 @@ namespace
 					busy = g_playerBusy;
 					running = g_running.size();
 				}
-				std::string who = withMe ? TR("$4Stim_You", "You") : std::string{};
+				std::string who = withMe ? TR("$4stim_you", "You") : std::string{};
 				for (const auto id : picked) {
 					const auto it = std::ranges::find_if(candidates, [&](const Candidate& c) { return c.id == id; });
 					who += (who.empty() ? "" : ", ") + (it != candidates.end() ? withSex(*it) : std::format("{:08X}", id));
 				}
 				const std::size_t castSize = picked.size() + (withMe ? 1 : 0);
 				if (castSize == 0) {
-					rows.push_back({ "@none", TR("$4Stim_PickSomeone", "Pick someone first"), TR("$4Stim_PickSomeoneDetail", "a scene without you needs at least one NPC") });
+					rows.push_back({ "@none", TR("$4stim_pick_someone", "Pick someone first"), TR("$4stim_pick_someone_detail", "a scene without you needs at least one NPC") });
 				} else {
-					rows.push_back({ "@go", castSize == 1 && withMe ? TR("$4Stim_ContinueAlone", "Continue alone") : TRF("$4Stim_ContinueWith", "Continue with {}", castSize), who });
+					rows.push_back({ "@go", castSize == 1 && withMe ? TR("$4stim_continue_alone", "Continue alone") : TRF("$4stim_continue_with", "Continue with {}", castSize), who });
 				}
 				if (busy) {
-					rows.push_back({ "@none", TR("$4Stim_YouNotIn", "You: not in it (NPCs only)"), TR("$4Stim_YouBusy", "you're in a scene already") });
+					rows.push_back({ "@none", TR("$4stim_you_not_in", "You: not in it (NPCs only)"), TR("$4stim_you_busy", "you're in a scene already") });
 				} else {
-					rows.push_back({ "@me", withMe ? TR("$4Stim_YouIn", "You: in the scene") : TR("$4Stim_YouNotIn", "You: not in it (NPCs only)"), TR("$4Stim_ChooseToSwitch", "choose to switch") });
+					rows.push_back({ "@me", withMe ? TR("$4stim_you_in", "You: in the scene") : TR("$4stim_you_not_in", "You: not in it (NPCs only)"), TR("$4stim_choose_to_switch", "choose to switch") });
 				}
 				for (const auto& c : candidates) {
 					if (std::ranges::find(picked, c.id) != picked.end()) {
-						rows.push_back({ std::format("@drop:{:X}", c.id), "[x] " + withSex(c), TRF("$4Stim_PickedAway", "picked, {:.0f} m away: choose to remove", c.distance / 70.0F) });
+						rows.push_back({ std::format("@drop:{:X}", c.id), "[x] " + withSex(c), TRF("$4stim_picked_away", "picked, {:.0f} m away: choose to remove", c.distance / 70.0F) });
 					}
 				}
 				if (running > 0) {
-					rows.push_back({ "@running", TRF("$4Stim_RunningScenesCount", "Running scenes ({})...", running), TR("$4Stim_RunningScenesDetail", "watch, end or auto-play a scene") });
+					rows.push_back({ "@running", TRF("$4stim_running_scenes_count", "Running scenes ({})...", running), TR("$4stim_running_scenes_detail", "watch, end or auto-play a scene") });
 				}
 				if (castSize < maxCast) {
 					for (const auto& c : candidates) {
 						if (std::ranges::find(picked, c.id) == picked.end()) {
-							rows.push_back({ std::format("@add:{:X}", c.id), withSex(c), TRF("$4Stim_MetersAway", "{:.0f} m away", c.distance / 70.0F) });
+							rows.push_back({ std::format("@add:{:X}", c.id), withSex(c), TRF("$4stim_meters_away", "{:.0f} m away", c.distance / 70.0F) });
 						}
 					}
 				}
-				title = picked.empty() ? TR("$4Stim_WhosIn", "Who's in the scene?") : TR("$4Stim_AddSomeone", "Add someone else?");
+				title = picked.empty() ? TR("$4stim_whos_in", "Who's in the scene?") : TR("$4stim_add_someone", "Add someone else?");
 			} else if (g_startStep == StartStep::kRunning || g_startStep == StartStep::kScene) {
 				std::vector<RunningScene> running;
 				std::uint32_t             selected;
@@ -7409,19 +7409,19 @@ namespace
 				const auto it = std::ranges::find_if(running, [&](const RunningScene& r) { return !r.actors.empty() && r.actors.front() == selected; });
 				if (g_startStep == StartStep::kScene && it != running.end()) {
 					if (!it->withPlayer && !busy) {  // not while you're in a scene yourself
-						rows.push_back({ "@watch", TR("$4Stim_Watch", "Watch"), TR("$4Stim_WatchDetail", "follow it with the free camera and the HUD") });
+						rows.push_back({ "@watch", TR("$4stim_watch", "Watch"), TR("$4stim_watch_detail", "follow it with the free camera and the HUD") });
 					}
-					rows.push_back({ "@auto", it->autoMode ? TR("$4Stim_AutoModeIsOn", "Auto mode: on") : TR("$4Stim_AutoModeIsOff", "Auto mode: off"), TR("$4Stim_ChooseToSwitch", "choose to switch") });
-					rows.push_back({ "@endscene", TR("$4Stim_EndScene", "End scene"), "" });
-					rows.push_back({ "@running", TR("$4Stim_Back", "Back"), TR("$4Stim_AllRunningScenes", "all running scenes") });
+					rows.push_back({ "@auto", it->autoMode ? TR("$4stim_auto_mode_is_on", "Auto mode: on") : TR("$4stim_auto_mode_is_off", "Auto mode: off"), TR("$4stim_choose_to_switch", "choose to switch") });
+					rows.push_back({ "@endscene", TR("$4stim_end_scene", "End scene"), "" });
+					rows.push_back({ "@running", TR("$4stim_back", "Back"), TR("$4stim_all_running_scenes", "all running scenes") });
 					title = it->label;
 				} else {
 					for (const auto& r : running) {
 						rows.push_back({ std::format("@scene:{:X}", r.actors.front()), r.label,
-							(r.withPlayer ? TR("$4Stim_YoureInIt", "you're in it") : TR("$4Stim_NPCs", "NPCs")) + (r.autoMode ? TR("$4Stim_CommaAutoMode", ", auto mode") : std::string{}) });
+							(r.withPlayer ? TR("$4stim_youre_in_it", "you're in it") : TR("$4stim_npcs", "NPCs")) + (r.autoMode ? TR("$4stim_comma_auto_mode", ", auto mode") : std::string{}) });
 					}
-					rows.push_back({ "@back", TR("$4Stim_Back", "Back"), TR("$4Stim_StartAScene", "start a scene") });
-					title = TR("$4Stim_RunningScenes", "Running scenes");
+					rows.push_back({ "@back", TR("$4stim_back", "Back"), TR("$4stim_start_a_scene", "start a scene") });
+					title = TR("$4stim_running_scenes", "Running scenes");
 				}
 			} else if (g_startStep == StartStep::kRole) {
 				// OStim's role selection: the player picks their place in
@@ -7429,11 +7429,11 @@ namespace
 				const auto player = RE::PlayerCharacter::GetSingleton()->GetFormID();
 				if (std::ranges::find(cast, player) != cast.end()) {
 					for (std::size_t i = 0; i < cast.size(); ++i) {
-						const auto detail = i == 0 ? TR("$4Stim_RoleFirst", "first, usually the one giving") : i + 1 == cast.size() ? TR("$4Stim_RoleLast", "last, usually the one receiving") : std::string{};
-						rows.push_back({ std::format("@role:{}", i), TRF("$4Stim_RoleN", "Role {}", i + 1), detail });
+						const auto detail = i == 0 ? TR("$4stim_role_first", "first, usually the one giving") : i + 1 == cast.size() ? TR("$4stim_role_last", "last, usually the one receiving") : std::string{};
+						rows.push_back({ std::format("@role:{}", i), TRF("$4stim_role_n", "Role {}", i + 1), detail });
 					}
-					rows.push_back({ "@role:any", TR("$4Stim_AnyRole", "Any role"), TR("$4Stim_AnyRoleDetail", "whichever the scene gives you") });
-					title = TR("$4Stim_YourRole", "Your role?");
+					rows.push_back({ "@role:any", TR("$4stim_any_role", "Any role"), TR("$4stim_any_role_detail", "whichever the scene gives you") });
+					title = TR("$4stim_your_role", "Your role?");
 				} else {
 					// Without the player: which NPC takes the first role.
 					std::vector<Candidate> candidates;
@@ -7443,32 +7443,32 @@ namespace
 					}
 					for (const auto id : cast) {
 						const auto it = std::ranges::find_if(candidates, [&](const Candidate& c) { return c.id == id; });
-						rows.push_back({ std::format("@lead:{:X}", id), TRF("$4Stim_Leads", "{} leads", it != candidates.end() ? withSex(*it) : std::format("{:08X}", id)),
-							TR("$4Stim_LeadsDetail", "takes the first role, usually the one giving") });
+						rows.push_back({ std::format("@lead:{:X}", id), TRF("$4stim_leads", "{} leads", it != candidates.end() ? withSex(*it) : std::format("{:08X}", id)),
+							TR("$4stim_leads_detail", "takes the first role, usually the one giving") });
 					}
-					rows.push_back({ "@role:any", TR("$4Stim_Either", "Either"), TR("$4Stim_EitherDetail", "whichever the scene gives them") });
-					title = TR("$4Stim_WhoLeads", "Who leads?");
+					rows.push_back({ "@role:any", TR("$4stim_either", "Either"), TR("$4stim_either_detail", "whichever the scene gives them") });
+					title = TR("$4stim_who_leads", "Who leads?");
 				}
-				rows.push_back({ "@back", TR("$4Stim_Back", "Back"), TR("$4Stim_ChangeWho", "change who's in it") });
+				rows.push_back({ "@back", TR("$4stim_back", "Back"), TR("$4stim_change_who", "change who's in it") });
 			} else {
 				// Where: right here, or a piece of furniture near, if any
 				// scene fits this cast there.
 				if (!ScenesForCast(cast, {}).empty()) {
 					const bool withMe = std::ranges::find(cast, RE::PlayerCharacter::GetSingleton()->GetFormID()) != cast.end();
-					rows.push_back({ "@here", withMe ? TR("$4Stim_RightHere", "Right here") : TR("$4Stim_WhereTheyAre", "Where they are"), TR("$4Stim_NoFurniture", "no furniture") });
+					rows.push_back({ "@here", withMe ? TR("$4stim_right_here", "Right here") : TR("$4stim_where_they_are", "Where they are"), TR("$4stim_no_furniture", "no furniture") });
 				}
 				const auto found = PickerFurniture();
 				for (std::size_t i = 0; i < found.size(); ++i) {
 					if (!ScenesForCast(cast, found[i].type).empty()) {
-						rows.push_back({ std::format("@furn:{}", i), found[i].name, TRF("$4Stim_MetersAway", "{:.0f} m away", found[i].distance / 70.0F) });
+						rows.push_back({ std::format("@furn:{}", i), found[i].name, TRF("$4stim_meters_away", "{:.0f} m away", found[i].distance / 70.0F) });
 					}
 				}
 				if (rows.empty()) {
-					rows.push_back({ "@back", TR("$4Stim_NoScenesForCast", "No scenes for this cast"), TR("$4Stim_ChooseToGoBack", "choose to go back") });
+					rows.push_back({ "@back", TR("$4stim_no_scenes_for_cast", "No scenes for this cast"), TR("$4stim_choose_to_go_back", "choose to go back") });
 				}
-				rows.push_back({ "@browse", TR("$4Stim_BrowseAll", "Browse all scenes..."), TRF("$4Stim_ForNActors", "for {} actor(s)", cast.size()) });
-				rows.push_back({ "@back", TR("$4Stim_Back", "Back"), TR("$4Stim_ChangeWho", "change who's in it") });
-				title = TR("$4Stim_Where", "Where?");
+				rows.push_back({ "@browse", TR("$4stim_browse_all", "Browse all scenes..."), TRF("$4stim_for_n_actors", "for {} actor(s)", cast.size()) });
+				rows.push_back({ "@back", TR("$4stim_back", "Back"), TR("$4stim_change_who", "change who's in it") });
+				title = TR("$4stim_where", "Where?");
 			}
 
 			Scaleform::GFx::Value list;
@@ -7660,13 +7660,13 @@ namespace
 				entry.SetMember("tags"sv, tags);
 				list.PushBack(entry);
 			};
-			add("@stay", TR("$4Stim_None", "None"), TR("$4Stim_StayHere", "stay where you are"));
+			add("@stay", TR("$4stim_none", "None"), TR("$4stim_stay_here", "stay where you are"));
 			for (std::size_t i = 0; i < found.size(); ++i) {
-				add(std::format("@cfurn:{}", i), found[i].name, TRF("$4Stim_MetersAway", "{:.0f} m away", found[i].distance / 70.0F));
+				add(std::format("@cfurn:{}", i), found[i].name, TRF("$4stim_meters_away", "{:.0f} m away", found[i].distance / 70.0F));
 			}
 			Scaleform::GFx::Value args[2];
 			args[0] = list;
-			const auto changeTitle = TR("$4Stim_ChangeFurnitureTitle", "Change furniture");
+			const auto changeTitle = TR("$4stim_change_furniture_title", "Change furniture");
 			args[1] = changeTitle.c_str();
 			menuObj.Invoke("SetScenes", nullptr, args, 2);
 		}
@@ -7716,7 +7716,7 @@ namespace
 				entry.SetMember("tags"sv, tags);
 				list.PushBack(entry);
 			};
-			std::string title = TR("$4Stim_Scene", "Scene");
+			std::string title = TR("$4stim_scene", "Scene");
 			if (scene) {
 				// During a transition, the options of where it's going.
 				const auto settled = SceneRegistry::Settled(scene);
@@ -7730,9 +7730,9 @@ namespace
 				title = scene->name + "   (speed " + std::to_string(current.speed + 1) + "/" + std::to_string(scene->speeds.size()) + ")";
 			}
 			if (g_settings.useFurniture) {
-				add(CHANGE_FURNITURE_ID, TR("$4Stim_ChangeFurniture", "Change furniture..."), TR("$4Stim_ChangeFurnitureDetail", "move the scene onto furniture near"));
+				add(CHANGE_FURNITURE_ID, TR("$4stim_change_furniture", "Change furniture..."), TR("$4stim_change_furniture_detail", "move the scene onto furniture near"));
 			}
-			add(END_SCENE_ID, TR("$4Stim_EndScene", "End scene"), "");
+			add(END_SCENE_ID, TR("$4stim_end_scene", "End scene"), "");
 
 			Scaleform::GFx::Value args[2];
 			args[0] = list;
@@ -8221,7 +8221,7 @@ namespace
 				} else {
 					StartAutoMode(*active);
 				}
-				Notify(active->autoMode.on ? TR("$4Stim_AutoModeOn", "Auto mode on") : TR("$4Stim_AutoModeOff", "Auto mode off"));
+				Notify(active->autoMode.on ? TR("$4stim_auto_mode_on", "Auto mode on") : TR("$4stim_auto_mode_off", "Auto mode off"));
 			}
 		} else if (a_action == "pullout" || a_action == "end" || a_action == "search" || a_action == "align" || a_action == "freecam" || a_action == "hideui") {
 			// OStim's other scene keys, for the scene you're in or watching:
@@ -8236,7 +8236,7 @@ namespace
 					return;
 				}
 				if (const auto active = FindActiveScene(focused.role0); active && !AutoPullOut(*active)) {
-					Notify(TR("$4Stim_NoPullout", "4Stim: nowhere to pull out to from here"));
+					Notify(TR("$4stim_no_pullout", "4Stim: nowhere to pull out to from here"));
 				}
 			} else if (a_action == "end") {
 				if (g_vm) {
@@ -12709,7 +12709,7 @@ namespace
 				static bool translated = false;
 				if (!translated) {
 					Translations::Load();  // the game's language is known by now
-					Translations::AddToGame();  // MCM's "$4Stim_..." labels
+					Translations::AddToGame();  // MCM's "$4stim_..." labels
 					translated = true;
 				}
 				HUD::LoadConfig();
@@ -12814,7 +12814,7 @@ namespace FourStim
 			});
 			if (found.empty()) {
 				REX::INFO("Furniture change: nothing near that any scene fits these actors on");
-				Notify(TR("$4Stim_NoFurnitureNear", "No furniture near for this scene"));
+				Notify(TR("$4stim_no_furniture_near", "No furniture near for this scene"));
 				return;
 			}
 			{

@@ -64,15 +64,15 @@ package
 
 		// ---- Called by the plugin ----
 
-		// The plugin's translations ({ "$4Stim_...": text }, docs/TRANSLATIONS.md).
+		// The plugin's translations ({ "$4stim_...": text }, docs/TRANSLATIONS.md).
 		public function SetStrings(a_table:Object):void
 		{
 			Strings.set(a_table);
 			if (_empty != null) {
-				_empty.text = Strings.t("$4Stim_PickerEmpty", "No scenes available for this pairing.");
+				_empty.text = Strings.t("$4stim_picker_empty", "No scenes available for this pairing.");
 			}
 			if (_footer != null) {
-				_footer.text = Strings.t("$4Stim_PickerFooter", "Enter: choose   Esc: close");
+				_footer.text = Strings.t("$4stim_picker_footer", "Enter: choose   Esc: close");
 			}
 		}
 
@@ -181,7 +181,7 @@ package
 			_empty.y = LIST_Y;
 			_empty.width = PANEL_W - PAD * 2 - 8;
 			_empty.height = ROW_H;
-			_empty.text = Strings.t("$4Stim_PickerEmpty", "No scenes available for this pairing.");
+			_empty.text = Strings.t("$4stim_picker_empty", "No scenes available for this pairing.");
 			_empty.visible = false;
 			addChild(_empty);
 
@@ -196,7 +196,7 @@ package
 			_footer.width = PANEL_W - PAD * 2;
 			_footer.height = FOOTER_H;
 			_footer.alpha = 0.6;
-			_footer.text = Strings.t("$4Stim_PickerFooter", "Enter: choose   Esc: close");
+			_footer.text = Strings.t("$4stim_picker_footer", "Enter: choose   Esc: close");
 			addChild(_footer);
 
 			addEventListener(MouseEvent.MOUSE_WHEEL, onWheel);

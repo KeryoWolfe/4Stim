@@ -363,7 +363,7 @@ namespace Translations
 	{
 		// Fallout 4 reads Interface\Translations\<plugin>_<language>.txt only
 		// for a plugin of that name, and 4Stim is an F4SE plugin with no
-		// 4Stim.esp, so MCM showed the bare "$4Stim_..." keys. Hand the file
+		// 4Stim.esp, so MCM showed the bare "$4stim_..." keys. Hand the file
 		// to the game's Scaleform translator ourselves: the game's language's,
 		// else the English. (One file only: whether the translator lets a
 		// second file's keys replace the first's isn't known, so a

@@ -71,7 +71,7 @@ namespace Options
 		bool                               g_loaded = false;
 		std::vector<Page>                  g_pages;    // first file's definition of a name wins, as OStim
 		std::vector<Option>                g_options;
-		std::map<std::string, std::string> g_english;  // "$4Stim_..." -> English
+		std::map<std::string, std::string> g_english;  // "$4stim_..." -> English
 
 		// Where the HUD is: the pages opened, each with the actor it's for
 		// (-1: not a per-actor page), and whose scene it is.
@@ -121,7 +121,7 @@ namespace Options
 			const auto actor = RE::TESForm::GetFormByID<RE::Actor>(a_id);
 			const auto player = RE::PlayerCharacter::GetSingleton();
 			if (a_you && actor && actor == player) {
-				return TR("$4Stim_Yourself", "yourself");
+				return TR("$4stim_yourself", "yourself");
 			}
 			const char* name = actor ? actor->GetDisplayFullName() : nullptr;
 			return name && *name ? name : std::format("{:08X}", a_id);
@@ -323,7 +323,7 @@ namespace Options
 		}
 		if (!g_path.empty()) {
 			const auto parent = g_path.size() > 1 ? FindPage(g_path[g_path.size() - 2].page) : nullptr;
-			auto       parentName = parent ? Text(parent->description) : TR("$4Stim_TabUtility", "Utility");
+			auto       parentName = parent ? Text(parent->description) : TR("$4stim_tab_utility", "Utility");
 			// A per-actor parent page ("{actor}"): that page's actor.
 			int parentActor = -1;
 			for (std::size_t i = 0; i + 1 < g_path.size(); ++i) {
@@ -334,7 +334,7 @@ namespace Options
 			if (parentActor >= 0 && static_cast<std::size_t>(parentActor) < a_actors.size()) {
 				Replace(parentName, "{actor}", ActorName(a_actors[parentActor], false));
 			}
-			rows.push_back({ std::string(OPTION_PREFIX) + ":back", TRF("$4Stim_OptionsBack", "Back to {}", parentName), "4Stim/symbols/return", "ff0000" });
+			rows.push_back({ std::string(OPTION_PREFIX) + ":back", TRF("$4stim_options_back", "Back to {}", parentName), "4Stim/symbols/return", "ff0000" });
 		}
 		// Pages under this one (one per actor where it repeats).
 		for (const auto& page : g_pages) {

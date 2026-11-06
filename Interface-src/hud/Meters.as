@@ -211,7 +211,7 @@ package hud
 			label.height = 16;
 			label.x = (SPEED_W - 40) / 2;
 			label.y = -3;
-			label.text = Strings.t("$4Stim_Speed", "SPD");
+			label.text = Strings.t("$4stim_speed", "SPD");
 			var tf:TextFormat = label.getTextFormat();
 			tf.align = TextFormatAlign.CENTER;
 			label.setTextFormat(tf);

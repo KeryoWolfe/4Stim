@@ -24,7 +24,7 @@
 // always shows the first, or its stateFaction, which 4Stim doesn't have),
 // "repeat": "voiceSet" lists the voice sets to choose from (a "default"
 // state, then a "set" state per voice set, "{type}" its name; the function
-// gets the voice set's id), and "english" (key -> text) for "$4Stim_..."
+// gets the voice set's id), and "english" (key -> text) for "$4stim_..."
 // texts (docs/TRANSLATIONS.md).
 namespace Options
 {

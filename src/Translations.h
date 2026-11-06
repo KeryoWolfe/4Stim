@@ -12,7 +12,7 @@
 // es, it, pl, ptbr, ru, ja, cn...), UTF-16 with "$key<tab>text" lines.
 // 4Stim reads it for the text it builds (names and numbers filled in),
 // falling back to the English in the code, and hands it to the game
-// (AddToGame) for MCM's "$4Stim_..." labels.
+// (AddToGame) for MCM's "$4stim_..." labels.
 namespace Translations
 {
 	// Reads the file for the game's language (sLanguage), else the English
@@ -27,7 +27,7 @@ namespace Translations
 	// The game's language code ("en"...).
 	std::string Language();
 
-	// The text for a_key ("$4Stim_..."), or a_english.
+	// The text for a_key ("$4stim_..."), or a_english.
 	std::string Get(std::string_view a_key, std::string_view a_english);
 
 	// OStim's LocaleManager (OStim NG Game/LocaleManager.cpp), for the text
@@ -65,7 +65,7 @@ namespace Translations
 	}
 }
 
-// Shorthands: TR("$4Stim_Key", "English"), TRF("$4Stim_Key", "English {}", value).
+// Shorthands: TR("$4stim_key", "English"), TRF("$4stim_key", "English {}", value).
 // tools/make-translations.py collects them into 4Stim_en.txt.
 #define TR(a_key, a_english) Translations::Get(a_key, a_english)
 #define TRF(a_key, a_english, ...) Translations::Format(a_key, a_english, __VA_ARGS__)

@@ -14,103 +14,46 @@
 	],
 	"pages": [
 		{
-			"pageDisplayName": "$4Stim_MCM_PageGeneral",
+			"pageDisplayName": "$4stim_page_general",
 			"content": [
 				{
-					"id": "i4S_sTargetMode:General",
-					"text": "$4Stim_MCM_sTargetMode",
-					"help": "$4Stim_MCM_sTargetMode_Help",
+					"type": "section",
+					"text": "$4stim_header_scenes"
+				},
+				{
+					"id": "b4S_SetResetPosition:General",
+					"text": "$4stim_reset_position",
+					"help": "$4stim_tooltip_reset_position_4stim",
 					"action": {
 						"type": "CallGlobalFunction",
 						"script": "FourStimMCM",
 						"function": "SettingChanged",
 						"params": []
 					},
-					"type": "dropdown",
+					"type": "switcher",
 					"valueOptions": {
-						"sourceType": "ModSettingInt",
-						"options": [
-							"$4Stim_MCM_sTargetMode_0",
-							"$4Stim_MCM_sTargetMode_1"
-						]
+						"sourceType": "ModSettingBool"
 					}
 				},
 				{
-					"id": "fMaxDistance:General",
-					"text": "$4Stim_MCM_fMaxDistance",
-					"help": "$4Stim_MCM_fMaxDistance_Help",
+					"id": "b4S_SetUseFades:General",
+					"text": "$4stim_use_fades",
+					"help": "$4stim_tooltip_fades",
 					"action": {
 						"type": "CallGlobalFunction",
 						"script": "FourStimMCM",
 						"function": "SettingChanged",
 						"params": []
 					},
-					"type": "slider",
+					"type": "switcher",
 					"valueOptions": {
-						"min": 50,
-						"max": 2000,
-						"step": 10,
-						"sourceType": "ModSettingFloat"
-					}
-				},
-				{
-					"id": "fCrosshairCone:General",
-					"text": "$4Stim_MCM_fCrosshairCone",
-					"help": "$4Stim_MCM_fCrosshairCone_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "slider",
-					"valueOptions": {
-						"min": 1,
-						"max": 45,
-						"step": 1,
-						"sourceType": "ModSettingFloat"
-					}
-				},
-				{
-					"id": "fProximityRadius:General",
-					"text": "$4Stim_MCM_fProximityRadius",
-					"help": "$4Stim_MCM_fProximityRadius_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "slider",
-					"valueOptions": {
-						"min": 50,
-						"max": 2000,
-						"step": 10,
-						"sourceType": "ModSettingFloat"
-					}
-				},
-				{
-					"id": "fActorRadius:General",
-					"text": "$4Stim_MCM_fActorRadius",
-					"help": "$4Stim_MCM_fActorRadius_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "slider",
-					"valueOptions": {
-						"min": 200,
-						"max": 5000,
-						"step": 50,
-						"sourceType": "ModSettingFloat"
+						"sourceType": "ModSettingBool"
 					}
 				},
 				{
 					"id": "b4S_SetUseIntroScenes:General",
-					"text": "$4Stim_MCM_SetUseIntroScenes",
-					"help": "$4Stim_MCM_SetUseIntroScenes_Help",
+					"text": "$4stim_use_intro_scenes",
+					"help": "$4stim_tooltip_use_intro_scenes",
 					"action": {
 						"type": "CallGlobalFunction",
 						"script": "FourStimMCM",
@@ -120,45 +63,12 @@
 					"type": "switcher",
 					"valueOptions": {
 						"sourceType": "ModSettingBool"
-					}
-				},
-				{
-					"id": "f4S_NPCSceneDuration:General",
-					"text": "$4Stim_MCM_NPCSceneDuration",
-					"help": "$4Stim_MCM_NPCSceneDuration_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "slider",
-					"valueOptions": {
-						"min": 0,
-						"max": 1800,
-						"step": 15,
-						"sourceType": "ModSettingFloat"
 					}
 				},
 				{
 					"id": "bResumeScenes:General",
-					"text": "$4Stim_MCM_bResumeScenes",
-					"help": "$4Stim_MCM_bResumeScenes_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "switcher",
-					"valueOptions": {
-						"sourceType": "ModSettingBool"
-					}
-				},
-				{
-					"id": "b4S_SetResetPosition:General",
-					"text": "$4Stim_MCM_SetResetPosition",
-					"help": "$4Stim_MCM_SetResetPosition_Help",
+					"text": "$4stim_resume_scenes",
+					"help": "$4stim_tooltip_resume_scenes",
 					"action": {
 						"type": "CallGlobalFunction",
 						"script": "FourStimMCM",
@@ -172,8 +82,8 @@
 				},
 				{
 					"id": "bEndOnDamage:General",
-					"text": "$4Stim_MCM_bEndOnDamage",
-					"help": "$4Stim_MCM_bEndOnDamage_Help",
+					"text": "$4stim_end_on_damage",
+					"help": "$4stim_tooltip_end_on_damage",
 					"action": {
 						"type": "CallGlobalFunction",
 						"script": "FourStimMCM",
@@ -187,8 +97,8 @@
 				},
 				{
 					"id": "bStayWhenInterrupted:General",
-					"text": "$4Stim_MCM_bStayWhenInterrupted",
-					"help": "$4Stim_MCM_bStayWhenInterrupted_Help",
+					"text": "$4stim_stay_when_interrupted",
+					"help": "$4stim_tooltip_stay_when_interrupted",
 					"action": {
 						"type": "CallGlobalFunction",
 						"script": "FourStimMCM",
@@ -202,8 +112,8 @@
 				},
 				{
 					"id": "fTransitionLead:General",
-					"text": "$4Stim_MCM_fTransitionLead",
-					"help": "$4Stim_MCM_fTransitionLead_Help",
+					"text": "$4stim_transition_lead",
+					"help": "$4stim_tooltip_transition_lead",
 					"action": {
 						"type": "CallGlobalFunction",
 						"script": "FourStimMCM",
@@ -220,8 +130,8 @@
 				},
 				{
 					"id": "bUsePlaybackSpeed:General",
-					"text": "$4Stim_MCM_bUsePlaybackSpeed",
-					"help": "$4Stim_MCM_bUsePlaybackSpeed_Help",
+					"text": "$4stim_use_playback_speed",
+					"help": "$4stim_tooltip_use_playback_speed",
 					"action": {
 						"type": "CallGlobalFunction",
 						"script": "FourStimMCM",
@@ -235,8 +145,8 @@
 				},
 				{
 					"id": "bLockScenes:General",
-					"text": "$4Stim_MCM_bLockScenes",
-					"help": "$4Stim_MCM_bLockScenes_Help",
+					"text": "$4stim_lock_scenes",
+					"help": "$4stim_tooltip_lock_scenes",
 					"action": {
 						"type": "CallGlobalFunction",
 						"script": "FourStimMCM",
@@ -250,8 +160,8 @@
 				},
 				{
 					"id": "bGuardScenes:General",
-					"text": "$4Stim_MCM_bGuardScenes",
-					"help": "$4Stim_MCM_bGuardScenes_Help",
+					"text": "$4stim_guard_scenes",
+					"help": "$4stim_tooltip_guard_scenes",
 					"action": {
 						"type": "CallGlobalFunction",
 						"script": "FourStimMCM",
@@ -264,44 +174,32 @@
 					}
 				},
 				{
-					"id": "bLogAnimEvents:General",
-					"text": "$4Stim_MCM_bLogAnimEvents",
-					"help": "$4Stim_MCM_bLogAnimEvents_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "switcher",
-					"valueOptions": {
-						"sourceType": "ModSettingBool"
-					}
-				}
-			]
-		},
-		{
-			"pageDisplayName": "$4Stim_MCM_PageCamera",
-			"content": [
+					"type": "section",
+					"text": "$4stim_header_partner"
+				},
 				{
-					"id": "b4S_SetUseFreeCam:General",
-					"text": "$4Stim_MCM_SetUseFreeCam",
-					"help": "$4Stim_MCM_SetUseFreeCam_Help",
+					"id": "i4S_sTargetMode:General",
+					"text": "$4stim_target_mode",
+					"help": "$4stim_tooltip_target_mode",
 					"action": {
 						"type": "CallGlobalFunction",
 						"script": "FourStimMCM",
 						"function": "SettingChanged",
 						"params": []
 					},
-					"type": "switcher",
+					"type": "dropdown",
 					"valueOptions": {
-						"sourceType": "ModSettingBool"
+						"sourceType": "ModSettingInt",
+						"options": [
+							"$4stim_target_mode_crosshair",
+							"$4stim_target_mode_proximity"
+						]
 					}
 				},
 				{
-					"id": "f4S_SetCameraSpeed:General",
-					"text": "$4Stim_MCM_SetCameraSpeed",
-					"help": "$4Stim_MCM_SetCameraSpeed_Help",
+					"id": "fMaxDistance:General",
+					"text": "$4stim_max_distance",
+					"help": "$4stim_tooltip_max_distance",
 					"action": {
 						"type": "CallGlobalFunction",
 						"script": "FourStimMCM",
@@ -310,165 +208,16 @@
 					},
 					"type": "slider",
 					"valueOptions": {
-						"min": 0.5,
-						"max": 20,
-						"step": 0.5,
-						"sourceType": "ModSettingFloat"
-					}
-				},
-				{
-					"id": "f4S_SetFreeCamFOV:General",
-					"text": "$4Stim_MCM_SetFreeCamFOV",
-					"help": "$4Stim_MCM_SetFreeCamFOV_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "slider",
-					"valueOptions": {
-						"min": 20,
-						"max": 120,
-						"step": 1,
-						"sourceType": "ModSettingFloat"
-					}
-				},
-				{
-					"id": "b4S_SetForceFirstPerson:General",
-					"text": "$4Stim_MCM_SetForceFirstPerson",
-					"help": "$4Stim_MCM_SetForceFirstPerson_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "switcher",
-					"valueOptions": {
-						"sourceType": "ModSettingBool"
-					}
-				},
-				{
-					"id": "b4S_SetUseFades:General",
-					"text": "$4Stim_MCM_SetUseFades",
-					"help": "$4Stim_MCM_SetUseFades_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "switcher",
-					"valueOptions": {
-						"sourceType": "ModSettingBool"
-					}
-				},
-				{
-					"id": "b4S_SetUseAutoFades:General",
-					"text": "$4Stim_MCM_SetUseAutoFades",
-					"help": "$4Stim_MCM_SetUseAutoFades_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "switcher",
-					"valueOptions": {
-						"sourceType": "ModSettingBool"
-					}
-				}
-			]
-		},
-		{
-			"pageDisplayName": "$4Stim_MCM_PageFurniture",
-			"content": [
-				{
-					"id": "b4S_SetEnableFurniture:General",
-					"text": "$4Stim_MCM_SetEnableFurniture",
-					"help": "$4Stim_MCM_SetEnableFurniture_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "switcher",
-					"valueOptions": {
-						"sourceType": "ModSettingBool"
-					}
-				},
-				{
-					"id": "b4S_SetSelectFurniture:General",
-					"text": "$4Stim_MCM_SetSelectFurniture",
-					"help": "$4Stim_MCM_SetSelectFurniture_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "switcher",
-					"valueOptions": {
-						"sourceType": "ModSettingBool"
-					}
-				},
-				{
-					"id": "i4S_SetFurnitureSearchDistance:General",
-					"text": "$4Stim_MCM_SetFurnitureSearchDistance",
-					"help": "$4Stim_MCM_SetFurnitureSearchDistance_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "slider",
-					"valueOptions": {
-						"min": 0,
-						"max": 50,
-						"step": 1,
-						"sourceType": "ModSettingInt"
-					}
-				},
-				{
-					"id": "fFurnitureHeight:General",
-					"text": "$4Stim_MCM_fFurnitureHeight",
-					"help": "$4Stim_MCM_fFurnitureHeight_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "slider",
-					"valueOptions": {
-						"min": 20,
-						"max": 500,
+						"min": 50,
+						"max": 2000,
 						"step": 10,
 						"sourceType": "ModSettingFloat"
 					}
 				},
 				{
-					"id": "b4S_SetResetClutter:General",
-					"text": "$4Stim_MCM_SetResetClutter",
-					"help": "$4Stim_MCM_SetResetClutter_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "switcher",
-					"valueOptions": {
-						"sourceType": "ModSettingBool"
-					}
-				},
-				{
-					"id": "i4S_SetResetClutterRadius:General",
-					"text": "$4Stim_MCM_SetResetClutterRadius",
-					"help": "$4Stim_MCM_SetResetClutterRadius_Help",
+					"id": "fCrosshairCone:General",
+					"text": "$4stim_crosshair_cone",
+					"help": "$4stim_tooltip_crosshair_cone",
 					"action": {
 						"type": "CallGlobalFunction",
 						"script": "FourStimMCM",
@@ -478,328 +227,15 @@
 					"type": "slider",
 					"valueOptions": {
 						"min": 1,
-						"max": 20,
-						"step": 1,
-						"sourceType": "ModSettingInt"
-					}
-				},
-				{
-					"id": "bLogFurniture:General",
-					"text": "$4Stim_MCM_bLogFurniture",
-					"help": "$4Stim_MCM_bLogFurniture_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "switcher",
-					"valueOptions": {
-						"sourceType": "ModSettingBool"
-					}
-				}
-			]
-		},
-		{
-			"pageDisplayName": "$4Stim_MCM_PageRoles",
-			"content": [
-				{
-					"id": "b4S_SetOnlyGayAnimsInGayScenes:General",
-					"text": "$4Stim_MCM_SetOnlyGayAnimsInGayScenes",
-					"help": "$4Stim_MCM_SetOnlyGayAnimsInGayScenes_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "switcher",
-					"valueOptions": {
-						"sourceType": "ModSettingBool"
-					}
-				},
-				{
-					"id": "b4S_unrestrictedNavigation:General",
-					"text": "$4Stim_MCM_unrestrictedNavigation",
-					"help": "$4Stim_MCM_unrestrictedNavigation_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "switcher",
-					"valueOptions": {
-						"sourceType": "ModSettingBool"
-					}
-				},
-				{
-					"id": "b4S_PlayerAlwaysDomStraight:Roles",
-					"text": "$4Stim_MCM_PlayerAlwaysDomStraight",
-					"help": "$4Stim_MCM_PlayerAlwaysDomStraight_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "switcher",
-					"valueOptions": {
-						"sourceType": "ModSettingBool"
-					}
-				},
-				{
-					"id": "b4S_PlayerAlwaysSubStraight:Roles",
-					"text": "$4Stim_MCM_PlayerAlwaysSubStraight",
-					"help": "$4Stim_MCM_PlayerAlwaysSubStraight_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "switcher",
-					"valueOptions": {
-						"sourceType": "ModSettingBool"
-					}
-				},
-				{
-					"id": "b4S_PlayerAlwaysDomGay:Roles",
-					"text": "$4Stim_MCM_PlayerAlwaysDomGay",
-					"help": "$4Stim_MCM_PlayerAlwaysDomGay_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "switcher",
-					"valueOptions": {
-						"sourceType": "ModSettingBool"
-					}
-				},
-				{
-					"id": "b4S_PlayerAlwaysSubGay:Roles",
-					"text": "$4Stim_MCM_PlayerAlwaysSubGay",
-					"help": "$4Stim_MCM_PlayerAlwaysSubGay_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "switcher",
-					"valueOptions": {
-						"sourceType": "ModSettingBool"
-					}
-				},
-				{
-					"id": "b4S_playerSelectRoleStraight:Roles",
-					"text": "$4Stim_MCM_playerSelectRoleStraight",
-					"help": "$4Stim_MCM_playerSelectRoleStraight_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "switcher",
-					"valueOptions": {
-						"sourceType": "ModSettingBool"
-					}
-				},
-				{
-					"id": "b4S_playerSelectRoleGay:Roles",
-					"text": "$4Stim_MCM_playerSelectRoleGay",
-					"help": "$4Stim_MCM_playerSelectRoleGay_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "switcher",
-					"valueOptions": {
-						"sourceType": "ModSettingBool"
-					}
-				},
-				{
-					"id": "b4S_playerSelectRoleThreesome:Roles",
-					"text": "$4Stim_MCM_playerSelectRoleThreesome",
-					"help": "$4Stim_MCM_playerSelectRoleThreesome_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "switcher",
-					"valueOptions": {
-						"sourceType": "ModSettingBool"
-					}
-				},
-				{
-					"id": "b4S_futaUseMaleRole:Roles",
-					"text": "$4Stim_MCM_futaUseMaleRole",
-					"help": "$4Stim_MCM_futaUseMaleRole_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "switcher",
-					"valueOptions": {
-						"sourceType": "ModSettingBool"
-					}
-				},
-				{
-					"id": "b4S_futaUseMaleExcitement:Roles",
-					"text": "$4Stim_MCM_futaUseMaleExcitement",
-					"help": "$4Stim_MCM_futaUseMaleExcitement_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "switcher",
-					"valueOptions": {
-						"sourceType": "ModSettingBool"
-					}
-				},
-				{
-					"id": "b4S_futaUseMaleClimax:Roles",
-					"text": "$4Stim_MCM_futaUseMaleClimax",
-					"help": "$4Stim_MCM_futaUseMaleClimax_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "switcher",
-					"valueOptions": {
-						"sourceType": "ModSettingBool"
-					}
-				},
-				{
-					"id": "b4S_unequipStrapOnIfNotNeeded:Roles",
-					"text": "$4Stim_MCM_unequipStrapOnIfNotNeeded",
-					"help": "$4Stim_MCM_unequipStrapOnIfNotNeeded_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "switcher",
-					"valueOptions": {
-						"sourceType": "ModSettingBool"
-					}
-				}
-			]
-		},
-		{
-			"pageDisplayName": "$4Stim_MCM_PageAlignment",
-			"content": [
-				{
-					"id": "b4S_alignmentGroupBySex:Alignment",
-					"text": "$4Stim_MCM_alignmentGroupBySex",
-					"help": "$4Stim_MCM_alignmentGroupBySex_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "switcher",
-					"valueOptions": {
-						"sourceType": "ModSettingBool"
-					}
-				},
-				{
-					"id": "b4S_alignmentGroupByHeight:Alignment",
-					"text": "$4Stim_MCM_alignmentGroupByHeight",
-					"help": "$4Stim_MCM_alignmentGroupByHeight_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "switcher",
-					"valueOptions": {
-						"sourceType": "ModSettingBool"
-					}
-				},
-				{
-					"id": "b4S_alignmentGroupByHeels:Alignment",
-					"text": "$4Stim_MCM_alignmentGroupByHeels",
-					"help": "$4Stim_MCM_alignmentGroupByHeels_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "switcher",
-					"valueOptions": {
-						"sourceType": "ModSettingBool"
-					}
-				},
-				{
-					"id": "b4S_SetSchlongBending:Alignment",
-					"text": "$4Stim_MCM_SetSchlongBending",
-					"help": "$4Stim_MCM_SetSchlongBending_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "switcher",
-					"valueOptions": {
-						"sourceType": "ModSettingBool"
-					}
-				},
-				{
-					"id": "bErections:Alignment",
-					"text": "$4Stim_MCM_bErections",
-					"help": "$4Stim_MCM_bErections_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "switcher",
-					"valueOptions": {
-						"sourceType": "ModSettingBool"
-					}
-				},
-				{
-					"id": "fPenisBendStep:Alignment",
-					"text": "$4Stim_MCM_fPenisBendStep",
-					"help": "$4Stim_MCM_fPenisBendStep_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "slider",
-					"valueOptions": {
-						"min": -45,
 						"max": 45,
-						"step": 0.5,
+						"step": 1,
 						"sourceType": "ModSettingFloat"
 					}
 				},
 				{
-					"id": "iPenisBendAxis:Alignment",
-					"text": "$4Stim_MCM_iPenisBendAxis",
-					"help": "$4Stim_MCM_iPenisBendAxis_Help",
+					"id": "fProximityRadius:General",
+					"text": "$4stim_proximity_radius",
+					"help": "$4stim_tooltip_proximity_radius",
 					"action": {
 						"type": "CallGlobalFunction",
 						"script": "FourStimMCM",
@@ -808,16 +244,86 @@
 					},
 					"type": "slider",
 					"valueOptions": {
-						"min": 0,
-						"max": 2,
-						"step": 1,
-						"sourceType": "ModSettingInt"
+						"min": 50,
+						"max": 2000,
+						"step": 10,
+						"sourceType": "ModSettingFloat"
 					}
 				},
 				{
-					"id": "bDisableEyeLook:Alignment",
-					"text": "$4Stim_MCM_bDisableEyeLook",
-					"help": "$4Stim_MCM_bDisableEyeLook_Help",
+					"id": "fActorRadius:General",
+					"text": "$4stim_actor_radius",
+					"help": "$4stim_tooltip_actor_radius",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "slider",
+					"valueOptions": {
+						"min": 200,
+						"max": 5000,
+						"step": 50,
+						"sourceType": "ModSettingFloat"
+					}
+				},
+				{
+					"type": "section",
+					"text": "$4stim_header_lights"
+				},
+				{
+					"id": "i4S_sMaleLight:Lights",
+					"text": "$4stim_male_light_mode",
+					"help": "$4stim_tooltip_male_light_mode",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "dropdown",
+					"valueOptions": {
+						"sourceType": "ModSettingInt",
+						"options": [
+							"$4stim_light_none",
+							"$4stim_light_face",
+							"$4stim_light_face_dim",
+							"$4stim_light_crotch",
+							"$4stim_light_crotch_dim",
+							"$4stim_light_ass",
+							"$4stim_light_ass_dim"
+						]
+					}
+				},
+				{
+					"id": "i4S_sFemaleLight:Lights",
+					"text": "$4stim_female_light_mode",
+					"help": "$4stim_tooltip_female_light_mode",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "dropdown",
+					"valueOptions": {
+						"sourceType": "ModSettingInt",
+						"options": [
+							"$4stim_light_none",
+							"$4stim_light_face",
+							"$4stim_light_face_dim",
+							"$4stim_light_crotch",
+							"$4stim_light_crotch_dim",
+							"$4stim_light_ass",
+							"$4stim_light_ass_dim"
+						]
+					}
+				},
+				{
+					"id": "b4S_SetOnlyLightInDark:Lights",
+					"text": "$4stim_dark_light",
+					"help": "$4stim_tooltip_dark_light",
 					"action": {
 						"type": "CallGlobalFunction",
 						"script": "FourStimMCM",
@@ -830,9 +336,9 @@
 					}
 				},
 				{
-					"id": "fLookMaxSide:Alignment",
-					"text": "$4Stim_MCM_fLookMaxSide",
-					"help": "$4Stim_MCM_fLookMaxSide_Help",
+					"id": "fLightLevelDark:Lights",
+					"text": "$4stim_light_level_dark",
+					"help": "$4stim_tooltip_light_level_dark",
 					"action": {
 						"type": "CallGlobalFunction",
 						"script": "FourStimMCM",
@@ -842,53 +348,19 @@
 					"type": "slider",
 					"valueOptions": {
 						"min": 0,
-						"max": 60,
+						"max": 200,
 						"step": 1,
 						"sourceType": "ModSettingFloat"
 					}
 				},
 				{
-					"id": "fLookMaxUp:Alignment",
-					"text": "$4Stim_MCM_fLookMaxUp",
-					"help": "$4Stim_MCM_fLookMaxUp_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "slider",
-					"valueOptions": {
-						"min": 0,
-						"max": 60,
-						"step": 1,
-						"sourceType": "ModSettingFloat"
-					}
+					"type": "section",
+					"text": "$4stim_header_hud"
 				},
-				{
-					"id": "b4S_SetScaling:Scaling",
-					"text": "$4Stim_MCM_SetScaling",
-					"help": "$4Stim_MCM_SetScaling_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "switcher",
-					"valueOptions": {
-						"sourceType": "ModSettingBool"
-					}
-				}
-			]
-		},
-		{
-			"pageDisplayName": "$4Stim_MCM_PageHUD",
-			"content": [
 				{
 					"id": "bEnableHUD:HUD",
-					"text": "$4Stim_MCM_bEnableHUD",
-					"help": "$4Stim_MCM_bEnableHUD_Help",
+					"text": "$4stim_enable_hud",
+					"help": "$4stim_tooltip_enable_hud",
 					"action": {
 						"type": "CallGlobalFunction",
 						"script": "FourStimMCM",
@@ -902,8 +374,8 @@
 				},
 				{
 					"id": "i4S_sHUDControls:HUD",
-					"text": "$4Stim_MCM_sHUDControls",
-					"help": "$4Stim_MCM_sHUDControls_Help",
+					"text": "$4stim_hud_controls",
+					"help": "$4stim_tooltip_hud_controls",
 					"action": {
 						"type": "CallGlobalFunction",
 						"script": "FourStimMCM",
@@ -914,15 +386,34 @@
 					"valueOptions": {
 						"sourceType": "ModSettingInt",
 						"options": [
-							"$4Stim_MCM_sHUDControls_0",
-							"$4Stim_MCM_sHUDControls_1"
+							"$4stim_hud_controls_tabs",
+							"$4stim_hud_controls_columns"
+						]
+					}
+				},
+				{
+					"id": "i4S_sTheme:HUD",
+					"text": "$4stim_theme",
+					"help": "$4stim_tooltip_theme",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "dropdown",
+					"valueOptions": {
+						"sourceType": "ModSettingInt",
+						"options": [
+							"$4stim_theme_color",
+							"$4stim_theme_pipboy"
 						]
 					}
 				},
 				{
 					"id": "fHUDFadeTime:HUD",
-					"text": "$4Stim_MCM_fHUDFadeTime",
-					"help": "$4Stim_MCM_fHUDFadeTime_Help",
+					"text": "$4stim_hud_fade_time",
+					"help": "$4stim_tooltip_hud_fade_time",
 					"action": {
 						"type": "CallGlobalFunction",
 						"script": "FourStimMCM",
@@ -938,9 +429,354 @@
 					}
 				},
 				{
-					"id": "i4S_sTheme:HUD",
-					"text": "$4Stim_MCM_sTheme",
-					"help": "$4Stim_MCM_sTheme_Help",
+					"type": "section",
+					"text": "$4stim_header_save_load"
+				},
+				{
+					"text": "$4stim_settings_note",
+					"type": "text"
+				},
+				{
+					"text": "$4stim_export",
+					"type": "button",
+					"help": "$4stim_tooltip_export",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "ExportSettings",
+						"params": []
+					}
+				},
+				{
+					"text": "$4stim_import",
+					"type": "button",
+					"help": "$4stim_tooltip_import",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "ImportSettings",
+						"params": []
+					}
+				},
+				{
+					"text": "$4stim_use_ini",
+					"type": "button",
+					"help": "$4stim_tooltip_use_ini",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "UseIniSettings",
+						"params": []
+					}
+				}
+			]
+		},
+		{
+			"pageDisplayName": "$4stim_page_controls",
+			"content": [
+				{
+					"type": "section",
+					"text": "$4stim_header_ostim_keys"
+				},
+				{
+					"id": "s4S_SetKeyMap:General",
+					"text": "$4stim_main_key",
+					"help": "$4stim_tooltip_main_key_4stim",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "keyinput",
+					"valueOptions": {
+						"sourceType": "ModSettingString",
+						"allowModifierKeys": false
+					}
+				},
+				{
+					"id": "s4S_keyNpcSceneStart:General",
+					"text": "$4stim_npc_start_key",
+					"help": "$4stim_tooltip_npc_start_key",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "keyinput",
+					"valueOptions": {
+						"sourceType": "ModSettingString",
+						"allowModifierKeys": false
+					}
+				},
+				{
+					"id": "s4S_SetKeyUp:General",
+					"text": "$4stim_speed_up_key",
+					"help": "$4stim_tooltip_speed_up_key",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "keyinput",
+					"valueOptions": {
+						"sourceType": "ModSettingString",
+						"allowModifierKeys": false
+					}
+				},
+				{
+					"id": "s4S_SetKeyDown:General",
+					"text": "$4stim_speed_down_key",
+					"help": "$4stim_tooltip_speed_down_key",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "keyinput",
+					"valueOptions": {
+						"sourceType": "ModSettingString",
+						"allowModifierKeys": false
+					}
+				},
+				{
+					"id": "s4S_SetPullOut:General",
+					"text": "$4stim_pullout_key",
+					"help": "$4stim_tooltip_pullout_key",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "keyinput",
+					"valueOptions": {
+						"sourceType": "ModSettingString",
+						"allowModifierKeys": false
+					}
+				},
+				{
+					"id": "s4S_SetControlToggle:AutoMode",
+					"text": "$4stim_control_toggle_key",
+					"help": "$4stim_tooltip_control_toggle_key_4stim",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "keyinput",
+					"valueOptions": {
+						"sourceType": "ModSettingString",
+						"allowModifierKeys": false
+					}
+				},
+				{
+					"id": "s4S_SetFreeCamToggleKey:General",
+					"text": "$4stim_tfc_key",
+					"help": "$4stim_tooltip_tfc_key",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "keyinput",
+					"valueOptions": {
+						"sourceType": "ModSettingString",
+						"allowModifierKeys": false
+					}
+				},
+				{
+					"id": "s4S_keySearch:General",
+					"text": "$4stim_key_search_menu",
+					"help": "$4stim_tooltip_key_search_menu",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "keyinput",
+					"valueOptions": {
+						"sourceType": "ModSettingString",
+						"allowModifierKeys": false
+					}
+				},
+				{
+					"id": "s4S_keyAlignment:General",
+					"text": "$4stim_key_alignment_menu",
+					"help": "$4stim_tooltip_key_alignment_menu_4stim",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "keyinput",
+					"valueOptions": {
+						"sourceType": "ModSettingString",
+						"allowModifierKeys": false
+					}
+				},
+				{
+					"id": "s4S_keyHideUI:General",
+					"text": "$4stim_key_hide_ui",
+					"help": "$4stim_tooltip_key_hide_ui",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "keyinput",
+					"valueOptions": {
+						"sourceType": "ModSettingString",
+						"allowModifierKeys": false
+					}
+				},
+				{
+					"id": "b4S_SetUseRumble:Excitement",
+					"text": "$4stim_use_rumble",
+					"help": "$4stim_tooltip_use_rumble_4stim",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "switcher",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"type": "section",
+					"text": "$4stim_header_osa_keys"
+				},
+				{
+					"id": "s4S_SetOsaUpKey:General",
+					"text": "$4stim_osaKeys_up",
+					"help": "$4stim_tooltip_osa_up",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "keyinput",
+					"valueOptions": {
+						"sourceType": "ModSettingString",
+						"allowModifierKeys": false
+					}
+				},
+				{
+					"id": "s4S_SetOsaDownKey:General",
+					"text": "$4stim_osaKeys_down",
+					"help": "$4stim_tooltip_osa_down",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "keyinput",
+					"valueOptions": {
+						"sourceType": "ModSettingString",
+						"allowModifierKeys": false
+					}
+				},
+				{
+					"id": "s4S_SetOsaLeftKey:General",
+					"text": "$4stim_osaKeys_left",
+					"help": "$4stim_tooltip_osa_left",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "keyinput",
+					"valueOptions": {
+						"sourceType": "ModSettingString",
+						"allowModifierKeys": false
+					}
+				},
+				{
+					"id": "s4S_SetOsaRightKey:General",
+					"text": "$4stim_osaKeys_right",
+					"help": "$4stim_tooltip_osa_right",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "keyinput",
+					"valueOptions": {
+						"sourceType": "ModSettingString",
+						"allowModifierKeys": false
+					}
+				},
+				{
+					"id": "s4S_SetOsaTogKey:General",
+					"text": "$4stim_osaKeys_tog",
+					"help": "$4stim_tooltip_osaKeys_tog_4stim",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "keyinput",
+					"valueOptions": {
+						"sourceType": "ModSettingString",
+						"allowModifierKeys": false
+					}
+				},
+				{
+					"id": "s4S_SetOsaYesKey:General",
+					"text": "$4stim_osaKeys_yes",
+					"help": "$4stim_tooltip_osa_yes",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "keyinput",
+					"valueOptions": {
+						"sourceType": "ModSettingString",
+						"allowModifierKeys": false
+					}
+				},
+				{
+					"id": "s4S_SetOsaEndKey:General",
+					"text": "$4stim_osaKeys_end",
+					"help": "$4stim_tooltip_osa_end",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "keyinput",
+					"valueOptions": {
+						"sourceType": "ModSettingString",
+						"allowModifierKeys": false
+					}
+				},
+				{
+					"type": "section",
+					"text": "$4stim_header_controller"
+				},
+				{
+					"id": "i4S_sPadScheme:Controller",
+					"text": "$4stim_pad_scheme",
+					"help": "$4stim_tooltip_pad_scheme",
 					"action": {
 						"type": "CallGlobalFunction",
 						"script": "FourStimMCM",
@@ -951,690 +787,321 @@
 					"valueOptions": {
 						"sourceType": "ModSettingInt",
 						"options": [
-							"$4Stim_MCM_sTheme_0",
-							"$4Stim_MCM_sTheme_1"
+							"$4stim_pad_scheme_modern",
+							"$4stim_pad_scheme_classic"
 						]
 					}
 				},
 				{
-					"id": "b4S_enablePlayerBar:HUD",
-					"text": "$4Stim_MCM_enablePlayerBar",
-					"help": "$4Stim_MCM_enablePlayerBar_Help",
+					"id": "i4S_sPadHotkey:Controller",
+					"text": "$4stim_main_key",
+					"help": "$4stim_tooltip_pad_hotkey",
 					"action": {
 						"type": "CallGlobalFunction",
 						"script": "FourStimMCM",
 						"function": "SettingChanged",
 						"params": []
 					},
-					"type": "switcher",
+					"type": "dropdown",
 					"valueOptions": {
-						"sourceType": "ModSettingBool"
+						"sourceType": "ModSettingInt",
+						"options": [
+							"$4stim_pad_button_none",
+							"$4stim_pad_button_lb",
+							"$4stim_pad_button_rb",
+							"$4stim_pad_button_lt",
+							"$4stim_pad_button_rt",
+							"$4stim_pad_button_x",
+							"$4stim_pad_button_y",
+							"$4stim_pad_button_ls",
+							"$4stim_pad_button_rs",
+							"$4stim_pad_button_back"
+						]
 					}
 				},
 				{
-					"id": "b4S_enableNpcBar:HUD",
-					"text": "$4Stim_MCM_enableNpcBar",
-					"help": "$4Stim_MCM_enableNpcBar_Help",
+					"id": "i4S_sPadNPCScene:Controller",
+					"text": "$4stim_npc_start_key",
+					"help": "$4stim_tooltip_pad_npc_scene",
 					"action": {
 						"type": "CallGlobalFunction",
 						"script": "FourStimMCM",
 						"function": "SettingChanged",
 						"params": []
 					},
-					"type": "switcher",
+					"type": "dropdown",
 					"valueOptions": {
-						"sourceType": "ModSettingBool"
+						"sourceType": "ModSettingInt",
+						"options": [
+							"$4stim_pad_button_none",
+							"$4stim_pad_button_lb",
+							"$4stim_pad_button_rb",
+							"$4stim_pad_button_lt",
+							"$4stim_pad_button_rt",
+							"$4stim_pad_button_x",
+							"$4stim_pad_button_y",
+							"$4stim_pad_button_ls",
+							"$4stim_pad_button_rs",
+							"$4stim_pad_button_back"
+						]
 					}
 				},
 				{
-					"id": "b4S_SetAutoHideBar:HUD",
-					"text": "$4Stim_MCM_SetAutoHideBar",
-					"help": "$4Stim_MCM_SetAutoHideBar_Help",
+					"id": "i4S_sPadSpeedUp:Controller",
+					"text": "$4stim_speed_up_key",
+					"help": "$4stim_tooltip_pad_speed_up",
 					"action": {
 						"type": "CallGlobalFunction",
 						"script": "FourStimMCM",
 						"function": "SettingChanged",
 						"params": []
 					},
-					"type": "switcher",
+					"type": "dropdown",
 					"valueOptions": {
-						"sourceType": "ModSettingBool"
+						"sourceType": "ModSettingInt",
+						"options": [
+							"$4stim_pad_button_none",
+							"$4stim_pad_button_lb",
+							"$4stim_pad_button_rb",
+							"$4stim_pad_button_lt",
+							"$4stim_pad_button_rt",
+							"$4stim_pad_button_x",
+							"$4stim_pad_button_y",
+							"$4stim_pad_button_ls",
+							"$4stim_pad_button_rs",
+							"$4stim_pad_button_back"
+						]
 					}
 				},
 				{
-					"id": "b4S_SetMatchColorToGender:HUD",
-					"text": "$4Stim_MCM_SetMatchColorToGender",
-					"help": "$4Stim_MCM_SetMatchColorToGender_Help",
+					"id": "i4S_sPadSpeedDown:Controller",
+					"text": "$4stim_speed_down_key",
+					"help": "$4stim_tooltip_pad_speed_down",
 					"action": {
 						"type": "CallGlobalFunction",
 						"script": "FourStimMCM",
 						"function": "SettingChanged",
 						"params": []
 					},
-					"type": "switcher",
+					"type": "dropdown",
 					"valueOptions": {
-						"sourceType": "ModSettingBool"
+						"sourceType": "ModSettingInt",
+						"options": [
+							"$4stim_pad_button_none",
+							"$4stim_pad_button_lb",
+							"$4stim_pad_button_rb",
+							"$4stim_pad_button_lt",
+							"$4stim_pad_button_rt",
+							"$4stim_pad_button_x",
+							"$4stim_pad_button_y",
+							"$4stim_pad_button_ls",
+							"$4stim_pad_button_rs",
+							"$4stim_pad_button_back"
+						]
+					}
+				},
+				{
+					"id": "i4S_sPadAutoMode:Controller",
+					"text": "$4stim_control_toggle_key",
+					"help": "$4stim_tooltip_pad_auto_mode",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "dropdown",
+					"valueOptions": {
+						"sourceType": "ModSettingInt",
+						"options": [
+							"$4stim_pad_button_none",
+							"$4stim_pad_button_lb",
+							"$4stim_pad_button_rb",
+							"$4stim_pad_button_lt",
+							"$4stim_pad_button_rt",
+							"$4stim_pad_button_x",
+							"$4stim_pad_button_y",
+							"$4stim_pad_button_ls",
+							"$4stim_pad_button_rs",
+							"$4stim_pad_button_back"
+						]
+					}
+				},
+				{
+					"id": "i4S_sPadPullOut:Controller",
+					"text": "$4stim_pullout_key",
+					"help": "$4stim_tooltip_pad_pull_out",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "dropdown",
+					"valueOptions": {
+						"sourceType": "ModSettingInt",
+						"options": [
+							"$4stim_pad_button_none",
+							"$4stim_pad_button_lb",
+							"$4stim_pad_button_rb",
+							"$4stim_pad_button_lt",
+							"$4stim_pad_button_rt",
+							"$4stim_pad_button_x",
+							"$4stim_pad_button_y",
+							"$4stim_pad_button_ls",
+							"$4stim_pad_button_rs",
+							"$4stim_pad_button_back"
+						]
+					}
+				},
+				{
+					"id": "i4S_sPadEnd:Controller",
+					"text": "$4stim_osaKeys_end",
+					"help": "$4stim_tooltip_pad_end",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "dropdown",
+					"valueOptions": {
+						"sourceType": "ModSettingInt",
+						"options": [
+							"$4stim_pad_button_none",
+							"$4stim_pad_button_lb",
+							"$4stim_pad_button_rb",
+							"$4stim_pad_button_lt",
+							"$4stim_pad_button_rt",
+							"$4stim_pad_button_x",
+							"$4stim_pad_button_y",
+							"$4stim_pad_button_ls",
+							"$4stim_pad_button_rs",
+							"$4stim_pad_button_back"
+						]
+					}
+				},
+				{
+					"id": "i4S_sPadSearch:Controller",
+					"text": "$4stim_key_search_menu",
+					"help": "$4stim_tooltip_pad_search",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "dropdown",
+					"valueOptions": {
+						"sourceType": "ModSettingInt",
+						"options": [
+							"$4stim_pad_button_none",
+							"$4stim_pad_button_lb",
+							"$4stim_pad_button_rb",
+							"$4stim_pad_button_lt",
+							"$4stim_pad_button_rt",
+							"$4stim_pad_button_x",
+							"$4stim_pad_button_y",
+							"$4stim_pad_button_ls",
+							"$4stim_pad_button_rs",
+							"$4stim_pad_button_back"
+						]
+					}
+				},
+				{
+					"id": "i4S_sPadAlign:Controller",
+					"text": "$4stim_key_alignment_menu",
+					"help": "$4stim_tooltip_pad_align",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "dropdown",
+					"valueOptions": {
+						"sourceType": "ModSettingInt",
+						"options": [
+							"$4stim_pad_button_none",
+							"$4stim_pad_button_lb",
+							"$4stim_pad_button_rb",
+							"$4stim_pad_button_lt",
+							"$4stim_pad_button_rt",
+							"$4stim_pad_button_x",
+							"$4stim_pad_button_y",
+							"$4stim_pad_button_ls",
+							"$4stim_pad_button_rs",
+							"$4stim_pad_button_back"
+						]
+					}
+				},
+				{
+					"id": "i4S_sPadFreeCam:Controller",
+					"text": "$4stim_tfc_key",
+					"help": "$4stim_tooltip_pad_free_cam",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "dropdown",
+					"valueOptions": {
+						"sourceType": "ModSettingInt",
+						"options": [
+							"$4stim_pad_button_none",
+							"$4stim_pad_button_lb",
+							"$4stim_pad_button_rb",
+							"$4stim_pad_button_lt",
+							"$4stim_pad_button_rt",
+							"$4stim_pad_button_x",
+							"$4stim_pad_button_y",
+							"$4stim_pad_button_ls",
+							"$4stim_pad_button_rs",
+							"$4stim_pad_button_back"
+						]
+					}
+				},
+				{
+					"id": "i4S_sPadHideUI:Controller",
+					"text": "$4stim_key_hide_ui",
+					"help": "$4stim_tooltip_pad_hide_ui",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "dropdown",
+					"valueOptions": {
+						"sourceType": "ModSettingInt",
+						"options": [
+							"$4stim_pad_button_none",
+							"$4stim_pad_button_lb",
+							"$4stim_pad_button_rb",
+							"$4stim_pad_button_lt",
+							"$4stim_pad_button_rt",
+							"$4stim_pad_button_x",
+							"$4stim_pad_button_y",
+							"$4stim_pad_button_ls",
+							"$4stim_pad_button_rs",
+							"$4stim_pad_button_back"
+						]
 					}
 				}
 			]
 		},
 		{
-			"pageDisplayName": "$4Stim_MCM_PageExcitement",
+			"pageDisplayName": "$4stim_page_auto_control",
 			"content": [
 				{
-					"id": "bEnableExcitement:Excitement",
-					"text": "$4Stim_MCM_bEnableExcitement",
-					"help": "$4Stim_MCM_bEnableExcitement_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "switcher",
-					"valueOptions": {
-						"sourceType": "ModSettingBool"
-					}
-				},
-				{
-					"id": "f4S_SetsexExcitementMult:Excitement",
-					"text": "$4Stim_MCM_SetsexExcitementMult",
-					"help": "$4Stim_MCM_SetsexExcitementMult_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "slider",
-					"valueOptions": {
-						"min": 0,
-						"max": 5,
-						"step": 0.05,
-						"sourceType": "ModSettingFloat"
-					}
-				},
-				{
-					"id": "f4S_SetFemaleSexExcitementMult:Excitement",
-					"text": "$4Stim_MCM_SetFemaleSexExcitementMult",
-					"help": "$4Stim_MCM_SetFemaleSexExcitementMult_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "slider",
-					"valueOptions": {
-						"min": 0,
-						"max": 5,
-						"step": 0.05,
-						"sourceType": "ModSettingFloat"
-					}
-				},
-				{
-					"id": "f4S_excitementDecayRate:Excitement",
-					"text": "$4Stim_MCM_excitementDecayRate",
-					"help": "$4Stim_MCM_excitementDecayRate_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "slider",
-					"valueOptions": {
-						"min": 0,
-						"max": 5,
-						"step": 0.05,
-						"sourceType": "ModSettingFloat"
-					}
-				},
-				{
-					"id": "f4S_excitementDecayGracePeriod:Excitement",
-					"text": "$4Stim_MCM_excitementDecayGracePeriod",
-					"help": "$4Stim_MCM_excitementDecayGracePeriod_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "slider",
-					"valueOptions": {
-						"min": 0,
-						"max": 30,
-						"step": 0.5,
-						"sourceType": "ModSettingFloat"
-					}
-				},
-				{
-					"id": "f4S_postOrgasmExcitement:Excitement",
-					"text": "$4Stim_MCM_postOrgasmExcitement",
-					"help": "$4Stim_MCM_postOrgasmExcitement_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "slider",
-					"valueOptions": {
-						"min": 0,
-						"max": 100,
-						"step": 1,
-						"sourceType": "ModSettingFloat"
-					}
-				},
-				{
-					"id": "f4S_postOrgasmExcitementMax:Excitement",
-					"text": "$4Stim_MCM_postOrgasmExcitementMax",
-					"help": "$4Stim_MCM_postOrgasmExcitementMax_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "slider",
-					"valueOptions": {
-						"min": 0,
-						"max": 100,
-						"step": 1,
-						"sourceType": "ModSettingFloat"
-					}
-				},
-				{
-					"id": "b4S_SetAutoClimaxAnims:Excitement",
-					"text": "$4Stim_MCM_SetAutoClimaxAnims",
-					"help": "$4Stim_MCM_SetAutoClimaxAnims_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "switcher",
-					"valueOptions": {
-						"sourceType": "ModSettingBool"
-					}
-				},
-				{
-					"id": "b4S_endOnPlayerOrgasm:Excitement",
-					"text": "$4Stim_MCM_endOnPlayerOrgasm",
-					"help": "$4Stim_MCM_endOnPlayerOrgasm_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "switcher",
-					"valueOptions": {
-						"sourceType": "ModSettingBool"
-					}
-				},
-				{
-					"id": "b4S_SetEndOnOrgasm:Excitement",
-					"text": "$4Stim_MCM_SetEndOnOrgasm",
-					"help": "$4Stim_MCM_SetEndOnOrgasm_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "switcher",
-					"valueOptions": {
-						"sourceType": "ModSettingBool"
-					}
-				},
-				{
-					"id": "b4S_SetEndOnSubOrgasm:Excitement",
-					"text": "$4Stim_MCM_SetEndOnSubOrgasm",
-					"help": "$4Stim_MCM_SetEndOnSubOrgasm_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "switcher",
-					"valueOptions": {
-						"sourceType": "ModSettingBool"
-					}
-				},
-				{
-					"id": "b4S_SetEndOnBothOrgasm:Excitement",
-					"text": "$4Stim_MCM_SetEndOnBothOrgasm",
-					"help": "$4Stim_MCM_SetEndOnBothOrgasm_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "switcher",
-					"valueOptions": {
-						"sourceType": "ModSettingBool"
-					}
-				},
-				{
-					"id": "b4S_endNPCSceneOnOrgasm:Excitement",
-					"text": "$4Stim_MCM_endNPCSceneOnOrgasm",
-					"help": "$4Stim_MCM_endNPCSceneOnOrgasm_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "switcher",
-					"valueOptions": {
-						"sourceType": "ModSettingBool"
-					}
-				},
-				{
-					"id": "fClimaxEndDelay:Excitement",
-					"text": "$4Stim_MCM_fClimaxEndDelay",
-					"help": "$4Stim_MCM_fClimaxEndDelay_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "slider",
-					"valueOptions": {
-						"min": 0,
-						"max": 30,
-						"step": 0.5,
-						"sourceType": "ModSettingFloat"
-					}
-				}
-			]
-		},
-		{
-			"pageDisplayName": "$4Stim_MCM_PageClimaxeffects",
-			"content": [
-				{
-					"id": "b4S_SetSlowMoOrgasms:Excitement",
-					"text": "$4Stim_MCM_SetSlowMoOrgasms",
-					"help": "$4Stim_MCM_SetSlowMoOrgasms_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "switcher",
-					"valueOptions": {
-						"sourceType": "ModSettingBool"
-					}
-				},
-				{
-					"id": "fClimaxShake:Excitement",
-					"text": "$4Stim_MCM_fClimaxShake",
-					"help": "$4Stim_MCM_fClimaxShake_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "slider",
-					"valueOptions": {
-						"min": 0,
-						"max": 2,
-						"step": 0.05,
-						"sourceType": "ModSettingFloat"
-					}
-				},
-				{
-					"id": "b4S_SetBlurOrgasms:Excitement",
-					"text": "$4Stim_MCM_SetBlurOrgasms",
-					"help": "$4Stim_MCM_SetBlurOrgasms_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "switcher",
-					"valueOptions": {
-						"sourceType": "ModSettingBool"
-					}
-				},
-				{
-					"id": "fClimaxBlur:Excitement",
-					"text": "$4Stim_MCM_fClimaxBlur",
-					"help": "$4Stim_MCM_fClimaxBlur_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "slider",
-					"valueOptions": {
-						"min": 0,
-						"max": 1,
-						"step": 0.05,
-						"sourceType": "ModSettingFloat"
-					}
-				},
-				{
-					"id": "fClimaxFlash:Excitement",
-					"text": "$4Stim_MCM_fClimaxFlash",
-					"help": "$4Stim_MCM_fClimaxFlash_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "slider",
-					"valueOptions": {
-						"min": 0,
-						"max": 1,
-						"step": 0.05,
-						"sourceType": "ModSettingFloat"
-					}
-				},
-				{
-					"id": "fClimaxGlowSize:Excitement",
-					"text": "$4Stim_MCM_fClimaxGlowSize",
-					"help": "$4Stim_MCM_fClimaxGlowSize_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "slider",
-					"valueOptions": {
-						"min": 0.01,
-						"max": 0.5,
-						"step": 0.01,
-						"sourceType": "ModSettingFloat"
-					}
-				},
-				{
-					"id": "b4S_SetUseRumble:Excitement",
-					"text": "$4Stim_MCM_SetUseRumble",
-					"help": "$4Stim_MCM_SetUseRumble_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "switcher",
-					"valueOptions": {
-						"sourceType": "ModSettingBool"
-					}
-				}
-			]
-		},
-		{
-			"pageDisplayName": "$4Stim_MCM_PageAutomode",
-			"content": [
-				{
-					"id": "b4S_SetAIControl:AutoMode",
-					"text": "$4Stim_MCM_SetAIControl",
-					"help": "$4Stim_MCM_SetAIControl_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "switcher",
-					"valueOptions": {
-						"sourceType": "ModSettingBool"
-					}
-				},
-				{
-					"id": "b4S_SetForceAIForMasturbation:AutoMode",
-					"text": "$4Stim_MCM_SetForceAIForMasturbation",
-					"help": "$4Stim_MCM_SetForceAIForMasturbation_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "switcher",
-					"valueOptions": {
-						"sourceType": "ModSettingBool"
-					}
-				},
-				{
-					"id": "b4S_SetForceAIInConsensualScenes:AutoMode",
-					"text": "$4Stim_MCM_SetForceAIInConsensualScenes",
-					"help": "$4Stim_MCM_SetForceAIInConsensualScenes_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "switcher",
-					"valueOptions": {
-						"sourceType": "ModSettingBool"
-					}
-				},
-				{
-					"id": "bAutoModeNPC:AutoMode",
-					"text": "$4Stim_MCM_bAutoModeNPC",
-					"help": "$4Stim_MCM_bAutoModeNPC_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "switcher",
-					"valueOptions": {
-						"sourceType": "ModSettingBool"
-					}
-				},
-				{
-					"id": "f4S_autoModeAnimDurationMin:AutoMode",
-					"text": "$4Stim_MCM_autoModeAnimDurationMin",
-					"help": "$4Stim_MCM_autoModeAnimDurationMin_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "slider",
-					"valueOptions": {
-						"min": 1,
-						"max": 60,
-						"step": 0.5,
-						"sourceType": "ModSettingFloat"
-					}
-				},
-				{
-					"id": "f4S_autoModeAnimDurationMax:AutoMode",
-					"text": "$4Stim_MCM_autoModeAnimDurationMax",
-					"help": "$4Stim_MCM_autoModeAnimDurationMax_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "slider",
-					"valueOptions": {
-						"min": 1,
-						"max": 120,
-						"step": 0.5,
-						"sourceType": "ModSettingFloat"
-					}
-				},
-				{
-					"id": "i4S_autoModeForeplayChance:AutoMode",
-					"text": "$4Stim_MCM_autoModeForeplayChance",
-					"help": "$4Stim_MCM_autoModeForeplayChance_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "slider",
-					"valueOptions": {
-						"min": 0,
-						"max": 100,
-						"step": 1,
-						"sourceType": "ModSettingInt"
-					}
-				},
-				{
-					"id": "i4S_autoModeForeplayThresholdMin:AutoMode",
-					"text": "$4Stim_MCM_autoModeForeplayThresholdMin",
-					"help": "$4Stim_MCM_autoModeForeplayThresholdMin_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "slider",
-					"valueOptions": {
-						"min": 0,
-						"max": 100,
-						"step": 1,
-						"sourceType": "ModSettingInt"
-					}
-				},
-				{
-					"id": "i4S_autoModeForeplayThresholdMax:AutoMode",
-					"text": "$4Stim_MCM_autoModeForeplayThresholdMax",
-					"help": "$4Stim_MCM_autoModeForeplayThresholdMax_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "slider",
-					"valueOptions": {
-						"min": 0,
-						"max": 100,
-						"step": 1,
-						"sourceType": "ModSettingInt"
-					}
-				},
-				{
-					"id": "i4S_autoModePulloutChance:AutoMode",
-					"text": "$4Stim_MCM_autoModePulloutChance",
-					"help": "$4Stim_MCM_autoModePulloutChance_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "slider",
-					"valueOptions": {
-						"min": 0,
-						"max": 100,
-						"step": 1,
-						"sourceType": "ModSettingInt"
-					}
-				},
-				{
-					"id": "i4S_autoModePulloutThresholdMin:AutoMode",
-					"text": "$4Stim_MCM_autoModePulloutThresholdMin",
-					"help": "$4Stim_MCM_autoModePulloutThresholdMin_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "slider",
-					"valueOptions": {
-						"min": 0,
-						"max": 100,
-						"step": 1,
-						"sourceType": "ModSettingInt"
-					}
-				},
-				{
-					"id": "i4S_autoModePulloutThresholdMax:AutoMode",
-					"text": "$4Stim_MCM_autoModePulloutThresholdMax",
-					"help": "$4Stim_MCM_autoModePulloutThresholdMax_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "slider",
-					"valueOptions": {
-						"min": 0,
-						"max": 100,
-						"step": 1,
-						"sourceType": "ModSettingInt"
-					}
-				},
-				{
-					"id": "i4S_navigationDistanceMax:AutoMode",
-					"text": "$4Stim_MCM_navigationDistanceMax",
-					"help": "$4Stim_MCM_navigationDistanceMax_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "slider",
-					"valueOptions": {
-						"min": 1,
-						"max": 50,
-						"step": 1,
-						"sourceType": "ModSettingInt"
-					}
-				},
-				{
-					"id": "b4S_autoModeLimitToNavigationDistance:AutoMode",
-					"text": "$4Stim_MCM_autoModeLimitToNavigationDistance",
-					"help": "$4Stim_MCM_autoModeLimitToNavigationDistance_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "switcher",
-					"valueOptions": {
-						"sourceType": "ModSettingBool"
-					}
-				},
-				{
-					"id": "bAutoModeStandingOnFloor:AutoMode",
-					"text": "$4Stim_MCM_bAutoModeStandingOnFloor",
-					"help": "$4Stim_MCM_bAutoModeStandingOnFloor_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "switcher",
-					"valueOptions": {
-						"sourceType": "ModSettingBool"
-					}
+					"type": "section",
+					"text": "$4stim_header_auto_speed_control"
 				},
 				{
 					"id": "b4S_SetActorSpeedControl:AutoMode",
-					"text": "$4Stim_MCM_SetActorSpeedControl",
-					"help": "$4Stim_MCM_SetActorSpeedControl_Help",
+					"text": "$4stim_auto_speed_control",
+					"help": "$4stim_tooltip_auto_speed_control",
 					"action": {
 						"type": "CallGlobalFunction",
 						"script": "FourStimMCM",
@@ -1648,8 +1115,8 @@
 				},
 				{
 					"id": "f4S_autoSpeedControlIntervalMin:AutoMode",
-					"text": "$4Stim_MCM_autoSpeedControlIntervalMin",
-					"help": "$4Stim_MCM_autoSpeedControlIntervalMin_Help",
+					"text": "$4stim_auto_speed_control_interval_min",
+					"help": "$4stim_tooltip_auto_speed_control_interval_min",
 					"action": {
 						"type": "CallGlobalFunction",
 						"script": "FourStimMCM",
@@ -1666,8 +1133,8 @@
 				},
 				{
 					"id": "f4S_autoSpeedControlIntervalMax:AutoMode",
-					"text": "$4Stim_MCM_autoSpeedControlIntervalMax",
-					"help": "$4Stim_MCM_autoSpeedControlIntervalMax_Help",
+					"text": "$4stim_auto_speed_control_interval_max",
+					"help": "$4stim_tooltip_auto_speed_control_interval_max",
 					"action": {
 						"type": "CallGlobalFunction",
 						"script": "FourStimMCM",
@@ -1684,8 +1151,8 @@
 				},
 				{
 					"id": "i4S_autoSpeedControlExcitementMin:AutoMode",
-					"text": "$4Stim_MCM_autoSpeedControlExcitementMin",
-					"help": "$4Stim_MCM_autoSpeedControlExcitementMin_Help",
+					"text": "$4stim_auto_speed_control_excitement_min",
+					"help": "$4stim_tooltip_auto_speed_control_excitement_min",
 					"action": {
 						"type": "CallGlobalFunction",
 						"script": "FourStimMCM",
@@ -1702,8 +1169,8 @@
 				},
 				{
 					"id": "i4S_autoSpeedControlExcitementMax:AutoMode",
-					"text": "$4Stim_MCM_autoSpeedControlExcitementMax",
-					"help": "$4Stim_MCM_autoSpeedControlExcitementMax_Help",
+					"text": "$4stim_auto_speed_control_excitement_max",
+					"help": "$4stim_tooltip_auto_speed_control_excitement_max",
 					"action": {
 						"type": "CallGlobalFunction",
 						"script": "FourStimMCM",
@@ -1717,16 +1184,1111 @@
 						"step": 1,
 						"sourceType": "ModSettingInt"
 					}
+				},
+				{
+					"type": "section",
+					"text": "$4stim_header_npc_scenes"
+				},
+				{
+					"id": "f4S_NPCSceneDuration:General",
+					"text": "$4stim_npc_scene_duration",
+					"help": "$4stim_tooltip_npc_scene_duration",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "slider",
+					"valueOptions": {
+						"min": 0,
+						"max": 1800,
+						"step": 15,
+						"sourceType": "ModSettingFloat"
+					}
+				},
+				{
+					"id": "b4S_endNPCSceneOnOrgasm:Excitement",
+					"text": "$4stim_end_npc_scene_on_orgasm",
+					"help": "$4stim_tooltip_end_npc_scene_on_orgasm",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "switcher",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "bAutoModeNPC:AutoMode",
+					"text": "$4stim_auto_mode_npc",
+					"help": "$4stim_tooltip_auto_mode_npc",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "switcher",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"type": "section",
+					"text": "$4stim_header_auto_navigation"
+				},
+				{
+					"id": "i4S_navigationDistanceMax:AutoMode",
+					"text": "$4stim_navigation_distance_max",
+					"help": "$4stim_tooltip_navigation_distance_max",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "slider",
+					"valueOptions": {
+						"min": 1,
+						"max": 50,
+						"step": 1,
+						"sourceType": "ModSettingInt"
+					}
+				},
+				{
+					"type": "section",
+					"text": "$4stim_header_auto_mode_toggle"
+				},
+				{
+					"id": "b4S_SetAIControl:AutoMode",
+					"text": "$4stim_use_auto_mode_always",
+					"help": "$4stim_tooltip_use_auto_mode_always",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "switcher",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "b4S_SetForceAIForMasturbation:AutoMode",
+					"text": "$4stim_use_auto_mode_solo",
+					"help": "$4stim_tooltip_use_auto_mode_solo",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "switcher",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "b4S_SetForceAIInConsensualScenes:AutoMode",
+					"text": "$4stim_set_force_ai_in_consensual_scenes",
+					"help": "$4stim_tooltip_set_force_ai_in_consensual_scenes",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "switcher",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"type": "section",
+					"text": "$4stim_header_auto_mode_settings"
+				},
+				{
+					"id": "b4S_autoModeLimitToNavigationDistance:AutoMode",
+					"text": "$4stim_auto_mode_limit_to_navigation_distance",
+					"help": "$4stim_tooltip_auto_mode_limit_to_navigation_distance",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "switcher",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "b4S_SetUseAutoFades:General",
+					"text": "$4stim_use_auto_mode_fades",
+					"help": "$4stim_tooltip_use_auto_mode_fades",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "switcher",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "f4S_autoModeAnimDurationMin:AutoMode",
+					"text": "$4stim_auto_mode_anim_duration_min",
+					"help": "$4stim_tooltip_auto_mode_anim_duration_min",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "slider",
+					"valueOptions": {
+						"min": 1,
+						"max": 60,
+						"step": 0.5,
+						"sourceType": "ModSettingFloat"
+					}
+				},
+				{
+					"id": "f4S_autoModeAnimDurationMax:AutoMode",
+					"text": "$4stim_auto_mode_anim_duration_max",
+					"help": "$4stim_tooltip_auto_mode_anim_duration_max",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "slider",
+					"valueOptions": {
+						"min": 1,
+						"max": 120,
+						"step": 0.5,
+						"sourceType": "ModSettingFloat"
+					}
+				},
+				{
+					"id": "i4S_autoModeForeplayChance:AutoMode",
+					"text": "$4stim_auto_mode_foreplay_chance",
+					"help": "$4stim_tooltip_auto_mode_foreplay_chance",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "slider",
+					"valueOptions": {
+						"min": 0,
+						"max": 100,
+						"step": 1,
+						"sourceType": "ModSettingInt"
+					}
+				},
+				{
+					"id": "i4S_autoModeForeplayThresholdMin:AutoMode",
+					"text": "$4stim_auto_mode_foreplay_threshold_min",
+					"help": "$4stim_tooltip_auto_mode_foreplay_treshold_min",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "slider",
+					"valueOptions": {
+						"min": 0,
+						"max": 100,
+						"step": 1,
+						"sourceType": "ModSettingInt"
+					}
+				},
+				{
+					"id": "i4S_autoModeForeplayThresholdMax:AutoMode",
+					"text": "$4stim_auto_mode_foreplay_threshold_max",
+					"help": "$4stim_tooltip_auto_mode_foreplay_treshold_max",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "slider",
+					"valueOptions": {
+						"min": 0,
+						"max": 100,
+						"step": 1,
+						"sourceType": "ModSettingInt"
+					}
+				},
+				{
+					"id": "i4S_autoModePulloutChance:AutoMode",
+					"text": "$4stim_auto_mode_pullout_chance",
+					"help": "$4stim_tooltip_auto_mode_pullout_chance",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "slider",
+					"valueOptions": {
+						"min": 0,
+						"max": 100,
+						"step": 1,
+						"sourceType": "ModSettingInt"
+					}
+				},
+				{
+					"id": "i4S_autoModePulloutThresholdMin:AutoMode",
+					"text": "$4stim_auto_mode_pullout_threshold_min",
+					"help": "$4stim_tooltip_auto_mode_pullout_treshold_min",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "slider",
+					"valueOptions": {
+						"min": 0,
+						"max": 100,
+						"step": 1,
+						"sourceType": "ModSettingInt"
+					}
+				},
+				{
+					"id": "i4S_autoModePulloutThresholdMax:AutoMode",
+					"text": "$4stim_auto_mode_pullout_threshold_max",
+					"help": "$4stim_tooltip_auto_mode_pullout_treshold_max",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "slider",
+					"valueOptions": {
+						"min": 0,
+						"max": 100,
+						"step": 1,
+						"sourceType": "ModSettingInt"
+					}
+				},
+				{
+					"id": "bAutoModeStandingOnFloor:AutoMode",
+					"text": "$4stim_auto_mode_standing_on_floor",
+					"help": "$4stim_tooltip_auto_mode_standing_on_floor",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "switcher",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
 				}
 			]
 		},
 		{
-			"pageDisplayName": "$4Stim_MCM_PageUndressing",
+			"pageDisplayName": "$4stim_page_camera",
+			"content": [
+				{
+					"type": "section",
+					"text": "$4stim_header_freecam"
+				},
+				{
+					"id": "b4S_SetUseFreeCam:General",
+					"text": "$4stim_freecam",
+					"help": "$4stim_tooltip_auto_fc",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "switcher",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "f4S_SetFreeCamFOV:General",
+					"text": "$4stim_freecam_fov",
+					"help": "$4stim_tooltip_fov",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "slider",
+					"valueOptions": {
+						"min": 20,
+						"max": 120,
+						"step": 1,
+						"sourceType": "ModSettingFloat"
+					}
+				},
+				{
+					"id": "f4S_SetCameraSpeed:General",
+					"text": "$4stim_freecam_speed",
+					"help": "$4stim_tooltip_fc_speed",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "slider",
+					"valueOptions": {
+						"min": 0.5,
+						"max": 20,
+						"step": 0.5,
+						"sourceType": "ModSettingFloat"
+					}
+				},
+				{
+					"id": "b4S_SetForceFirstPerson:General",
+					"text": "$4stim_force_first",
+					"help": "$4stim_tooltip_force_first",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "switcher",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				}
+			]
+		},
+		{
+			"pageDisplayName": "$4stim_page_excitement",
+			"content": [
+				{
+					"type": "section",
+					"text": "$4stim_header_excitement_calculation"
+				},
+				{
+					"id": "bEnableExcitement:Excitement",
+					"text": "$4stim_enable_excitement",
+					"help": "$4stim_tooltip_enable_excitement",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "switcher",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "f4S_SetsexExcitementMult:Excitement",
+					"text": "$4stim_excitement_mult_male",
+					"help": "$4stim_tooltip_excitement_mult_male",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "slider",
+					"valueOptions": {
+						"min": 0,
+						"max": 5,
+						"step": 0.05,
+						"sourceType": "ModSettingFloat"
+					}
+				},
+				{
+					"id": "f4S_SetFemaleSexExcitementMult:Excitement",
+					"text": "$4stim_excitement_mult_female",
+					"help": "$4stim_tooltip_excitement_mult_female",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "slider",
+					"valueOptions": {
+						"min": 0,
+						"max": 5,
+						"step": 0.05,
+						"sourceType": "ModSettingFloat"
+					}
+				},
+				{
+					"id": "f4S_excitementDecayRate:Excitement",
+					"text": "$4stim_excitement_decay_rate",
+					"help": "$4stim_tooltip_excitement_decay_rate",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "slider",
+					"valueOptions": {
+						"min": 0,
+						"max": 5,
+						"step": 0.05,
+						"sourceType": "ModSettingFloat"
+					}
+				},
+				{
+					"id": "f4S_excitementDecayGracePeriod:Excitement",
+					"text": "$4stim_excitement_decay_grace_period",
+					"help": "$4stim_tooltip_excitement_decay_grace_period",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "slider",
+					"valueOptions": {
+						"min": 0,
+						"max": 30,
+						"step": 0.5,
+						"sourceType": "ModSettingFloat"
+					}
+				},
+				{
+					"id": "f4S_postOrgasmExcitement:Excitement",
+					"text": "$4stim_post_orgasm_excitement",
+					"help": "$4stim_tooltip_post_orgasm_excitement",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "slider",
+					"valueOptions": {
+						"min": 0,
+						"max": 100,
+						"step": 1,
+						"sourceType": "ModSettingFloat"
+					}
+				},
+				{
+					"id": "f4S_postOrgasmExcitementMax:Excitement",
+					"text": "$4stim_post_orgasm_excitement_max",
+					"help": "$4stim_tooltip_post_orgasm_excitement_max",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "slider",
+					"valueOptions": {
+						"min": 0,
+						"max": 100,
+						"step": 1,
+						"sourceType": "ModSettingFloat"
+					}
+				},
+				{
+					"type": "section",
+					"text": "$4stim_header_excitement_bars"
+				},
+				{
+					"id": "b4S_enablePlayerBar:HUD",
+					"text": "$4stim_player_bar",
+					"help": "$4stim_tooltip_player_bar",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "switcher",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "b4S_enableNpcBar:HUD",
+					"text": "$4stim_npc_bar",
+					"help": "$4stim_tooltip_npc_bar",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "switcher",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "b4S_SetAutoHideBar:HUD",
+					"text": "$4stim_auto_hide_bar",
+					"help": "$4stim_tooltip_auto_hide_bar_4stim",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "switcher",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "b4S_SetMatchColorToGender:HUD",
+					"text": "$4stim_match_color_gender",
+					"help": "$4stim_tooltip_gendered_colors",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "switcher",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"type": "section",
+					"text": "$4stim_header_orgasms"
+				},
+				{
+					"id": "b4S_endOnPlayerOrgasm:Excitement",
+					"text": "$4stim_orgasm_end_player",
+					"help": "$4stim_tooltip_orgasm_end_player",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "switcher",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "b4S_SetEndOnOrgasm:Excitement",
+					"text": "$4stim_orgasm_end_male",
+					"help": "$4stim_tooltip_orgasm_end_male",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "switcher",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "b4S_SetEndOnSubOrgasm:Excitement",
+					"text": "$4stim_orgasm_end_female",
+					"help": "$4stim_tooltip_orgasm_end_female",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "switcher",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "b4S_SetEndOnBothOrgasm:Excitement",
+					"text": "$4stim_orgasm_end_all",
+					"help": "$4stim_tooltip_orgasm_end_all",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "switcher",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "b4S_SetSlowMoOrgasms:Excitement",
+					"text": "$4stim_slowmo_orgasm",
+					"help": "$4stim_tooltip_slowmo_orgasms",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "switcher",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "b4S_SetBlurOrgasms:Excitement",
+					"text": "$4stim_blur_orgasm",
+					"help": "$4stim_tooltip_blur_orgasms",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "switcher",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "b4S_SetAutoClimaxAnims:Excitement",
+					"text": "$4stim_auto_climax_anims",
+					"help": "$4stim_tooltip_auto_climax_anims",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "switcher",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "fClimaxEndDelay:Excitement",
+					"text": "$4stim_climax_end_delay",
+					"help": "$4stim_tooltip_climax_end_delay",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "slider",
+					"valueOptions": {
+						"min": 0,
+						"max": 30,
+						"step": 0.5,
+						"sourceType": "ModSettingFloat"
+					}
+				},
+				{
+					"type": "section",
+					"text": "$4stim_header_climax_effects"
+				},
+				{
+					"id": "fClimaxShake:Excitement",
+					"text": "$4stim_climax_shake",
+					"help": "$4stim_tooltip_climax_shake",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "slider",
+					"valueOptions": {
+						"min": 0,
+						"max": 2,
+						"step": 0.05,
+						"sourceType": "ModSettingFloat"
+					}
+				},
+				{
+					"id": "fClimaxBlur:Excitement",
+					"text": "$4stim_climax_blur",
+					"help": "$4stim_tooltip_climax_blur",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "slider",
+					"valueOptions": {
+						"min": 0,
+						"max": 1,
+						"step": 0.05,
+						"sourceType": "ModSettingFloat"
+					}
+				},
+				{
+					"id": "fClimaxFlash:Excitement",
+					"text": "$4stim_climax_flash",
+					"help": "$4stim_tooltip_climax_flash",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "slider",
+					"valueOptions": {
+						"min": 0,
+						"max": 1,
+						"step": 0.05,
+						"sourceType": "ModSettingFloat"
+					}
+				},
+				{
+					"id": "fClimaxGlowSize:Excitement",
+					"text": "$4stim_climax_glow_size",
+					"help": "$4stim_tooltip_climax_glow_size",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "slider",
+					"valueOptions": {
+						"min": 0.01,
+						"max": 0.5,
+						"step": 0.01,
+						"sourceType": "ModSettingFloat"
+					}
+				}
+			]
+		},
+		{
+			"pageDisplayName": "$4stim_page_gender_roles",
+			"content": [
+				{
+					"type": "section",
+					"text": "$4stim_header_animation_settings"
+				},
+				{
+					"id": "b4S_SetOnlyGayAnimsInGayScenes:General",
+					"text": "$4stim_intended_sex_only",
+					"help": "$4stim_tooltip_intended_sex_only",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "switcher",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"type": "section",
+					"text": "$4stim_header_player_roles"
+				},
+				{
+					"id": "b4S_PlayerAlwaysDomStraight:Roles",
+					"text": "$4stim_always_dom_straight",
+					"help": "$4stim_tooltip_always_dom_straight",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "switcher",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "b4S_PlayerAlwaysSubStraight:Roles",
+					"text": "$4stim_always_sub_straight",
+					"help": "$4stim_tooltip_always_sub_straight",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "switcher",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "b4S_PlayerAlwaysDomGay:Roles",
+					"text": "$4stim_always_dom_gay",
+					"help": "$4stim_tooltip_always_dom_gay",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "switcher",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "b4S_PlayerAlwaysSubGay:Roles",
+					"text": "$4stim_always_sub_gay",
+					"help": "$4stim_tooltip_always_sub_gay",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "switcher",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "b4S_playerSelectRoleStraight:Roles",
+					"text": "$4stim_select_role_straight",
+					"help": "$4stim_tooltip_select_role_straight",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "switcher",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "b4S_playerSelectRoleGay:Roles",
+					"text": "$4stim_select_role_gay",
+					"help": "$4stim_tooltip_select_role_gay",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "switcher",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "b4S_playerSelectRoleThreesome:Roles",
+					"text": "$4stim_select_role_threesome",
+					"help": "$4stim_tooltip_select_role_threesome",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "switcher",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"type": "section",
+					"text": "$4stim_header_strap_ons"
+				},
+				{
+					"id": "b4S_unequipStrapOnIfNotNeeded:Roles",
+					"text": "$4stim_unequip_strap_on_if_not_needed",
+					"help": "$4stim_tooltip_unequip_strap_on_if_not_needed",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "switcher",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"type": "section",
+					"text": "$4stim_header_futanari"
+				},
+				{
+					"id": "b4S_futaUseMaleRole:Roles",
+					"text": "$4stim_futa_use_male_role",
+					"help": "$4stim_tooltip_futa_use_male_role",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "switcher",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "b4S_futaUseMaleExcitement:Roles",
+					"text": "$4stim_futa_use_male_excitement",
+					"help": "$4stim_tooltip_futa_use_male_excitement",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "switcher",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "b4S_futaUseMaleClimax:Roles",
+					"text": "$4stim_futa_use_male_orgasm",
+					"help": "$4stim_tooltip_futa_use_male_orgasm",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "switcher",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				}
+			]
+		},
+		{
+			"pageDisplayName": "$4stim_page_furniture",
+			"content": [
+				{
+					"id": "b4S_SetEnableFurniture:General",
+					"text": "$4stim_use_furniture",
+					"help": "$4stim_tooltip_enable_furniture",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "switcher",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "b4S_SetSelectFurniture:General",
+					"text": "$4stim_select_furniture",
+					"help": "$4stim_tooltip_select_furniture",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "switcher",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "i4S_SetFurnitureSearchDistance:General",
+					"text": "$4stim_furniture_search_rad",
+					"help": "$4stim_tooltip_furniture_search_dist",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "slider",
+					"valueOptions": {
+						"min": 0,
+						"max": 50,
+						"step": 1,
+						"sourceType": "ModSettingInt"
+					}
+				},
+				{
+					"id": "fFurnitureHeight:General",
+					"text": "$4stim_furniture_height",
+					"help": "$4stim_tooltip_furniture_height",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "slider",
+					"valueOptions": {
+						"min": 20,
+						"max": 500,
+						"step": 10,
+						"sourceType": "ModSettingFloat"
+					}
+				},
+				{
+					"id": "b4S_SetResetClutter:General",
+					"text": "$4stim_reset_clutter",
+					"help": "$4stim_tooltip_reset_clutter",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "switcher",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "i4S_SetResetClutterRadius:General",
+					"text": "$4stim_reset_clutter_radius",
+					"help": "$4stim_tooltip_reset_clutter_radius",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "slider",
+					"valueOptions": {
+						"min": 1,
+						"max": 20,
+						"step": 1,
+						"sourceType": "ModSettingInt"
+					}
+				}
+			]
+		},
+		{
+			"pageDisplayName": "$4stim_page_undress",
 			"content": [
 				{
 					"id": "bUndress:Undress",
-					"text": "$4Stim_MCM_bUndress",
-					"help": "$4Stim_MCM_bUndress_Help",
+					"text": "$4stim_undress",
+					"help": "$4stim_tooltip_undress",
 					"action": {
 						"type": "CallGlobalFunction",
 						"script": "FourStimMCM",
@@ -1740,23 +2302,8 @@
 				},
 				{
 					"id": "b4S_SetAlwaysUndressAtStart:Undress",
-					"text": "$4Stim_MCM_SetAlwaysUndressAtStart",
-					"help": "$4Stim_MCM_SetAlwaysUndressAtStart_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "switcher",
-					"valueOptions": {
-						"sourceType": "ModSettingBool"
-					}
-				},
-				{
-					"id": "b4S_SetPartialUndressing:Undress",
-					"text": "$4Stim_MCM_SetPartialUndressing",
-					"help": "$4Stim_MCM_SetPartialUndressing_Help",
+					"text": "$4stim_undress_start",
+					"help": "$4stim_tooltip_always_undress",
 					"action": {
 						"type": "CallGlobalFunction",
 						"script": "FourStimMCM",
@@ -1770,8 +2317,38 @@
 				},
 				{
 					"id": "b4S_SetUndressIfNeed:Undress",
-					"text": "$4Stim_MCM_SetUndressIfNeed",
-					"help": "$4Stim_MCM_SetUndressIfNeed_Help",
+					"text": "$4stim_undress_need",
+					"help": "$4stim_tooltip_undress_if_need",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "switcher",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "b4S_SetPartialUndressing:Undress",
+					"text": "$4stim_partial_undressing",
+					"help": "$4stim_tooltip_partial_undressing",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "switcher",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "b4S_SetAnimateRedress:Undress",
+					"text": "$4stim_animate_redress",
+					"help": "$4stim_tooltip_animate_redress",
 					"action": {
 						"type": "CallGlobalFunction",
 						"script": "FourStimMCM",
@@ -1785,8 +2362,8 @@
 				},
 				{
 					"id": "bUndressPlayer:Undress",
-					"text": "$4Stim_MCM_bUndressPlayer",
-					"help": "$4Stim_MCM_bUndressPlayer_Help",
+					"text": "$4stim_undress_player",
+					"help": "$4stim_tooltip_undress_player",
 					"action": {
 						"type": "CallGlobalFunction",
 						"script": "FourStimMCM",
@@ -1800,8 +2377,8 @@
 				},
 				{
 					"id": "bRedress:Undress",
-					"text": "$4Stim_MCM_bRedress",
-					"help": "$4Stim_MCM_bRedress_Help",
+					"text": "$4stim_redress",
+					"help": "$4stim_tooltip_redress",
 					"action": {
 						"type": "CallGlobalFunction",
 						"script": "FourStimMCM",
@@ -1815,8 +2392,8 @@
 				},
 				{
 					"id": "fUndressItemDelay:Undress",
-					"text": "$4Stim_MCM_fUndressItemDelay",
-					"help": "$4Stim_MCM_fUndressItemDelay_Help",
+					"text": "$4stim_undress_item_delay",
+					"help": "$4stim_tooltip_undress_item_delay",
 					"action": {
 						"type": "CallGlobalFunction",
 						"script": "FourStimMCM",
@@ -1832,29 +2409,13 @@
 					}
 				},
 				{
-					"id": "b4S_SetAnimateRedress:Undress",
-					"text": "$4Stim_MCM_SetAnimateRedress",
-					"help": "$4Stim_MCM_SetAnimateRedress_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "switcher",
-					"valueOptions": {
-						"sourceType": "ModSettingBool"
-					}
-				}
-			]
-		},
-		{
-			"pageDisplayName": "$4Stim_MCM_PageUndressingslots",
-			"content": [
+					"type": "section",
+					"text": "$4stim_undress_slots_header"
+				},
 				{
 					"id": "bUndressSlot30:UndressSlots",
-					"text": "$4Stim_MCM_bUndressSlot30",
-					"help": "$4Stim_MCM_bUndressSlot30_Help",
+					"text": "$4stim_slot_30",
+					"help": "$4stim_tooltip_undressing_about",
 					"action": {
 						"type": "CallGlobalFunction",
 						"script": "FourStimMCM",
@@ -1868,8 +2429,8 @@
 				},
 				{
 					"id": "bUndressSlot31:UndressSlots",
-					"text": "$4Stim_MCM_bUndressSlot31",
-					"help": "$4Stim_MCM_bUndressSlot31_Help",
+					"text": "$4stim_slot_31",
+					"help": "$4stim_tooltip_undressing_about",
 					"action": {
 						"type": "CallGlobalFunction",
 						"script": "FourStimMCM",
@@ -1883,8 +2444,8 @@
 				},
 				{
 					"id": "bUndressSlot32:UndressSlots",
-					"text": "$4Stim_MCM_bUndressSlot32",
-					"help": "$4Stim_MCM_bUndressSlot32_Help",
+					"text": "$4stim_slot_32",
+					"help": "$4stim_tooltip_undressing_about",
 					"action": {
 						"type": "CallGlobalFunction",
 						"script": "FourStimMCM",
@@ -1898,8 +2459,8 @@
 				},
 				{
 					"id": "bUndressSlot33:UndressSlots",
-					"text": "$4Stim_MCM_bUndressSlot33",
-					"help": "$4Stim_MCM_bUndressSlot33_Help",
+					"text": "$4stim_slot_33",
+					"help": "$4stim_tooltip_undressing_about",
 					"action": {
 						"type": "CallGlobalFunction",
 						"script": "FourStimMCM",
@@ -1913,8 +2474,8 @@
 				},
 				{
 					"id": "bUndressSlot34:UndressSlots",
-					"text": "$4Stim_MCM_bUndressSlot34",
-					"help": "$4Stim_MCM_bUndressSlot34_Help",
+					"text": "$4stim_slot_34",
+					"help": "$4stim_tooltip_undressing_about",
 					"action": {
 						"type": "CallGlobalFunction",
 						"script": "FourStimMCM",
@@ -1928,8 +2489,8 @@
 				},
 				{
 					"id": "bUndressSlot35:UndressSlots",
-					"text": "$4Stim_MCM_bUndressSlot35",
-					"help": "$4Stim_MCM_bUndressSlot35_Help",
+					"text": "$4stim_slot_35",
+					"help": "$4stim_tooltip_undressing_about",
 					"action": {
 						"type": "CallGlobalFunction",
 						"script": "FourStimMCM",
@@ -1943,8 +2504,8 @@
 				},
 				{
 					"id": "bUndressSlot36:UndressSlots",
-					"text": "$4Stim_MCM_bUndressSlot36",
-					"help": "$4Stim_MCM_bUndressSlot36_Help",
+					"text": "$4stim_slot_36",
+					"help": "$4stim_tooltip_undressing_about",
 					"action": {
 						"type": "CallGlobalFunction",
 						"script": "FourStimMCM",
@@ -1958,8 +2519,8 @@
 				},
 				{
 					"id": "bUndressSlot37:UndressSlots",
-					"text": "$4Stim_MCM_bUndressSlot37",
-					"help": "$4Stim_MCM_bUndressSlot37_Help",
+					"text": "$4stim_slot_37",
+					"help": "$4stim_tooltip_undressing_about",
 					"action": {
 						"type": "CallGlobalFunction",
 						"script": "FourStimMCM",
@@ -1973,8 +2534,8 @@
 				},
 				{
 					"id": "bUndressSlot38:UndressSlots",
-					"text": "$4Stim_MCM_bUndressSlot38",
-					"help": "$4Stim_MCM_bUndressSlot38_Help",
+					"text": "$4stim_slot_38",
+					"help": "$4stim_tooltip_undressing_about",
 					"action": {
 						"type": "CallGlobalFunction",
 						"script": "FourStimMCM",
@@ -1988,8 +2549,8 @@
 				},
 				{
 					"id": "bUndressSlot39:UndressSlots",
-					"text": "$4Stim_MCM_bUndressSlot39",
-					"help": "$4Stim_MCM_bUndressSlot39_Help",
+					"text": "$4stim_slot_39",
+					"help": "$4stim_tooltip_undressing_about",
 					"action": {
 						"type": "CallGlobalFunction",
 						"script": "FourStimMCM",
@@ -2003,8 +2564,8 @@
 				},
 				{
 					"id": "bUndressSlot40:UndressSlots",
-					"text": "$4Stim_MCM_bUndressSlot40",
-					"help": "$4Stim_MCM_bUndressSlot40_Help",
+					"text": "$4stim_slot_40",
+					"help": "$4stim_tooltip_undressing_about",
 					"action": {
 						"type": "CallGlobalFunction",
 						"script": "FourStimMCM",
@@ -2018,8 +2579,8 @@
 				},
 				{
 					"id": "bUndressSlot41:UndressSlots",
-					"text": "$4Stim_MCM_bUndressSlot41",
-					"help": "$4Stim_MCM_bUndressSlot41_Help",
+					"text": "$4stim_slot_41",
+					"help": "$4stim_tooltip_undressing_about",
 					"action": {
 						"type": "CallGlobalFunction",
 						"script": "FourStimMCM",
@@ -2033,8 +2594,8 @@
 				},
 				{
 					"id": "bUndressSlot42:UndressSlots",
-					"text": "$4Stim_MCM_bUndressSlot42",
-					"help": "$4Stim_MCM_bUndressSlot42_Help",
+					"text": "$4stim_slot_42",
+					"help": "$4stim_tooltip_undressing_about",
 					"action": {
 						"type": "CallGlobalFunction",
 						"script": "FourStimMCM",
@@ -2048,8 +2609,8 @@
 				},
 				{
 					"id": "bUndressSlot43:UndressSlots",
-					"text": "$4Stim_MCM_bUndressSlot43",
-					"help": "$4Stim_MCM_bUndressSlot43_Help",
+					"text": "$4stim_slot_43",
+					"help": "$4stim_tooltip_undressing_about",
 					"action": {
 						"type": "CallGlobalFunction",
 						"script": "FourStimMCM",
@@ -2063,8 +2624,8 @@
 				},
 				{
 					"id": "bUndressSlot44:UndressSlots",
-					"text": "$4Stim_MCM_bUndressSlot44",
-					"help": "$4Stim_MCM_bUndressSlot44_Help",
+					"text": "$4stim_slot_44",
+					"help": "$4stim_tooltip_undressing_about",
 					"action": {
 						"type": "CallGlobalFunction",
 						"script": "FourStimMCM",
@@ -2078,8 +2639,8 @@
 				},
 				{
 					"id": "bUndressSlot45:UndressSlots",
-					"text": "$4Stim_MCM_bUndressSlot45",
-					"help": "$4Stim_MCM_bUndressSlot45_Help",
+					"text": "$4stim_slot_45",
+					"help": "$4stim_tooltip_undressing_about",
 					"action": {
 						"type": "CallGlobalFunction",
 						"script": "FourStimMCM",
@@ -2093,8 +2654,8 @@
 				},
 				{
 					"id": "bUndressSlot46:UndressSlots",
-					"text": "$4Stim_MCM_bUndressSlot46",
-					"help": "$4Stim_MCM_bUndressSlot46_Help",
+					"text": "$4stim_slot_46",
+					"help": "$4stim_tooltip_undressing_about",
 					"action": {
 						"type": "CallGlobalFunction",
 						"script": "FourStimMCM",
@@ -2108,8 +2669,8 @@
 				},
 				{
 					"id": "bUndressSlot47:UndressSlots",
-					"text": "$4Stim_MCM_bUndressSlot47",
-					"help": "$4Stim_MCM_bUndressSlot47_Help",
+					"text": "$4stim_slot_47",
+					"help": "$4stim_tooltip_undressing_about",
 					"action": {
 						"type": "CallGlobalFunction",
 						"script": "FourStimMCM",
@@ -2123,8 +2684,8 @@
 				},
 				{
 					"id": "bUndressSlot48:UndressSlots",
-					"text": "$4Stim_MCM_bUndressSlot48",
-					"help": "$4Stim_MCM_bUndressSlot48_Help",
+					"text": "$4stim_slot_48",
+					"help": "$4stim_tooltip_undressing_about",
 					"action": {
 						"type": "CallGlobalFunction",
 						"script": "FourStimMCM",
@@ -2138,8 +2699,8 @@
 				},
 				{
 					"id": "bUndressSlot49:UndressSlots",
-					"text": "$4Stim_MCM_bUndressSlot49",
-					"help": "$4Stim_MCM_bUndressSlot49_Help",
+					"text": "$4stim_slot_49",
+					"help": "$4stim_tooltip_undressing_about",
 					"action": {
 						"type": "CallGlobalFunction",
 						"script": "FourStimMCM",
@@ -2153,8 +2714,8 @@
 				},
 				{
 					"id": "bUndressSlot50:UndressSlots",
-					"text": "$4Stim_MCM_bUndressSlot50",
-					"help": "$4Stim_MCM_bUndressSlot50_Help",
+					"text": "$4stim_slot_50",
+					"help": "$4stim_tooltip_undressing_about",
 					"action": {
 						"type": "CallGlobalFunction",
 						"script": "FourStimMCM",
@@ -2168,8 +2729,8 @@
 				},
 				{
 					"id": "bUndressSlot51:UndressSlots",
-					"text": "$4Stim_MCM_bUndressSlot51",
-					"help": "$4Stim_MCM_bUndressSlot51_Help",
+					"text": "$4stim_slot_51",
+					"help": "$4stim_tooltip_undressing_about",
 					"action": {
 						"type": "CallGlobalFunction",
 						"script": "FourStimMCM",
@@ -2183,8 +2744,8 @@
 				},
 				{
 					"id": "bUndressSlot52:UndressSlots",
-					"text": "$4Stim_MCM_bUndressSlot52",
-					"help": "$4Stim_MCM_bUndressSlot52_Help",
+					"text": "$4stim_slot_52",
+					"help": "$4stim_tooltip_undressing_about",
 					"action": {
 						"type": "CallGlobalFunction",
 						"script": "FourStimMCM",
@@ -2198,8 +2759,8 @@
 				},
 				{
 					"id": "bUndressSlot53:UndressSlots",
-					"text": "$4Stim_MCM_bUndressSlot53",
-					"help": "$4Stim_MCM_bUndressSlot53_Help",
+					"text": "$4stim_slot_53",
+					"help": "$4stim_tooltip_undressing_about",
 					"action": {
 						"type": "CallGlobalFunction",
 						"script": "FourStimMCM",
@@ -2213,8 +2774,8 @@
 				},
 				{
 					"id": "bUndressSlot54:UndressSlots",
-					"text": "$4Stim_MCM_bUndressSlot54",
-					"help": "$4Stim_MCM_bUndressSlot54_Help",
+					"text": "$4stim_slot_54",
+					"help": "$4stim_tooltip_undressing_about",
 					"action": {
 						"type": "CallGlobalFunction",
 						"script": "FourStimMCM",
@@ -2228,8 +2789,8 @@
 				},
 				{
 					"id": "bUndressSlot55:UndressSlots",
-					"text": "$4Stim_MCM_bUndressSlot55",
-					"help": "$4Stim_MCM_bUndressSlot55_Help",
+					"text": "$4stim_slot_55",
+					"help": "$4stim_tooltip_undressing_about",
 					"action": {
 						"type": "CallGlobalFunction",
 						"script": "FourStimMCM",
@@ -2243,8 +2804,8 @@
 				},
 				{
 					"id": "bUndressSlot56:UndressSlots",
-					"text": "$4Stim_MCM_bUndressSlot56",
-					"help": "$4Stim_MCM_bUndressSlot56_Help",
+					"text": "$4stim_slot_56",
+					"help": "$4stim_tooltip_undressing_about",
 					"action": {
 						"type": "CallGlobalFunction",
 						"script": "FourStimMCM",
@@ -2258,8 +2819,8 @@
 				},
 				{
 					"id": "bUndressSlot57:UndressSlots",
-					"text": "$4Stim_MCM_bUndressSlot57",
-					"help": "$4Stim_MCM_bUndressSlot57_Help",
+					"text": "$4stim_slot_57",
+					"help": "$4stim_tooltip_undressing_about",
 					"action": {
 						"type": "CallGlobalFunction",
 						"script": "FourStimMCM",
@@ -2273,8 +2834,8 @@
 				},
 				{
 					"id": "bUndressSlot58:UndressSlots",
-					"text": "$4Stim_MCM_bUndressSlot58",
-					"help": "$4Stim_MCM_bUndressSlot58_Help",
+					"text": "$4stim_slot_58",
+					"help": "$4stim_tooltip_undressing_about",
 					"action": {
 						"type": "CallGlobalFunction",
 						"script": "FourStimMCM",
@@ -2288,8 +2849,8 @@
 				},
 				{
 					"id": "bUndressSlot59:UndressSlots",
-					"text": "$4Stim_MCM_bUndressSlot59",
-					"help": "$4Stim_MCM_bUndressSlot59_Help",
+					"text": "$4stim_slot_59",
+					"help": "$4stim_tooltip_undressing_about",
 					"action": {
 						"type": "CallGlobalFunction",
 						"script": "FourStimMCM",
@@ -2303,8 +2864,8 @@
 				},
 				{
 					"id": "bUndressSlot60:UndressSlots",
-					"text": "$4Stim_MCM_bUndressSlot60",
-					"help": "$4Stim_MCM_bUndressSlot60_Help",
+					"text": "$4stim_slot_60",
+					"help": "$4stim_tooltip_undressing_about",
 					"action": {
 						"type": "CallGlobalFunction",
 						"script": "FourStimMCM",
@@ -2318,8 +2879,8 @@
 				},
 				{
 					"id": "bUndressSlot61:UndressSlots",
-					"text": "$4Stim_MCM_bUndressSlot61",
-					"help": "$4Stim_MCM_bUndressSlot61_Help",
+					"text": "$4stim_slot_61",
+					"help": "$4stim_tooltip_undressing_about",
 					"action": {
 						"type": "CallGlobalFunction",
 						"script": "FourStimMCM",
@@ -2334,27 +2895,12 @@
 			]
 		},
 		{
-			"pageDisplayName": "$4Stim_MCM_PageFacesandsound",
+			"pageDisplayName": "$4stim_page_expression",
 			"content": [
 				{
-					"id": "b4S_noFacialExpressions:Expressions",
-					"text": "$4Stim_MCM_noFacialExpressions",
-					"help": "$4Stim_MCM_noFacialExpressions_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "switcher",
-					"valueOptions": {
-						"sourceType": "ModSettingBool"
-					}
-				},
-				{
 					"id": "f4S_SetExpressionDurationMin:Expressions",
-					"text": "$4Stim_MCM_SetExpressionDurationMin",
-					"help": "$4Stim_MCM_SetExpressionDurationMin_Help",
+					"text": "$4stim_expression_duration_min",
+					"help": "$4stim_tooltip_expression_duration_min",
 					"action": {
 						"type": "CallGlobalFunction",
 						"script": "FourStimMCM",
@@ -2371,8 +2917,8 @@
 				},
 				{
 					"id": "f4S_SetExpressionDurationMax:Expressions",
-					"text": "$4Stim_MCM_SetExpressionDurationMax",
-					"help": "$4Stim_MCM_SetExpressionDurationMax_Help",
+					"text": "$4stim_expression_duration_max",
+					"help": "$4stim_tooltip_expression_duration_max",
 					"action": {
 						"type": "CallGlobalFunction",
 						"script": "FourStimMCM",
@@ -2388,9 +2934,13 @@
 					}
 				},
 				{
-					"id": "bSounds:Sound",
-					"text": "$4Stim_MCM_bSounds",
-					"help": "$4Stim_MCM_bSounds_Help",
+					"type": "section",
+					"text": "$4stim_header_eyes"
+				},
+				{
+					"id": "bDisableEyeLook:Alignment",
+					"text": "$4stim_disable_eye_look",
+					"help": "$4stim_tooltip_disable_eye_look",
 					"action": {
 						"type": "CallGlobalFunction",
 						"script": "FourStimMCM",
@@ -2403,9 +2953,54 @@
 					}
 				},
 				{
+					"id": "fLookMaxSide:Alignment",
+					"text": "$4stim_look_max_side",
+					"help": "$4stim_tooltip_look_max_side",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "slider",
+					"valueOptions": {
+						"min": 0,
+						"max": 60,
+						"step": 1,
+						"sourceType": "ModSettingFloat"
+					}
+				},
+				{
+					"id": "fLookMaxUp:Alignment",
+					"text": "$4stim_look_max_up",
+					"help": "$4stim_tooltip_look_max_up",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "slider",
+					"valueOptions": {
+						"min": 0,
+						"max": 60,
+						"step": 1,
+						"sourceType": "ModSettingFloat"
+					}
+				}
+			]
+		},
+		{
+			"pageDisplayName": "$4stim_page_sound",
+			"content": [
+				{
+					"type": "section",
+					"text": "$4stim_header_moans"
+				},
+				{
 					"id": "f4S_moanIntervalMin:Sound",
-					"text": "$4Stim_MCM_moanIntervalMin",
-					"help": "$4Stim_MCM_moanIntervalMin_Help",
+					"text": "$4stim_moan_interval_min",
+					"help": "$4stim_tooltip_moan_interval_min",
 					"action": {
 						"type": "CallGlobalFunction",
 						"script": "FourStimMCM",
@@ -2422,8 +3017,8 @@
 				},
 				{
 					"id": "f4S_moanIntervalMax:Sound",
-					"text": "$4Stim_MCM_moanIntervalMax",
-					"help": "$4Stim_MCM_moanIntervalMax_Help",
+					"text": "$4stim_moan_interval_max",
+					"help": "$4stim_tooltip_moan_interval_max",
 					"action": {
 						"type": "CallGlobalFunction",
 						"script": "FourStimMCM",
@@ -2440,8 +3035,8 @@
 				},
 				{
 					"id": "f4S_moanVolume:Sound",
-					"text": "$4Stim_MCM_moanVolume",
-					"help": "$4Stim_MCM_moanVolume_Help",
+					"text": "$4stim_moan_volume",
+					"help": "$4stim_tooltip_moan_volume",
 					"action": {
 						"type": "CallGlobalFunction",
 						"script": "FourStimMCM",
@@ -2457,9 +3052,13 @@
 					}
 				},
 				{
+					"type": "section",
+					"text": "$4stim_header_sounds"
+				},
+				{
 					"id": "f4S_soundVolume:Sound",
-					"text": "$4Stim_MCM_soundVolume",
-					"help": "$4Stim_MCM_soundVolume_Help",
+					"text": "$4stim_sound_volume",
+					"help": "$4stim_tooltip_sound_volume",
 					"action": {
 						"type": "CallGlobalFunction",
 						"script": "FourStimMCM",
@@ -2472,12 +3071,27 @@
 						"max": 2,
 						"step": 0.05,
 						"sourceType": "ModSettingFloat"
+					}
+				},
+				{
+					"id": "bSounds:Sound",
+					"text": "$4stim_sounds",
+					"help": "$4stim_tooltip_sounds",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "switcher",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
 					}
 				},
 				{
 					"id": "iSoundPriority:Sound",
-					"text": "$4Stim_MCM_iSoundPriority",
-					"help": "$4Stim_MCM_iSoundPriority_Help",
+					"text": "$4stim_sound_priority",
+					"help": "$4stim_tooltip_sound_priority",
 					"action": {
 						"type": "CallGlobalFunction",
 						"script": "FourStimMCM",
@@ -2495,60 +3109,12 @@
 			]
 		},
 		{
-			"pageDisplayName": "$4Stim_MCM_PageLights",
+			"pageDisplayName": "$4stim_page_alignment",
 			"content": [
 				{
-					"id": "i4S_sMaleLight:Lights",
-					"text": "$4Stim_MCM_sMaleLight",
-					"help": "$4Stim_MCM_sMaleLight_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "dropdown",
-					"valueOptions": {
-						"sourceType": "ModSettingInt",
-						"options": [
-							"$4Stim_MCM_sMaleLight_0",
-							"$4Stim_MCM_sMaleLight_1",
-							"$4Stim_MCM_sMaleLight_2",
-							"$4Stim_MCM_sMaleLight_3",
-							"$4Stim_MCM_sMaleLight_4",
-							"$4Stim_MCM_sMaleLight_5",
-							"$4Stim_MCM_sMaleLight_6"
-						]
-					}
-				},
-				{
-					"id": "i4S_sFemaleLight:Lights",
-					"text": "$4Stim_MCM_sFemaleLight",
-					"help": "$4Stim_MCM_sFemaleLight_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "dropdown",
-					"valueOptions": {
-						"sourceType": "ModSettingInt",
-						"options": [
-							"$4Stim_MCM_sFemaleLight_0",
-							"$4Stim_MCM_sFemaleLight_1",
-							"$4Stim_MCM_sFemaleLight_2",
-							"$4Stim_MCM_sFemaleLight_3",
-							"$4Stim_MCM_sFemaleLight_4",
-							"$4Stim_MCM_sFemaleLight_5",
-							"$4Stim_MCM_sFemaleLight_6"
-						]
-					}
-				},
-				{
-					"id": "b4S_SetOnlyLightInDark:Lights",
-					"text": "$4Stim_MCM_SetOnlyLightInDark",
-					"help": "$4Stim_MCM_SetOnlyLightInDark_Help",
+					"id": "b4S_SetScaling:Scaling",
+					"text": "$4stim_scaling",
+					"help": "$4stim_tooltip_scaling",
 					"action": {
 						"type": "CallGlobalFunction",
 						"script": "FourStimMCM",
@@ -2561,9 +3127,57 @@
 					}
 				},
 				{
-					"id": "fLightLevelDark:Lights",
-					"text": "$4Stim_MCM_fLightLevelDark",
-					"help": "$4Stim_MCM_fLightLevelDark_Help",
+					"id": "b4S_SetSchlongBending:Alignment",
+					"text": "$4stim_schlong_bending",
+					"help": "$4stim_tooltip_schlong_bending",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "switcher",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "bErections:Alignment",
+					"text": "$4stim_erections",
+					"help": "$4stim_tooltip_erections",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "switcher",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "fPenisBendStep:Alignment",
+					"text": "$4stim_penis_bend_step",
+					"help": "$4stim_tooltip_penis_bend_step",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "slider",
+					"valueOptions": {
+						"min": -45,
+						"max": 45,
+						"step": 0.5,
+						"sourceType": "ModSettingFloat"
+					}
+				},
+				{
+					"id": "iPenisBendAxis:Alignment",
+					"text": "$4stim_penis_bend_axis",
+					"help": "$4stim_tooltip_penis_bend_axis",
 					"action": {
 						"type": "CallGlobalFunction",
 						"script": "FourStimMCM",
@@ -2573,20 +3187,73 @@
 					"type": "slider",
 					"valueOptions": {
 						"min": 0,
-						"max": 200,
+						"max": 2,
 						"step": 1,
-						"sourceType": "ModSettingFloat"
+						"sourceType": "ModSettingInt"
+					}
+				},
+				{
+					"type": "section",
+					"text": "$4stim_header_alignment_menu"
+				},
+				{
+					"id": "b4S_alignmentGroupBySex:Alignment",
+					"text": "$4stim_alignment_group_by_sex",
+					"help": "$4stim_tooltip_alignment_group_by_sex",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "switcher",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "b4S_alignmentGroupByHeight:Alignment",
+					"text": "$4stim_alignment_group_by_height",
+					"help": "$4stim_tooltip_alignment_group_by_height",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "switcher",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "b4S_alignmentGroupByHeels:Alignment",
+					"text": "$4stim_alignment_group_by_heels",
+					"help": "$4stim_tooltip_alignment_group_by_heels",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "switcher",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
 					}
 				}
 			]
 		},
 		{
-			"pageDisplayName": "$4Stim_MCM_PageSextoys",
+			"pageDisplayName": "$4stim_page_toys",
 			"content": [
 				{
+					"type": "section",
+					"text": "$4stim_header_toys"
+				},
+				{
 					"id": "bToysEnabled:SexToys",
-					"text": "$4Stim_MCM_bToysEnabled",
-					"help": "$4Stim_MCM_bToysEnabled_Help",
+					"text": "$4stim_toys_enabled",
+					"help": "$4stim_tooltip_toys_enabled",
 					"action": {
 						"type": "CallGlobalFunction",
 						"script": "FourStimMCM",
@@ -2600,8 +3267,8 @@
 				},
 				{
 					"id": "bIntiface:SexToys",
-					"text": "$4Stim_MCM_bIntiface",
-					"help": "$4Stim_MCM_bIntiface_Help",
+					"text": "$4stim_intiface",
+					"help": "$4stim_tooltip_intiface",
 					"action": {
 						"type": "CallGlobalFunction",
 						"script": "FourStimMCM",
@@ -2615,8 +3282,8 @@
 				},
 				{
 					"id": "bIntifaceScan:SexToys",
-					"text": "$4Stim_MCM_bIntifaceScan",
-					"help": "$4Stim_MCM_bIntifaceScan_Help",
+					"text": "$4stim_intiface_scan",
+					"help": "$4stim_tooltip_intiface_scan",
 					"action": {
 						"type": "CallGlobalFunction",
 						"script": "FourStimMCM",
@@ -2629,9 +3296,13 @@
 					}
 				},
 				{
+					"type": "section",
+					"text": "$4stim_header_toys_synchronization"
+				},
+				{
 					"id": "i4S_sToySynchronization:SexToys",
-					"text": "$4Stim_MCM_sToySynchronization",
-					"help": "$4Stim_MCM_sToySynchronization_Help",
+					"text": "$4stim_toy_slot_synchronization_type",
+					"help": "$4stim_tooltip_toy_slot_synchronization_type_4stim",
 					"action": {
 						"type": "CallGlobalFunction",
 						"script": "FourStimMCM",
@@ -2642,17 +3313,21 @@
 					"valueOptions": {
 						"sourceType": "ModSettingInt",
 						"options": [
-							"$4Stim_MCM_sToySynchronization_0",
-							"$4Stim_MCM_sToySynchronization_1",
-							"$4Stim_MCM_sToySynchronization_2",
-							"$4Stim_MCM_sToySynchronization_3"
+							"$4stim_synchronization_type_player",
+							"$4stim_synchronization_type_male",
+							"$4stim_synchronization_type_female",
+							"$4stim_synchronization_type_scene"
 						]
 					}
 				},
 				{
+					"type": "section",
+					"text": "$4stim_header_toys_scaling"
+				},
+				{
 					"id": "i4S_sToyScaling:SexToys",
-					"text": "$4Stim_MCM_sToyScaling",
-					"help": "$4Stim_MCM_sToyScaling_Help",
+					"text": "$4stim_toy_slot_scaling_type",
+					"help": "$4stim_tooltip_toy_slot_scaling_type_4stim",
 					"action": {
 						"type": "CallGlobalFunction",
 						"script": "FourStimMCM",
@@ -2663,17 +3338,17 @@
 					"valueOptions": {
 						"sourceType": "ModSettingInt",
 						"options": [
-							"$4Stim_MCM_sToyScaling_0",
-							"$4Stim_MCM_sToyScaling_1",
-							"$4Stim_MCM_sToyScaling_2",
-							"$4Stim_MCM_sToyScaling_3"
+							"$4stim_scaling_type_none",
+							"$4stim_scaling_type_stimulation_rate",
+							"$4stim_scaling_type_stimulation_value",
+							"$4stim_scaling_type_speed"
 						]
 					}
 				},
 				{
 					"id": "fToyMinScale:SexToys",
-					"text": "$4Stim_MCM_fToyMinScale",
-					"help": "$4Stim_MCM_fToyMinScale_Help",
+					"text": "$4stim_toy_slot_min_scale",
+					"help": "$4stim_tooltip_toy_slot_min_scale",
 					"action": {
 						"type": "CallGlobalFunction",
 						"script": "FourStimMCM",
@@ -2690,8 +3365,8 @@
 				},
 				{
 					"id": "fToyMaxScale:SexToys",
-					"text": "$4Stim_MCM_fToyMaxScale",
-					"help": "$4Stim_MCM_fToyMaxScale_Help",
+					"text": "$4stim_toy_slot_max_scale",
+					"help": "$4stim_tooltip_toy_slot_max_scale",
 					"action": {
 						"type": "CallGlobalFunction",
 						"script": "FourStimMCM",
@@ -2708,8 +3383,8 @@
 				},
 				{
 					"id": "fToyMinMagnitude:SexToys",
-					"text": "$4Stim_MCM_fToyMinMagnitude",
-					"help": "$4Stim_MCM_fToyMinMagnitude_Help",
+					"text": "$4stim_toy_slot_min_magnitude",
+					"help": "$4stim_tooltip_toy_slot_min_magnitude",
 					"action": {
 						"type": "CallGlobalFunction",
 						"script": "FourStimMCM",
@@ -2726,8 +3401,8 @@
 				},
 				{
 					"id": "fToyMaxMagnitude:SexToys",
-					"text": "$4Stim_MCM_fToyMaxMagnitude",
-					"help": "$4Stim_MCM_fToyMaxMagnitude_Help",
+					"text": "$4stim_toy_slot_max_magnitude",
+					"help": "$4stim_tooltip_toy_slot_max_magnitude",
 					"action": {
 						"type": "CallGlobalFunction",
 						"script": "FourStimMCM",
@@ -2744,8 +3419,8 @@
 				},
 				{
 					"id": "bToyPeaks:SexToys",
-					"text": "$4Stim_MCM_bToyPeaks",
-					"help": "$4Stim_MCM_bToyPeaks_Help",
+					"text": "$4stim_toy_slot_do_peaks",
+					"help": "$4stim_tooltip_toy_slot_do_peaks",
 					"action": {
 						"type": "CallGlobalFunction",
 						"script": "FourStimMCM",
@@ -2759,8 +3434,8 @@
 				},
 				{
 					"id": "fToyMinPeak:SexToys",
-					"text": "$4Stim_MCM_fToyMinPeak",
-					"help": "$4Stim_MCM_fToyMinPeak_Help",
+					"text": "$4stim_toy_slot_min_peak",
+					"help": "$4stim_tooltip_toy_slot_min_peak",
 					"action": {
 						"type": "CallGlobalFunction",
 						"script": "FourStimMCM",
@@ -2777,8 +3452,8 @@
 				},
 				{
 					"id": "fToyMaxPeak:SexToys",
-					"text": "$4Stim_MCM_fToyMaxPeak",
-					"help": "$4Stim_MCM_fToyMaxPeak_Help",
+					"text": "$4stim_toy_slot_max_peak",
+					"help": "$4stim_tooltip_toy_slot_max_peak",
 					"action": {
 						"type": "CallGlobalFunction",
 						"script": "FourStimMCM",
@@ -2794,9 +3469,13 @@
 					}
 				},
 				{
+					"type": "section",
+					"text": "$4stim_header_toys_climax"
+				},
+				{
 					"id": "bToyClimax:SexToys",
-					"text": "$4Stim_MCM_bToyClimax",
-					"help": "$4Stim_MCM_bToyClimax_Help",
+					"text": "$4stim_toy_slot_do_climax",
+					"help": "$4stim_tooltip_toy_slot_do_climax",
 					"action": {
 						"type": "CallGlobalFunction",
 						"script": "FourStimMCM",
@@ -2810,8 +3489,8 @@
 				},
 				{
 					"id": "fToyClimaxMagnitude:SexToys",
-					"text": "$4Stim_MCM_fToyClimaxMagnitude",
-					"help": "$4Stim_MCM_fToyClimaxMagnitude_Help",
+					"text": "$4stim_toy_slot_climax_magnitude",
+					"help": "$4stim_tooltip_toy_slot_climax_magnitude",
 					"action": {
 						"type": "CallGlobalFunction",
 						"script": "FourStimMCM",
@@ -2829,661 +3508,108 @@
 			]
 		},
 		{
-			"pageDisplayName": "$4Stim_MCM_PageHotkeys",
+			"pageDisplayName": "$4stim_page_debug",
 			"content": [
 				{
-					"type": "section",
-					"text": "$4Stim_MCM_SectionScenekeys"
-				},
-				{
-					"id": "s4S_SetKeyMap:General",
-					"text": "$4Stim_MCM_SetKeyMap",
-					"help": "$4Stim_MCM_SetKeyMap_Help",
+					"id": "b4S_unrestrictedNavigation:General",
+					"text": "$4stim_unrestricted_navigation",
+					"help": "$4stim_tooltip_unrestricted_navigation",
 					"action": {
 						"type": "CallGlobalFunction",
 						"script": "FourStimMCM",
 						"function": "SettingChanged",
 						"params": []
 					},
-					"type": "keyinput",
+					"type": "switcher",
 					"valueOptions": {
-						"sourceType": "ModSettingString",
-						"allowModifierKeys": false
+						"sourceType": "ModSettingBool"
 					}
 				},
 				{
-					"id": "s4S_keyNpcSceneStart:General",
-					"text": "$4Stim_MCM_keyNpcSceneStart",
-					"help": "$4Stim_MCM_keyNpcSceneStart_Help",
+					"id": "b4S_noFacialExpressions:Expressions",
+					"text": "$4stim_no_facial_expressions",
+					"help": "$4stim_tooltip_no_facial_expressions",
 					"action": {
 						"type": "CallGlobalFunction",
 						"script": "FourStimMCM",
 						"function": "SettingChanged",
 						"params": []
 					},
-					"type": "keyinput",
+					"type": "switcher",
 					"valueOptions": {
-						"sourceType": "ModSettingString",
-						"allowModifierKeys": false
+						"sourceType": "ModSettingBool"
 					}
 				},
 				{
-					"id": "s4S_SetKeyUp:General",
-					"text": "$4Stim_MCM_SetKeyUp",
-					"help": "$4Stim_MCM_SetKeyUp_Help",
+					"id": "bLogAnimEvents:General",
+					"text": "$4stim_log_anim_events",
+					"help": "$4stim_tooltip_log_anim_events",
 					"action": {
 						"type": "CallGlobalFunction",
 						"script": "FourStimMCM",
 						"function": "SettingChanged",
 						"params": []
 					},
-					"type": "keyinput",
+					"type": "switcher",
 					"valueOptions": {
-						"sourceType": "ModSettingString",
-						"allowModifierKeys": false
+						"sourceType": "ModSettingBool"
 					}
 				},
 				{
-					"id": "s4S_SetKeyDown:General",
-					"text": "$4Stim_MCM_SetKeyDown",
-					"help": "$4Stim_MCM_SetKeyDown_Help",
+					"id": "bLogFurniture:General",
+					"text": "$4stim_log_furniture",
+					"help": "$4stim_tooltip_log_furniture",
 					"action": {
 						"type": "CallGlobalFunction",
 						"script": "FourStimMCM",
 						"function": "SettingChanged",
 						"params": []
 					},
-					"type": "keyinput",
+					"type": "switcher",
 					"valueOptions": {
-						"sourceType": "ModSettingString",
-						"allowModifierKeys": false
-					}
-				},
-				{
-					"id": "s4S_SetPullOut:General",
-					"text": "$4Stim_MCM_SetPullOut",
-					"help": "$4Stim_MCM_SetPullOut_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "keyinput",
-					"valueOptions": {
-						"sourceType": "ModSettingString",
-						"allowModifierKeys": false
-					}
-				},
-				{
-					"id": "s4S_SetFreeCamToggleKey:General",
-					"text": "$4Stim_MCM_SetFreeCamToggleKey",
-					"help": "$4Stim_MCM_SetFreeCamToggleKey_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "keyinput",
-					"valueOptions": {
-						"sourceType": "ModSettingString",
-						"allowModifierKeys": false
-					}
-				},
-				{
-					"id": "s4S_keySearch:General",
-					"text": "$4Stim_MCM_keySearch",
-					"help": "$4Stim_MCM_keySearch_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "keyinput",
-					"valueOptions": {
-						"sourceType": "ModSettingString",
-						"allowModifierKeys": false
-					}
-				},
-				{
-					"id": "s4S_keyAlignment:General",
-					"text": "$4Stim_MCM_keyAlignment",
-					"help": "$4Stim_MCM_keyAlignment_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "keyinput",
-					"valueOptions": {
-						"sourceType": "ModSettingString",
-						"allowModifierKeys": false
-					}
-				},
-				{
-					"id": "s4S_keyHideUI:General",
-					"text": "$4Stim_MCM_keyHideUI",
-					"help": "$4Stim_MCM_keyHideUI_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "keyinput",
-					"valueOptions": {
-						"sourceType": "ModSettingString",
-						"allowModifierKeys": false
-					}
-				},
-				{
-					"id": "s4S_SetControlToggle:AutoMode",
-					"text": "$4Stim_MCM_SetControlToggle",
-					"help": "$4Stim_MCM_SetControlToggle_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "keyinput",
-					"valueOptions": {
-						"sourceType": "ModSettingString",
-						"allowModifierKeys": false
-					}
-				},
-				{
-					"type": "section",
-					"text": "$4Stim_MCM_SectionNavigationkeys"
-				},
-				{
-					"id": "s4S_SetOsaUpKey:General",
-					"text": "$4Stim_MCM_SetOsaUpKey",
-					"help": "$4Stim_MCM_SetOsaUpKey_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "keyinput",
-					"valueOptions": {
-						"sourceType": "ModSettingString",
-						"allowModifierKeys": false
-					}
-				},
-				{
-					"id": "s4S_SetOsaDownKey:General",
-					"text": "$4Stim_MCM_SetOsaDownKey",
-					"help": "$4Stim_MCM_SetOsaDownKey_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "keyinput",
-					"valueOptions": {
-						"sourceType": "ModSettingString",
-						"allowModifierKeys": false
-					}
-				},
-				{
-					"id": "s4S_SetOsaLeftKey:General",
-					"text": "$4Stim_MCM_SetOsaLeftKey",
-					"help": "$4Stim_MCM_SetOsaLeftKey_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "keyinput",
-					"valueOptions": {
-						"sourceType": "ModSettingString",
-						"allowModifierKeys": false
-					}
-				},
-				{
-					"id": "s4S_SetOsaRightKey:General",
-					"text": "$4Stim_MCM_SetOsaRightKey",
-					"help": "$4Stim_MCM_SetOsaRightKey_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "keyinput",
-					"valueOptions": {
-						"sourceType": "ModSettingString",
-						"allowModifierKeys": false
-					}
-				},
-				{
-					"id": "s4S_SetOsaTogKey:General",
-					"text": "$4Stim_MCM_SetOsaTogKey",
-					"help": "$4Stim_MCM_SetOsaTogKey_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "keyinput",
-					"valueOptions": {
-						"sourceType": "ModSettingString",
-						"allowModifierKeys": false
-					}
-				},
-				{
-					"id": "s4S_SetOsaYesKey:General",
-					"text": "$4Stim_MCM_SetOsaYesKey",
-					"help": "$4Stim_MCM_SetOsaYesKey_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "keyinput",
-					"valueOptions": {
-						"sourceType": "ModSettingString",
-						"allowModifierKeys": false
-					}
-				},
-				{
-					"id": "s4S_SetOsaEndKey:General",
-					"text": "$4Stim_MCM_SetOsaEndKey",
-					"help": "$4Stim_MCM_SetOsaEndKey_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "keyinput",
-					"valueOptions": {
-						"sourceType": "ModSettingString",
-						"allowModifierKeys": false
+						"sourceType": "ModSettingBool"
 					}
 				}
 			]
 		},
 		{
-			"pageDisplayName": "$4Stim_MCM_PageController",
+			"pageDisplayName": "$4stim_page_about",
 			"content": [
 				{
-					"id": "i4S_sPadScheme:Controller",
-					"text": "$4Stim_MCM_sPadScheme",
-					"help": "$4Stim_MCM_sPadScheme_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "dropdown",
-					"valueOptions": {
-						"sourceType": "ModSettingInt",
-						"options": [
-							"$4Stim_MCM_sPadScheme_0",
-							"$4Stim_MCM_sPadScheme_1"
-						]
-					}
+					"text": "4Stim",
+					"type": "text"
+				},
+				{
+					"text": "$4stim_about_port",
+					"type": "text"
 				},
 				{
 					"type": "section",
-					"text": "$4Stim_MCM_SectionButtons"
+					"text": "$4stim_authors"
 				},
 				{
-					"id": "i4S_sPadHotkey:Controller",
-					"text": "$4Stim_MCM_sPadHotkey",
-					"help": "$4Stim_MCM_sPadHotkey_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "dropdown",
-					"valueOptions": {
-						"sourceType": "ModSettingInt",
-						"options": [
-							"$4Stim_MCM_sPadHotkey_0",
-							"$4Stim_MCM_sPadHotkey_1",
-							"$4Stim_MCM_sPadHotkey_2",
-							"$4Stim_MCM_sPadHotkey_3",
-							"$4Stim_MCM_sPadHotkey_4",
-							"$4Stim_MCM_sPadHotkey_5",
-							"$4Stim_MCM_sPadHotkey_6",
-							"$4Stim_MCM_sPadHotkey_7",
-							"$4Stim_MCM_sPadHotkey_8",
-							"$4Stim_MCM_sPadHotkey_9"
-						]
-					}
-				},
-				{
-					"id": "i4S_sPadNPCScene:Controller",
-					"text": "$4Stim_MCM_sPadNPCScene",
-					"help": "$4Stim_MCM_sPadNPCScene_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "dropdown",
-					"valueOptions": {
-						"sourceType": "ModSettingInt",
-						"options": [
-							"$4Stim_MCM_sPadNPCScene_0",
-							"$4Stim_MCM_sPadNPCScene_1",
-							"$4Stim_MCM_sPadNPCScene_2",
-							"$4Stim_MCM_sPadNPCScene_3",
-							"$4Stim_MCM_sPadNPCScene_4",
-							"$4Stim_MCM_sPadNPCScene_5",
-							"$4Stim_MCM_sPadNPCScene_6",
-							"$4Stim_MCM_sPadNPCScene_7",
-							"$4Stim_MCM_sPadNPCScene_8",
-							"$4Stim_MCM_sPadNPCScene_9"
-						]
-					}
-				},
-				{
-					"id": "i4S_sPadSpeedUp:Controller",
-					"text": "$4Stim_MCM_sPadSpeedUp",
-					"help": "$4Stim_MCM_sPadSpeedUp_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "dropdown",
-					"valueOptions": {
-						"sourceType": "ModSettingInt",
-						"options": [
-							"$4Stim_MCM_sPadSpeedUp_0",
-							"$4Stim_MCM_sPadSpeedUp_1",
-							"$4Stim_MCM_sPadSpeedUp_2",
-							"$4Stim_MCM_sPadSpeedUp_3",
-							"$4Stim_MCM_sPadSpeedUp_4",
-							"$4Stim_MCM_sPadSpeedUp_5",
-							"$4Stim_MCM_sPadSpeedUp_6",
-							"$4Stim_MCM_sPadSpeedUp_7",
-							"$4Stim_MCM_sPadSpeedUp_8",
-							"$4Stim_MCM_sPadSpeedUp_9"
-						]
-					}
-				},
-				{
-					"id": "i4S_sPadSpeedDown:Controller",
-					"text": "$4Stim_MCM_sPadSpeedDown",
-					"help": "$4Stim_MCM_sPadSpeedDown_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "dropdown",
-					"valueOptions": {
-						"sourceType": "ModSettingInt",
-						"options": [
-							"$4Stim_MCM_sPadSpeedDown_0",
-							"$4Stim_MCM_sPadSpeedDown_1",
-							"$4Stim_MCM_sPadSpeedDown_2",
-							"$4Stim_MCM_sPadSpeedDown_3",
-							"$4Stim_MCM_sPadSpeedDown_4",
-							"$4Stim_MCM_sPadSpeedDown_5",
-							"$4Stim_MCM_sPadSpeedDown_6",
-							"$4Stim_MCM_sPadSpeedDown_7",
-							"$4Stim_MCM_sPadSpeedDown_8",
-							"$4Stim_MCM_sPadSpeedDown_9"
-						]
-					}
-				},
-				{
-					"id": "i4S_sPadAutoMode:Controller",
-					"text": "$4Stim_MCM_sPadAutoMode",
-					"help": "$4Stim_MCM_sPadAutoMode_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "dropdown",
-					"valueOptions": {
-						"sourceType": "ModSettingInt",
-						"options": [
-							"$4Stim_MCM_sPadAutoMode_0",
-							"$4Stim_MCM_sPadAutoMode_1",
-							"$4Stim_MCM_sPadAutoMode_2",
-							"$4Stim_MCM_sPadAutoMode_3",
-							"$4Stim_MCM_sPadAutoMode_4",
-							"$4Stim_MCM_sPadAutoMode_5",
-							"$4Stim_MCM_sPadAutoMode_6",
-							"$4Stim_MCM_sPadAutoMode_7",
-							"$4Stim_MCM_sPadAutoMode_8",
-							"$4Stim_MCM_sPadAutoMode_9"
-						]
-					}
-				},
-				{
-					"id": "i4S_sPadPullOut:Controller",
-					"text": "$4Stim_MCM_sPadPullOut",
-					"help": "$4Stim_MCM_sPadPullOut_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "dropdown",
-					"valueOptions": {
-						"sourceType": "ModSettingInt",
-						"options": [
-							"$4Stim_MCM_sPadPullOut_0",
-							"$4Stim_MCM_sPadPullOut_1",
-							"$4Stim_MCM_sPadPullOut_2",
-							"$4Stim_MCM_sPadPullOut_3",
-							"$4Stim_MCM_sPadPullOut_4",
-							"$4Stim_MCM_sPadPullOut_5",
-							"$4Stim_MCM_sPadPullOut_6",
-							"$4Stim_MCM_sPadPullOut_7",
-							"$4Stim_MCM_sPadPullOut_8",
-							"$4Stim_MCM_sPadPullOut_9"
-						]
-					}
-				},
-				{
-					"id": "i4S_sPadEnd:Controller",
-					"text": "$4Stim_MCM_sPadEnd",
-					"help": "$4Stim_MCM_sPadEnd_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "dropdown",
-					"valueOptions": {
-						"sourceType": "ModSettingInt",
-						"options": [
-							"$4Stim_MCM_sPadEnd_0",
-							"$4Stim_MCM_sPadEnd_1",
-							"$4Stim_MCM_sPadEnd_2",
-							"$4Stim_MCM_sPadEnd_3",
-							"$4Stim_MCM_sPadEnd_4",
-							"$4Stim_MCM_sPadEnd_5",
-							"$4Stim_MCM_sPadEnd_6",
-							"$4Stim_MCM_sPadEnd_7",
-							"$4Stim_MCM_sPadEnd_8",
-							"$4Stim_MCM_sPadEnd_9"
-						]
-					}
-				},
-				{
-					"id": "i4S_sPadSearch:Controller",
-					"text": "$4Stim_MCM_sPadSearch",
-					"help": "$4Stim_MCM_sPadSearch_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "dropdown",
-					"valueOptions": {
-						"sourceType": "ModSettingInt",
-						"options": [
-							"$4Stim_MCM_sPadSearch_0",
-							"$4Stim_MCM_sPadSearch_1",
-							"$4Stim_MCM_sPadSearch_2",
-							"$4Stim_MCM_sPadSearch_3",
-							"$4Stim_MCM_sPadSearch_4",
-							"$4Stim_MCM_sPadSearch_5",
-							"$4Stim_MCM_sPadSearch_6",
-							"$4Stim_MCM_sPadSearch_7",
-							"$4Stim_MCM_sPadSearch_8",
-							"$4Stim_MCM_sPadSearch_9"
-						]
-					}
-				},
-				{
-					"id": "i4S_sPadAlign:Controller",
-					"text": "$4Stim_MCM_sPadAlign",
-					"help": "$4Stim_MCM_sPadAlign_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "dropdown",
-					"valueOptions": {
-						"sourceType": "ModSettingInt",
-						"options": [
-							"$4Stim_MCM_sPadAlign_0",
-							"$4Stim_MCM_sPadAlign_1",
-							"$4Stim_MCM_sPadAlign_2",
-							"$4Stim_MCM_sPadAlign_3",
-							"$4Stim_MCM_sPadAlign_4",
-							"$4Stim_MCM_sPadAlign_5",
-							"$4Stim_MCM_sPadAlign_6",
-							"$4Stim_MCM_sPadAlign_7",
-							"$4Stim_MCM_sPadAlign_8",
-							"$4Stim_MCM_sPadAlign_9"
-						]
-					}
-				},
-				{
-					"id": "i4S_sPadFreeCam:Controller",
-					"text": "$4Stim_MCM_sPadFreeCam",
-					"help": "$4Stim_MCM_sPadFreeCam_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "dropdown",
-					"valueOptions": {
-						"sourceType": "ModSettingInt",
-						"options": [
-							"$4Stim_MCM_sPadFreeCam_0",
-							"$4Stim_MCM_sPadFreeCam_1",
-							"$4Stim_MCM_sPadFreeCam_2",
-							"$4Stim_MCM_sPadFreeCam_3",
-							"$4Stim_MCM_sPadFreeCam_4",
-							"$4Stim_MCM_sPadFreeCam_5",
-							"$4Stim_MCM_sPadFreeCam_6",
-							"$4Stim_MCM_sPadFreeCam_7",
-							"$4Stim_MCM_sPadFreeCam_8",
-							"$4Stim_MCM_sPadFreeCam_9"
-						]
-					}
-				},
-				{
-					"id": "i4S_sPadHideUI:Controller",
-					"text": "$4Stim_MCM_sPadHideUI",
-					"help": "$4Stim_MCM_sPadHideUI_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "SettingChanged",
-						"params": []
-					},
-					"type": "dropdown",
-					"valueOptions": {
-						"sourceType": "ModSettingInt",
-						"options": [
-							"$4Stim_MCM_sPadHideUI_0",
-							"$4Stim_MCM_sPadHideUI_1",
-							"$4Stim_MCM_sPadHideUI_2",
-							"$4Stim_MCM_sPadHideUI_3",
-							"$4Stim_MCM_sPadHideUI_4",
-							"$4Stim_MCM_sPadHideUI_5",
-							"$4Stim_MCM_sPadHideUI_6",
-							"$4Stim_MCM_sPadHideUI_7",
-							"$4Stim_MCM_sPadHideUI_8",
-							"$4Stim_MCM_sPadHideUI_9"
-						]
-					}
-				}
-			]
-		},
-		{
-			"pageDisplayName": "$4Stim_MCM_PageSettings",
-			"content": [
-				{
-					"text": "$4Stim_MCM_SettingsNote",
+					"text": "4Stim: KeryoWolfe",
 					"type": "text"
 				},
 				{
-					"text": "$4Stim_MCM_IniOnly",
+					"text": "OStim Standalone: Kannonfodder, VersuchDrei",
 					"type": "text"
 				},
 				{
-					"type": "spacer"
+					"text": "OStim: Nem, Qudix, Sairion",
+					"type": "text"
 				},
 				{
-					"text": "$4Stim_MCM_Export",
-					"type": "button",
-					"help": "$4Stim_MCM_Export_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "ExportSettings",
-						"params": []
-					}
+					"type": "section",
+					"text": "$4stim_links"
 				},
 				{
-					"text": "$4Stim_MCM_Import",
-					"type": "button",
-					"help": "$4Stim_MCM_Import_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "ImportSettings",
-						"params": []
-					}
+					"text": "https://github.com/KeryoWolfe/4Stim",
+					"type": "text"
 				},
 				{
-					"text": "$4Stim_MCM_UseIni",
-					"type": "button",
-					"help": "$4Stim_MCM_UseIni_Help",
-					"action": {
-						"type": "CallGlobalFunction",
-						"script": "FourStimMCM",
-						"function": "UseIniSettings",
-						"params": []
-					}
+					"text": "https://github.com/VersuchDrei/OStimNG",
+					"type": "text"
 				}
 			]
 		}

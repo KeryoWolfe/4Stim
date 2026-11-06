@@ -1,35 +1,35 @@
 {
-	"_comment": "4Stim's own HUD options, in OStim's options format (docs/OPTIONS.md): a page per actor with undressing, muting, their voice set, and their strap-on and tongue (on / off, and which one). \"state\" (4Stim's) picks the state shown; \"english\" holds the English of the $4Stim_ texts (docs/TRANSLATIONS.md).",
+	"_comment": "4Stim's own HUD options, in OStim's options format (docs/OPTIONS.md): a page per actor with undressing, muting, their voice set, and their strap-on and tongue (on / off, and which one). \"state\" (4Stim's) picks the state shown; \"english\" holds the English of the $4stim_ texts (docs/TRANSLATIONS.md).",
 	"pages": [
 		{
 			"name": "4StimActors",
-			"description": "$4Stim_OptActors",
+			"description": "$4stim_options_actors",
 			"icon": "4Stim/symbols/gender_mf",
 			"parent": null
 		},
 		{
 			"name": "4StimActor",
-			"description": "$4Stim_OptActor",
+			"description": "$4stim_options_actor",
 			"icon": "4Stim/symbols/gender_{sex}",
 			"parent": "4StimActors",
 			"repeat": "actor"
 		},
 		{
 			"name": "4StimVoice",
-			"description": "$4Stim_OptVoicePage",
+			"description": "$4stim_options_voice_page",
 			"icon": "4Stim/symbols/switch",
 			"parent": "4StimActor"
 		},
 		{
 			"name": "4StimStrapOn",
-			"description": "$4Stim_OptStrapOnPage",
+			"description": "$4stim_options_strap_on_page",
 			"icon": "4Stim/sexual/strapon_insert_vert",
 			"parent": "4StimActor",
 			"sex": "female"
 		},
 		{
 			"name": "4StimTongue",
-			"description": "$4Stim_OptTonguePage",
+			"description": "$4stim_options_tongue_page",
 			"icon": "4Stim/sensual/kissing",
 			"parent": "4StimActor"
 		}
@@ -41,12 +41,12 @@
 			"state": "stripped",
 			"states": {
 				"off": {
-					"description": "$4Stim_OptUndress",
+					"description": "$4stim_options_undress",
 					"icon": "4Stim/clothes/bra",
 					"function": "FourStimOptions/ToggleUndress"
 				},
 				"on": {
-					"description": "$4Stim_OptDress",
+					"description": "$4stim_options_dress",
 					"icon": "4Stim/clothes/top",
 					"function": "FourStimOptions/ToggleUndress"
 				}
@@ -58,12 +58,12 @@
 			"state": "muted",
 			"states": {
 				"off": {
-					"description": "$4Stim_OptMute",
+					"description": "$4stim_options_mute",
 					"icon": "4Stim/symbols/x",
 					"function": "FourStimOptions/ToggleMute"
 				},
 				"on": {
-					"description": "$4Stim_OptUnmute",
+					"description": "$4stim_options_unmute",
 					"icon": "4Stim/sensual/kissing",
 					"border": "ff0000",
 					"function": "FourStimOptions/ToggleMute"
@@ -76,12 +76,12 @@
 			"repeat": "voiceSet",
 			"states": {
 				"default": {
-					"description": "$4Stim_OptVoiceDefault",
+					"description": "$4stim_options_voice_default",
 					"icon": "4Stim/symbols/return",
 					"function": "FourStimOptions/ChooseVoice"
 				},
 				"set": {
-					"description": "$4Stim_OptVoiceSet",
+					"description": "$4stim_options_voice_set",
 					"icon": "4Stim/sensual/kissing",
 					"border": "ffff00",
 					"function": "FourStimOptions/ChooseVoice"
@@ -95,12 +95,12 @@
 			"equipType": "strapon",
 			"states": {
 				"toggle": {
-					"description": "$4Stim_OptStrapOnToggle",
+					"description": "$4stim_options_strap_on_toggle",
 					"icon": "4Stim/sexual/strapon_insert_hz",
 					"function": "FourStimOptions/ToggleStrapOn"
 				},
 				"object": {
-					"description": "$4Stim_OptWearObject",
+					"description": "$4stim_options_wear_object",
 					"icon": "4Stim/sexual/strapon_insert_vert",
 					"border": "ffff00",
 					"function": "FourStimOptions/ChooseStrapOn"
@@ -114,12 +114,12 @@
 			"equipType": "tongue",
 			"states": {
 				"toggle": {
-					"description": "$4Stim_OptTongueToggle",
+					"description": "$4stim_options_tongue_toggle",
 					"icon": "4Stim/sensual/kissing",
 					"function": "FourStimOptions/ToggleTongue"
 				},
 				"object": {
-					"description": "$4Stim_OptWearObject",
+					"description": "$4stim_options_wear_object",
 					"icon": "4Stim/sensual/kissing_end",
 					"border": "ffff00",
 					"function": "FourStimOptions/ChooseTongue"
@@ -128,19 +128,19 @@
 		}
 	],
 	"english": {
-		"$4Stim_OptActors": "Actors",
-		"$4Stim_OptActor": "{actor}",
-		"$4Stim_OptStrapOnPage": "Strap-on",
-		"$4Stim_OptTonguePage": "Tongue",
-		"$4Stim_OptUndress": "Undress {actor}",
-		"$4Stim_OptDress": "Dress {actor}",
-		"$4Stim_OptMute": "Mute {actor}",
-		"$4Stim_OptUnmute": "Unmute {actor}",
-		"$4Stim_OptStrapOnToggle": "Strap-on on / off for {actor}",
-		"$4Stim_OptTongueToggle": "Tongue on / off for {actor}",
-		"$4Stim_OptWearObject": "Wear {type}",
-		"$4Stim_OptVoicePage": "Voice",
-		"$4Stim_OptVoiceDefault": "{type} voice for {actor}",
-		"$4Stim_OptVoiceSet": "Voice: {type}"
+		"$4stim_options_actors": "Actors",
+		"$4stim_options_actor": "{actor}",
+		"$4stim_options_strap_on_page": "Strap-on",
+		"$4stim_options_tongue_page": "Tongue",
+		"$4stim_options_undress": "Undress {actor}",
+		"$4stim_options_dress": "Dress {actor}",
+		"$4stim_options_mute": "Mute {actor}",
+		"$4stim_options_unmute": "Unmute {actor}",
+		"$4stim_options_strap_on_toggle": "Strap-on on / off for {actor}",
+		"$4stim_options_tongue_toggle": "Tongue on / off for {actor}",
+		"$4stim_options_wear_object": "Wear {type}",
+		"$4stim_options_voice_page": "Voice",
+		"$4stim_options_voice_default": "{type} voice for {actor}",
+		"$4stim_options_voice_set": "Voice: {type}"
 	}
 }

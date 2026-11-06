@@ -2,6 +2,12 @@
 
 ## 0.5.0 alpha (in progress)
 
+### The MCM and translations, as OStim's
+- **The MCM has OStim's pages, in OStim's order, with its section headers, labels and help texts** (docs/MCM.md): General, Controls, Auto Control, Camera, Excitement, Gender Roles, Furniture, Undressing, Expressions, Sound, Alignment, Toys, Debug, About. 4Stim's own settings sit on the page they belong to (the HUD and partner finding on General, the controller on Controls, climax effects on Excitement, eyes on Expressions), and the undressing slots and Save and Load are on OStim's pages for them. Where a setting works differently in 4Stim, its help says what 4Stim does. Nothing you've set in the MCM changes.
+- **Translation keys follow OStim's**: OStim's own keys with "4stim" for "ostim" (`$4stim_reset_position`, `$4stim_tooltip_fades`), so OStim's translations carry over, and 4Stim's own texts in the same style (`$4stim_tab_search`, was `$4Stim_TabSearch`). A translation made for the old keys needs them renamed (docs/TRANSLATIONS.md).
+
+Needs the plugin and both SWFs rebuilt (the keys are in them). No Papyrus changes.
+
 ### The HUD, closer to OStim's (parity audit, 5 §1, §4, §9, §17, §21)
 - **The speed meter shows OStim's speed number** (the scene's `displaySpeed`, "1.5"), else speed / speeds as before; **the scene's name sits under the list's header**, its pack at the header's end.
 - **The HUD comes back on every scene change**, as OStim's menu does (before, only when a scene started).

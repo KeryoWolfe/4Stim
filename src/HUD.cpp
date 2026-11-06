@@ -1099,17 +1099,17 @@ namespace HUD
 				// OStim's speed buttons, under its options: here, list rows
 				// (kinds "speedUp" / "speedDown"; ChangeSpeed).
 				if (a_scene && a_scene->speeds.size() > 1) {
-					AddEntry(list, "__speedup", TR("$4Stim_SpeedUp", "Faster"), IconPath("4Stim/symbols/arrow_up"), "speedUp");
-					AddEntry(list, "__speeddown", TR("$4Stim_SpeedDown", "Slower"), IconPath("4Stim/symbols/arrow_down"), "speedDown");
+					AddEntry(list, "__speedup", TR("$4stim_speed_up", "Faster"), IconPath("4Stim/symbols/arrow_up"), "speedUp");
+					AddEntry(list, "__speeddown", TR("$4stim_speed_down", "Slower"), IconPath("4Stim/symbols/arrow_down"), "speedDown");
 				}
 				if (a_focused.Active()) {
 					// Watching an NPC scene: leave it running and go back to the game.
 					const auto player = RE::PlayerCharacter::GetSingleton();
 					const auto ids = a_focused.ActorIDs();
 					if (player && std::ranges::find(ids, player->GetFormID()) == ids.end()) {
-						AddEntry(list, std::string(STOP_WATCHING_ID), TR("$4Stim_StopWatching", "Stop watching"), "", "end");
+						AddEntry(list, std::string(STOP_WATCHING_ID), TR("$4stim_stop_watching", "Stop watching"), "", "end");
 					}
-					AddEntry(list, std::string(END_ID), TR("$4Stim_EndScene", "End scene"), "", "end");
+					AddEntry(list, std::string(END_ID), TR("$4stim_end_scene", "End scene"), "", "end");
 				}
 				InvokeRequired("SetNavigation", &list, 1);
 			}
@@ -1136,7 +1136,7 @@ namespace HUD
 				}
 				// Built in: "Change furniture..." (OStim: the start key during a scene).
 				if (FourStim::UsesFurniture()) {
-					AddEntry(list, std::string(FURNITURE_ID), TR("$4Stim_ChangeFurniture", "Change furniture..."), IconPath("4Stim/objects/barstool.swf"), nullptr);
+					AddEntry(list, std::string(FURNITURE_ID), TR("$4stim_change_furniture", "Change furniture..."), IconPath("4Stim/objects/barstool.swf"), nullptr);
 				}
 				// Undressing each actor by hand is in the options' actor pages
 				// (Options\4Stim.json); the old entries' ids still work.
