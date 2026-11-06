@@ -10,6 +10,8 @@ What other mods can use: OStim NG's Papyrus API scripts with 4Stim's names, scen
 | `OMetadata` | `FourMetadata` | what a scene is |
 | `OActor` | `FourActor` | one actor in a scene |
 | `OFurniture` | `FourFurniture` | furniture types and finding furniture |
+| `OActorUtil` | `FourActorUtil` | actor arrays, sorting, conditions, actors in range |
+| `OSequence` | `FourSequence` | random sequences by furniture and tags |
 | `OSexIntegrationMain` events | `FourStim.RegisterForSceneEvents` | scene events (below) |
 | `PluginInterface` (SKSE) | `include/4Stim/PluginInterface.h` (F4SE) | C++ |
 
@@ -68,7 +70,7 @@ By scene ID: `GetName`, `GetActorCount`, `IsTransition`, `GetDestination`, `GetF
 
 ## FourActor
 
-`GetThreadID`, `IsInOStim` (and 4Stim's `IsIn4Stim`), `VerifyActors`, `HasSchlong`, excitement (`Get` / `Set` / `ModifyExcitement`, multiplier), `Climax(act, ignoreStall)`, `GetTimesClimaxed`, `StallClimax` / `PermitClimax` / `IsClimaxStalled(act, checkThread)` (as OStim's: an actor's stall and their thread's are separate, a climax reached or asked for while stalled waits until both are lifted, and `Climax(act, true)` climaxes now without lifting the stall), `Mute` / `Unmute` / `IsMuted`, `Undress` / `Redress`, `RemoveWeapons` / `AddWeapons` (put back when the scene ends either way), equip objects (`EquipObject`, `UnequipObject`, `Get` / `SetEquipObjectID`), `AutoTransition`, per-actor metadata (as the thread's, kept while they're in a scene), `PlayExpression(act, event)` (an expression event from `Expressions\`, for its duration, which it returns, as OStim's) / `ClearExpression`, `SetExpressionsEnabled` / `HasExpressionOverride`, `UndressPartial` / `RedressPartial` (by slot mask), `IsObjectEquipped` / `SetObjectVariant` / `UnsetObjectVariant`, and OStim's deprecated `UpdateExpression` and `GetSceneID`. Not yet: `SortActors` (it needs OActorUtil). `VerifyActors` turns down children, disabled and deleted actors too, as OStim's.
+`GetThreadID`, `IsInOStim` (and 4Stim's `IsIn4Stim`), `VerifyActors`, `HasSchlong`, excitement (`Get` / `Set` / `ModifyExcitement`, multiplier), `Climax(act, ignoreStall)`, `GetTimesClimaxed`, `StallClimax` / `PermitClimax` / `IsClimaxStalled(act, checkThread)` (as OStim's: an actor's stall and their thread's are separate, a climax reached or asked for while stalled waits until both are lifted, and `Climax(act, true)` climaxes now without lifting the stall), `Mute` / `Unmute` / `IsMuted`, `Undress` / `Redress`, `RemoveWeapons` / `AddWeapons` (put back when the scene ends either way), equip objects (`EquipObject`, `UnequipObject`, `Get` / `SetEquipObjectID`), `AutoTransition`, per-actor metadata (as the thread's, kept while they're in a scene), `PlayExpression(act, event)` (an expression event from `Expressions\`, for its duration, which it returns, as OStim's) / `ClearExpression`, `SetExpressionsEnabled` / `HasExpressionOverride`, `UndressPartial` / `RedressPartial` (by slot mask), `IsObjectEquipped` / `SetObjectVariant` / `UnsetObjectVariant`, and OStim's deprecated `UpdateExpression` and `GetSceneID`. `SortActors`. `VerifyActors` turns down children, disabled and deleted actors too, as OStim's.
 
 The equip object chosen for an actor (`SetEquipObjectID`, or the HUD's options) is saved with the game, as OStim saves its actors' equip objects.
 

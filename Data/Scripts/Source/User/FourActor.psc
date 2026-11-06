@@ -152,3 +152,6 @@ EndFunction
 int Function GetSceneID(Actor Act) Global
 	return GetThreadID(Act)
 EndFunction
+Actor[] Function SortActors(Actor[] Actors, int PlayerIndex = -1) Global
+	return FourActorUtil.Sort(Actors, FourActorUtil.EmptyArray(), PlayerIndex)
+EndFunction

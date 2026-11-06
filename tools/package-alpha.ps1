@@ -46,7 +46,7 @@ $tag = "$version-alpha"
 $Scripts = @("FourStim", "FourStimScene", "FourStimMenu", "FourStimUndress", "FourStimPhysics", "FourStimErection", "FourStimFurniture",
     "FourStimMCM", "FourStimOptions",
     # OStim's API scripts (docs\API.md)
-    "FourThread", "FourThreadBuilder", "FourLibrary", "FourMetadata", "FourActor", "FourFurniture",
+    "FourThread", "FourThreadBuilder", "FourLibrary", "FourMetadata", "FourActor", "FourFurniture", "FourActorUtil", "FourSequence",
     "FourModEvents", "FourJSON", "FourStimFactions")
 $problems = @()
 $warnings = @()

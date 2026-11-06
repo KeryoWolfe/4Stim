@@ -9403,6 +9403,153 @@ namespace
 		const float y = d.x * std::sin(yaw) + d.y * std::cos(yaw);
 		return { x, y, d.z, spot.heading - yaw, Furniture::MultiplyScale(type) };
 	}
+	// ---- FourActorUtil (OStim's OActorUtil, docs/API.md) ----
+	bool AU_FulfillsCondition(std::monostate, RE::Actor* a_actor, RE::BGSPerk* a_condition)
+	{
+		return a_actor && a_condition && a_condition->perkConditions.IsTrue(a_actor, a_actor);
+	}
+	bool AU_FulfillsAnyCondition(std::monostate, RE::Actor* a_actor, std::vector<RE::BGSPerk*> a_conditions)
+	{
+		return a_actor && std::ranges::any_of(a_conditions, [&](RE::BGSPerk* a_perk) { return a_perk && a_perk->perkConditions.IsTrue(a_actor, a_actor); });
+	}
+	bool AU_FulfillsAllConditions(std::monostate, RE::Actor* a_actor, std::vector<RE::BGSPerk*> a_conditions)
+	{
+		return a_actor && std::ranges::all_of(a_conditions, [&](RE::BGSPerk* a_perk) { return !a_perk || a_perk->perkConditions.IsTrue(a_actor, a_actor); });
+	}
+	std::vector<RE::Actor*> AU_EmptyArray(std::monostate) { return {}; }
+	std::vector<RE::Actor*> AU_CreateArray(std::monostate, std::int32_t a_size, RE::Actor* a_filler)
+	{
+		return a_size > 0 ? std::vector<RE::Actor*>(static_cast<std::size_t>(std::min(a_size, 128)), a_filler) : std::vector<RE::Actor*>{};
+	}
+	std::vector<RE::Actor*> AU_ToArray(std::monostate, RE::Actor* a1, RE::Actor* a2, RE::Actor* a3, RE::Actor* a4, RE::Actor* a5, RE::Actor* a6, RE::Actor* a7,
+		RE::Actor* a8, RE::Actor* a9, RE::Actor* a10)
+	{
+		std::vector<RE::Actor*> out;
+		for (const auto a : { a1, a2, a3, a4, a5, a6, a7, a8, a9, a10 }) {
+			if (a) {
+				out.push_back(a);
+			}
+		}
+		return out;
+	}
+	// OActorUtil.Sort (OStim's ActorUtil::sort): the dominant actors first,
+	// then those with a penis (otherwise in the order given); then the player
+	// moved to a_playerIndex, or for two without one, where the
+	// PlayerAlways... settings put them.
+	std::vector<RE::Actor*> AU_Sort(std::monostate, std::vector<RE::Actor*> a_actors, std::vector<RE::Actor*> a_dominant, std::int32_t a_playerIndex)
+	{
+		std::erase(a_actors, nullptr);
+		const auto dominant = [&](RE::Actor* a) { return std::ranges::find(a_dominant, a) != a_dominant.end(); };
+		std::ranges::stable_sort(a_actors, [&](RE::Actor* a, RE::Actor* b) {
+			if (dominant(a) != dominant(b)) {
+				return dominant(a);
+			}
+			return ActorProperties::HasPenis(a) && !ActorProperties::HasPenis(b);
+		});
+		const auto player = RE::PlayerCharacter::GetSingleton();
+		const auto at = std::ranges::find(a_actors, player);
+		if (at == a_actors.end()) {
+			return a_actors;
+		}
+		int want = a_playerIndex;
+		if (want < 0 || static_cast<std::size_t>(want) >= a_actors.size()) {
+			std::vector<std::uint32_t> ids;
+			for (const auto a : a_actors) {
+				ids.push_back(a->GetFormID());
+			}
+			want = PlayerAlwaysIndex(ids);
+		}
+		if (want >= 0 && static_cast<std::size_t>(want) < a_actors.size()) {
+			a_actors.erase(at);
+			a_actors.insert(a_actors.begin() + want, player);
+		}
+		return a_actors;
+	}
+	// OActorUtil.GetActorsInRangeV2: actors around a_center, nearest first;
+	// not disabled or ghosts; a_condition: only those who fulfill the perk's
+	// conditions; a_onlyKnown: only actors with an actor type (OStim's
+	// OStimActorsOnly).
+	std::vector<RE::Actor*> AU_GetActorsInRangeV2(std::monostate, RE::TESObjectREFR* a_center, float a_range, bool a_includeCenter, bool a_includePlayer,
+		bool a_onlyKnown, RE::BGSPerk* a_condition)
+	{
+		std::vector<RE::Actor*> out;
+		if (!a_center) {
+			return out;
+		}
+		const auto center = a_center->data.location;
+		Compat::ForEachReferenceInRange(center, a_range, [&](RE::TESObjectREFR* a_ref) {
+			const auto actor = a_ref ? a_ref->As<RE::Actor>() : nullptr;
+			if (!actor || (!a_includeCenter && a_ref == a_center) || (!a_includePlayer && IsPlayer(actor)) || actor->IsDisabled()) {
+				return RE::BSContainer::ForEachResult::kContinue;
+			}
+			if (a_condition && !a_condition->perkConditions.IsTrue(actor, actor)) {
+				return RE::BSContainer::ForEachResult::kContinue;
+			}
+			if (a_onlyKnown && ActorProperties::Type(actor).empty()) {
+				return RE::BSContainer::ForEachResult::kContinue;
+			}
+			out.push_back(actor);
+			return RE::BSContainer::ForEachResult::kContinue;
+		});
+		std::ranges::sort(out, {}, [&](RE::Actor* a) { return a->data.location.GetSquaredDistance(center); });
+		return out;
+	}
+	std::vector<std::string> AU_ActorsToNames(std::monostate, std::vector<RE::Actor*> a_actors)
+	{
+		std::vector<std::string> out;
+		for (const auto a : a_actors) {
+			const char* name = a ? a->GetDisplayFullName() : nullptr;
+			out.emplace_back(name ? name : "");
+		}
+		return out;
+	}
+
+	// ---- FourSequence (OStim's OSequence) ----
+	// OStim's GraphTable::getRandomSequence: a random sequence for these
+	// actors in this order, on this furniture type or a supertype of it ("":
+	// sequences without furniture), passing a_mode's tag test (0 none, 1 has
+	// a_tags[0], 2 any of them, 3 all of them). "" if none.
+	std::string SQ_Random(std::monostate, std::vector<RE::Actor*> a_actors, std::string a_furniture, std::vector<std::string> a_tags, std::string a_csv, std::int32_t a_mode)
+	{
+		std::erase(a_actors, nullptr);
+		if (a_actors.empty()) {
+			return {};
+		}
+		if (!a_csv.empty()) {
+			a_tags = SplitCSV(a_csv);
+		}
+		for (auto& tag : a_tags) {
+			tag = LowerCopy(tag);
+		}
+		const auto                    furniture = LowerCopy(a_furniture);
+		SceneRegistry::ListFilter     filter;
+		for (const auto a : a_actors) {
+			filter.actors.push_back(ActorProperties::Condition(a));
+		}
+		filter.fixedOrder = true;
+		std::vector<std::string> picks;
+		for (const auto& summary : SceneRegistry::ListSequences(a_actors.size(), filter)) {
+			const auto sequence = SceneRegistry::FindSequence(summary.id);
+			if (!sequence) {
+				continue;
+			}
+			if (furniture.empty() ? !sequence->furniture.empty() : (sequence->furniture.empty() || !Furniture::IsA(furniture, sequence->furniture))) {
+				continue;
+			}
+			const auto has = [&](const std::string& t) { return std::ranges::find(sequence->tags, t) != sequence->tags.end(); };
+			const bool ok = a_mode == 0 || (a_mode == 1 && !a_tags.empty() && has(a_tags[0])) || (a_mode == 2 && std::ranges::any_of(a_tags, has)) ||
+			                (a_mode == 3 && std::ranges::all_of(a_tags, has));
+			if (ok) {
+				picks.push_back(sequence->id);
+			}
+		}
+		if (picks.empty()) {
+			return {};
+		}
+		static std::mt19937 rng{ std::random_device{}() };
+		return picks[std::uniform_int_distribution<std::size_t>(0, picks.size() - 1)(rng)];
+	}
+
 	// OFurniture.GetSceneID: the thread using the piece, -1 if none.
 	std::int32_t F_GetSceneID(std::monostate, RE::TESObjectREFR* a_ref)
 	{
@@ -10044,6 +10191,17 @@ namespace
 		a_vm->BindNativeMethod(FURNITURE, "FindFurnitureOfType"sv, F_FindFurnitureOfType);
 		a_vm->BindNativeMethod(FURNITURE, "GetOffset"sv, F_GetOffset);
 		a_vm->BindNativeMethod(FURNITURE, "GetSceneID"sv, F_GetSceneID);
+		constexpr auto ACTORUTIL = "FourActorUtil"sv;
+		a_vm->BindNativeMethod(ACTORUTIL, "FulfillsCondition"sv, AU_FulfillsCondition);
+		a_vm->BindNativeMethod(ACTORUTIL, "FulfillsAnyCondition"sv, AU_FulfillsAnyCondition);
+		a_vm->BindNativeMethod(ACTORUTIL, "FulfillsAllConditions"sv, AU_FulfillsAllConditions);
+		a_vm->BindNativeMethod(ACTORUTIL, "EmptyArray"sv, AU_EmptyArray);
+		a_vm->BindNativeMethod(ACTORUTIL, "CreateArray"sv, AU_CreateArray);
+		a_vm->BindNativeMethod(ACTORUTIL, "ToArray"sv, AU_ToArray);
+		a_vm->BindNativeMethod(ACTORUTIL, "Sort"sv, AU_Sort);
+		a_vm->BindNativeMethod(ACTORUTIL, "GetActorsInRangeV2"sv, AU_GetActorsInRangeV2);
+		a_vm->BindNativeMethod(ACTORUTIL, "ActorsToNames"sv, AU_ActorsToNames);
+		a_vm->BindNativeMethod("FourSequence"sv, "RandomSequence"sv, SQ_Random);
 		constexpr auto MOD_EVENTS = "FourModEvents"sv;
 		a_vm->BindNativeMethod(MOD_EVENTS, "RegisterForModEvent"sv, ME_Register);
 		a_vm->BindNativeMethod(MOD_EVENTS, "UnregisterForModEvent"sv, ME_Unregister);
