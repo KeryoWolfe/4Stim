@@ -1158,13 +1158,12 @@ namespace SceneRegistry
 
 	std::shared_ptr<const Scene> RoleScene(std::shared_ptr<const Scene> a_scene)
 	{
-		// As OStim's changeNode: every node, transitions included, uses its
-		// own actors' fields. A transition without an actors list (4Stim's
-		// shorthand) borrows its destination's.
-		if (a_scene && a_scene->IsTransition() && a_scene->actors.empty()) {
-			return Settled(std::move(a_scene));
-		}
-		return a_scene;
+		// 4Stim departs from OStim's changeNode here (each node, transitions
+		// included, uses its own actors' fields): a transition uses the scene
+		// it goes to's, so the actors don't jump when it starts and again when
+		// it lands. In Fallout 4 the move to a new offset / scale shows as a
+		// bounce at both ends of every transition (seen in game, twice).
+		return a_scene && a_scene->IsTransition() ? Settled(std::move(a_scene)) : a_scene;
 	}
 
 	std::shared_ptr<const Sequence> FindSequence(std::string_view a_id)

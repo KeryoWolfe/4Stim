@@ -51,7 +51,7 @@ As in OStim, alignments are saved per **set of actors**, scene and role, to `Doc
 ```
 
 - **The actor set** is OStim's key: one `<sex><height>x<heels>` per role, joined by `&`. By default actors are grouped by sex only, as OStim's defaults (`alignmentGroupBySex=1`, `alignmentGroupByHeight=0`, `alignmentGroupByHeels=1` in `4Stim.ini`), so a man and a woman in missionary share one alignment, and two women in the same scene have their own. With `alignmentGroupByHeight=1`, actors of different scales get their own too (height = scale x 100). Heels are read from the High Heels System's files and mesh extra data (`SCALING.md`), and count only while an actor's heels are on (feet on the ground).
-- **A transition** has its own alignment and uses its own per-role values (offset, scale, heels, look direction, penis bend), as OStim's: every scene, transitions included, is aligned on its own. A transition whose file has no `actors` list borrows the scene it goes to's. (Before 0.5.0 4Stim always used the destination's.)
+- **A transition** uses the alignment and per-role values (offset, scale, heels, look direction, penis bend) of the scene it goes to, so no one jumps when it starts or arrives. OStim uses the transition's own; in Fallout 4 that shows as a bounce at both ends of every transition, so 4Stim keeps the destination's.
 - **Size** is on top of the actor's own scale, and is undone when they leave the scene (also when a save made mid-scene is loaded).
 - **`sosBend`** is the penis bend (below). With no alignment saved for a role, the scene's own `penisBend` is used, as OStim's default alignment.
 - A scene file's own `offset` (OStim's, `SCENES.md`) is added on top, as in OStim.

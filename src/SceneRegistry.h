@@ -250,8 +250,9 @@ namespace SceneRegistry
 	std::shared_ptr<const Scene> Settled(std::shared_ptr<const Scene> a_scene);
 
 	// The scene whose per-role fields (offset, scale, heels, look, penis
-	// bend) and alignment apply while a_scene plays: a_scene itself, as
-	// OStim, transitions too; a transition with no actors list, its destination.
+	// bend) and alignment apply while a_scene plays: a_scene itself; for a
+	// transition, the scene it goes to (4Stim's, against a bounce; OStim
+	// uses the transition's own).
 	std::shared_ptr<const Scene> RoleScene(std::shared_ptr<const Scene> a_scene);
 
 	// Case-insensitive sequence lookup; nullptr if there's no such sequence.

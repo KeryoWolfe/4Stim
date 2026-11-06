@@ -3,7 +3,7 @@
 ## 0.5.0 alpha (in progress)
 
 ### Scenes and transitions, as OStim's (parity audit Tier 3)
-- **Transitions use their own per-role values and alignment** (offset, scale, heels, look direction, penis bend), as OStim's, not the scene they go to; one without an `actors` list still borrows its destination's (docs/ALIGNMENT.md).
+- Transitions keep using the scene they go to's per-role values and alignment (tried OStim's own-values rule; it brought back the bounce at both ends of each transition).
 - **OStim's nine missing annotations**: `4StimUndress`, `4StimRedress`, `4StimUndressPartial.<mask>`, `4StimRedressPartial.<mask>`, `4StimRemoveWeapons`, `4StimAddWeapons`, `4StimSetLooking.<left>[,<up>]`, `4StimUnsetLooking`, `4StimResetLooking` (docs/EVENTS.md). The partial masks take Fallout 4's slots.
 - **Sequences**: no navigation while one plays, as OStim's scene menu; an interrupted one ends a scene started with `EndAfterSequence`; every scene's roles count, and the actor types must match (docs/SCENES.md).
 - **`fadeOnEntry` fades when you pick the scene too**, not only in auto mode.
