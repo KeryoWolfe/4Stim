@@ -27,6 +27,9 @@ Scriptname FourStimTest extends Quest
 ; FourMetadata (OMetadata) on a scene the player and the console-selected NPC can play:
 ;   cgf "FourStimTest.Metadata"                 checks each kind of lookup
 ;
+; The C++ APIs other F4SE plugins use (start a scene with you in it first):
+;   cgf "FourStimTest.PluginAPI"
+;
 ; Low-level pieces (console-selected actor):
 ;   Lock, Unlock, Suppress, Restore, Move, StopPose
 
@@ -387,4 +390,9 @@ Function Metadata() Global
 		verdict = fails + " FAILED"
 	endif
 	Debug.MessageBox("4Stim metadata test on " + id + ": " + verdict + "\n\n" + report)
+EndFunction
+
+; ---- C++ plugin APIs ----
+Function PluginAPI() Global
+	Debug.MessageBox("4Stim C++ API check:\n\n" + FourStim.TestPluginAPI())
 EndFunction

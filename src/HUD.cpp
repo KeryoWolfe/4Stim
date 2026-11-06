@@ -371,8 +371,13 @@ namespace HUD
 		void ShowMenu(bool a_show);
 
 		// Whether the HUD should be on screen right now.
+		std::atomic<bool> g_externalUI = false;
+
 		bool Wanted()
 		{
+			if (g_externalUI) {
+				return false;
+			}
 			bool enabled;
 			{
 				std::scoped_lock lock(g_configLock);
@@ -1380,6 +1385,16 @@ namespace HUD
 			REX::INFO("HUD: shown");
 		});
 	}
+
+	void SetExternalUI(bool a_on)
+	{
+		g_externalUI = a_on;
+		OnFocusedSceneChanged();  // closes it (or opens it again)
+	}
+
+	bool ExternalUI() { return g_externalUI; }
+
+	const char* NavigationInputName(const RE::ButtonEvent* a_event) { return a_event ? InputName(a_event) : nullptr; }
 
 	bool HandleInput(const RE::ButtonEvent* a_event)
 	{

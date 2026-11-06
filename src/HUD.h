@@ -77,4 +77,12 @@ namespace HUD
 	// other buttons are [Controller]'s, in main.cpp. Returns
 	// true if a_event was one of them. Called from the input hook (main thread).
 	bool HandleInput(const RE::ButtonEvent* a_event);
+
+	// The thread API's external UI (OStim's UIState::SetExternalUIEnabled):
+	// while on, the HUD stays closed.
+	void               SetExternalUI(bool a_on);
+	[[nodiscard]] bool ExternalUI();
+	// The HUD's name for a navigation input ("Up", "Down", "Left", "Right",
+	// "Accept", "Toggle", "Cancel", "Back", "PadLeft", "PadRight"), or nullptr.
+	const char* NavigationInputName(const RE::ButtonEvent* a_event);
 }

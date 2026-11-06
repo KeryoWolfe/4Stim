@@ -9,6 +9,7 @@
 #include <fstream>
 #include <filesystem>
 #include <unordered_map>
+#include <future>
 #include <set>
 #include <unordered_set>
 
@@ -46,6 +47,7 @@
 #include "SexToys.h"
 #include "Intiface.h"
 #include "4Stim/PluginInterface.h"
+#include "4Stim/FourStimNG-API.h"
 #include "compat/Addresses.h"
 #include "compat/RequiredIDs.h"
 
@@ -5786,6 +5788,10 @@ namespace
 	// ---- The MCM page (docs/MCM.md) ----
 
 	void RunKeyAction(std::string_view a_action);
+	namespace API
+	{
+		void NotifyNGControl(FourStimNG_API::Thread::Controls a_control);  // the thread API's control callbacks
+	}
 
 	// A setting changed in the MCM: 4Stim.ini and the MCM's file read again.
 	void ReloadSettings(std::monostate)
@@ -7829,9 +7835,29 @@ namespace
 			g_navHeld = 0;
 		}
 
+		// The thread API's control callbacks (OStim's UIState::HandleControl):
+		// the navigation keys in a scene the player is in or watches, with
+		// no menu up. With an external UI, that's all they do.
+		if (const auto ui = RE::UI::GetSingleton(); a_event->QJustPressed() && GetPlayerScene().Active() && ui && !ui->GetMenuOpen(PICKER_MENU) &&
+													ui->menuMode == 0 && !ui->GetMenuOpen("Console")) {
+			if (const auto name = HUD::NavigationInputName(a_event)) {
+				using C = FourStimNG_API::Thread::Controls;
+				const std::string_view n(name);
+				const std::optional<C> control = n == "Up"sv ? C::Up : n == "Down"sv ? C::Down : (n == "Left"sv || n == "PadLeft"sv) ? C::Left :
+				                                 (n == "Right"sv || n == "PadRight"sv) ? C::Right : n == "Accept"sv ? C::Yes :
+				                                 n == "Toggle"sv ? C::Toggle : (n == "Cancel"sv || n == "Back"sv) ? C::No : std::optional<C>{};
+				if (control) {
+					API::NotifyNGControl(*control);
+				}
+				if (HUD::ExternalUI()) {
+					return;
+				}
+			}
+		}
+
 		// The HUD, while focused, gets the navigation keys (both press and
 		// release), unless the console, a pausing menu or the picker is up.
-		if (const auto ui = RE::UI::GetSingleton(); HUD::IsFocused() && ui && !ui->GetMenuOpen(PICKER_MENU) &&
+		if (const auto ui = RE::UI::GetSingleton(); !HUD::ExternalUI() && HUD::IsFocused() && ui && !ui->GetMenuOpen(PICKER_MENU) &&
 													ui->menuMode == 0 && !ui->GetMenuOpen("Console")) {
 			if (HUD::HandleInput(a_event)) {
 				return;
@@ -7976,12 +8002,17 @@ namespace
 					Compat::DispatchStaticCall(g_vm, "FourStimMenu"sv, "EndPlayerScene"sv, callback);
 				}
 			} else if (a_action == "search") {
-				ShowPicker(PickerMode::kSearch);
+				API::NotifyNGControl(FourStimNG_API::Thread::Controls::SearchMenu);
+				if (!HUD::ExternalUI()) {
+					ShowPicker(PickerMode::kSearch);
+				}
 			} else if (a_action == "align") {
+				API::NotifyNGControl(FourStimNG_API::Thread::Controls::AlignMenu);
 				HUD::ToggleTab("align");
 			} else if (a_action == "freecam") {
 				ToggleSceneFreeCamera();
 			} else {
+				API::NotifyNGControl(FourStimNG_API::Thread::Controls::KEY_HIDE);
 				HUD::ToggleHidden();
 			}
 		} else if (a_action == "npcscene") {
@@ -10791,8 +10822,21 @@ namespace
 		}
 
 		// SceneEvents' native listener: the threads' listeners (main thread).
+		void NotifyNG(FourStimNG_API::Thread::ThreadEvent a_event, std::uint32_t a_threadID);
+
 		void OnSceneEvent(SceneEvents::Kind a_kind, const std::vector<std::uint32_t>& a_actors, std::uint32_t a_actor)
 		{
+			// The NG thread API's events: the player's thread only, as OStim's
+			// (ThreadManager's listeners); the player's is thread 0.
+			if (std::ranges::any_of(a_actors, [](std::uint32_t a) { return IsPlayer(RE::TESForm::GetFormByID<RE::Actor>(a)); })) {
+				using E = FourStimNG_API::Thread::ThreadEvent;
+				switch (a_kind) {
+				case SceneEvents::Kind::kStart: NotifyNG(E::ThreadStarted, 0); break;
+				case SceneEvents::Kind::kChange: NotifyNG(E::NodeChanged, 0); break;
+				case SceneEvents::Kind::kEnd: NotifyNG(E::ThreadEnded, 0); break;
+				default: break;
+				}
+			}
 			ThreadImpl* thread = nullptr;
 			if (a_kind == SceneEvents::Kind::kEnd) {
 				// The scene's gone already: the thread with these actors.
@@ -10845,7 +10889,707 @@ namespace
 				thread->running = false;
 			}
 		}
+
+		// ---- OStim's second C++ API, OstimNG-API (include/4Stim/FourStimNG-API.h) ----
+		// OStim's ModAPI: a Scene interface (start / stop scenes) and a Thread
+		// interface for external scene UIs, from the exports
+		// RequestPluginAPI_Scene and RequestPluginAPI_Thread.
+
+		namespace NG = FourStimNG_API;
+
+		// OStim's Scene API starts a thread from its actors, furniture and starting scene.
+		NG::Scene::APIResult StartNGScene(const char* a_plugin, RE::TESObjectREFR* a_furniture, const char* a_scene,
+			std::vector<RE::Actor*> a_actors, std::uint32_t* a_threadID)
+		{
+			if (a_actors.empty() || std::ranges::any_of(a_actors, [](RE::Actor* a) { return a == nullptr; })) {
+				return NG::Scene::APIResult::Invalid;
+			}
+			const auto builder = BuilderCreate(std::move(a_actors));
+			if (builder < 0) {
+				return NG::Scene::APIResult::Failed;
+			}
+			if (a_furniture) {
+				TB_SetFurniture({}, builder, a_furniture);
+			}
+			if (a_scene && SceneRegistry::Find(a_scene)) {
+				TB_SetStartingAnimation({}, builder, a_scene);
+			}
+			const auto id = TB_Start({}, builder);
+			if (id < 0) {
+				return NG::Scene::APIResult::Failed;
+			}
+			if (a_threadID) {
+				*a_threadID = static_cast<std::uint32_t>(id);
+			}
+			REX::INFO("Scene API: thread {} started by {}", id, a_plugin ? a_plugin : "a plugin");
+			return NG::Scene::APIResult::OK;
+		}
+
+		class NGSceneInterface final : public NG::Scene::ISceneInterface
+		{
+		public:
+			using R = NG::Scene::APIResult;
+
+			R StartScene(const char* a_plugin, RE::TESObjectREFR* a_furniture, const char* a_scene, RE::Actor* a_actors[256], std::uint32_t* a_threadID) noexcept override
+			{
+				std::vector<RE::Actor*> actors;
+				for (int i = 0; a_actors && i < 256 && a_actors[i]; ++i) {
+					actors.push_back(a_actors[i]);
+				}
+				return StartNGScene(a_plugin, a_furniture, a_scene, std::move(actors), a_threadID);
+			}
+			R StartCoupleScene(const char* a_plugin, RE::TESObjectREFR* a_furniture, const char* a_scene, RE::Actor* a_dom, RE::Actor* a_sub, std::uint32_t* a_threadID) noexcept override
+			{
+				return StartNGScene(a_plugin, a_furniture, a_scene, { a_dom, a_sub }, a_threadID);
+			}
+			R StartThreesomeScene(const char* a_plugin, RE::TESObjectREFR* a_furniture, const char* a_scene, RE::Actor* a_1, RE::Actor* a_2, RE::Actor* a_3, std::uint32_t* a_threadID) noexcept override
+			{
+				return StartNGScene(a_plugin, a_furniture, a_scene, { a_1, a_2, a_3 }, a_threadID);
+			}
+			R StartFoursomeScene(const char* a_plugin, RE::TESObjectREFR* a_furniture, const char* a_scene, RE::Actor* a_1, RE::Actor* a_2, RE::Actor* a_3, RE::Actor* a_4, std::uint32_t* a_threadID) noexcept override
+			{
+				return StartNGScene(a_plugin, a_furniture, a_scene, { a_1, a_2, a_3, a_4 }, a_threadID);
+			}
+			R StopScene(const char*, std::uint32_t a_threadID) noexcept override
+			{
+				const auto id = static_cast<std::int32_t>(a_threadID);
+				if (!FindThread(id)) {
+					return R::Invalid;
+				}
+				WithThread(id, [](ActiveScene& a) { EndActiveScene(a, "asked by another plugin (Scene API StopScene)"); });
+				return R::OK;
+			}
+			R SetAutoMode(const char*, std::uint32_t a_threadID, bool a_on) noexcept override
+			{
+				const auto id = static_cast<std::int32_t>(a_threadID);
+				if (!FindThread(id)) {
+					return R::Invalid;
+				}
+				a_on ? T_StartAutoMode({}, id) : T_StopAutoMode({}, id);
+				return R::OK;
+			}
+			R TryGetAutoMode(const char*, std::uint32_t a_threadID, bool* a_on) noexcept override
+			{
+				const auto id = static_cast<std::int32_t>(a_threadID);
+				if (!FindThread(id) || !a_on) {
+					return R::Invalid;
+				}
+				*a_on = T_IsInAutoMode({}, id);
+				return R::OK;
+			}
+		};
+
+		// The scene a navigation ends up at (past its transitions).
+		std::shared_ptr<const SceneRegistry::Scene> NavDestination(const std::string& a_to)
+		{
+			const auto scene = SceneRegistry::Find(a_to);
+			return scene ? SceneRegistry::Settled(scene) : nullptr;
+		}
+
+		FourStim::FocusedScene AsFocused(const ActiveScene& a_active)
+		{
+			FourStim::FocusedScene f;
+			f.role0 = a_active.actors.empty() ? 0 : a_active.actors[0];
+			f.role1 = a_active.actors.size() > 1 ? a_active.actors[1] : 0;
+			if (a_active.actors.size() > 2) {
+				f.more.assign(a_active.actors.begin() + 2, a_active.actors.end());
+			}
+			f.sceneID = a_active.sceneID;
+			f.speed = a_active.speed;
+			f.furniture = a_active.furnitureType;
+			return f;
+		}
+
+		std::atomic<bool> g_externalUI = false;
+
+		class NGThreadInterface final : public NG::Thread::IThreadInterface
+		{
+		public:
+			using R = NG::Thread::APIResult;
+
+			void Notify(NG::Thread::ThreadEvent a_event, std::uint32_t a_threadID)
+			{
+				std::vector<std::pair<NG::Thread::ThreadEventCallback, void*>> calls;
+				{
+					std::scoped_lock lock(callbackLock);
+					calls = events;
+				}
+				for (const auto& [callback, data] : calls) {
+					callback(a_event, a_threadID, data);
+				}
+			}
+			void NotifyControl(NG::Thread::Controls a_control, std::uint32_t a_threadID)
+			{
+				std::vector<std::pair<NG::Thread::ControlEventCallback, void*>> calls;
+				{
+					std::scoped_lock lock(callbackLock);
+					calls = controls;
+				}
+				for (const auto& [callback, data] : calls) {
+					callback(a_control, a_threadID, data);
+				}
+			}
+
+			std::uint32_t GetPlayerThreadID() noexcept override { return 0; }
+			bool          IsThreadValid(std::uint32_t a_id) noexcept override { return FindThread(static_cast<std::int32_t>(a_id)) != nullptr; }
+			const char*   GetCurrentSceneID(std::uint32_t a_id) noexcept override
+			{
+				const auto active = FindThread(static_cast<std::int32_t>(a_id));
+				return active ? ThreadOf(*active)->sceneID.c_str() : nullptr;
+			}
+			std::uint32_t GetActorCount(std::uint32_t a_id) noexcept override
+			{
+				const auto active = FindThread(static_cast<std::int32_t>(a_id));
+				return active ? static_cast<std::uint32_t>(active->actors.size()) : 0u;
+			}
+			std::uint32_t GetActors(std::uint32_t a_id, NG::Thread::ActorData* a_buffer, std::uint32_t a_size) noexcept override
+			{
+				const auto active = FindThread(static_cast<std::int32_t>(a_id));
+				if (!active || !a_buffer) {
+					return 0;
+				}
+				std::uint32_t count = 0;
+				for (const auto id : active->actors) {
+					if (count >= a_size) {
+						break;
+					}
+					const auto actor = RE::TESForm::GetFormByID<RE::Actor>(id);
+					a_buffer[count++] = { id, Excitement::Get(id), actor && SceneRegistry::SexOf(actor) == SceneRegistry::Sex::kFemale,
+						actor && ActorProperties::HasPenis(actor), Excitement::TimesClimaxed(id) };
+				}
+				return count;
+			}
+
+			// OStim's: none in a transition, a sequence or with no player control.
+			std::vector<const SceneRegistry::Navigation*> Navigations(const ActiveScene& a_active, std::shared_ptr<const SceneRegistry::Scene>& a_scene)
+			{
+				std::vector<const SceneRegistry::Navigation*> out;
+				a_scene = SceneRegistry::Find(a_active.sceneID);
+				if (!a_scene || a_scene->IsTransition() || a_active.sequence || a_active.noPlayerControl) {
+					return out;
+				}
+				for (const auto& nav : a_scene->navigations) {
+					const auto first = SceneRegistry::Find(nav.to);
+					const auto dest = NavDestination(nav.to);
+					if (first && dest && SexesFit(*first, a_active.actors) && SexesFit(*dest, a_active.actors) && SceneFitsFurniture(*dest, a_active.furnitureType)) {
+						out.push_back(&nav);
+					}
+				}
+				return out;
+			}
+			std::uint32_t GetNavigationCount(std::uint32_t a_id) noexcept override
+			{
+				const auto active = FindThread(static_cast<std::int32_t>(a_id));
+				std::shared_ptr<const SceneRegistry::Scene> scene;
+				return active ? static_cast<std::uint32_t>(Navigations(*active, scene).size()) : 0u;
+			}
+			std::uint32_t GetNavigationOptions(std::uint32_t a_id, NG::Thread::NavigationData* a_buffer, std::uint32_t a_size) noexcept override
+			{
+				const auto active = FindThread(static_cast<std::int32_t>(a_id));
+				if (!active || !a_buffer) {
+					return 0;
+				}
+				std::shared_ptr<const SceneRegistry::Scene> scene;
+				const auto navs = Navigations(*active, scene);
+				navScene = scene;  // keeps the strings alive
+				navText.clear();
+				navKeep.clear();
+				navText.reserve(navs.size() * 2);  // no reallocation below: the c_str()s handed out stay valid
+				std::uint32_t count = 0;
+				for (const auto nav : navs) {
+					if (count >= a_size) {
+						break;
+					}
+					const auto first = SceneRegistry::Find(nav->to);
+					const auto dest = NavDestination(nav->to);
+					navKeep.push_back(first);
+					navKeep.push_back(dest);
+					const auto& label = nav->label.empty() ? dest->name : nav->label;
+					navText.push_back(FormatNavLabel(label, AsFocused(*active)));
+					navText.push_back(!nav->icon.empty() ? nav->icon : dest->icon);
+					a_buffer[count++] = { first->id.c_str(), dest->id.c_str(), navText[navText.size() - 1].c_str(), navText[navText.size() - 2].c_str(),
+						nav->border.c_str(), first->IsTransition() };
+				}
+				return count;
+			}
+			R NavigateToScene(std::uint32_t a_id, const char* a_scene) noexcept override
+			{
+				if (!a_scene) {
+					return R::Invalid;
+				}
+				if (!FindThread(static_cast<std::int32_t>(a_id))) {
+					return R::Invalid;
+				}
+				ThreadGoTo(static_cast<std::int32_t>(a_id), a_scene, false);
+				return R::OK;
+			}
+			bool IsTransition(std::uint32_t a_id) noexcept override
+			{
+				const auto active = FindThread(static_cast<std::int32_t>(a_id));
+				const auto scene = active ? SceneRegistry::Find(active->sceneID) : nullptr;
+				return scene && scene->IsTransition();
+			}
+			bool IsInSequence(std::uint32_t a_id) noexcept override
+			{
+				const auto active = FindThread(static_cast<std::int32_t>(a_id));
+				return active && active->sequence;
+			}
+			bool IsAutoMode(std::uint32_t a_id) noexcept override { return T_IsInAutoMode({}, static_cast<std::int32_t>(a_id)); }
+			bool IsPlayerControlDisabled(std::uint32_t a_id) noexcept override
+			{
+				const auto active = FindThread(static_cast<std::int32_t>(a_id));
+				return active && active->noPlayerControl;
+			}
+			void RegisterEventCallback(NG::Thread::ThreadEventCallback a_callback, void* a_data) noexcept override
+			{
+				if (a_callback) {
+					std::scoped_lock lock(callbackLock);
+					events.emplace_back(a_callback, a_data);
+				}
+			}
+			void UnregisterEventCallback(NG::Thread::ThreadEventCallback a_callback) noexcept override
+			{
+				std::scoped_lock lock(callbackLock);
+				std::erase_if(events, [&](const auto& e) { return e.first == a_callback; });
+			}
+			void RegisterControlCallback(NG::Thread::ControlEventCallback a_callback, void* a_data) noexcept override
+			{
+				if (a_callback) {
+					std::scoped_lock lock(callbackLock);
+					controls.emplace_back(a_callback, a_data);
+				}
+			}
+			void UnregisterControlCallback(NG::Thread::ControlEventCallback a_callback) noexcept override
+			{
+				std::scoped_lock lock(callbackLock);
+				std::erase_if(controls, [&](const auto& e) { return e.first == a_callback; });
+			}
+			void SetExternalUIEnabled(bool a_enabled) noexcept override
+			{
+				g_externalUI = a_enabled;
+				HUD::SetExternalUI(a_enabled);
+				REX::INFO("Thread API: external UI {}", a_enabled ? "on (4Stim's HUD stays closed)" : "off");
+			}
+			void GetKeyData(NG::Thread::KeyData* a_out) noexcept override
+			{
+				if (!a_out) {
+					return;
+				}
+				const auto& st = g_settings;
+				const auto k = [](std::uint32_t a_key) { return static_cast<std::int32_t>(a_key); };
+				*a_out = { k(st.navUpKey), k(st.navDownKey), k(st.navLeftKey), k(st.navRightKey), k(st.navYesKey), k(st.endKey), k(st.navToggleKey),
+					k(st.searchKey), k(st.alignmentKey), k(st.hotkey), k(st.npcSceneKey), k(st.speedUpKey), k(st.speedDownKey), k(st.pullOutKey),
+					k(g_autoConfig.key), k(st.freeCamKey), k(st.hideUIKey) };
+			}
+
+			const char* GetCurrentNodeName(std::uint32_t a_id) noexcept override
+			{
+				const auto active = FindThread(static_cast<std::int32_t>(a_id));
+				nameScene = active ? SceneRegistry::Find(active->sceneID) : nullptr;
+				return nameScene ? nameScene->name.c_str() : nullptr;
+			}
+			std::int32_t GetCurrentSpeed(std::uint32_t a_id) noexcept override
+			{
+				const auto active = FindThread(static_cast<std::int32_t>(a_id));
+				return active ? active->speed : 0;
+			}
+			std::int32_t GetMaxSpeed(std::uint32_t a_id) noexcept override
+			{
+				const auto active = FindThread(static_cast<std::int32_t>(a_id));
+				const auto scene = active ? SceneRegistry::Find(active->sceneID) : nullptr;
+				return scene && !scene->speeds.empty() ? static_cast<std::int32_t>(scene->speeds.size()) - 1 : 0;
+			}
+			R SetSpeed(std::uint32_t a_id, std::int32_t a_speed) noexcept override
+			{
+				const auto active = FindThread(static_cast<std::int32_t>(a_id));
+				const auto scene = active ? SceneRegistry::Find(active->sceneID) : nullptr;
+				if (!scene) {
+					return R::Invalid;
+				}
+				if (a_speed < 0 || a_speed >= static_cast<std::int32_t>(scene->speeds.size())) {
+					return R::Failed;
+				}
+				T_SetSpeed({}, static_cast<std::int32_t>(a_id), a_speed);
+				return R::OK;
+			}
+
+			bool GetActorAlignment(std::uint32_t a_id, std::uint32_t a_index, NG::Thread::ActorAlignmentData* a_out) noexcept override
+			{
+				FourStimAPI::AlignmentOffset o;
+				if (!a_out || !alignment->getOffset(static_cast<std::int32_t>(a_id), a_index, &o)) {
+					return false;
+				}
+				*a_out = { o.x, o.y, o.z, o.scale, o.rot, o.bend };
+				return true;
+			}
+			R SetActorAlignment(std::uint32_t a_id, std::uint32_t a_index, const NG::Thread::ActorAlignmentData* a_data) noexcept override
+			{
+				const auto active = FindThread(static_cast<std::int32_t>(a_id));
+				if (!a_data || !active) {
+					return R::Invalid;
+				}
+				if (a_index >= active->actors.size()) {
+					return R::Failed;
+				}
+				const FourStimAPI::AlignmentOffset o{ a_data->offsetX, a_data->offsetY, a_data->offsetZ, a_data->rotation, a_data->scale, a_data->sosBend };
+				return alignment->setOffset(static_cast<std::int32_t>(a_id), a_index, &o) ? R::OK : R::Failed;
+			}
+
+			// OStim's: scenes whose name has a_query, sorted by name, that the
+			// player's thread could play (actor count, furniture, no transitions).
+			std::uint32_t SearchScenes(const char* a_query, NG::Thread::SceneSearchResult* a_buffer, std::uint32_t a_size) noexcept override
+			{
+				const auto active = FindThread(0);
+				if (!a_query || !a_buffer || a_size == 0 || !active) {
+					return 0;
+				}
+				const auto query = LowerCopy(a_query);
+				searchKeep.clear();
+				for (const auto& summary : SceneRegistry::List(active->actors.size())) {
+					const auto scene = SceneRegistry::Find(summary.id);
+					if (scene && !scene->IsTransition() && SceneFitsFurniture(*scene, active->furnitureType) &&
+						LowerCopy(scene->name).find(query) != std::string::npos) {
+						searchKeep.push_back(scene);
+					}
+				}
+				std::ranges::sort(searchKeep, [](const auto& x, const auto& y) { return x->name < y->name; });
+				std::uint32_t count = 0;
+				for (const auto& scene : searchKeep) {
+					if (count >= a_size) {
+						break;
+					}
+					a_buffer[count++] = { scene->id.c_str(), scene->name.c_str(), static_cast<std::uint32_t>(scene->actors.size()) };
+				}
+				return count;
+			}
+			bool GetSceneInfo(const char* a_scene, NG::Thread::SceneSearchResult* a_out) noexcept override
+			{
+				infoScene = a_scene ? SceneRegistry::Find(a_scene) : nullptr;
+				if (!infoScene || !a_out) {
+					return false;
+				}
+				*a_out = { infoScene->id.c_str(), infoScene->name.c_str(), static_cast<std::uint32_t>(infoScene->actors.size()) };
+				return true;
+			}
+			R NavigateToSearchResult(std::uint32_t a_id, const char* a_scene) noexcept override
+			{
+				if (!a_scene || !FindThread(static_cast<std::int32_t>(a_id))) {
+					return R::Invalid;
+				}
+				if (!SceneRegistry::Find(a_scene)) {
+					return R::Failed;
+				}
+				ThreadGoTo(static_cast<std::int32_t>(a_id), a_scene, true);  // OStim's ChangeNode: straight there
+				return R::OK;
+			}
+
+			// The options menu: 4Stim's Utility tab's options pages
+			// (Options.h), for the player's (or the watched) scene.
+			void RebuildOptionsTree() noexcept override { Options::Reload(); }
+			std::uint32_t GetOptionsItemCount() noexcept override { return static_cast<std::uint32_t>(OptionItems().size()); }
+			std::vector<Options::Entry> OptionItems()
+			{
+				const auto ids = GetPlayerScene().ActorIDs();
+				auto rows = Options::Rows(ids);
+				if (Options::InPage(ids) && !rows.empty()) {
+					rows.erase(rows.begin());  // its "Back"
+				}
+				return rows;
+			}
+			std::uint32_t GetOptionsItems(NG::Thread::OptionsMenuItem* a_buffer, std::uint32_t a_size) noexcept override
+			{
+				if (!a_buffer || a_size == 0) {
+					return 0;
+				}
+				const auto ids = GetPlayerScene().ActorIDs();
+				const bool inPage = Options::InPage(ids);
+				options = OptionItems();
+				optionIDs.clear();
+				for (std::size_t i = 0; i < options.size(); ++i) {
+					optionIDs.push_back(std::to_string(i));
+				}
+				static const std::string back = "-1";
+				static const std::string backTitle = "back";
+				static const std::string exitTitle = "exit";
+				static const std::string backIcon = "4Stim/symbols/return";
+				static const std::string exitIcon = "4Stim/symbols/x";
+				static const std::string red = "ff0000";
+				static const std::string none;
+				std::uint32_t count = 0;
+				a_buffer[count++] = { back.c_str(), inPage ? backTitle.c_str() : exitTitle.c_str(), inPage ? backIcon.c_str() : exitIcon.c_str(), red.c_str(), none.c_str() };
+				for (std::size_t i = 0; i < options.size() && count < a_size; ++i) {
+					a_buffer[count++] = { optionIDs[i].c_str(), options[i].label.c_str(), options[i].icon.c_str(), options[i].border.c_str(), none.c_str() };
+				}
+				return count;
+			}
+			bool SelectOptionsItem(std::int32_t a_index) noexcept override
+			{
+				const auto ids = GetPlayerScene().ActorIDs();
+				if (a_index < 0) {
+					if (!Options::InPage(ids)) {
+						return false;  // exit, as OStim's at the root
+					}
+					const auto rows = Options::Rows(ids);
+					if (!rows.empty()) {
+						Options::Pick(rows.front().id, ids);  // its "Back"
+					}
+					HUD::RefreshUtility();
+					return true;
+				}
+				const auto items = OptionItems();
+				if (static_cast<std::size_t>(a_index) < items.size()) {
+					Options::Pick(items[a_index].id, ids);
+					HUD::RefreshUtility();
+				}
+				return true;
+			}
+			bool IsOptionsAtRoot() noexcept override { return !Options::InPage(GetPlayerScene().ActorIDs()); }
+
+			bool IsActorInAnyThread(std::uint32_t a_actor) noexcept override { return FindActiveScene(a_actor) != nullptr; }
+			bool HasCompatibleNode(std::uint32_t a_id, const std::uint32_t* a_actors, std::uint32_t a_count) noexcept override
+			{
+				const auto active = FindThread(static_cast<std::int32_t>(a_id));
+				if (!active || !a_actors || a_count == 0) {
+					return false;
+				}
+				std::vector<std::uint32_t> cast(a_actors, a_actors + a_count);
+				if (std::ranges::any_of(cast, [](std::uint32_t a) { return !RE::TESForm::GetFormByID<RE::Actor>(a); })) {
+					return false;
+				}
+				return std::ranges::any_of(ScenesForActors(cast, active->furnitureType), [](const auto& s) { return !s->IsTransition(); });
+			}
+			std::int32_t MigrateThread(std::uint32_t a_id, const std::uint32_t* a_actors, std::uint32_t a_count,
+				void (*a_onComplete)(std::int32_t, void*), void* a_context, int a_delayMs) noexcept override;
+			bool         IsUnrestrictedNavigation() noexcept override { return SceneRegistry::Rules().unrestricted; }
+			bool         IsIntendedSexOnly() noexcept override { return SceneRegistry::Rules().intendedSexOnly; }
+			std::int32_t GetActorPosition(std::uint32_t a_id, std::uint32_t a_actor) noexcept override
+			{
+				const auto active = FindThread(static_cast<std::int32_t>(a_id));
+				if (!active) {
+					return -1;
+				}
+				const auto it = std::ranges::find(active->actors, a_actor);
+				return it != active->actors.end() ? static_cast<std::int32_t>(it - active->actors.begin()) : -1;
+			}
+
+			AlignmentInterfaceImpl* alignment = nullptr;
+
+		private:
+			std::mutex                                                       callbackLock;
+			std::vector<std::pair<NG::Thread::ThreadEventCallback, void*>>   events;
+			std::vector<std::pair<NG::Thread::ControlEventCallback, void*>>  controls;
+			std::shared_ptr<const SceneRegistry::Scene>                      navScene, nameScene, infoScene;
+			std::vector<std::shared_ptr<const SceneRegistry::Scene>>         navKeep, searchKeep;
+			std::vector<std::string>                                         navText;
+			std::vector<Options::Entry>                                      options;
+			std::vector<std::string>                                         optionIDs;
+		};
+
+		NGThreadInterface* NGThreads()
+		{
+			static NGThreadInterface threads;
+			static AlignmentInterfaceImpl alignment;
+			threads.alignment = &alignment;
+			return &threads;
+		}
+
+		NGSceneInterface* NGScenes()
+		{
+			static NGSceneInterface scenes;
+			return &scenes;
+		}
+
+		void NotifyNG(FourStimNG_API::Thread::ThreadEvent a_event, std::uint32_t a_threadID)
+		{
+			NGThreads()->Notify(a_event, a_threadID);
+		}
+
+		// OStim's ThreadManager::migrateThread: the old thread ends, and once
+		// its actors are free (and a_delayMs more), a new one starts with
+		// a_actors on the same furniture, auto mode as it was, the actors'
+		// excitement carried over. a_onComplete gets the new ID or -1.
+		std::int32_t NGThreadInterface::MigrateThread(std::uint32_t a_id, const std::uint32_t* a_actors, std::uint32_t a_count,
+			void (*a_onComplete)(std::int32_t, void*), void* a_context, int a_delayMs) noexcept
+		{
+			const auto fail = [&]() {
+				if (a_onComplete) {
+					a_onComplete(-1, a_context);
+				}
+				return -1;
+			};
+			const auto oldID = static_cast<std::int32_t>(a_id);
+			const auto active = FindThread(oldID);
+			if (!active || !a_actors || a_count == 0) {
+				return fail();
+			}
+			std::vector<std::uint32_t> cast(a_actors, a_actors + a_count);
+			if (std::ranges::any_of(cast, [](std::uint32_t a) { return !RE::TESForm::GetFormByID<RE::Actor>(a); })) {
+				return fail();
+			}
+			if (!a_onComplete && std::this_thread::get_id() == g_mainThread) {
+				REX::WARN("Thread API: MigrateThread without a callback on the main thread would wait on itself: refused");
+				return -1;
+			}
+			const auto furniture = active->furnitureRef;
+			const bool autoMode = active->autoMode.on;
+			std::vector<std::pair<std::uint32_t, float>> excitement;
+			for (const auto id : cast) {
+				excitement.emplace_back(id, Excitement::Get(id));
+			}
+			auto promise = std::make_shared<std::promise<std::int32_t>>();
+			auto future = promise->get_future();
+			const auto done = [a_onComplete, a_context, promise](std::int32_t a_newID) {
+				if (a_onComplete) {
+					a_onComplete(a_newID, a_context);
+				} else {
+					promise->set_value(a_newID);
+				}
+			};
+			WithThread(oldID, [](ActiveScene& a) { EndActiveScene(a, "moved to a new thread by another plugin (Thread API MigrateThread)"); });
+			std::thread([oldID, cast, furniture, autoMode, excitement, done, a_delayMs]() {
+				// Wait for the old thread's actors to be released (10 s at most).
+				for (int i = 0; i < 100; ++i) {
+					std::this_thread::sleep_for(std::chrono::milliseconds(100));
+					auto free = std::make_shared<std::promise<bool>>();
+					auto answer = free->get_future();
+					F4SE::GetTaskInterface()->AddTask([free, oldID, cast]() {
+						free->set_value(!FindThread(oldID) && std::ranges::none_of(cast, [](std::uint32_t a) { return FindActiveScene(a) != nullptr; }));
+					});
+					if (answer.wait_for(std::chrono::seconds(2)) == std::future_status::ready && answer.get()) {
+						std::this_thread::sleep_for(std::chrono::milliseconds(std::max(a_delayMs, 0)));
+						F4SE::GetTaskInterface()->AddTask([cast, furniture, autoMode, excitement, done]() {
+							std::vector<RE::Actor*> actors;
+							for (const auto id : cast) {
+								actors.push_back(RE::TESForm::GetFormByID<RE::Actor>(id));
+							}
+							const auto builder = std::ranges::any_of(actors, [](RE::Actor* a) { return !a; }) ? -1 : BuilderCreate(actors);
+							if (builder < 0) {
+								done(-1);
+								return;
+							}
+							if (const auto ref = furniture ? RE::TESForm::GetFormByID<RE::TESObjectREFR>(furniture) : nullptr) {
+								TB_SetFurniture({}, builder, ref);
+							}
+							if (!autoMode) {
+								TB_NoAutoMode({}, builder);
+							}
+							const auto id = TB_Start({}, builder);
+							if (id >= 0) {
+								for (const auto& [actor, value] : excitement) {
+									Excitement::Set(actor, value);
+								}
+								if (autoMode) {
+									T_StartAutoMode({}, id);
+								}
+							}
+							REX::INFO("Thread API: MigrateThread: new thread {}", id);
+							done(id);
+						});
+						return;
+					}
+				}
+				REX::WARN("Thread API: MigrateThread: thread {}'s actors weren't released in time", oldID);
+				done(-1);
+			}).detach();
+			if (a_onComplete) {
+				return 0;
+			}
+			return future.get();
+		}
+
+		// FourStimTest.PluginAPI's check: 4Stim's own exports, found the way
+		// another plugin finds them (GetProcAddress on 4Stim.dll), and the
+		// player's thread read through them. The event and control callbacks
+		// it registers log to 4Stim.log from then on.
+		void LogNGEvent(NG::Thread::ThreadEvent a_event, std::uint32_t a_thread, void*)
+		{
+			REX::INFO("Thread API test: event {} on thread {}", static_cast<int>(a_event), a_thread);
+		}
+		void LogNGControl(NG::Thread::Controls a_control, std::uint32_t a_thread, void*)
+		{
+			REX::INFO("Thread API test: control {} on thread {}", static_cast<int>(a_control), a_thread);
+		}
+
+		std::string SelfTest()
+		{
+			std::string out;
+			const auto  line = [&](bool a_ok, const std::string& a_text) {
+				out += std::format("{} {}\n", a_ok ? "ok" : "FAIL", a_text);
+				REX::INFO("Thread API test: {} {}", a_ok ? "ok" : "FAIL", a_text);
+			};
+			const auto module = REX::W32::GetModuleHandleA("4Stim.dll");
+			const auto mapFn = module ? reinterpret_cast<FourStimAPI::InterfaceMap* (*)()>(REX::W32::GetProcAddress(module, "requestInterfaceMap")) : nullptr;
+			const auto sceneFn = module ? reinterpret_cast<NG::Scene::_RequestPluginAPI_Scene>(REX::W32::GetProcAddress(module, "RequestPluginAPI_Scene")) : nullptr;
+			const auto threadFn = module ? reinterpret_cast<NG::Thread::_RequestPluginAPI_Thread>(REX::W32::GetProcAddress(module, "RequestPluginAPI_Thread")) : nullptr;
+			line(module != nullptr, "4Stim.dll found");
+			line(mapFn && mapFn() && mapFn()->queryInterface(FourStimAPI::ThreadInterface::NAME), "requestInterfaceMap: \"Threads\" in it");
+			const auto scenes = sceneFn ? sceneFn(NG::Scene::InterfaceVersion::V1, "4StimSelfTest", { 1, 0, 0, 0 }) : nullptr;
+			const auto threads = threadFn ? threadFn(NG::Thread::InterfaceVersion::V1, "4StimSelfTest", { 1, 0, 0, 0 }) : nullptr;
+			line(scenes != nullptr, "RequestPluginAPI_Scene");
+			line(threads != nullptr, "RequestPluginAPI_Thread");
+			if (!threads || !scenes) {
+				return out;
+			}
+			threads->UnregisterEventCallback(LogNGEvent);
+			threads->RegisterEventCallback(LogNGEvent, nullptr);
+			threads->UnregisterControlCallback(LogNGControl);
+			threads->RegisterControlCallback(LogNGControl, nullptr);
+			NG::Thread::KeyData keys{};
+			threads->GetKeyData(&keys);
+			line(true, std::format("GetKeyData: end {:X}, search {:X}, align {:X}, up {:X}", keys.keyEnd, keys.keySearch, keys.keyAlignment, keys.keyUp));
+			const std::uint32_t id = threads->GetPlayerThreadID();
+			if (!threads->IsThreadValid(id)) {
+				line(true, "no player thread: start a scene and run it again for the rest");
+				return out;
+			}
+			const auto sceneID = threads->GetCurrentSceneID(id);
+			line(sceneID != nullptr, std::format("GetCurrentSceneID: {}", sceneID ? sceneID : "(none)"));
+			const auto name = threads->GetCurrentNodeName(id);
+			line(name != nullptr, std::format("GetCurrentNodeName: {}", name ? name : "(none)"));
+			NG::Thread::ActorData actors[8]{};
+			const auto count = threads->GetActors(id, actors, 8);
+			line(count == threads->GetActorCount(id) && count > 0, std::format("GetActors: {} (excitement {:.0f}, female {}, schlong {})", count, actors[0].excitement, actors[0].isFemale, actors[0].hasSchlong));
+			line(threads->GetActorPosition(id, actors[0].formID) == 0 && threads->IsActorInAnyThread(actors[0].formID), "GetActorPosition / IsActorInAnyThread");
+			std::vector<std::uint32_t> ids;
+			for (std::uint32_t i = 0; i < count; ++i) {
+				ids.push_back(actors[i].formID);
+			}
+			line(threads->HasCompatibleNode(id, ids.data(), count), "HasCompatibleNode (the same actors)");
+			NG::Thread::NavigationData navs[32]{};
+			const auto navCount = threads->GetNavigationOptions(id, navs, 32);
+			line(navCount == threads->GetNavigationCount(id), std::format("GetNavigationOptions: {}{}", navCount, navCount ? std::format(" (first: {} -> {}, \"{}\")", navs[0].sceneId, navs[0].destinationId, navs[0].description) : ""));
+			line(true, std::format("speed {} of {}, transition {}, sequence {}, auto mode {}, player control off {}", threads->GetCurrentSpeed(id), threads->GetMaxSpeed(id),
+				threads->IsTransition(id), threads->IsInSequence(id), threads->IsAutoMode(id), threads->IsPlayerControlDisabled(id)));
+			bool autoMode = false;
+			line(scenes->TryGetAutoMode("4StimSelfTest", id, &autoMode) == NG::Scene::APIResult::OK && autoMode == threads->IsAutoMode(id), "Scene API TryGetAutoMode");
+			NG::Thread::ActorAlignmentData align{};
+			line(threads->GetActorAlignment(id, 0, &align), std::format("GetActorAlignment 0: {:.1f} {:.1f} {:.1f}, scale {:.2f}, rotation {:.1f}, bend {:.1f}", align.offsetX, align.offsetY, align.offsetZ, align.scale, align.rotation, align.sosBend));
+			NG::Thread::SceneSearchResult found[8]{};
+			const auto hits = threads->SearchScenes("a", found, 8);
+			line(true, std::format("SearchScenes \"a\": {}{}", hits, hits ? std::format(" (first: {})", found[0].name) : ""));
+			NG::Thread::SceneSearchResult info{};
+			line(sceneID && threads->GetSceneInfo(sceneID, &info) && info.actorCount == count, "GetSceneInfo (the current scene)");
+			NG::Thread::OptionsMenuItem items[32]{};
+			const auto itemCount = threads->GetOptionsItems(items, 32);
+			line(itemCount == threads->GetOptionsItemCount() + 1 && std::string_view(items[0].id) == "-1", std::format("GetOptionsItems: back / exit + {}, at root {}", itemCount - 1, threads->IsOptionsAtRoot()));
+			return out;
+		}
+
+		// A navigation-type key pressed in a scene the player is in or
+		// watches: OStim's UIState::HandleControl hands it to the thread
+		// API's control callbacks. Main thread.
+		void NotifyNGControl(FourStimNG_API::Thread::Controls a_control)
+		{
+			const auto focused = GetPlayerScene();
+			const auto active = focused.Active() ? FindActiveScene(focused.role0) : nullptr;
+			if (active) {
+				NGThreads()->NotifyControl(a_control, static_cast<std::uint32_t>(active->threadID));
+			}
+		}
 	}
+
+	// FourStim.TestPluginAPI (FourStimTest.PluginAPI): the C++ API's self-check.
+	std::string TestPluginAPI(std::monostate) { return API::SelfTest(); }
 
 	bool RegisterPapyrusFunctions(RE::BSScript::IVirtualMachine* a_vm)
 	{
@@ -10853,6 +11597,7 @@ namespace
 
 		REX::INFO("RegisterPapyrusFunctions called, binding {}", SCRIPT_NAME);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "StartScene"sv, StartScene);
+		a_vm->BindNativeMethod(SCRIPT_NAME, "TestPluginAPI"sv, TestPluginAPI);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "StopScene"sv, StopScene);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "SuppressInteraction"sv, SuppressInteraction);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "RestoreInteraction"sv, RestoreInteraction);
@@ -12005,4 +12750,35 @@ F4SE_PLUGIN_LOAD(const F4SE::LoadInterface* a_f4se)
 	REX::INFO("4Stim loaded");
 
 	return true;
+}
+
+// OStim's exports for its C++ APIs: the interface map (PluginInterface.h's
+// getInterfaceMap) and the OstimNG-API interfaces (FourStimNG-API.h).
+extern "C" __declspec(dllexport) FourStimAPI::InterfaceMap* requestInterfaceMap()
+{
+	return API::Map();
+}
+
+extern "C" __declspec(dllexport) FourStimNG_API::Scene::ISceneInterface* RequestPluginAPI_Scene(FourStimNG_API::Scene::InterfaceVersion a_version,
+	const char* a_pluginName, FourStimNG_API::PluginVersion a_pluginVersion)
+{
+	if (!a_pluginName) {
+		REX::WARN("RequestPluginAPI_Scene called with no plugin name");
+		return nullptr;
+	}
+	REX::INFO("RequestPluginAPI_Scene: interface version {} for {} {}.{}.{}", static_cast<int>(a_version) + 1, a_pluginName,
+		a_pluginVersion.major, a_pluginVersion.minor, a_pluginVersion.patch);
+	return a_version == FourStimNG_API::Scene::InterfaceVersion::V1 ? API::NGScenes() : nullptr;
+}
+
+extern "C" __declspec(dllexport) FourStimNG_API::Thread::IThreadInterface* RequestPluginAPI_Thread(FourStimNG_API::Thread::InterfaceVersion a_version,
+	const char* a_pluginName, FourStimNG_API::PluginVersion a_pluginVersion)
+{
+	if (!a_pluginName) {
+		REX::WARN("RequestPluginAPI_Thread called with no plugin name");
+		return nullptr;
+	}
+	REX::INFO("RequestPluginAPI_Thread: interface version {} for {} {}.{}.{}", static_cast<int>(a_version) + 1, a_pluginName,
+		a_pluginVersion.major, a_pluginVersion.minor, a_pluginVersion.patch);
+	return a_version == FourStimNG_API::Thread::InterfaceVersion::V1 ? API::NGThreads() : nullptr;
 }

@@ -5,7 +5,12 @@
 // plugin. No 4Stim code or libraries are needed to build against it.
 //
 // Getting the interface map, at F4SE's kPostLoad message or later (OStim:
-// SKSE's kPostLoad):
+// SKSE's kPostLoad), either from 4Stim's exported requestInterfaceMap, as
+// OStim's getInferfaceMap (OStim's spelling; here getInterfaceMap):
+//
+//     auto map = FourStimAPI::getInterfaceMap();
+//
+// or with a message, as OStim's InterfaceExchangeMessage:
 //
 //     FourStimAPI::InterfaceExchangeMessage message;
 //     F4SE::GetMessagingInterface()->Dispatch(FourStimAPI::InterfaceExchangeMessage::MESSAGE_TYPE,
@@ -21,8 +26,9 @@
 // - Scenes are passed by ID (const char*), not as OStim's Graph::Node
 //   objects; scene data is read through FourStim's Papyrus functions or the
 //   scene files. OStim's GraphInterface, FurnitureInterface and
-//   SettingInterface aren't here; 4Stim adds an "Alignment" interface (OStim's
-//   alignment get / set is in its separate OstimNG-API, not ported yet).
+//   SettingInterface aren't here; 4Stim adds an "Alignment" interface (OStim
+//   has alignment get / set in its separate OstimNG-API thread interface,
+//   which 4Stim has too: include/4Stim/FourStimNG-API.h).
 // - ThreadActor has no undressPartial / redressPartial (4Stim undresses
 //   whole items, docs/UNDRESS.md).
 //
@@ -63,6 +69,18 @@ namespace FourStimAPI
 
 		InterfaceMap* interfaceMap = nullptr;
 	};
+
+#ifndef FOURSTIM_API_IMPLEMENTATION
+	// The map from 4Stim's exported requestInterfaceMap (OStim's
+	// getInferfaceMap), or nullptr when 4Stim isn't installed. Declare
+	// GetModuleHandleA / GetProcAddress first (include Windows.h).
+	inline InterfaceMap* getInterfaceMap()
+	{
+		const auto module = GetModuleHandleA("4Stim.dll");
+		const auto request = module ? reinterpret_cast<InterfaceMap* (*)()>(reinterpret_cast<void*>(GetProcAddress(module, "requestInterfaceMap"))) : nullptr;
+		return request ? request() : nullptr;
+	}
+#endif
 
 	// ---- Threads (OStim's ThreadInterface) ----
 
@@ -180,7 +198,7 @@ namespace FourStimAPI
 	};
 
 	// ---- Alignment (4Stim's own interface; OStim has alignment get / set only in
-	// its separate OstimNG-API thread interface, which 4Stim doesn't have yet) ----
+	// its separate OstimNG-API thread interface: FourStimNG-API.h) ----
 
 	struct AlignmentOffset
 	{

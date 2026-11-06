@@ -108,6 +108,7 @@ target("4Stim")
     add_files("src/**.cpp")
     add_headerfiles("src/**.h")
     add_includedirs("src", "include")
+    add_defines("FOURSTIM_API_IMPLEMENTATION")  -- include/4Stim headers without their loaders (Windows.h)
     add_headerfiles("include/**.h")
     set_pcxxheader("src/pch.h")
 

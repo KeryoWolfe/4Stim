@@ -14,6 +14,7 @@ What other mods can use: OStim NG's Papyrus API scripts with 4Stim's names, scen
 | `OSequence` | `FourSequence` | random sequences by furniture and tags |
 | `OSexIntegrationMain` events | `FourStim.RegisterForSceneEvents` | scene events (below) |
 | `PluginInterface` (SKSE) | `include/4Stim/PluginInterface.h` (F4SE) | C++ |
+| `OstimNG-API` (SKSE) | `include/4Stim/FourStimNG-API.h` (F4SE) | C++: scenes and threads for external UIs |
 
 The API scripts are named `Four...` (OStim's `O...` prefix; Papyrus names can't start with a digit, so not `4...`). `FourStim.psc` keeps 4Stim's own functions (scene start, excitement, equip objects, furniture...); the scripts above wrap many of them under OStim's names.
 
@@ -164,7 +165,7 @@ These are 4Stim's own, not OStim's (OStim has no NPC-scene or sequence events); 
 
 ## C++: the plugin interface
 
-`include/4Stim/PluginInterface.h` is OStim's SKSE plugin interface for F4SE: copy the one header into your plugin; nothing else of 4Stim's is needed to build. At F4SE's `kPostLoad` message or later, dispatch an `InterfaceExchangeMessage` to "4Stim" and read back the interface map:
+`include/4Stim/PluginInterface.h` is OStim's SKSE plugin interface for F4SE: copy the one header into your plugin; nothing else of 4Stim's is needed to build. At F4SE's `kPostLoad` message or later, get the interface map from 4Stim's exported `requestInterfaceMap` (`FourStimAPI::getInterfaceMap()`, OStim's `getInferfaceMap`; include `Windows.h` first), or dispatch an `InterfaceExchangeMessage` to "4Stim" and read it back:
 
 ```cpp
 #include "4Stim/PluginInterface.h"
@@ -178,12 +179,35 @@ if (message.interfaceMap) {
 ```
 
 - **"Threads"** (OStim's `ThreadInterface`): `getThread(id)`; listeners for thread start, speed change, scene change (OStim's node changed), climax and thread stop; `createThreadBuilder(count, actors)` (the Papyrus builder's options; `start()` / `cancel()` free it); `getActor(actor)`. A `Thread` gives its ID, whether it's the player's, its actors, scene, speed and furniture, and can navigate, warp, change speed or stop; a `ThreadActor` gives the game actor, undresses / redresses, removes / adds weapons, and (4Stim) reads and sets excitement and climaxes.
-- **"Alignment"** (4Stim's own interface; OStim's alignment get / set is in its second C++ API, `OstimNG-API`'s thread interface, which 4Stim doesn't have yet): a thread actor's alignment offset in the current scene (sideways, forward, up, rotation, scale, penis bend), read, set (saved, applied at once) or reset, as the HUD's Align tab does.
+- **"Alignment"** (4Stim's own interface; OStim's alignment get / set is in its second C++ API's thread interface, which 4Stim has too, below): a thread actor's alignment offset in the current scene (sideways, forward, up, rotation, scale, penis bend), read, set (saved, applied at once) or reset, as the HUD's Align tab does.
 - **"SexToys"** (OStim's `SexToyInterface`, the same): device plugins register a reload listener once and add their toys whenever it's called.
 
 Listeners are called on the game's main thread, and the `Thread` / `ThreadActor` objects stay valid for the session (a stopped thread says so with `isRunning()`).
 
 Departures from OStim (4Stim's code, not Fallout 4): the namespace is `FourStimAPI` and the message type `'4ST'`, so a plugin can talk to both; scenes are passed by ID instead of OStim's `Graph::Node` objects, and OStim's graph, furniture and settings interfaces aren't there; there's no `undressPartial` / `redressPartial`.
+
+## C++: the scene and thread API (OStim's OstimNG-API)
+
+`include/4Stim/FourStimNG-API.h` is OStim's second C++ API (its `ModAPI`, `OstimNG-API`), which external scene UIs such as OStim Prism and companion plugins use. One header, no 4Stim code needed to build; call `GetAPI` at F4SE's `kPostLoad` or later (nullptr without 4Stim):
+
+```cpp
+#include "4Stim/FourStimNG-API.h"
+
+auto scenes = FourStimNG_API::Scene::GetAPI("MyPlugin", 1, 0, 0);
+auto threads = FourStimNG_API::Thread::GetAPI("MyPlugin", 1, 0, 0);
+std::uint32_t id;
+scenes->StartCoupleScene("MyPlugin", nullptr, "OStim2PStandingApartMF", dom, sub, &id);
+threads->RegisterEventCallback([](auto event, std::uint32_t thread, void*) { /* ... */ }, nullptr);
+```
+
+- **Scene interface** (exported `RequestPluginAPI_Scene`): `StartScene` (up to 256 actors), `StartCoupleScene` / `StartThreesomeScene` / `StartFoursomeScene` (furniture and starting scene optional), `StopScene`, `SetAutoMode`, `TryGetAutoMode`.
+- **Thread interface** (exported `RequestPluginAPI_Thread`): the player's thread (always 0, as OStim's) and any thread by ID: its scene and name, actors (form ID, excitement, female, has a penis, times climaxed), navigations (scene, destination past transitions, icon, label, border; none in a transition, a sequence or without player control, as OStim's), navigate, speed, transition / sequence / auto mode / player control, alignment get / set (the Align tab's offsets), scene search (by name, for the player's thread's actor count and furniture) and scene info, the options menu (4Stim's options pages: back / exit first, then the page's items, as OStim's), actor checks (`IsActorInAnyThread`, `GetActorPosition`, `HasCompatibleNode`), `MigrateThread`, the navigation rules (`IsUnrestrictedNavigation`, `IsIntendedSexOnly`) and 4Stim.ini's keys (`GetKeyData`).
+- **Events**: `RegisterEventCallback` gets ThreadStarted, NodeChanged and ThreadEnded for the player's thread, as OStim's; `RegisterControlCallback` gets the navigation keys (Up, Down, Left, Right, Yes, Toggle, No) pressed in the scene you're in or watch, and the search, align and hide keys (SearchMenu, AlignMenu, KEY_HIDE).
+- **External UI**: `SetExternalUIEnabled(true)` keeps 4Stim's scene HUD closed and the search picker shut; the navigation keys then only reach the control callbacks, for the external UI to act on.
+
+Departures from OStim: the namespace is `FourStimNG_API` and the DLL `4Stim.dll`; actors and furniture are CommonLibF4's `RE::Actor*` / `RE::TESObjectREFR*`, and the plugin version is three numbers (the exports take an 8-byte `PluginVersion`, REL::Version's layout); `MigrateThread` starts a new 4Stim scene on the same furniture with the same auto mode and the actors' excitement, but not their undressing, and without a callback it refuses to block the game's main thread (-1); options items have no description yet. Strings handed out stay valid until the next call that fills the same kind of buffer.
+
+`cgf "FourStimTest.PluginAPI"` (with a scene running) checks the exports the way another plugin reaches them and reads the player's thread through them; the callbacks it registers log events and control keys to 4Stim.log.
 
 ## Sex toys
 

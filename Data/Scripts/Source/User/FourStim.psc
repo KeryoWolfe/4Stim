@@ -257,6 +257,11 @@ String[] Function GetSceneActorTags(String asSceneID, int aiRole) Global Native
 ; kept for compatibility; pass None.
 Function StartScene(Actor akActor, Actor akUnused, String asSceneID) Global Native
 
+; Checks 4Stim's C++ APIs (include/4Stim/FourStimNG-API.h, PluginInterface.h)
+; the way another F4SE plugin reaches them, on the player's scene if one runs;
+; returns a report (also in 4Stim.log). FourStimTest.PluginAPI shows it.
+string Function TestPluginAPI() Global Native
+
 ; Plays roles 0 and 1 of a two-actor scene on the same frame.
 Function PlaySceneIdles(Actor akActor0, Actor akActor1, String asSceneID) Global Native
 
