@@ -382,6 +382,9 @@ OSTIM_KEYS = {
     'navigationDistanceMax': ('navigation_distance_max', 'tooltip_navigation_distance_max'),
     'SetAIControl': ('use_auto_mode_always', 'tooltip_use_auto_mode_always'),
     'SetForceAIForMasturbation': ('use_auto_mode_solo', 'tooltip_use_auto_mode_solo'),
+    # OStim's "vanilla" toggle is this setting (no dominant / submissive roles,
+    # Thread::evaluateAutoMode); its dominant / submissive toggles are TODO in OStim's code.
+    'SetForceAIInConsensualScenes': ('use_auto_mode_vanilla', 'tooltip_use_auto_mode_vanilla'),
     'autoModeLimitToNavigationDistance': ('auto_mode_limit_to_navigation_distance', 'tooltip_auto_mode_limit_to_navigation_distance'),
     'SetUseAutoFades': ('use_auto_mode_fades', 'tooltip_use_auto_mode_fades'),
     'autoModeAnimDurationMin': ('auto_mode_anim_duration_min', 'tooltip_auto_mode_anim_duration_min'),

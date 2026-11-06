@@ -94,6 +94,7 @@ The short answer to "are we missing anything": yes, and it falls into five patte
 - `SetUseScreenShake` isn't read and shake is on by default; OStim's is off (5 §3).
 - **Done in 0.5.0 (built, untested):** OStim's four excitement bar settings (`enablePlayerBar`, `enableNpcBar`, `SetAutoHideBar`, `SetMatchColorToGender`, colored by role by default), and the bars stay up when the HUD fades (5 §4). Was: missing, and the meters faded with the HUD.
 - OStim's per-actor and per-sex defaults (Actors page) are mostly missing (5 §6). OStim's add-on `settings` folder isn't read (5 §7).
+- Documented as not in yet, so not findings in the report: the custom timescale (`SetCustomTimescale`), the dialogue settings (countdowns, player dialogue, cross talk), `SetBedRealignment` / `bedOffset`, and per-toy / per-slot toy settings (5, "Documented gaps"; SETTINGS.md "Not in yet"). Listed here so this list has every OStim MCM setting 4Stim lacks.
 - Undressing: no `SetRemoveWeaponsAtStart`, no wig handling, no Papyrus override hook; `SetUndressingSlotMask` takes Fallout 4 slot bits (5 §14, 2 §15).
 
 ## Tier 4: small differences (Low)

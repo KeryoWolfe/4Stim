@@ -1295,8 +1295,8 @@
 				},
 				{
 					"id": "b4S_SetForceAIInConsensualScenes:AutoMode",
-					"text": "$4stim_set_force_ai_in_consensual_scenes",
-					"help": "$4stim_tooltip_set_force_ai_in_consensual_scenes",
+					"text": "$4stim_use_auto_mode_vanilla",
+					"help": "$4stim_tooltip_use_auto_mode_vanilla",
 					"action": {
 						"type": "CallGlobalFunction",
 						"script": "FourStimMCM",

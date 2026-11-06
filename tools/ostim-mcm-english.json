@@ -284,5 +284,7 @@
 	"tooltip_toy_slot_do_climax": "Activate this toy when the actor has a climax.",
 	"tooltip_toy_slot_climax_magnitude": "Toy magnitude during climaxes.",
 	"tooltip_unrestricted_navigation": "If checked all requirement checks for all animations are skipped and you can play any animation with any combination of actors.\\nNote: This can lead to some unexpected results in auto mode.",
-	"tooltip_no_facial_expressions": "Disables all facial expressions during scenes. Warning: This will cause clipping during oral scenes! It is only intended to be used for screen-archery purposes."
+	"tooltip_no_facial_expressions": "Disables all facial expressions during scenes. Warning: This will cause clipping during oral scenes! It is only intended to be used for screen-archery purposes.",
+	"use_auto_mode_vanilla": "Use auto mode in vanilla scenes",
+	"tooltip_use_auto_mode_vanilla": "Always starts scenes with no dominant/submissive roles in automatic mode."
 }
