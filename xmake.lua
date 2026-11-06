@@ -42,6 +42,11 @@ rule("4stim.plugin", function()
         --     which 4Stim played scenes with on 1.11.240, has 2231704 and
         --     2231705, as 4Stim's own compat/RequiredIDs.h does). With them,
         --     PlayIdle called StopCurrentIdle and every idle was refused.
+        --  3. A None array passed to a native taking an array (a Papyrus
+        --     "string[] empty" never given a value) unpacks through a null
+        --     pointer and crashes the game (UnpackVariable for arrays): the
+        --     owner's crash calling FourLibrary.GetRandomScene. It becomes an
+        --     empty array, as Papyrus treats a None array (Length 0).
         local fixes = {
             { "include/RE/A/Actor.h",
               "static constexpr auto FORM_ID{ ENUM_FORM_ID::kACHR };",
@@ -52,6 +57,9 @@ rule("4stim.plugin", function()
             { "include/RE/IDs.h",
               "StopCurrentIdle{ 434460, 2231706 }",
               "StopCurrentIdle{ 434460, 2231705 }" },
+            { "include/RE/B/BSScriptUtil.h",
+              "const auto in = get<Array>(a_var);",
+              "const auto in = get<Array>(a_var); if (!in) { return out; }  // 4Stim: a None array is an empty one" },
         }
         for _, fix in ipairs(fixes) do
             local file = path.join(os.projectdir(), "lib/commonlibf4", fix[1])
