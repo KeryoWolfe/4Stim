@@ -62,11 +62,11 @@ The short answer to "are we missing anything": yes, and it falls into five patte
 - **Done in 0.5.0 (built, untested):** `NoAutoMode` keeps auto mode off whoever asks; `NoPlayerControl` no longer turns it on; `SetForceAIForMasturbation` and `SetForceAIInConsensualScenes` are in (ini and MCM). Was: (1 §6, 1 §8, 5 §5).
 
 **Scenes and transitions**
-- A transition uses its destination's per-role values (scale, heels, look, penis bend, offset), not its own (2 §2).
-- Nine annotations are missing: Undress, Redress, UndressPartial, RedressPartial, RemoveWeapons, AddWeapons, SetLooking, UnsetLooking, ResetLooking (2 §3, 3 §12).
-- During a sequence navigation stays available (OStim hides it); `fadeOnEntry` is ignored on manual navigation; sequences only check the first scene's roles; `EndAfterSequence` isn't honoured when interrupted (3 §7-8, 1 §17).
-- Navigation building: no duplicate removal, no furniture check on the destination, transition chains checked one step only; `NavigateTo` doesn't route through the graph (3 §15, 6 F10).
-- Actor conditions are cached and only refreshed by the picker, so a mid-scene change (a worn penis) doesn't reach navigation (2 §5).
+- **Done in 0.5.0 (not yet built or tested):** a transition uses its own per-role values and alignment, as OStim's (one with no `actors` list borrows its destination's). Was: its destination's (2 §2).
+- **Done in 0.5.0 (not yet built or tested):** OStim's nine missing annotations (Undress, Redress, UndressPartial, RedressPartial, RemoveWeapons, AddWeapons, SetLooking, UnsetLooking, ResetLooking) as `4Stim...`; the partial masks take Fallout 4's slots (EVENTS.md). Was: missing (2 §3, 3 §12).
+- **Done in 0.5.0 (not yet built or tested):** no navigation during a sequence (the HUD and picker), `fadeOnEntry` fades a picked scene too, a sequence's roles ask for what any of its scenes asks for and its actor types must match, and an interrupted sequence ends an `EndAfterSequence` scene. Still 4Stim's: furniture must be the same type in every scene (OStim takes sub- and supertypes). Was: (3 §7-8, 1 §17).
+- **Done in 0.5.0 (not yet built or tested):** navigation building as OStim's addNavigations (duplicate links dropped, furniture types checked, the default label and icon from the scene the link ends at), every scene on a link's way checked, and `FourThread.NavigateTo` going along the graph within the navigation distance. Was: (3 §15, 6 F10).
+- **Done in 0.5.0 (not yet built or tested):** actor conditions are read again at every scene change, so a penis put on or taken off counts from the next scene on. Still cached between scene changes (the picker's lists are built off the main thread). Was: refreshed only by the picker (2 §5).
 
 **Actions**
 - Action tags: done in 0.5.0 for what OStim's carry (their API forms, inverted `-tag` included); action custom data done in 0.5.0 (read from action files, FourMetadata's custom functions). Was: action tags aren't implemented (no `action tags` files, no inverted `-tag`), action custom data (`ints`, `floats`, `strings`, used by OCum and OEndurance) isn't read, and `Default.json` drifted from OStim's data (male masturbation peaks inverted, bathing lost its water requirement...) (3 §4-5, §13).

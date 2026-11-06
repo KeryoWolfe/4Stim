@@ -149,7 +149,9 @@ paths relative to `Data\Textures\`, so the HUD passes `..\Interface\...`), and
 any DDS format the game reads works (BC1/BC3/BC7 or uncompressed, with alpha); 128 × 128 is a good
 size. A `.swf` icon (written out in full, `"MyPack/Kneel.swf"`) can be
 animated. A navigation entry shows its own `icon` if it has one, otherwise the
-destination scene's icon, otherwise an empty tile.
+destination scene's icon, otherwise OStim's pick from the scene it ends at
+(its tags and actions: missionary, cowgirl, blowjob, kissing..., else a
+placeholder; OStim's `LegacyUtil::getIcon`).
 
 ---
 

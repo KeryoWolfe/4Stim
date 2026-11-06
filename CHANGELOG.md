@@ -2,6 +2,17 @@
 
 ## 0.5.0 alpha (in progress)
 
+### Scenes and transitions, as OStim's (parity audit Tier 3)
+- **Transitions use their own per-role values and alignment** (offset, scale, heels, look direction, penis bend), as OStim's, not the scene they go to; one without an `actors` list still borrows its destination's (docs/ALIGNMENT.md).
+- **OStim's nine missing annotations**: `4StimUndress`, `4StimRedress`, `4StimUndressPartial.<mask>`, `4StimRedressPartial.<mask>`, `4StimRemoveWeapons`, `4StimAddWeapons`, `4StimSetLooking.<left>[,<up>]`, `4StimUnsetLooking`, `4StimResetLooking` (docs/EVENTS.md). The partial masks take Fallout 4's slots.
+- **Sequences**: no navigation while one plays, as OStim's scene menu; an interrupted one ends a scene started with `EndAfterSequence`; every scene's roles count, and the actor types must match (docs/SCENES.md).
+- **`fadeOnEntry` fades when you pick the scene too**, not only in auto mode.
+- **Navigation links as OStim builds them**: a second link to the same scene is left out, links between incompatible furniture are dropped (logged), the default label is the name of the scene the link ends at, a link with no icon gets OStim's icon for that scene, and a link is offered only when the actors suit every scene on its way.
+- **`FourThread.NavigateTo` goes along the navigation graph** (within `navigationDistanceMax`), as OStim's navigateTo; `WarpTo` still jumps.
+- **Actor conditions are read again at every scene change**, so a penis put on or taken off mid-scene counts for the navigation from the next scene on.
+
+Needs the plugin rebuilt. No Papyrus or SWF changes.
+
 ### The MCM and translations, as OStim's
 - **The MCM has OStim's pages, in OStim's order, with its section headers, labels and help texts** (docs/MCM.md): General, Controls, Auto Control, Camera, Excitement, Gender Roles, Furniture, Undressing, Expressions, Sound, Alignment, Toys, Debug, About. 4Stim's own settings sit on the page they belong to (the HUD and partner finding on General, the controller on Controls, climax effects on Excitement, eyes on Expressions), and the undressing slots and Save and Load are on OStim's pages for them. Where a setting works differently in 4Stim, its help says what 4Stim does. Nothing you've set in the MCM changes.
 - **Translation keys follow OStim's**: OStim's own keys with "4stim" for "ostim" (`$4stim_reset_position`, `$4stim_tooltip_fades`), so OStim's translations carry over, and 4Stim's own texts in the same style (`$4stim_tab_search`, was `$4Stim_TabSearch`). A translation made for the old keys needs them renamed (docs/TRANSLATIONS.md).

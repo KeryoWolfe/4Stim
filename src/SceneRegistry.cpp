@@ -800,6 +800,50 @@ namespace SceneRegistry
 			return it;
 		}
 
+		// The scene a loaded scene ends at, past its transitions.
+		auto SettleLinked(std::unordered_map<std::string, Scene>::iterator a_it)
+		{
+			for (int hop = 0; hop < 8 && a_it != g_scenes.end() && a_it->second.IsTransition(); ++hop) {
+				const auto next = FindLinked(a_it->second.destination);
+				if (next == g_scenes.end()) {
+					break;
+				}
+				a_it = next;
+			}
+			return a_it;
+		}
+
+		// OStim's LegacyUtil::getIcon: a navigation's icon from the scene's
+		// tags and actions, for links that name none.
+		std::string DefaultIcon(const Scene& a_scene)
+		{
+			const auto tagged = [&](std::string_view a_tag) { return std::ranges::any_of(a_scene.tags, [&](const std::string& t) { return _stricmp(t.c_str(), std::string(a_tag).c_str()) == 0; }); };
+			const auto acts = [&](std::string_view a_type) { return std::ranges::any_of(a_scene.actions, [&](const SceneAction& a) { return a.type && a.type->id == a_type; }); };
+			for (const auto tag : { "missionary", "cowgirl", "reversecowgirl", "doggystyle", "sixtynine" }) {
+				if (tagged(tag)) {
+					return std::format("OStim/sexual/{}_mf", tag);
+				}
+			}
+			if (acts("vaginalsex")) return "OStim/sexual/vaginalsex_mf";
+			if (acts("analsex")) return "OStim/sexual/analsex_mf";
+			if (std::ranges::any_of(a_scene.actions, [](const SceneAction& a) { return a.type && a.type->id == "blowjob" && a.target == a.performer; })) return "OStim/sexual/facefuck_mf";
+			for (const auto type : { "blowjob", "cunnilingus", "boobjob", "handjob", "vaginalfisting", "vaginalfingering" }) {
+				if (acts(type)) {
+					return std::format("OStim/sexual/{}_mf", type);
+				}
+			}
+			if (acts("vampirebite")) return "OStim/sensual/vampirebite";
+			if (acts("kissing")) return "OStim/sensual/kissing_mf";
+			if (acts("kissingneck")) return "OStim/sensual/kissingneck_mf";
+			if (acts("licking")) return "OStim/sensual/licking";
+			for (const auto type : { "gropingbutt", "holdinghead", "holdinghip" }) {
+				if (acts(type)) {
+					return std::format("OStim/detail/{}_mf", type);
+				}
+			}
+			return "OStim/symbols/placeholder";
+		}
+
 		int BuildSequences(std::unordered_map<std::string, std::shared_ptr<const Sequence>>& a_out)
 		{
 			int kept = 0;
@@ -829,6 +873,7 @@ namespace SceneRegistry
 						break;
 					} else {
 						bool clash = false;
+						bool otherType = false;
 						for (std::size_t role = 0; role < seq.actors.size(); ++role) {
 							auto&      have = seq.actors[role].sex;
 							const auto want = scene.actors[role].sex;
@@ -837,9 +882,26 @@ namespace SceneRegistry
 							} else if (want != Sex::kAny && want != have) {
 								clash = true;
 							}
+							// As OStim's Sequence::fulfilledBy: the cast must suit
+							// every scene, so each role asks for what any of its
+							// scenes asks for; and as its hasSameActorTpyes, the
+							// actor types match.
+							if (_stricmp(seq.actors[role].type.c_str(), scene.actors[role].type.c_str()) != 0) {
+								otherType = true;
+							}
+							auto& needs = seq.actors[role].requirements;
+							for (const auto& need : scene.actors[role].requirements) {
+								if (std::ranges::find(needs, need) == needs.end()) {
+									needs.push_back(need);
+								}
+							}
 						}
 						if (clash) {
 							problem = std::format("entry {}: \"{}\" asks for a different sex in a role than the scenes before it", index, sceneID);
+							break;
+						}
+						if (otherType) {
+							problem = std::format("entry {}: \"{}\" has another actor type in a role than the scenes before it (OStim's rule)", index, sceneID);
 							break;
 						}
 					}
@@ -956,11 +1018,38 @@ namespace SceneRegistry
 					++dropped;
 					continue;
 				}
+				// As OStim's addNavigations: furniture types where one is the
+				// other's kind (no furniture is OStim's "none")...
+				const auto& from = origin->second.furniture.empty() ? std::string("none") : origin->second.furniture;
+				const auto& to = dest->second.furniture.empty() ? std::string("none") : dest->second.furniture;
+				if (!Furniture::IsA(from, to) && !Furniture::IsA(to, from)) {
+					REX::WARN("Scenes: {}: navigation \"{}\" -> \"{}\" dropped (furniture \"{}\" and \"{}\" aren't compatible)", raw.file, raw.origin, raw.nav.to, from, to);
+					++dropped;
+					continue;
+				}
+				// ...one link per destination (two packs linking the same pair
+				// give one row)...
+				auto&      navs = origin->second.navigations;
+				const auto settled = SettleLinked(dest);
+				if (std::ranges::any_of(navs, [&](const Navigation& n) {
+						const auto other = FindLinked(n.to);
+						return _stricmp(n.to.c_str(), dest->second.id.c_str()) == 0 || (other != g_scenes.end() && SettleLinked(other) == dest);
+					})) {
+					continue;
+				}
+				// ...and, with no description, the name of the scene it ends at
+				// (a transition back into this scene: its own), and with no
+				// icon, OStim's pick from that scene's tags and actions
+				// (LegacyUtil::getIcon) unless it names one itself (4Stim's).
+				const auto& shown = settled == origin ? dest->second : settled->second;
 				raw.nav.to = dest->second.id;
 				if (raw.nav.label.empty()) {
-					raw.nav.label = dest->second.name;
+					raw.nav.label = shown.name;
 				}
-				origin->second.navigations.push_back(std::move(raw.nav));
+				if (raw.nav.icon.empty() && dest->second.icon.empty()) {
+					raw.nav.icon = DefaultIcon(shown);
+				}
+				navs.push_back(std::move(raw.nav));
 			}
 			g_rawNavigations.clear();
 			for (auto& [key, scene] : g_scenes) {
@@ -1063,6 +1152,17 @@ namespace SceneRegistry
 				break;
 			}
 			a_scene = std::move(next);
+		}
+		return a_scene;
+	}
+
+	std::shared_ptr<const Scene> RoleScene(std::shared_ptr<const Scene> a_scene)
+	{
+		// As OStim's changeNode: every node, transitions included, uses its
+		// own actors' fields. A transition without an actors list (4Stim's
+		// shorthand) borrows its destination's.
+		if (a_scene && a_scene->IsTransition() && a_scene->actors.empty()) {
+			return Settled(std::move(a_scene));
 		}
 		return a_scene;
 	}

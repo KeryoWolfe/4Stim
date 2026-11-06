@@ -73,6 +73,16 @@ namespace FourStim
 
 	// Whether the focused scene's actors (in their roles) may play a_scene:
 	// its roles' types, requirements and (SetOnlyGayAnimsInGayScenes) sexes.
+	// Whether the focused scene is playing a sequence (not auto mode's way
+	// to a scene): OStim's scene menu offers no navigation then.
+	bool FocusedInSequence();
+
+	// Whether a_ids on a_furniture can play a_scene and, for a transition,
+	// every scene it leads through to where it ends (OStim's
+	// Navigation::fulfilledBy, which checks each node of the way).
+	bool CanPlayChain(const SceneRegistry::Scene& a_scene, const std::vector<std::uint32_t>& a_ids, const std::string& a_furniture);
+
+	// CanPlayChain for the focused scene's actors and furniture.
 	bool FocusedCanPlay(const SceneRegistry::Scene& a_scene);
 
 	// Alignment of the focused scene (docs/ALIGNMENT.md), for the HUD's Align

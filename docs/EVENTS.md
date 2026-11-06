@@ -66,6 +66,11 @@ Events are in `Data\F4SE\Plugins\4Stim\Events\`, one per file, the id being the 
 | `4StimBendSoS.<steps>` / `4StimResetSoS` | `OStimBendSoS` / `OStimResetSoS` | The actor's penis bends that many SoS steps more, until reset or the next scene (docs/ALIGNMENT.md). |
 | `4StimPenisAim` | (4Stim's) | The animation points the actor's penis at the partner itself (AnimBridge writes it on the animations it aims): the scene file's penis bend is left out until the next scene; the Align tab's bend still counts (docs/ALIGNMENT.md). |
 | `4StimEquipObject.<type>` / `4StimUnequipObject.<type>` | `OStimEquipObject` / `OStimUnequipObject` | The actor puts on / takes off an equip object of that type (docs/ACTORS.md). |
+| `4StimUndress` / `4StimRedress` | `OStimUndress` / `OStimRedress` | The actor takes off everything in the undress slots / puts back on everything 4Stim took off (docs/UNDRESS.md). |
+| `4StimUndressPartial.<mask>` / `4StimRedressPartial.<mask>` | `OStimUndressPartial` / `OStimRedressPartial` | The same for the slots in `<mask>`, hexadecimal, bit 0 = slot 30 (`0x8` is slot 33, the body). **Fallout 4's slots**, as `OActor.UndressPartial`: OStim's masks are Skyrim's (`0x4` is Skyrim's body), so an animation converted from OStim needs its mask mapped through UNDRESS.md's table. |
+| `4StimRemoveWeapons` / `4StimAddWeapons` | `OStimRemoveWeapons` / `OStimAddWeapons` | The actor's weapon comes off (remembered, as at a scene's start) / goes back on. |
+| `4StimSetLooking.<left>` / `4StimSetLooking.<left>,<up>` | `OStimSetLooking` | The actor looks that way, -100 to 100 (- is right / down), over the scene's look until the next scene (docs/EXPRESSIONS.md, eyes). |
+| `4StimUnsetLooking` / `4StimResetLooking` | `OStimUnsetLooking` / `OStimResetLooking` | The actor's eyes are their own again / follow the scene's look again (none: as Unset). |
 
 Annotations count for as long as the actor is in a scene.
 

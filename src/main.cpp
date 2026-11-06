@@ -1663,6 +1663,7 @@ namespace
 	}
 
 	void LockScene(ActiveScene& a_active);
+	bool InterruptSequence(ActiveScene& a_active, std::string_view a_why);
 	void UnlockActors(const std::vector<std::uint32_t>& a_ids);
 	void RestoreScales(const ActiveScene& a_active);
 	void MoveApart(const ActiveScene& a_ended);
@@ -2585,6 +2586,25 @@ namespace
 		}).detach();
 	}
 
+	// As OStim's clearNodeQueue: a sequence interrupted (navigation, another
+	// mod moving the scene) stops, and with EndAfterSequence, the scene ends
+	// too. True if the scene is ending. Auto mode's routes just stop.
+	bool InterruptSequence(ActiveScene& a_active, std::string_view a_why)
+	{
+		if (!a_active.sequence) {
+			return false;
+		}
+		const auto sequence = std::exchange(a_active.sequence, nullptr);
+		REX::INFO("Sequence \"{}\": stopped, {}", sequence->id, a_why);
+		HUD::OnFocusedSceneChanged();
+		if (a_active.endAfterSequence && !sequence->route) {
+			EndActiveScene(a_active, "its sequence was interrupted (EndAfterSequence)");
+			a_active.remaining = -1.0F;
+			return true;
+		}
+		return false;
+	}
+
 	// A scene moved on by someone else (navigation, a speed key). Leaving
 	// the scene a sequence is on ends the sequence: the player took over.
 	void TrackSceneChange(std::uint32_t a_actorID, const std::string& a_sceneID, int a_speed)
@@ -2615,9 +2635,8 @@ namespace
 			LockScene(*scene);  // this scene's alignment
 		}
 		if (moved) {
-			if (scene->sequence) {
-				REX::INFO("Sequence \"{}\": stopped, the scene was moved to \"{}\"", scene->sequence->id, a_sceneID);
-				scene->sequence.reset();
+			if (InterruptSequence(*scene, std::format("the scene was moved to \"{}\"", a_sceneID))) {
+				return;
 			}
 			ArmAutoplay(*scene);
 			if (scene->autoMode.on) {
@@ -2732,9 +2751,8 @@ namespace
 	{
 		if (!a_active.queuedScene.empty()) {
 			const auto queued = std::exchange(a_active.queuedScene, std::string{});
-			if (a_active.sequence) {
-				REX::INFO("Sequence \"{}\": stopped, the player picked \"{}\"", a_active.sequence->id, queued);
-				a_active.sequence.reset();
+			if (InterruptSequence(a_active, std::format("the player picked \"{}\"", queued))) {
+				return;
 			}
 			REX::INFO("Transition \"{}\" -> \"{}\" (picked during the transition)", a_active.sceneID, queued);
 			if (PlayOnActiveScene(a_active, queued, -1)) {
@@ -2759,7 +2777,8 @@ namespace
 			REX::INFO("Sequence \"{}\": finished on \"{}\"", sequence->id, a_active.sceneID);
 			a_active.sequence.reset();
 			SceneEvents::SequenceEnded(a_active.actors, sequence->id, a_active.threadID);
-			if (a_active.endAfterSequence) {
+			HUD::OnFocusedSceneChanged();  // navigation back, as OStim's NodeChanged when its sequence ends
+			if (a_active.endAfterSequence && !sequence->route) {
 				EndActiveScene(a_active, "its sequence ended (EndAfterSequence)");
 				a_active.remaining = -1.0F;
 				return;
@@ -2927,6 +2946,7 @@ namespace
 		float total = 0.0F;
 		sequence->id = "auto mode";
 		sequence->name = "auto mode";
+		sequence->route = true;
 		sequence->actorCount = a_active.actors.size();
 		for (std::size_t i = 0; i < a_route.size(); ++i) {
 			const auto scene = SceneRegistry::Find(a_route[i]);
@@ -3220,7 +3240,7 @@ namespace
 	ActorSpot SpotOf(const ActiveScene& a_active, std::size_t a_role)
 	{
 		const auto scene = SceneRegistry::Find(a_active.sceneID);
-		const auto settled = scene ? SceneRegistry::Settled(scene) : nullptr;
+		const auto settled = scene ? SceneRegistry::RoleScene(scene) : nullptr;
 		const auto id = settled ? settled->id : a_active.sceneID;
 		const auto o = Alignment::Get(a_active.alignKey, id, a_role);
 		// As OStim's alignActor: the role's offset from the scene file plus
@@ -3268,11 +3288,17 @@ namespace
 	void RefreshActors(ActiveScene& a_active)
 	{
 		const auto scene = SceneRegistry::Find(a_active.sceneID);
-		const auto settled = scene ? SceneRegistry::Settled(scene) : nullptr;
+		const auto settled = scene ? SceneRegistry::RoleScene(scene) : nullptr;
 		a_active.heels.resize(a_active.actors.size(), 0.0F);
 		std::vector<Alignment::ActorInfo> info;
 		for (std::size_t role = 0; role < a_active.actors.size(); ++role) {
 			const auto actor = RE::TESForm::GetFormByID<RE::Actor>(a_active.actors[role]);
+			// As OStim's getActorConditions, read fresh: what they are and
+			// have now (a penis put on or taken off mid-scene), for the
+			// navigation and the picker, at every scene change.
+			if (actor) {
+				ActorProperties::Remember(actor);
+			}
 			a_active.heels[role] = Scaling::HeelHeight(actor);
 			const bool feetOnGround = settled && role < settled->actors.size() && settled->actors[role].feetOnGround;
 			info.push_back({ SceneRegistry::SexOf(actor), Scaling::NPCHeight(actor), feetOnGround ? a_active.heels[role] : 0.0F });
@@ -3287,7 +3313,7 @@ namespace
 		}
 		RefreshActors(a_active);
 		const auto scene = SceneRegistry::Find(a_active.sceneID);
-		const auto settled = scene ? SceneRegistry::Settled(scene) : nullptr;
+		const auto settled = scene ? SceneRegistry::RoleScene(scene) : nullptr;
 		for (std::size_t role = 0; role < a_active.actors.size(); ++role) {
 			const auto id = a_active.actors[role];
 			const auto actor = RE::TESForm::GetFormByID<RE::Actor>(id);
@@ -3455,9 +3481,8 @@ namespace
 			SetPlayerScene(focused);
 		}
 		// A sequence or a picked transition destination doesn't carry over.
-		if (a_active.sequence) {
-			REX::INFO("Sequence \"{}\": stopped, the scene changed furniture", a_active.sequence->id);
-			a_active.sequence.reset();
+		if (InterruptSequence(a_active, "the scene changed furniture")) {
+			return false;  // the scene is ending (EndAfterSequence)
 		}
 		a_active.queuedScene.clear();
 		PlayOnActiveScene(a_active, scene->id, -1);
@@ -4682,6 +4707,7 @@ namespace
 		active->sequence = a_sequence;
 		active->step = 0;
 		REX::INFO("Sequence \"{}\": started on the running scene ({} scene(s))", a_sequence->id, a_sequence->entries.size());
+		HUD::OnFocusedSceneChanged();  // no navigation during it, as OStim's scene menu
 		ArmAutoplay(*active);
 		return true;
 	}
@@ -6648,13 +6674,19 @@ namespace
 
 	// Moves the player's scene to a_destination (normally one of the current
 	// scene's navigation links). Returns false if that isn't possible.
-	bool NavigateSceneImpl(const std::string& a_destination)
+	// a_search: picked in the search picker, which goes anywhere, as OStim's
+	// search menu (warpTo), sequence or not.
+	bool NavigateSceneImpl(const std::string& a_destination, bool a_search = false)
 	{
 		const auto current = GetPlayerScene();
 		const auto from = current.role0 ? SceneRegistry::Find(current.sceneID) : nullptr;
 		const auto to = SceneRegistry::Find(a_destination);
 		if (NoPlayerControl(current.role0)) {
 			REX::INFO("NavigateScene: this scene was started with NoPlayerControl");
+			return false;
+		}
+		if (!a_search && FourStim::FocusedInSequence()) {
+			REX::INFO("NavigateScene: not during a sequence (as OStim's scene menu)");
 			return false;
 		}
 		if (!from || !to || to->actors.size() != from->actors.size()) {
@@ -6683,6 +6715,30 @@ namespace
 		}
 		const auto active = FindActiveScene(current.role0);
 		const int  speed = active ? MappedSpeed(*active, *to) : std::min(current.speed, static_cast<int>(to->speeds.size()) - 1);
+		// As OStim's Navigate (warpTo with the node's fadeOnEntry): into a
+		// scene marked fadeOnEntry, the screen fades to black, the scene
+		// changes 0.7 s in, and it fades back 0.55 s later.
+		const bool withPlayer = std::ranges::any_of(current.ActorIDs(), [](std::uint32_t id) { return IsPlayer(RE::TESForm::GetFormByID<RE::Actor>(id)); });
+		if (to->fadeOnEntry && withPlayer && g_vm && !g_sceneFade) {
+			REX::INFO("NavigateScene: fading to \"{}\" (fadeOnEntry)", to->id);
+			RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
+			Compat::DispatchStaticCall(g_vm, "FourStimMenu"sv, "FadeToBlack"sv, callback);
+			std::thread([to, speed, role0 = current.role0]() {
+				std::this_thread::sleep_for(std::chrono::milliseconds(700));
+				F4SE::GetTaskInterface()->AddTask([to, speed, role0]() {
+					const auto now = GetPlayerScene();
+					if (now.role0 == role0 && FindActiveScene(role0)) {
+						PlayPlayerScene(*to, speed, now);
+					}
+				});
+				std::this_thread::sleep_for(std::chrono::milliseconds(550));
+				if (g_vm) {
+					RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> after;
+					Compat::DispatchStaticCall(g_vm, "FourStimMenu"sv, "FadeFromBlack"sv, after, 0.0F);
+				}
+			}).detach();
+			return true;
+		}
 		PlayPlayerScene(*to, speed, current);
 		return true;
 	}
@@ -7719,10 +7775,14 @@ namespace
 			std::string title = TR("$4stim_scene", "Scene");
 			if (scene) {
 				// During a transition, the options of where it's going.
+				// None during a sequence, as OStim's scene menu.
 				const auto settled = SceneRegistry::Settled(scene);
-				for (const auto& nav : settled->navigations) {
+				const bool inSequence = FourStim::FocusedInSequence();
+				for (const auto& nav : inSequence ? std::vector<SceneRegistry::Navigation>{} : settled->navigations) {
+					// As OStim's Navigation::fulfilledBy: every scene on the way,
+					// transitions and the scene it ends at.
 					const auto dest = SceneRegistry::Find(nav.to);
-					if (dest && (!SexesFit(*dest, current.ActorIDs()) || !SceneFitsFurniture(*dest, current.furniture))) {
+					if (dest && !FourStim::CanPlayChain(*dest, current.ActorIDs(), current.furniture)) {
 						continue;
 					}
 					add(nav.to, FormatNavLabel(nav.label, current), dest ? dest->name : nav.to);
@@ -7765,7 +7825,7 @@ namespace
 				a_sceneID = sequence->entries.front().scene;
 			}
 			if (g_pickerMode == PickerMode::kSearch) {
-				NavigateSceneImpl(a_sceneID);
+				NavigateSceneImpl(a_sceneID, true);
 				return;
 			}
 			if (g_pickerMode == PickerMode::kNavigate) {
@@ -8471,6 +8531,79 @@ namespace
 				PenisBend::Offset(id, 0);  // OStim's OStimResetSoS
 			} else if (_stricmp(a_tag.c_str(), "4StimPenisAim") == 0) {
 				PenisBend::Aim(id, true);  // AnimBridge aimed this animation's penis: no scene bend on top
+			} else if (_stricmp(a_tag.c_str(), "4StimUndress") == 0 || _stricmp(a_tag.c_str(), "4StimRedress") == 0) {
+				// OStim's OStimUndress / OStimRedress: everything in the undress
+				// slots off, or everything 4Stim took off back on.
+				const bool undress = _stricmp(a_tag.c_str(), "4StimUndress") == 0;
+				F4SE::GetTaskInterface()->AddTask([id, undress]() {
+					if (!FindActiveScene(id)) {
+						return;
+					}
+					if (undress) {
+						Undress::StripAll(id);
+					} else {
+						Undress::Redress(id, true);
+					}
+				});
+			} else if (_stricmp(a_tag.c_str(), "4StimUndressPartial") == 0 || _stricmp(a_tag.c_str(), "4StimRedressPartial") == 0) {
+				// OStim's OStimUndressPartial / OStimRedressPartial: "<hex slot
+				// mask>". 4Stim: Fallout 4's slots (bit 0 = slot 30), as
+				// OActor.UndressPartial; OStim's masks are Skyrim's, so an
+				// animation converted from OStim needs its mask mapped (EVENTS.md).
+				const bool  undress = _stricmp(a_tag.c_str(), "4StimUndressPartial") == 0;
+				std::string payload = a_payload.c_str();
+				try {
+					const auto mask = static_cast<std::uint32_t>(std::stoul(payload, nullptr, 16));
+					F4SE::GetTaskInterface()->AddTask([id, undress, mask]() {
+						if (!FindActiveScene(id)) {
+							return;
+						}
+						if (undress) {
+							Undress::StripMask(id, mask);
+						} else {
+							Undress::RedressMask(id, mask);
+						}
+					});
+				} catch (const std::exception&) {
+					REX::WARN("Undress: {}.{} on {:08X}: the slot mask must be hexadecimal", a_tag.c_str(), payload, id);
+				}
+			} else if (_stricmp(a_tag.c_str(), "4StimRemoveWeapons") == 0 || _stricmp(a_tag.c_str(), "4StimAddWeapons") == 0) {
+				// OStim's OStimRemoveWeapons / OStimAddWeapons: the weapon off
+				// (remembered, as at a scene's start) or back on.
+				const std::string_view function = _stricmp(a_tag.c_str(), "4StimRemoveWeapons") == 0 ? "HolsterByID"sv : "RearmByID"sv;
+				F4SE::GetTaskInterface()->AddTask([id, function]() {
+					if (g_vm && FindActiveScene(id)) {
+						RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
+						Compat::DispatchStaticCall(g_vm, "FourStimScene"sv, function, callback, static_cast<std::int32_t>(id));
+					}
+				});
+			} else if (_stricmp(a_tag.c_str(), "4StimSetLooking") == 0) {
+				// OStim's OStimSetLooking: "<left>" or "<left>,<up>" (-100 to
+				// 100; - is right / down), over the scene's look until the next
+				// scene or 4StimResetLooking.
+				std::string payload = a_payload.c_str();
+				try {
+					const auto  comma = payload.find(',');
+					const float left = static_cast<float>(std::stoi(payload.substr(0, comma)));
+					const float up = comma != std::string::npos ? static_cast<float>(std::stoi(payload.substr(comma + 1))) : 0.0F;
+					EyeLook::Set(id, std::clamp(up, -100.0F, 100.0F), std::clamp(left, -100.0F, 100.0F));
+				} catch (const std::exception&) {
+					REX::WARN("Eyes: 4StimSetLooking.{} on {:08X}: expected <left> or <left>,<up>", payload, id);
+				}
+			} else if (_stricmp(a_tag.c_str(), "4StimUnsetLooking") == 0) {
+				EyeLook::Set(id, 0.0F, 0.0F);  // OStim's OStimUnsetLooking: their eyes their own
+			} else if (_stricmp(a_tag.c_str(), "4StimResetLooking") == 0) {
+				// OStim's OStimResetLooking: the scene's look again (none: as Unset).
+				F4SE::GetTaskInterface()->AddTask([id]() {
+					const auto active = FindActiveScene(id);
+					const auto scene = active ? SceneRegistry::RoleScene(SceneRegistry::Find(active->sceneID)) : nullptr;
+					const auto role = active ? static_cast<std::size_t>(std::ranges::find(active->actors, id) - active->actors.begin()) : 0;
+					if (scene && role < scene->actors.size()) {
+						EyeLook::Set(id, scene->actors[role].lookUp, scene->actors[role].lookLeft);
+					} else {
+						EyeLook::Set(id, 0.0F, 0.0F);
+					}
+				});
 			} else if (_stricmp(a_tag.c_str(), "4StimEquipObject") == 0 || _stricmp(a_tag.c_str(), "4StimUnequipObject") == 0) {
 				// OStim's OStimEquipObject / OStimUnequipObject: "<type>".
 				const bool  equip = _stricmp(a_tag.c_str(), "4StimEquipObject") == 0;
@@ -9129,8 +9262,19 @@ namespace
 					a.queuedScene = to->id;
 					return;
 				}
-				if (a.sequence) {
-					a.sequence.reset();  // another mod took over
+				if (InterruptSequence(a, "another mod moved the scene")) {
+					return;
+				}
+				// As OStim's navigateTo: along the navigation graph when the
+				// scene is within navigationDistanceMax (auto mode's way), else
+				// straight there.
+				if (!a_warp && from) {
+					const auto reachable = Reachable(a, from, g_autoConfig.maxSteps);
+					const auto it = std::ranges::find_if(reachable, [&](const auto& a_entry) { return a_entry.first->id == to->id; });
+					if (it != reachable.end() && it->second.size() > 1) {
+						AutoGoTo(a, to, it->second);
+						return;
+					}
 				}
 				if (PlayOnActiveScene(a, to->id, -1)) {
 					ArmAutoplay(a);
@@ -10946,7 +11090,7 @@ namespace
 					return false;
 				}
 				const auto scene = SceneRegistry::Find(active->sceneID);
-				const auto settled = scene ? SceneRegistry::Settled(scene) : nullptr;
+				const auto settled = scene ? SceneRegistry::RoleScene(scene) : nullptr;
 				const auto sceneID = settled ? settled->id : active->sceneID;
 				const auto found = Alignment::Find(active->alignKey, sceneID, a_position);
 				auto       o = found.value_or(Alignment::Offset{});
@@ -10975,7 +11119,7 @@ namespace
 						return;
 					}
 					const auto scene = SceneRegistry::Find(a.sceneID);
-					const auto id = scene ? SceneRegistry::Settled(scene)->id : a.sceneID;
+					const auto id = scene ? SceneRegistry::RoleScene(scene)->id : a.sceneID;
 					Alignment::Set(a.alignKey, id, a_position, o);
 					LockScene(a);
 				});
@@ -10993,7 +11137,7 @@ namespace
 						return;
 					}
 					const auto scene = SceneRegistry::Find(a.sceneID);
-					const auto id = scene ? SceneRegistry::Settled(scene)->id : a.sceneID;
+					const auto id = scene ? SceneRegistry::RoleScene(scene)->id : a.sceneID;
 					Alignment::Remove(a.alignKey, id, a_position);
 					LockScene(a);
 				});
@@ -12831,10 +12975,34 @@ namespace FourStim
 		return FormatNavLabel(std::move(a_label), a_scene);
 	}
 
+	bool FocusedInSequence()
+	{
+		const auto focused = GetPlayerScene();
+		const auto active = focused.Active() ? FindActiveScene(focused.role0) : nullptr;
+		return active && active->sequence && !active->sequence->route;
+	}
+
+	bool CanPlayChain(const SceneRegistry::Scene& a_scene, const std::vector<std::uint32_t>& a_ids, const std::string& a_furniture)
+	{
+		const SceneRegistry::Scene*                 scene = &a_scene;
+		std::shared_ptr<const SceneRegistry::Scene> next;
+		for (int hop = 0; scene && hop < 8; ++hop) {
+			if (!SexesFit(*scene, a_ids) || !SceneFitsFurniture(*scene, a_furniture)) {
+				return false;
+			}
+			if (!scene->IsTransition()) {
+				break;
+			}
+			next = SceneRegistry::Find(scene->destination);
+			scene = next.get();
+		}
+		return true;
+	}
+
 	bool FocusedCanPlay(const SceneRegistry::Scene& a_scene)
 	{
 		const auto focused = GetPlayerScene();
-		return SexesFit(a_scene, focused.ActorIDs()) && SceneFitsFurniture(a_scene, focused.furniture);
+		return CanPlayChain(a_scene, focused.ActorIDs(), focused.furniture);
 	}
 
 	bool GetFocusedAlignment(std::size_t a_role, Alignment::Offset& a_offset, std::string& a_sceneID)
@@ -12845,12 +13013,12 @@ namespace FourStim
 			return false;
 		}
 		const auto scene = SceneRegistry::Find(active->sceneID);
-		a_sceneID = scene ? SceneRegistry::Settled(scene)->id : active->sceneID;
+		a_sceneID = scene ? SceneRegistry::RoleScene(scene)->id : active->sceneID;
 		// None set: OStim's default alignment, the scene's penis bend.
 		const auto found = Alignment::Find(active->alignKey, a_sceneID, a_role);
 		a_offset = found.value_or(Alignment::Offset{});
 		if (!found && scene) {
-			const auto settled = SceneRegistry::Settled(scene);
+			const auto settled = SceneRegistry::RoleScene(scene);
 			a_offset.bend = a_role < settled->actors.size() ? settled->actors[a_role].penisBend : 0.0F;
 		}
 		return true;

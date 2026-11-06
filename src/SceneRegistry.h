@@ -143,7 +143,7 @@ namespace SceneRegistry
 	struct SpeedInfo
 	{
 		float playbackSpeed = 1.0F;  // OStim's: how fast the animation plays (main.cpp's PlaybackSpeed scales the actors' animation updates)
-		float displaySpeed = 0.0F;   // OStim's speed label (0 = not given): kept, not shown yet
+		float displaySpeed = 0.0F;   // OStim's speed label (0 = not given): the HUD's speed number
 		std::string animation;       // OStim's "animation" name (its Idles are animation_0, _1...); "" for "idles" speeds
 	};
 
@@ -213,6 +213,9 @@ namespace SceneRegistry
 		std::string                sourceFile;
 		std::vector<SceneActor>    actors;     // per role, what its scenes ask for
 		std::string                furniture;  // what its scenes are played on (all the same)
+		// Auto mode's way to a scene (OStim's node queue), not a sequence:
+		// navigation stays, and EndAfterSequence doesn't apply.
+		bool                       route = false;
 	};
 
 	// Which actor takes each role of a scene (or sequence) whose roles ask for
@@ -245,6 +248,11 @@ namespace SceneRegistry
 	// destination (followed through chained transitions). Never null for a
 	// non-null a_scene.
 	std::shared_ptr<const Scene> Settled(std::shared_ptr<const Scene> a_scene);
+
+	// The scene whose per-role fields (offset, scale, heels, look, penis
+	// bend) and alignment apply while a_scene plays: a_scene itself, as
+	// OStim, transitions too; a transition with no actors list, its destination.
+	std::shared_ptr<const Scene> RoleScene(std::shared_ptr<const Scene> a_scene);
 
 	// Case-insensitive sequence lookup; nullptr if there's no such sequence.
 	std::shared_ptr<const Sequence> FindSequence(std::string_view a_id);

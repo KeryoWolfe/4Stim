@@ -1082,7 +1082,8 @@ namespace HUD
 			{
 				GValue list;
 				uiMovie->CreateArray(&list);
-				if (a_scene) {
+				// As OStim's scene menu: no options during a sequence.
+				if (a_scene && !FourStim::FocusedInSequence()) {
 					// As OStim's scene menu (UI/Scene/SceneMenu.cpp BuildMenuData):
 					// one list, the scene's navigations in priority order, those
 					// the actors and the furniture can play. Packs make their own
