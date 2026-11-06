@@ -28,26 +28,44 @@ rule("4stim.plugin", function()
     add_deps("commonlib.plugin")
 
     on_load(function(target)
-        -- Dear Modding's CommonLibF4 (c71da99) gives Papyrus natives their
-        -- parameter types from each class's TYPE_ID, and RE::Actor has none,
-        -- so it inherits TESObjectREFR's (ObjectReference): every native
-        -- taking an Actor was then registered with an ObjectReference
-        -- parameter and refused to bind ("does not match existing
-        -- signature"). Give Actor its own (BSScript::kActor, 65, the same
-        -- number as the old FORM_ID kACHR) before anything compiles, until
-        -- the fork has it.
-        local actorh = path.join(os.projectdir(), "lib/commonlibf4/include/RE/A/Actor.h")
-        if os.isfile(actorh) then
-            local text = io.readfile(actorh)
-            if not text:find("TYPE_ID{ BSScript::kActor }", 1, true) then
-                local anchor = "static constexpr auto FORM_ID{ ENUM_FORM_ID::kACHR };"
-                local s, e = text:find(anchor, 1, true)
-                if s then
-                    text = text:sub(1, e) .. "\n\t\tstatic constexpr auto TYPE_ID{ BSScript::kActor };" .. text:sub(e + 1)
-                    io.writefile(actorh, text)
-                    print("4Stim: added RE::Actor::TYPE_ID to CommonLibF4 (lib/commonlibf4/include/RE/A/Actor.h)")
-                else
-                    raise("4Stim: CommonLibF4's Actor.h has no TYPE_ID and no FORM_ID line to put one after; Actor natives would not bind")
+        -- Fixes to Dear Modding's CommonLibF4 (c71da99), made to the
+        -- submodule's headers before anything compiles, until the fork has
+        -- them. Each is { file, what's wrong, what it should be }; a file
+        -- that already has the fix is left alone, and one with neither stops
+        -- the build (the fork changed: look again).
+        --  1. RE::Actor has no TYPE_ID, so it inherits TESObjectREFR's
+        --     (ObjectReference): natives taking an Actor were registered as
+        --     taking an ObjectReference and refused to bind ("does not match
+        --     existing signature"). kActor is 65, the old FORM_ID kACHR.
+        --  2. AIProcess::SetupSpecialIdle and StopCurrentIdle are one ID
+        --     too high for NG/AE (2231705 and 2231706; libxse's CommonLibF4,
+        --     which 4Stim played scenes with on 1.11.240, has 2231704 and
+        --     2231705, as 4Stim's own compat/RequiredIDs.h does). With them,
+        --     PlayIdle called StopCurrentIdle and every idle was refused.
+        local fixes = {
+            { "include/RE/A/Actor.h",
+              "static constexpr auto FORM_ID{ ENUM_FORM_ID::kACHR };",
+              "static constexpr auto FORM_ID{ ENUM_FORM_ID::kACHR }; static constexpr auto TYPE_ID{ BSScript::kActor };" },
+            { "include/RE/IDs.h",
+              "SetupSpecialIdle{ 1446774, 2231705 }",
+              "SetupSpecialIdle{ 1446774, 2231704 }" },
+            { "include/RE/IDs.h",
+              "StopCurrentIdle{ 434460, 2231706 }",
+              "StopCurrentIdle{ 434460, 2231705 }" },
+        }
+        for _, fix in ipairs(fixes) do
+            local file = path.join(os.projectdir(), "lib/commonlibf4", fix[1])
+            if os.isfile(file) then
+                local text = io.readfile(file)
+                -- (Actor.h fixed by an earlier 4Stim build has TYPE_ID on a line of its own)
+                local done = text:find(fix[3], 1, true) or (fix[1]:find("Actor.h", 1, true) and text:find("TYPE_ID{ BSScript::kActor }", 1, true))
+                if not done then
+                    local s, e = text:find(fix[2], 1, true)
+                    if not s then
+                        raise("4Stim: can't fix CommonLibF4's " .. fix[1] .. ": neither \"" .. fix[2] .. "\" nor the fix is in it")
+                    end
+                    io.writefile(file, text:sub(1, s - 1) .. fix[3] .. text:sub(e + 1))
+                    print("4Stim: fixed CommonLibF4's " .. fix[1] .. " (" .. fix[3]:gsub("%s+", " ") .. ")")
                 end
             end
         end
