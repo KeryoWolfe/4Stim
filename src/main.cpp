@@ -1446,8 +1446,13 @@ namespace
 		bool                                         noUndress = false;
 		bool                                         endAfterSequence = false;
 
-		// Asked to end by the scene clock (EndBrokenScenes); the end goes
-		// through Papyrus, which removes the scene a moment later.
+		// Its end has begun (EndActiveScene, or the player's end key / menu):
+		// the end goes through Papyrus, which removes the scene a moment
+		// later (after a fade, for the player's). Until then nothing plays
+		// on it (PlayOnActiveScene): a transition or auto mode moving on in
+		// that moment played its next scene in the same frame as the end's
+		// IdleStop, which the game then ignored (the owner's ZaZ pillory
+		// scene, 5 November: both actors kept the animation after the end).
 		bool ending = false;
 		// Ended because someone died, fought or was hurt (not a normal end):
 		// with bStayWhenInterrupted no one is sent back where they stood.
@@ -1604,7 +1609,9 @@ namespace
 	void RestoreScales(const ActiveScene& a_active);
 	void MoveApart(const ActiveScene& a_ended);
 	void ArmAutoplay(ActiveScene& a_scene);
-	void EndActiveScene(const ActiveScene& a_scene, std::string_view a_why);
+	void EndActiveScene(ActiveScene& a_scene, std::string_view a_why);
+	void MarkPlayerSceneEnding();
+	void StopAgainIfJustPlayed(const std::vector<std::uint32_t>& a_ids, RE::TESIdleForm* a_idle);
 	std::int32_t ThreadIDOf(std::uint32_t a_actorID);
 	void EndBrokenScenes(float a_seconds);
 	void ForgetActorMeta(const std::vector<std::uint32_t>& a_ids);
@@ -2597,6 +2604,10 @@ namespace
 	// if it's this one, and a SceneChanged event.
 	bool PlayOnActiveScene(ActiveScene& a_active, const std::string& a_sceneID, int a_speed)
 	{
+		if (a_active.ending) {
+			REX::INFO("Autoplay: \"{}\" not played, \"{}\" is ending", a_sceneID, a_active.sceneID);
+			return false;
+		}
 		const auto scene = SceneRegistry::Find(a_sceneID);
 		if (!scene || scene->actors.size() != a_active.actors.size()) {
 			REX::WARN("Autoplay: can't play \"{}\" on this scene's {} actor(s)", a_sceneID, a_active.actors.size());
@@ -4232,11 +4243,12 @@ namespace
 
 	// Ends a running scene through Papyrus: the focused scene the way the
 	// HUD's "End scene" does, any other without touching the camera.
-	void EndActiveScene(const ActiveScene& a_scene, std::string_view a_why)
+	void EndActiveScene(ActiveScene& a_scene, std::string_view a_why)
 	{
 		if (!g_vm || a_scene.actors.empty()) {
 			return;
 		}
+		a_scene.ending = true;
 		REX::INFO("Scene \"{}\": ending, {}", a_scene.sceneID, a_why);
 		RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
 		const auto focused = GetPlayerScene();
@@ -4779,6 +4791,7 @@ namespace
 
 			const auto ok = process->PlayIdle(*a_actor, idle, nullptr);
 			REX::INFO("StopScene: PlayIdle(IdleStop) returned {}", ok);
+			StopAgainIfJustPlayed({ a_actor->GetFormID() }, idle);
 			ClearFocusIfIn(a_actor->GetFormID());
 			TrackSceneStop(a_actor->GetFormID());
 		});
@@ -5893,6 +5906,49 @@ namespace
 	std::string             J_GetScene(std::monostate, std::string a_json) { return ModEvents::JSONScene(a_json); }
 	std::vector<std::string> J_GetMetadata(std::monostate, std::string a_json) { return ModEvents::JSONMetadata(a_json); }
 
+	// The player's scene is about to end (end key, picker, HUD): nothing plays
+	// on it any more (ActiveScene::ending), from the next frame. Main thread.
+	void MarkPlayerSceneEnding()
+	{
+		F4SE::GetTaskInterface()->AddTask([]() {
+			const auto focused = GetPlayerScene();
+			if (const auto active = focused.Active() ? FindActiveScene(focused.role0) : nullptr) {
+				active->ending = true;
+			}
+		});
+	}
+
+	// An end's IdleStop in the same moment as a scene's PlayIdle can lose: the
+	// game plays the scene's idle and the actors keep it after the end (the
+	// owner's ZaZ pillory scene, 5 November: IdleStop returned true, and
+	// both went on in the last scene's animation, the player held in place).
+	// So when the end comes within a moment of a scene's idle, IdleStop goes
+	// again shortly after, to whoever hasn't started another scene since.
+	// From the IdleStop task (main thread), before TrackSceneStop.
+	void StopAgainIfJustPlayed(const std::vector<std::uint32_t>& a_ids, RE::TESIdleForm* a_idle)
+	{
+		const auto active = a_ids.empty() ? nullptr : FindActiveScene(a_ids.front());
+		if (!active || std::chrono::steady_clock::now() - active->lastPlayed > std::chrono::milliseconds(750)) {
+			return;
+		}
+		REX::INFO("Scene end: \"{}\" played {} ms before its end: IdleStop again in a moment", active->sceneID,
+			std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - active->lastPlayed).count());
+		std::thread([a_ids, a_idle]() {
+			std::this_thread::sleep_for(std::chrono::milliseconds(400));
+			F4SE::GetTaskInterface()->AddTask([a_ids, a_idle]() {
+				for (const auto id : a_ids) {
+					if (FindActiveScene(id)) {
+						continue;  // in a new scene by now
+					}
+					const auto actor = RE::TESForm::GetFormByID<RE::Actor>(id);
+					const auto process = actor ? actor->currentProcess : nullptr;
+					const bool ok = process && process->PlayIdle(*actor, a_idle, nullptr);
+					REX::INFO("Scene end: {:08X} IdleStop again returned {}", id, ok);
+				}
+			});
+		}).detach();
+	}
+
 	// Clears both actors' poses in the same task (same frame), mirroring
 	// PlaySceneIdles, so the pair releases together.
 	void StopPair(std::monostate, RE::Actor* a_actor0, RE::Actor* a_actor1)
@@ -5915,6 +5971,7 @@ namespace
 			const auto ok0 = p0 ? p0->PlayIdle(*a_actor0, idle, nullptr) : false;
 			const auto ok1 = p1 ? p1->PlayIdle(*a_actor1, idle, nullptr) : false;
 			REX::INFO("StopPair: {:08X} / {:08X} IdleStop returned {} / {}", a_actor0->GetFormID(), a_actor1->GetFormID(), ok0, ok1);
+			StopAgainIfJustPlayed({ a_actor0->GetFormID(), a_actor1->GetFormID() }, idle);
 			ClearFocusIfIn(a_actor0->GetFormID());
 			ClearFocusIfIn(a_actor1->GetFormID());
 			TrackSceneStop(a_actor0->GetFormID());
@@ -6054,6 +6111,7 @@ namespace
 			ids.push_back(actor->GetFormID());
 		}
 		F4SE::GetTaskInterface()->AddTask([ids, idle]() {
+			StopAgainIfJustPlayed(ids, idle);
 			for (const auto id : ids) {
 				const auto actor = RE::TESForm::GetFormByID<RE::Actor>(id);
 				const auto process = actor ? actor->currentProcess : nullptr;
@@ -7548,6 +7606,7 @@ namespace
 				} else if (a_sceneID == END_SCENE_ID) {
 					if (g_vm) {
 						RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
+						MarkPlayerSceneEnding();
 						Compat::DispatchStaticCall(g_vm, "FourStimMenu"sv, "EndPlayerScene"sv, callback);
 					}
 				} else {
@@ -7912,6 +7971,7 @@ namespace
 			} else if (a_action == "end") {
 				if (g_vm) {
 					RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
+					MarkPlayerSceneEnding();
 					Compat::DispatchStaticCall(g_vm, "FourStimMenu"sv, "EndPlayerScene"sv, callback);
 				}
 			} else if (a_action == "search") {
@@ -10921,6 +10981,7 @@ namespace FourStim
 	{
 		if (g_vm) {
 			RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
+			MarkPlayerSceneEnding();
 			Compat::DispatchStaticCall(g_vm, "FourStimMenu"sv, "EndPlayerScene"sv, callback);
 		}
 	}
