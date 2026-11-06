@@ -9270,9 +9270,33 @@ namespace
 		std::scoped_lock lock(g_actorMetaLock);
 		g_actorMeta[a_actor->GetFormID()].strings[LowerCopy(a_key)] = std::move(a_value);
 	}
-	bool AM_PlayExpression(std::monostate, RE::Actor* a_actor, std::string a_expression)
+	// OActor.PlayExpression: the expression's duration in seconds (-1 if
+	// the event has none), as OStim's (it returned a bool before 0.5.0).
+	float AM_PlayExpression(std::monostate, RE::Actor* a_actor, std::string a_expression)
 	{
-		return a_actor && Expressions::SetEvent(a_actor->GetFormID(), LowerCopy(a_expression), true);
+		return a_actor ? Expressions::PlayEvent(a_actor->GetFormID(), LowerCopy(a_expression), true) : -1.0F;
+	}
+	void AM_SetExpressionsEnabled(std::monostate, RE::Actor* a_actor, bool a_enabled, bool a_allowOverride)
+	{
+		if (a_actor) {
+			Expressions::SetEnabled(a_actor->GetFormID(), a_enabled, a_allowOverride);
+		}
+	}
+	bool AM_HasExpressionOverride(std::monostate, RE::Actor* a_actor)
+	{
+		return a_actor && Expressions::HasOverride(a_actor->GetFormID());
+	}
+	void AM_UndressPartial(std::monostate, RE::Actor* a_actor, std::int32_t a_mask)
+	{
+		if (a_actor && FindActiveScene(a_actor->GetFormID())) {
+			Undress::StripMask(a_actor->GetFormID(), static_cast<std::uint32_t>(a_mask));
+		}
+	}
+	void AM_RedressPartial(std::monostate, RE::Actor* a_actor, std::int32_t a_mask)
+	{
+		if (a_actor && FindActiveScene(a_actor->GetFormID())) {
+			Undress::RedressMask(a_actor->GetFormID(), static_cast<std::uint32_t>(a_mask));
+		}
 	}
 	void AM_ClearExpression(std::monostate, RE::Actor* a_actor)
 	{
@@ -9356,6 +9380,41 @@ namespace
 			}
 		}
 		return nullptr;
+	}
+	// OFurniture.GetOffset: where a scene goes on the piece, in its own
+	// frame, as OStim's [x, y, z, rotation, scale] (its marker offset plus
+	// the type's offsets; here 4Stim's spot for the type: markers, else its
+	// bounds, plus the type's offset). Rotation in radians, as OStim's.
+	// Empty for something that isn't furniture a scene type knows.
+	std::vector<float> F_GetOffset(std::monostate, RE::TESObjectREFR* a_ref)
+	{
+		if (!a_ref) {
+			return {};
+		}
+		const auto type = Furniture::Classify(a_ref);
+		if (type.empty()) {
+			return {};
+		}
+		const auto spot = Furniture::SpotFor(a_ref, type, a_ref->data.location);
+		const auto d = spot.position - a_ref->data.location;
+		const float yaw = a_ref->data.angle.z;
+		// Into the piece's frame (the game's heading turns clockwise from north).
+		const float x = d.x * std::cos(yaw) - d.y * std::sin(yaw);
+		const float y = d.x * std::sin(yaw) + d.y * std::cos(yaw);
+		return { x, y, d.z, spot.heading - yaw, Furniture::MultiplyScale(type) };
+	}
+	// OFurniture.GetSceneID: the thread using the piece, -1 if none.
+	std::int32_t F_GetSceneID(std::monostate, RE::TESObjectREFR* a_ref)
+	{
+		if (!a_ref) {
+			return -1;
+		}
+		for (const auto& active : g_activeScenes) {
+			if (active.furnitureRef == a_ref->GetFormID()) {
+				return active.threadID;
+			}
+		}
+		return -1;
 	}
 
 	// ---- C++ plugin interface (include/4Stim/PluginInterface.h, docs/API.md) ----
@@ -9976,9 +10035,15 @@ namespace
 		a_vm->BindNativeMethod(ACTOR, "SetMetaString"sv, AM_SetMetaString);
 		a_vm->BindNativeMethod(ACTOR, "PlayExpression"sv, AM_PlayExpression);
 		a_vm->BindNativeMethod(ACTOR, "ClearExpression"sv, AM_ClearExpression);
+		a_vm->BindNativeMethod(ACTOR, "SetExpressionsEnabled"sv, AM_SetExpressionsEnabled);
+		a_vm->BindNativeMethod(ACTOR, "HasExpressionOverride"sv, AM_HasExpressionOverride);
+		a_vm->BindNativeMethod(ACTOR, "UndressPartial"sv, AM_UndressPartial);
+		a_vm->BindNativeMethod(ACTOR, "RedressPartial"sv, AM_RedressPartial);
 		constexpr auto FURNITURE = "FourFurniture"sv;
 		a_vm->BindNativeMethod(FURNITURE, "FindFurniture"sv, F_FindFurniture);
 		a_vm->BindNativeMethod(FURNITURE, "FindFurnitureOfType"sv, F_FindFurnitureOfType);
+		a_vm->BindNativeMethod(FURNITURE, "GetOffset"sv, F_GetOffset);
+		a_vm->BindNativeMethod(FURNITURE, "GetSceneID"sv, F_GetSceneID);
 		constexpr auto MOD_EVENTS = "FourModEvents"sv;
 		a_vm->BindNativeMethod(MOD_EVENTS, "RegisterForModEvent"sv, ME_Register);
 		a_vm->BindNativeMethod(MOD_EVENTS, "UnregisterForModEvent"sv, ME_Unregister);

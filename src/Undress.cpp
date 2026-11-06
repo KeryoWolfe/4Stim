@@ -462,6 +462,49 @@ namespace Undress
 		Strip(a_id, g_config.slots, a_byHand);
 	}
 
+	void StripMask(std::uint32_t a_id, std::uint32_t a_mask)
+	{
+		std::vector<int> slots;
+		for (int slot = 30; slot <= 61; ++slot) {
+			if (a_mask & (1u << (slot - 30))) {
+				slots.push_back(slot);
+			}
+		}
+		Strip(a_id, slots, true);
+	}
+
+	void RedressMask(std::uint32_t a_id, std::uint32_t a_mask)
+	{
+		std::vector<std::int32_t> items;
+		{
+			std::scoped_lock lock(g_lock);
+			const auto it = g_states.find(a_id);
+			if (it == g_states.end()) {
+				return;
+			}
+			auto& state = it->second;
+			std::erase_if(state.items, [&](std::uint32_t a_item) {
+				const auto form = RE::TESForm::GetFormByID(a_item);
+				if (!form || !(form->GetFilledSlots() & a_mask)) {
+					return false;
+				}
+				items.push_back(static_cast<std::int32_t>(a_item));
+				return true;
+			});
+			state.handled &= ~static_cast<std::uint64_t>(a_mask);  // those slots can come off again
+		}
+		if (items.empty()) {
+			return;
+		}
+		if (const auto vm = FourStim::GetVM()) {
+			REX::INFO("Undress: dressing {:08X} again in slots {:08X} ({} item(s))", a_id, a_mask, items.size());
+			const std::vector<std::int32_t> groups(items.size(), -1);
+			RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
+			Compat::DispatchStaticCall(vm, "FourStimUndress"sv, "Redress"sv, callback, static_cast<std::int32_t>(a_id), items, g_config.itemDelay, groups,
+				std::vector<std::int32_t>{}, std::vector<float>{}, std::vector<float>{});
+		}
+	}
+
 	std::vector<std::uint32_t> WornItems(RE::Actor* a_actor, std::uint32_t a_mask)
 	{
 		return a_actor ? WornIn(a_actor, a_mask) : std::vector<std::uint32_t>{};

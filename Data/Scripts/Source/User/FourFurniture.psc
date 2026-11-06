@@ -20,3 +20,14 @@ EndFunction
 bool Function IsChildOf(string SuperType, string SubType) Global
 	return FourStim.IsFurnitureChildOf(SuperType, SubType)
 EndFunction
+
+; Where a scene goes on the piece, in its own frame, as OStim's
+; [x, y, z, rotation (radians), scale]. Empty if no scene type knows it.
+float[] Function GetOffset(ObjectReference FurnitureRef) Global Native
+; The thread using the piece, -1 if none.
+int Function GetSceneID(ObjectReference FurnitureRef) Global Native
+; OStim's ResetClutter: kept for add-ons, but it does nothing, as in OStim
+; (its body is commented out there). 4Stim puts clutter back by itself after
+; a scene (bResetClutter).
+Function ResetClutter(ObjectReference CenterRef, float Radius) Global
+EndFunction

@@ -50,6 +50,12 @@ namespace Undress
 	// bUndressPlayer=0. Any thread.
 	void StripAll(std::uint32_t a_id, bool a_byHand = false);
 
+	// OActor.UndressPartial / RedressPartial: takes off (as by hand) or puts
+	// back what 4Stim took off in a_mask's slots (bit 0 = slot 30, the
+	// Creation Kit's slot masks). Any thread.
+	void StripMask(std::uint32_t a_id, std::uint32_t a_mask);
+	void RedressMask(std::uint32_t a_id, std::uint32_t a_mask);
+
 	// The armor a_actor wears with any of a_mask's slots (bit 0 = slot 30),
 	// as form IDs; not the Pip-Boy. Main thread.
 	std::vector<std::uint32_t> WornItems(RE::Actor* a_actor, std::uint32_t a_mask = 0xFFFFFFFF);

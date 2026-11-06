@@ -105,6 +105,8 @@ namespace Expressions
 			float                eventIn = -1.0F;  // timed event: seconds left (< 0 = until cleared)
 			float                overrideIn = -1.0F;
 			bool                 dirty = true;
+			bool                 noUnderlying = false;  // OStim's NO_UNDERLYING_EXPRESSION (OActor.SetExpressionsEnabled)
+			bool                 noOverride = false;    // NO_OVERRIDE_EXPRESSION
 			// The face moves toward its target a little at a time, as OStim's
 			// ExpressionUpdater (speed per 20 ms: 1 underlying, 3 event, 5
 			// override, so 50, 150 and 250 points a second).
@@ -410,13 +412,13 @@ namespace Expressions
 				const int   bit = 1 << slot;
 				const Layer* layer = nullptr;
 				float        speed = 50.0F;
-				if (a_state.override_ && (a_state.override_->expression->mask & bit)) {
+				if (a_state.override_ && !a_state.noOverride && (a_state.override_->expression->mask & bit)) {
 					layer = &*a_state.override_;
 					speed = 250.0F;
 				} else if (a_state.event && (a_state.event->expression->mask & bit)) {
 					layer = &*a_state.event;
 					speed = 150.0F;
-				} else if (a_state.underlying && (a_state.underlying->expression->mask & bit)) {
+				} else if (a_state.underlying && !a_state.noUnderlying && (a_state.underlying->expression->mask & bit)) {
 					layer = &*a_state.underlying;
 				}
 				if (slot == kMouth) {
@@ -540,18 +542,55 @@ namespace Expressions
 
 	bool SetEvent(std::uint32_t a_id, const std::string& a_event, bool a_timed)
 	{
+		return PlayEvent(a_id, a_event, a_timed) >= 0.0F;
+	}
+
+	float PlayEvent(std::uint32_t a_id, const std::string& a_event, bool a_timed)
+	{
 		std::scoped_lock lock(g_lock);
 		EnsureLoaded();
-		const auto it = g_states.find(a_id);
 		const auto list = Find(g_byEvent, a_event);
-		if (it == g_states.end() || !list) {
-			return false;
+		if (!list || list->empty()) {
+			return -1.0F;
+		}
+		const auto picked = Pick(*list);
+		const auto it = g_states.find(a_id);
+		// Its duration for the actor's sex, as OStim's getDuration(actor).
+		bool female = false;
+		if (it != g_states.end()) {
+			female = it->second.female;
+		} else if (const auto actor = RE::TESForm::GetFormByID<RE::Actor>(a_id)) {
+			female = Compat::GetSex(actor) == RE::SEX::kFemale;
+		}
+		const float duration = picked ? std::max((female ? picked->female : picked->male).duration, 0.0F) : -1.0F;
+		if (it == g_states.end() || !picked) {
+			return duration;  // OStim's: the duration even for an actor not in a scene
 		}
 		auto& state = it->second;
-		state.event = MakeLayer(Pick(*list), state.female, state.speed, Excitement::Get(a_id));
+		state.event = MakeLayer(picked, state.female, state.speed, Excitement::Get(a_id));
 		state.eventIn = a_timed && state.event ? std::max(state.event->expression->duration, 0.1F) : -1.0F;
 		state.dirty = true;
-		return state.event.has_value();
+		return state.event ? duration : -1.0F;
+	}
+
+	void SetEnabled(std::uint32_t a_id, bool a_enabled, bool a_allowOverride)
+	{
+		std::scoped_lock lock(g_lock);
+		const auto it = g_states.find(a_id);
+		if (it == g_states.end()) {
+			return;
+		}
+		auto& state = it->second;
+		state.noUnderlying = !a_enabled;
+		state.noOverride = !a_enabled && !a_allowOverride;
+		state.dirty = true;
+	}
+
+	bool HasOverride(std::uint32_t a_id)
+	{
+		std::scoped_lock lock(g_lock);
+		const auto it = g_states.find(a_id);
+		return it != g_states.end() && it->second.override_.has_value();
 	}
 
 	void ClearEvent(std::uint32_t a_id)

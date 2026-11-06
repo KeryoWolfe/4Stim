@@ -42,6 +42,17 @@ namespace Expressions
 	// An event expression ("moan", "climax"): kept until ClearEvent, or for
 	// its own duration with a_timed. Returns false if there's none for it.
 	bool SetEvent(std::uint32_t a_id, const std::string& a_event, bool a_timed);
+	// The same, returning the picked expression's duration in seconds (OStim's
+	// OActor.PlayExpression; -1 if the event has no expression). An actor
+	// not in a scene gets nothing, but the duration is still returned.
+	float PlayEvent(std::uint32_t a_id, const std::string& a_event, bool a_timed);
+
+	// OActor.SetExpressionsEnabled: off stops the scene's (underlying)
+	// expressions, and the overrides too unless a_allowOverride; events
+	// still play. Kept until the actor leaves the scene.
+	void SetEnabled(std::uint32_t a_id, bool a_enabled, bool a_allowOverride);
+	// OActor.HasExpressionOverride: an override (an open mouth for oral...) is on.
+	bool HasOverride(std::uint32_t a_id);
 	void ClearEvent(std::uint32_t a_id);
 
 	// Advances the timers and applies changes. Main thread (the scene clock).

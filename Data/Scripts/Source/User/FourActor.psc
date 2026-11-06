@@ -12,11 +12,12 @@ bool Function IsIn4Stim(Actor Act) Global
 	return FourStim.IsInScene(Act)
 EndFunction
 
-; Whether they all exist, aren't dead and aren't in a scene already.
+; Whether they can all be in a scene, as OStim's isEligible: they exist,
+; aren't disabled, deleted, children or dead, and aren't in a scene already.
 bool Function VerifyActors(Actor[] Actors) Global
 	int i = 0
 	while i < Actors.Length
-		if Actors[i] == None || Actors[i].IsDead() || FourStim.IsInScene(Actors[i])
+		if Actors[i] == None || Actors[i].IsDisabled() || Actors[i].IsDeleted() || Actors[i].IsChild() || Actors[i].IsDead() || FourStim.IsInScene(Actors[i])
 			return false
 		endif
 		i += 1
@@ -119,6 +120,35 @@ string Function GetMetaString(Actor Act, string MetaID) Global Native
 Function SetMetaString(Actor Act, string MetaID, string Value) Global Native
 
 ; ---- Expressions (docs\EXPRESSIONS.md) ----
-; Plays an event expression ("climax", ...) until cleared; false if unknown.
-bool Function PlayExpression(Actor Act, string Expression) Global Native
+; Plays an event expression ("climax", ...) for its duration, which it
+; returns in seconds (-1 if the event has no expression), as OStim's.
+float Function PlayExpression(Actor Act, string Expression) Global Native
 Function ClearExpression(Actor Act) Global Native
+; Off: the scene's expressions stop (an event one still plays); the
+; overrides (an open mouth for oral) stay unless AllowOverride is false.
+Function SetExpressionsEnabled(Actor Act, bool Enabled, bool AllowOverride = true) Global Native
+; Whether the actor's face is overridden (an oral action's open mouth...).
+bool Function HasExpressionOverride(Actor Act) Global Native
+
+; ---- Undressing by slot mask (the Creation Kit's armor slot masks) ----
+Function UndressPartial(Actor Act, int Mask) Global Native
+Function RedressPartial(Actor Act, int Mask) Global Native
+
+; ---- Equip object state (OStim's) ----
+bool Function IsObjectEquipped(Actor Act, string Type) Global
+	return FourStim.IsObjectEquipped(Act, Type)
+EndFunction
+bool Function SetObjectVariant(Actor Act, string Type, string Variant, float Duration = 0.0) Global
+	return FourStim.SetObjectVariant(Act, Type, Variant, Duration)
+EndFunction
+Function UnsetObjectVariant(Actor Act, string Type) Global
+	FourStim.UnsetObjectVariant(Act, Type)
+EndFunction
+
+; ---- OStim's deprecated names, kept so old add-ons work ----
+Function UpdateExpression(Actor Act) Global
+	ClearExpression(Act)
+EndFunction
+int Function GetSceneID(Actor Act) Global
+	return GetThreadID(Act)
+EndFunction
