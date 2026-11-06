@@ -1,5 +1,7 @@
 #include "EyeLook.h"
 
+#include <functional>
+
 #include <algorithm>
 #include <cmath>
 #include <mutex>
@@ -111,7 +113,33 @@ namespace EyeLook
 			}
 			if (!found && actor->Get3D(false) && !state.warned) {
 				state.warned = true;
-				REX::INFO("Eyes: {:08X} has no \"{}\" / \"{}\" bones: OStim's look directions skipped", id, g_config.leftEye, g_config.rightEye);
+				// What its 3D does have with "eye" in the name, to find the
+				// bones Fallout 4's eyes really follow (the owner, 5
+				// November: the eyes may be driven by something else).
+				std::vector<std::string> names;
+				std::function<void(RE::NiAVObject*, int)> walk = [&](RE::NiAVObject* a_object, int a_depth) {
+					if (!a_object || names.size() >= 24) {
+						return;
+					}
+					std::string name = a_object->name.c_str() ? a_object->name.c_str() : "";
+					std::string lower = name;
+					std::ranges::transform(lower, lower.begin(), [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+					if (lower.find("eye") != std::string::npos) {
+						names.push_back(std::format("{} ({})", name, a_object->IsNode() ? "node" : a_object->IsGeometry() ? "geometry" : "object"));
+					}
+					if (const auto node = a_depth > 0 ? a_object->IsNode() : nullptr) {
+						for (const auto& child : node->children) {
+							walk(child.get(), a_depth - 1);
+						}
+					}
+				};
+				walk(actor->Get3D(false), 64);
+				std::string list;
+				for (const auto& n : names) {
+					list += (list.empty() ? "" : ", ") + n;
+				}
+				REX::INFO("Eyes: {:08X} has no \"{}\" / \"{}\" bones: OStim's look directions skipped. In its 3D with \"eye\" in the name: {}", id, g_config.leftEye,
+					g_config.rightEye, list.empty() ? "nothing" : list);
 			}
 		}
 	}
