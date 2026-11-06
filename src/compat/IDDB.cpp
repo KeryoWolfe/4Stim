@@ -240,6 +240,45 @@ namespace
 
 	// 4Stim: the address table for this game version, sorted by ID.
 	std::vector<REL::IDDB::MAPPING> g4StimTable;
+
+	// 4Stim (since the Dear Modding CommonLibF4, 5 November): on 1.10.163
+	// ("old-gen") that library hands its own old-gen Address Library IDs
+	// for the functions whose ID changed with next-gen (REL::VariantID's
+	// first value), where libxse's had only next-gen / AE IDs. Those are
+	// looked up in the game's own Address Library for 1.10.163
+	// (version-1-10-163-0.bin, F4SE's format: a count, then ID / offset
+	// pairs), when it's installed, before the Runtime Database and 4Stim's
+	// table; IDs it doesn't have (next-gen / AE ones) go on to those as
+	// before.
+	std::vector<REL::IDDB::MAPPING> gOldGenTable;
+	std::filesystem::path           gOldGenPath;
+
+	bool LoadOldGenLibrary(const std::filesystem::path& a_path)
+	{
+		std::ifstream in(a_path, std::ios::binary);
+		std::uint64_t count = 0;
+		if (!in || !in.read(reinterpret_cast<char*>(&count), sizeof(count)) || count == 0 || count > 10'000'000) {
+			return false;
+		}
+		std::vector<REL::IDDB::MAPPING> table(static_cast<std::size_t>(count));
+		if (!in.read(reinterpret_cast<char*>(table.data()), static_cast<std::streamsize>(table.size() * sizeof(REL::IDDB::MAPPING)))) {
+			return false;
+		}
+		std::ranges::sort(table, {}, &REL::IDDB::MAPPING::id);
+		gOldGenTable = std::move(table);
+		gOldGenPath = a_path;
+		return true;
+	}
+
+	std::optional<std::uint64_t> FromOldGen(std::uint64_t a_id)
+	{
+		const auto it = std::lower_bound(gOldGenTable.begin(), gOldGenTable.end(), REL::IDDB::MAPPING{ a_id, 0 },
+			[](const REL::IDDB::MAPPING& a_lhs, const REL::IDDB::MAPPING& a_rhs) { return a_lhs.id < a_rhs.id; });
+		if (it == gOldGenTable.end() || it->id != a_id) {
+			return std::nullopt;
+		}
+		return it->offset;
+	}
 	std::filesystem::path           g4StimTablePath;
 	std::vector<std::string>        g4StimTableProbes;  // where it was looked for, and what was there (the log)
 
@@ -357,6 +396,14 @@ namespace REL
 
 		const auto mod = REX::FModule::GetExecutingModule();
 		const auto version = mod.GetFileVersion().wstring(L"-");
+
+		// 4Stim: old-gen's own Address Library, for the library's old-gen IDs (above).
+		if (mod.GetFileVersion() < REL::Version{ 1, 10, 980, 0 }) {
+			const auto oldGen = plugin.parent_path() / std::format(L"version-{}.bin", version);
+			if (std::filesystem::exists(oldGen)) {
+				LoadOldGenLibrary(oldGen);
+			}
+		}
 
 		// 4Stim: AE (1.11.x) with its Address Library: as CommonLibF4 does
 		// (below). Any other version, or AE without it: the Runtime
@@ -673,6 +720,12 @@ namespace REL
 	std::uint64_t IDDB::offset(std::uint64_t a_id) const
 	{
 		const auto mod = REX::FModule::GetExecutingModule();
+		// 4Stim: old-gen's own Address Library first (its old-gen IDs).
+		if (!gOldGenTable.empty()) {
+			if (const auto rva = FromOldGen(a_id)) {
+				return *rva;
+			}
+		}
 		// 4Stim: the Runtime Database, then our own table.
 		if (gRuntime) {
 			RD::RuntimeDatabase::ResolveFailure failure{};
@@ -782,6 +835,12 @@ namespace Compat
 	{
 		if (!UsingAddressTable())
 			return true;
-		return FromRuntime(a_id).has_value() || FromTable(a_id).has_value();
+		return FromOldGen(a_id).has_value() || FromRuntime(a_id).has_value() || FromTable(a_id).has_value();
+	}
+
+	std::filesystem::path OldGenLibraryPath()
+	{
+		(void)REL::IDDB::GetSingleton();
+		return gOldGenTable.empty() ? std::filesystem::path{} : gOldGenPath;
 	}
 }

@@ -64,7 +64,7 @@ Interface-src/         ActionScript 3 sources for the picker and HUD movies
 tools/                 package-alpha.ps1 (test build archives)
 docs/                  Scene format (SCENES.md), HUD API (HUD_API.md), API for other mods (API.md)
 include/4Stim/         C++ plugin interface for other F4SE plugins (PluginInterface.h)
-lib/commonlibf4/       CommonLibF4 (git submodule)
+lib/commonlibf4/       CommonLibF4, Dear Modding's fork (git submodule, pinned)
 ```
 
 ## Building
@@ -102,7 +102,7 @@ powershell -ExecutionPolicy Bypass -File tools\package-alpha.ps1
 ## Credits
 
 - [OStim NG](https://github.com/VersuchDrei/OStimNG) for the design this framework follows, the action types (`Actions\Default.json`) and the scene data used for testing
-- [CommonLibF4](https://github.com/libxse/commonlibf4) and the [F4SE](https://f4se.silverlock.org/) team
+- [CommonLibF4](https://github.com/libxse/commonlibf4), [Dear Modding's fork of it](https://github.com/Dear-Modding-FO4/commonlibf4) (which 4Stim builds against), and the [F4SE](https://f4se.silverlock.org/) team
 
 ## License
 

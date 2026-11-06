@@ -31,6 +31,10 @@ namespace Compat
 	// and what was there (the log).
 	std::vector<std::string> AddressTableProbes();
 
+	// 1.10.163's own Address Library, when it's installed and read (for the
+	// Dear Modding CommonLibF4's old-gen IDs; compat/IDDB.cpp); empty if not.
+	std::filesystem::path OldGenLibraryPath();
+
 	// Why HasAddress is false for a_id.
 	std::string WhyMissing(std::uint64_t a_id);
 }

@@ -11058,6 +11058,9 @@ F4SE_PLUGIN_LOAD(const F4SE::LoadInterface* a_f4se)
 		}
 		REX::INFO("Addresses: {}, {}", Compat::UsingRuntimeDatabase() ? "CommonLibF4RD's Runtime Database" : "4Stim's own table",
 			Compat::AddressTablePath().string());
+		if (const auto oldGen = Compat::OldGenLibraryPath(); !oldGen.empty()) {
+			REX::INFO("Addresses: old-gen IDs from the game's Address Library first, {}", oldGen.string());
+		}
 		if (Compat::UsingRuntimeDatabase()) {
 			for (const auto& probe : Compat::AddressTableProbes()) {
 				REX::INFO("Addresses: 4Stim's table at {}", probe);
