@@ -27,6 +27,9 @@ Times given with OStim's names are in milliseconds, as in OStim. `SetFurnitureSe
 | `sPadHotkey`, `sPadNPCScene`, `sPadSpeedUp`, `sPadSpeedDown`, `sPadAutoMode`, `sPadPullOut`, `sPadEnd`, `sPadSearch`, `sPadAlign`, `sPadFreeCam`, `sPadHideUI` (`[Controller]`, 4Stim's) | `None` | | A controller button for that scene key: `LB`, `RB`, `LT`, `RT`, `X`, `Y`, `LS`, `RS`, `Back` |
 | `sPadScheme` (`[Controller]`, 4Stim's) | `Modern` | | How the controller moves through the HUD: `Modern` (B to the tab buttons, then hide) or `Classic` (OStim's navigation keys on the d-pad and A) |
 | `fHUDFadeTime` (`[HUD]`) | 10 | | OStim's UI `fadeTime`: seconds without input before the HUD fades out and hands the keys back (0 = never) |
+| `enablePlayerBar` / `enableNpcBar` (`[HUD]`) | 1 / 1 | | An excitement bar for you / for each NPC in the scene |
+| `SetAutoHideBar` (`[HUD]`) | 0 | | The bars fade with the HUD (off: they stay up all scene, as OStim's). OStim hides them after 15 s without player input; 4Stim uses the HUD's fade (`fHUDFadeTime`) |
+| `SetMatchColorToGender` (`[HUD]`) | 0 | | Bar colors by sex (blue male, pink female, purple other); off, by role as OStim's (the first blue, the second pink, the rest purple) |
 | `SetOsaYesKey` / `SetOsaTogKey` | `0x67` / `0x69` (numpad 7 / 9) | | The HUD's choose (Enter works too) / between the list and the tab buttons |
 | `SetUseFreeCam` | 1 | | Free camera in scenes with you |
 | `SetCameraSpeed` | 3 | `fFreeCameraSpeed` (a multiplier) | Free camera speed (the game's `fFreeCameraTranslationSpeed`) |

@@ -25,6 +25,11 @@ package
 			Menu_mc.SetScenes(a_list, a_title);
 		}
 
+		public function SetFooter(a_text:String):void
+		{
+			Menu_mc.SetFooter(a_text);
+		}
+
 		public function ProcessUserEvent(a_name:String, a_down:Boolean):Boolean
 		{
 			return Menu_mc.ProcessUserEvent(a_name, a_down);

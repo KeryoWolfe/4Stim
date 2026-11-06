@@ -97,16 +97,30 @@ namespace HUD
 		bool                      g_columns = false;  // sHUDControls=Columns (OStim's scheme)
 		bool                      g_padClassic = false;  // sPadScheme=Classic: the controller as OStim's navigation keys
 		float                     g_fadeTime = 10.0F;    // fHUDFadeTime: seconds without input before the HUD fades (0 = never)
+		// The excitement bars, OStim's bar settings (SETTINGS.md): which
+		// actors get one, whether they fade with the HUD, and their colors by
+		// sex or (OStim's default) by role.
+		struct BarOptions
+		{
+			bool player = true;        // bEnablePlayerBar (OStim's enablePlayerBar, on)
+			bool npc = true;           // bEnableNpcBar (enableNpcBar, on)
+			bool autoHide = false;     // bAutoHideBars (SetAutoHideBar, off)
+			bool matchGender = false;  // bMatchColorToGender (SetMatchColorToGender, off)
+		};
+		BarOptions g_bars;
 		json                      g_theme;
 		std::vector<UtilityEntry> g_utility;
 
 		std::atomic<bool> g_focused = false;
 		bool              g_hidden = false;  // hidden by the hide-HUD key (OStim's keyHideUI)
 
-		// The Align tab: which role is being adjusted and the step size.
-		constexpr std::array<float, 5> ALIGN_STEPS{ 0.5F, 1.0F, 2.0F, 5.0F, 10.0F };  // units / degrees; scale moves by step / 100
+		// The Align tab: which role is being adjusted and the step size, as
+		// OStim's align menu (IncrementValue): 10, 1, 0.1, 0.01, 0.001 for
+		// every field (penis bend: one step), starting at 1.
+		constexpr std::array<float, 5> ALIGN_STEPS{ 10.0F, 1.0F, 0.1F, 0.01F, 0.001F };
 		std::size_t                    g_alignRole = 0;
 		std::size_t                    g_alignStep = 1;
+		std::string                    g_tab = "navigation";  // the tab the movie shows (its TabChanged)
 		std::atomic<bool> g_showRequested = false;
 
 		std::string Lower(std::string a_text)
@@ -538,6 +552,7 @@ namespace HUD
 				MapCodeMethodToASFunction("AlignReset", 11);
 				MapCodeMethodToASFunction("SetHorizontalRepeat", 12);  // (on)
 				MapCodeMethodToASFunction("Hide", 13);  // hide the HUD; the scene goes on
+				MapCodeMethodToASFunction("TabChanged", 14);  // (id) the tab it shows now
 			}
 
 			void Call(const Params& a_params) override
@@ -612,6 +627,9 @@ namespace HUD
 					if (!g_hidden) {
 						ToggleHidden();
 					}
+					break;
+				case 14:  // TabChanged(id)
+					g_tab = string0();
 					break;
 				default:
 					break;
@@ -691,6 +709,19 @@ namespace HUD
 				InvokeOptional("SetPadScheme", &pad, 1);
 				GValue seconds(static_cast<double>(fade));
 				InvokeOptional("SetFadeTime", &seconds, 1);
+				// OStim's bar settings (optional SetBarOptions).
+				BarOptions bars;
+				{
+					std::scoped_lock lock(g_configLock);
+					bars = g_bars;
+				}
+				GValue options;
+				uiMovie->CreateObject(&options);
+				options.SetMember("player"sv, GValue(bars.player));
+				options.SetMember("npc"sv, GValue(bars.npc));
+				options.SetMember("autoHide"sv, GValue(bars.autoHide));
+				options.SetMember("matchGender"sv, GValue(bars.matchGender));
+				InvokeOptional("SetBarOptions", &options, 1);
 			}
 
 			// Hidden by the hide-HUD key (optional HUD API function SetHidden).
@@ -724,13 +755,20 @@ namespace HUD
 				std::string       sceneID;
 				const bool        ok = !ids.empty() && FourStim::GetFocusedAlignment(g_alignRole, offset, sceneID);
 				std::string       name = "Partner";
+				const char*       sex = "other";
 				if (const auto actor = ok ? RE::TESForm::GetFormByID<RE::Actor>(ids[g_alignRole]) : nullptr) {
 					if (actor == RE::PlayerCharacter::GetSingleton()) {
 						name = "You";
 					} else if (const auto n = actor->GetDisplayFullName(); n && *n) {
 						name = n;
 					}
+					const auto s = Compat::GetSex(actor);
+					sex = s == RE::SEX::kMale ? "male" : s == RE::SEX::kFemale ? "female" : "other";
 				}
+				// OStim's align readout (its sceneInfo): the scene, its pack
+				// and the actor set's alignment key.
+				const auto        scene = ok ? SceneRegistry::Find(sceneID) : nullptr;
+				const std::string key = ok ? FourStim::GetFocusedAlignKey() : std::string{};
 				GValue data;
 				uiMovie->CreateObject(&data);
 				data.SetMember("available"sv, GValue(ok));
@@ -744,6 +782,12 @@ namespace HUD
 				data.SetMember("scale"sv, GValue(static_cast<double>(offset.scale)));
 				data.SetMember("bend"sv, GValue(static_cast<double>(offset.bend)));
 				data.SetMember("step"sv, GValue(static_cast<double>(ALIGN_STEPS[g_alignStep])));
+				data.SetMember("stepIndex"sv, GValue(static_cast<double>(g_alignStep)));
+				data.SetMember("sex"sv, GValue(sex));
+				data.SetMember("sceneID"sv, GValue(sceneID.c_str()));
+				data.SetMember("sceneName"sv, GValue(scene ? scene->name.c_str() : ""));
+				data.SetMember("modpack"sv, GValue(scene ? scene->modpack.c_str() : ""));
+				data.SetMember("key"sv, GValue(key.c_str()));
 				InvokeOptional("SetAlign", &data, 1);
 			}
 
@@ -755,18 +799,21 @@ namespace HUD
 				if (!FourStim::GetFocusedAlignment(g_alignRole, offset, sceneID)) {
 					return;
 				}
+				// As OStim's AlignMenu::Increment: the step for every field,
+				// scale too. Snapped to the smallest step so float error doesn't build up.
 				const float step = ALIGN_STEPS[g_alignStep] * a_dir;
-				auto        snap = [](float a_value, float a_grid) { return std::round(a_value / a_grid) * a_grid; };
+				auto        snap = [](float a_value) { return std::round(a_value * 1000.0F) / 1000.0F; };
 				if (a_field == "x") {
-					offset.x = snap(offset.x + step, 0.1F);
+					offset.x = snap(offset.x + step);
 				} else if (a_field == "y") {
-					offset.y = snap(offset.y + step, 0.1F);
+					offset.y = snap(offset.y + step);
 				} else if (a_field == "z") {
-					offset.z = snap(offset.z + step, 0.1F);
+					offset.z = snap(offset.z + step);
 				} else if (a_field == "rot") {
-					offset.rot = std::fmod(snap(offset.rot + step, 0.1F) + 540.0F, 360.0F) - 180.0F;
+					offset.rot = snap(std::fmod(offset.rot + step + 540.0F, 360.0F) - 180.0F);
 				} else if (a_field == "scale") {
-					offset.scale = std::clamp(snap(offset.scale + step / 100.0F, 0.005F), 0.5F, 2.0F);
+					// 4Stim keeps a size the skeleton can take (OStim doesn't clamp).
+					offset.scale = std::clamp(snap(offset.scale + step), 0.1F, 10.0F);
 				} else if (a_field == "bend") {
 					offset.bend = std::clamp(std::round(offset.bend) + a_dir, -10.0F, 9.0F);  // as OStim: one SoS step a press (-10: flaccid)
 				} else {
@@ -939,12 +986,13 @@ namespace HUD
 
 			void SendScene(const SceneRegistry::Scene* a_scene)
 			{
-				GValue value, id, name, count, tags;
+				GValue value, id, name, count, tags, modpack;
 				uiMovie->CreateObject(&value);
 				uiMovie->CreateArray(&tags);
 				if (a_scene) {
 					id = a_scene->id.c_str();
 					name = a_scene->name.c_str();
+					modpack = a_scene->modpack.c_str();
 					count = static_cast<double>(a_scene->actors.size());
 					for (const auto& tag : a_scene->tags) {
 						tags.PushBack(GValue(tag.c_str()));
@@ -952,10 +1000,12 @@ namespace HUD
 				} else {
 					id = "";
 					name = "";
+					modpack = "";
 					count = 0.0;
 				}
 				value.SetMember("id"sv, id);
 				value.SetMember("name"sv, name);
+				value.SetMember("modpack"sv, modpack);
 				value.SetMember("actorCount"sv, count);
 				value.SetMember("tags"sv, tags);
 				InvokeRequired("SetScene", &value, 1);
@@ -994,8 +1044,19 @@ namespace HUD
 			void SendSpeed(const FourStim::FocusedScene& a_focused, const SceneRegistry::Scene* a_scene)
 			{
 				const int count = a_scene ? static_cast<int>(a_scene->speeds.size()) : 0;
-				GValue    args[2]{ static_cast<double>(std::clamp(a_focused.speed, 0, std::max(count - 1, 0))), static_cast<double>(count) };
+				const int level = std::clamp(a_focused.speed, 0, std::max(count - 1, 0));
+				GValue    args[2]{ static_cast<double>(level), static_cast<double>(count) };
 				InvokeRequired("SetSpeed", args, 2);
+				// OStim's speed number (the scene's displaySpeed), shown on the
+				// speed meter; "" when the scene gives none (optional SetSpeedLabel).
+				std::string label;
+				if (a_scene && level < static_cast<int>(a_scene->speedInfo.size())) {
+					if (const float shown = a_scene->speedInfo[level].displaySpeed; shown != 0.0F) {
+						label = std::format("{:g}", shown);
+					}
+				}
+				GValue text(label.c_str());
+				InvokeOptional("SetSpeedLabel", &text, 1);
 			}
 
 			// a_border: OStim's icon border color, "rrggbb" ("" or OStim's
@@ -1189,6 +1250,23 @@ namespace HUD
 		std::scoped_lock lock(g_configLock);
 		g_padClassic = a_classic;
 		g_fadeTime = std::max(a_fadeTime, 0.0F);
+	}
+
+	void SetBarOptions(bool a_player, bool a_npc, bool a_autoHide, bool a_matchGender)
+	{
+		std::scoped_lock lock(g_configLock);
+		g_bars = { a_player, a_npc, a_autoHide, a_matchGender };
+	}
+
+	bool CycleAlignStep()
+	{
+		if (!g_focused || g_hidden || g_tab != "align" || !g_menu || !g_menu->Loaded()) {
+			return false;
+		}
+		// As OStim's align menu: 10 -> 1 -> 0.1 -> 0.01 -> 0.001 -> 10.
+		g_alignStep = (g_alignStep + 1) % ALIGN_STEPS.size();
+		g_menu->SendAlign();
+		return true;
 	}
 
 	bool PadClassic()

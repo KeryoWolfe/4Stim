@@ -16,6 +16,7 @@ package hud
 	{
 		public static const ROW_H:Number = 40;
 		public static const HEADER_H:Number = 31;
+		public static const INFO_H:Number = 22;  // the info line under the header (setInfo)
 		private static const FADE:Number = 64;   // height of the top fade
 		private static const TILE:Number = 40;
 		private static const ICON:Number = 36;
@@ -27,6 +28,10 @@ package hud
 		private var _mirror:Boolean = false;
 
 		private var _title:TextField;
+		private var _corner:TextField;  // the header's other end: the scene's pack (setInfo)
+		private var _info:TextField;    // under the header: the scene's name (setInfo)
+		private var _infoText:String = "";
+		private var _cornerText:String = "";
 		private var _rule:Shape;
 		private var _bg:Shape;
 		private var _rows:Array = [];   // { sprite, bg, tile, icon, label }
@@ -43,7 +48,7 @@ package hud
 			super();
 			_w = a_width;
 			_h = a_height;
-			_visible = Math.max(1, int((_h - HEADER_H) / ROW_H));
+			_visible = Math.max(1, int((_h - HEADER_H - INFO_H) / ROW_H));
 			mouseEnabled = false;
 			mouseChildren = false;
 		}
@@ -69,6 +74,21 @@ package hud
 			_title.width = _w - 8;
 			_title.height = 24;
 			addChild(_title);
+
+			_corner = _theme.makeText(12, _theme.color("textMuted"));
+			_corner.alpha = _theme.alpha("textMuted");
+			_corner.y = 6;
+			_corner.width = _w * 0.55;
+			_corner.height = 20;
+			_corner.x = _mirror ? 8 : _w - _corner.width - 8;
+			addChild(_corner);
+
+			_info = _theme.makeText(15, _theme.color("text"));
+			_info.x = 8;
+			_info.y = HEADER_H;
+			_info.width = _w - 16;
+			_info.height = INFO_H;
+			addChild(_info);
 
 			_rule = new Shape();
 			addChild(_rule);
@@ -97,6 +117,7 @@ package hud
 			addChild(_empty);
 
 			drawStatic();
+			drawInfo();
 			refresh();
 		}
 
@@ -106,6 +127,30 @@ package hud
 				_title.text = a_title.toUpperCase();
 				spaceLetters(_title, 2);
 			}
+		}
+
+		// The info line under the header (the scene's name, or the Align tab's
+		// readout) and the header's other end (the scene's pack); "" for none.
+		public function setInfo(a_info:String, a_corner:String):void
+		{
+			_infoText = a_info != null ? a_info : "";
+			_cornerText = a_corner != null ? a_corner : "";
+			drawInfo();
+		}
+
+		private function drawInfo():void
+		{
+			if (_info == null) {
+				return;
+			}
+			_info.text = _infoText;
+			var tf:TextFormat = _info.getTextFormat();
+			tf.align = _mirror ? TextFormatAlign.RIGHT : TextFormatAlign.LEFT;
+			_info.setTextFormat(tf);
+			_corner.text = _cornerText;
+			tf = _corner.getTextFormat();
+			tf.align = _mirror ? TextFormatAlign.LEFT : TextFormatAlign.RIGHT;
+			_corner.setTextFormat(tf);
 		}
 
 		public function setEntries(a_entries:Array, a_emptyText:String, a_keepSelection:Boolean = false):void

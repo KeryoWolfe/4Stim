@@ -80,6 +80,9 @@ namespace FourStim
 	// scene it goes to) and that scene's id. False if there's no such role.
 	bool GetFocusedAlignment(std::size_t a_role, Alignment::Offset& a_offset, std::string& a_sceneID);
 
+	// The focused scene's actor set key (OStim's alignment key), "" if none.
+	std::string GetFocusedAlignKey();
+
 	// Sets it, saves it, and moves the actor there now. Main thread.
 	void SetFocusedAlignment(std::size_t a_role, const Alignment::Offset& a_offset);
 

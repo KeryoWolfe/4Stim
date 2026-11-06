@@ -8,7 +8,10 @@ package hud
 
 	// The actor name bars and, beside them, the vertical speed meter.
 	// Actors are { role, name, sex, isPlayer, meter } (HUD_API.md); meter -1
-	// means nothing fills the bars yet, so only the track shows.
+	// means nothing fills the bars yet, so only the track shows. Which actors
+	// get a bar and their colors follow OStim's bar settings (setOptions):
+	// by default every actor, colored by role as OStim's bars (the first
+	// blue, the second pink, the rest purple), or by sex with matchGender.
 	public class Meters extends Sprite
 	{
 		private static const BAR_W:Number = 220;
@@ -33,6 +36,11 @@ package hud
 		private var _actors:Array = [];
 		private var _speed:int = 0;
 		private var _speedCount:int = 0;
+		private var _speedLabel:String = "";  // OStim's speed number, "" = none
+		private var _showPlayer:Boolean = true;
+		private var _showNpc:Boolean = true;
+		private var _matchGender:Boolean = false;
+		private var _shown:Array = [];  // the actors that get a bar
 
 		private var _names:Sprite = new Sprite();
 		private var _speedMeter:Sprite = new Sprite();
@@ -74,10 +82,30 @@ package hud
 			redraw();
 		}
 
-		// Rows in a column: all the actors up to ROWS, then half of them (two columns).
+		// OStim's speed number for this speed (the scene's displaySpeed), ""
+		// for none: the meter then shows speed / speeds.
+		public function setSpeedLabel(a_label:String):void
+		{
+			_speedLabel = a_label != null ? a_label : "";
+			redraw();
+		}
+
+		// OStim's bar settings: { player, npc, matchGender } (HUD_API.md SetBarOptions).
+		public function setOptions(a_options:Object):void
+		{
+			if (a_options == null) {
+				return;
+			}
+			_showPlayer = a_options.player !== false;
+			_showNpc = a_options.npc !== false;
+			_matchGender = a_options.matchGender === true;
+			redraw();
+		}
+
+		// Rows in a column: all the bars up to ROWS, then half of them (two columns).
 		private function rowCount():int
 		{
-			return _actors.length <= ROWS ? Math.max(1, _actors.length) : Math.max(ROWS, Math.ceil(_actors.length / COLS));
+			return _shown.length <= ROWS ? Math.max(1, _shown.length) : Math.max(ROWS, Math.ceil(_shown.length / COLS));
 		}
 
 		private function compact():Boolean { return rowCount() > ROWS; }
@@ -93,12 +121,12 @@ package hud
 
 		private function columns():int
 		{
-			return Math.max(1, Math.ceil(_actors.length / rowCount()));
+			return Math.max(1, Math.ceil(_shown.length / rowCount()));
 		}
 
 		private function barWidth():Number
 		{
-			return _actors.length > ROWS ? BAR_W / 2 : BAR_W;
+			return _shown.length > ROWS ? BAR_W / 2 : BAR_W;
 		}
 
 		// The width of all the bar columns together.
@@ -119,15 +147,22 @@ package hud
 			_names.visible = _theme.show("actorMeters");
 			_speedMeter.visible = _theme.show("speedMeter");
 
+			_shown = [];
+			for (var a:int = 0; a < _actors.length; a++) {
+				if (_actors[a].isPlayer === true ? _showPlayer : _showNpc) {
+					_shown.push(_actors[a]);
+				}
+			}
+
 			var barW:Number = barWidth();
 			var cols:int = columns();
-			for (var i:int = 0; i < _actors.length; i++) {
-				var actor:Object = _actors[i];
+			for (var i:int = 0; i < _shown.length; i++) {
+				var actor:Object = _shown[i];
 				var rows:int = rowCount();
 				var col:int = int(i / rows);
 				var x:Number = (_mirror ? cols - 1 - col : col) * (barW + COL_GAP);
 				var y:Number = (i % rows) * (nameH() + barH() + rowGap());
-				var name:TextField = _theme.makeText(compact() ? 12 : _actors.length > ROWS ? 14 : 16, _theme.color("text"));
+				var name:TextField = _theme.makeText(compact() ? 12 : _shown.length > ROWS ? 14 : 16, _theme.color("text"));
 				name.width = barW;
 				name.height = 22;
 				name.x = x;
@@ -146,7 +181,8 @@ package hud
 				Theme.fill(bar.graphics, _theme.colors("meterTrack"), 0, 0, barW, bh, 0, 1, bh / 2);
 				var value:Number = Number(actor.meter);
 				if (value > 0) {
-					var key:String = actor.sex == "male" ? "meterMale" : actor.sex == "female" ? "meterFemale" : "meterOther";
+					var key:String = _matchGender ? (actor.sex == "male" ? "meterMale" : actor.sex == "female" ? "meterFemale" : "meterOther") :
+					                 (int(actor.role) == 0 ? "meterMale" : int(actor.role) == 1 ? "meterFemale" : "meterOther");
 					var w:Number = Math.max(bh, barW * Math.min(1, value));
 					Theme.fill(bar.graphics, _theme.colors(key), _mirror ? barW - w : 0, 0, w, bh, _mirror ? Math.PI : 0, 1, bh / 2);
 				}
@@ -186,7 +222,7 @@ package hud
 			value.height = 18;
 			value.x = (SPEED_W - 40) / 2;
 			value.y = total - 15;
-			value.text = _speedCount > 0 ? (_speed + 1) + "/" + _speedCount : "-";
+			value.text = _speedCount <= 0 ? "-" : _speedLabel != "" ? _speedLabel : (_speed + 1) + "/" + _speedCount;
 			tf = value.getTextFormat();
 			tf.align = TextFormatAlign.CENTER;
 			value.setTextFormat(tf);

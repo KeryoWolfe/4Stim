@@ -58,7 +58,7 @@ The short answer to "are we missing anything": yes, and it falls into five patte
 
 **Speed and auto mode**
 - **Done in 0.5.0 (built, untested):** scenes start at `defaultSpeed` and a scene moved to maps the speed proportionally, as OStim's ChangeNode (its formula as it is). Was: `defaultSpeed` and speed carry-over worked the other way round (1 §9, 3 §6).
-- **Done in 0.5.0 (built, untested):** speed control runs in every NPC scene and in the player's with `SetActorSpeedControl`, auto mode or not; `FourThread.SetSpeed` sends the speed event. Was: only in auto mode (1 §7), no event from SetSpeed (6 F6). Still open: the speed display ignores `displaySpeed` (5 §21; the HUD shows a meter, not OStim's number).
+- **Done in 0.5.0 (built, untested):** speed control runs in every NPC scene and in the player's with `SetActorSpeedControl`, auto mode or not; `FourThread.SetSpeed` sends the speed event. Was: only in auto mode (1 §7), no event from SetSpeed (6 F6). **Done in 0.5.0 (built, untested):** the speed meter shows the scene's `displaySpeed` (5 §21), else speed / speeds.
 - **Done in 0.5.0 (built, untested):** `NoAutoMode` keeps auto mode off whoever asks; `NoPlayerControl` no longer turns it on; `SetForceAIForMasturbation` and `SetForceAIInConsensualScenes` are in (ini and MCM). Was: (1 §6, 1 §8, 5 §5).
 
 **Scenes and transitions**
@@ -90,15 +90,15 @@ The short answer to "are we missing anything": yes, and it falls into five patte
 - Script-started player scenes skip OStim's start flow: waiting for dialogue to close, adding actors, role choice, `PlayerAlways`, furniture choice (1 §12, 6 F18). Builder eligibility is weaker than OStim's `isEligible` (1 §13).
 
 **Settings and menus**
-- The search menu has no text search (5 §1). The scene key does something else in and out of a scene, undocumented, without OStim's hold-for-solo (5 §2).
+- **Done in 0.5.0 (built, untested):** the search picker takes typing and filters by name, as OStim's search menu (5 §1). Still open: The scene key does something else in and out of a scene, undocumented, without OStim's hold-for-solo (5 §2).
 - `SetUseScreenShake` isn't read and shake is on by default; OStim's is off (5 §3).
-- OStim's four excitement bar settings are missing, and the meters fade with the HUD where OStim's stay (5 §4).
+- **Done in 0.5.0 (built, untested):** OStim's four excitement bar settings (`enablePlayerBar`, `enableNpcBar`, `SetAutoHideBar`, `SetMatchColorToGender`, colored by role by default), and the bars stay up when the HUD fades (5 §4). Was: missing, and the meters faded with the HUD.
 - OStim's per-actor and per-sex defaults (Actors page) are mostly missing (5 §6). OStim's add-on `settings` folder isn't read (5 §7).
 - Undressing: no `SetRemoveWeaponsAtStart`, no wig handling, no Papyrus override hook; `SetUndressingSlotMask` takes Fallout 4 slot bits (5 §14, 2 §15).
 
 ## Tier 4: small differences (Low)
 
-The Low findings, each a line or two, are in the reports: the Align tab's steps and keys (5 §9), export / import layout (5 §10), MCM volume sliders going to 2 while the plugin clamps to 1 (5 §11), the Toggle key (5 §12), the NPC scene key's 0 (5 §13), settings per install rather than per save (5 §16), the HUD not waking on a scene change (5 §17), `addActorsAtStart` (5 §18), options' `asState` (5 §20), the camera after a scene and other small lifecycle items (1 §20), equip object choices per reference (2 §16), actor property `sex` (2 §17), expression fall-through and parsing (2 §18-19), post-climax excitement rule (2 §14), toy scaling formulas (4 §11), lights and the equip-object API (4 §12), default voice set contents (4 §9), climax expression without a sound (4 §10), CallEvent defaults and return values (6 F19-F21), graph lookups for the API (3 §16), smaller OStim file fields (3 §17), released actors after a load (1 §19), NPC height (2 §21, unverified).
+The Low findings, each a line or two, are in the reports: the Align tab's steps and keys (5 §9, **done**: OStim's steps, readout, Toggle and the pull-out key as its No), export / import layout (5 §10), MCM volume sliders going to 2 while the plugin clamps to 1 (5 §11), the Toggle key (5 §12), the NPC scene key's 0 (5 §13), settings per install rather than per save (5 §16), the HUD not waking on a scene change (5 §17, **done**), `addActorsAtStart` (5 §18), options' `asState` (5 §20), the camera after a scene and other small lifecycle items (1 §20), equip object choices per reference (2 §16), actor property `sex` (2 §17), expression fall-through and parsing (2 §18-19), post-climax excitement rule (2 §14), toy scaling formulas (4 §11), lights and the equip-object API (4 §12), default voice set contents (4 §9), climax expression without a sound (4 §10), CallEvent defaults and return values (6 F19-F21), graph lookups for the API (3 §16), smaller OStim file fields (3 §17), released actors after a load (1 §19), NPC height (2 §21, unverified).
 
 ## Docs that say the wrong thing
 

@@ -189,6 +189,11 @@ namespace
 		std::uint32_t padEnd = 0, padSearch = 0, padAlign = 0, padFreeCam = 0, padHideUI = 0;
 		bool          padClassic = false;  // sPadScheme: Modern (4Stim's) or Classic (OStim's navigation)
 		float         hudFadeTime = 10.0F; // fHUDFadeTime (OStim's UI fadeTime, 10 s): the HUD fades after this long without input
+		// OStim's excitement bar settings (its MCM's bars section), same defaults.
+		bool          playerBar = true;       // bEnablePlayerBar (enablePlayerBar)
+		bool          npcBar = true;          // bEnableNpcBar (enableNpcBar)
+		bool          autoHideBars = false;   // bAutoHideBars (SetAutoHideBar): the bars fade with the HUD
+		bool          matchBarColor = false;  // bMatchColorToGender (SetMatchColorToGender): colored by sex, not role
 		std::string   hudTheme = "Color";     // file name in Data\Interface\4Stim\Themes\, without .json
 		bool          hudEnabled = true;
 		bool          hudColumns = false;     // sHUDControls=Columns: OStim's control scheme (Left / Right between the list and the tab buttons)
@@ -388,6 +393,11 @@ namespace
 		{ "setaicontrol", { "bautomodeplayer", OStimUnit::kSame } },
 		{ "setforceaiformasturbation", { "bautomodesolo", OStimUnit::kSame } },
 		{ "setforceaiinconsensualscenes", { "bautomodepartner", OStimUnit::kSame } },
+		// Excitement bars.
+		{ "enableplayerbar", { "benableplayerbar", OStimUnit::kSame } },
+		{ "enablenpcbar", { "benablenpcbar", OStimUnit::kSame } },
+		{ "setautohidebar", { "bautohidebars", OStimUnit::kSame } },
+		{ "setmatchcolortogender", { "bmatchcolortogender", OStimUnit::kSame } },
 		{ "automodeanimdurationmin", { "fautomodescenemin", OStimUnit::kMilliseconds } },
 		{ "automodeanimdurationmax", { "fautomodescenemax", OStimUnit::kMilliseconds } },
 		{ "automodeforeplaychance", { "iforeplaychance", OStimUnit::kSame } },
@@ -606,6 +616,16 @@ namespace
 					} else if (key == "spadhideui") {
 						g_settings.padHideUI = button;
 					}
+				}
+				// OStim's bar settings (a chain of their own, C1061).
+				if (key == "benableplayerbar") {
+					g_settings.playerBar = std::stoi(value) != 0;
+				} else if (key == "benablenpcbar") {
+					g_settings.npcBar = std::stoi(value) != 0;
+				} else if (key == "bautohidebars") {
+					g_settings.autoHideBars = std::stoi(value) != 0;
+				} else if (key == "bmatchcolortogender") {
+					g_settings.matchBarColor = std::stoi(value) != 0;
 				}
 				// OStim's navigation keys (a chain of their own, C1061).
 				if (key == "inavupkey") {
@@ -923,6 +943,7 @@ namespace
 		// changes) applies them too; HUD::LoadConfig then reads the theme.
 		HUD::SetOptions(g_settings.hudTheme, g_settings.hudEnabled, g_settings.hudColumns);
 		HUD::SetControllerOptions(g_settings.padClassic, g_settings.hudFadeTime);
+		HUD::SetBarOptions(g_settings.playerBar, g_settings.npcBar, g_settings.autoHideBars, g_settings.matchBarColor);
 		HUD::SetNavigationKeys({ g_settings.navUpKey, g_settings.navDownKey, g_settings.navLeftKey, g_settings.navRightKey,
 			g_settings.navYesKey, g_settings.navToggleKey });
 		const auto& pb = PenisBend::Settings();
@@ -6782,6 +6803,10 @@ namespace
 		kFurniture  // furniture near the focused scene; picking one moves the scene onto it (OStim's changeFurniture)
 	};
 	std::atomic<PickerMode>    g_pickerMode = PickerMode::kStart;
+	// OStim's search menu: what's been typed in the picker's search mode
+	// (UTF-8, main thread) and whether the picker is taking typing now.
+	std::string                g_searchQuery;
+	std::atomic<bool>          g_searchTyping = false;
 
 	// kFurniture: the focused scene's role 0 and the furniture near it that
 	// any scene fits its actors on (found when the list opened).
@@ -7056,9 +7081,56 @@ namespace
 				return;
 			}
 			LinkMenuObject();
+			// Search mode: type to filter by name, as OStim's search menu. Text
+			// entry mode makes the game send typed characters (the input hook
+			// takes them) and keeps typed letters from working as game keys.
+			if (g_pickerMode == PickerMode::kSearch) {
+				g_searchQuery.clear();
+				if (const auto controls = RE::ControlMap::GetSingleton()) {
+					controls->SetTextEntryMode(true);
+					_textEntry = true;
+				}
+				g_searchTyping = true;
+			}
 			// Send the list right away rather than waiting for the menu to ask
 			// (its RequestScenes call remains as a backup).
 			SendScenes();
+		}
+
+		~PickerMenu() override
+		{
+			g_searchTyping = false;
+			if (_textEntry) {
+				if (const auto controls = RE::ControlMap::GetSingleton()) {
+					controls->SetTextEntryMode(false);
+				}
+			}
+		}
+
+		// The list again, for what's been typed now (the input hook).
+		void Refresh() { SendScenes(); }
+
+		// A navigation name to the menu, as if from the game (the input hook,
+		// for keys typed while searching).
+		void SendUserEvent(const char* a_name)
+		{
+			if (menuObj.IsObject()) {
+				Scaleform::GFx::Value args[2];
+				args[0] = a_name;
+				args[1] = true;
+				menuObj.Invoke("ProcessUserEvent", nullptr, args, 2);
+			}
+		}
+
+		// While typing, the input hook does the keyboard's keys (so a key
+		// isn't done twice when text entry mode still maps it); the controller
+		// and mouse work as usual.
+		void OnButtonEvent(const RE::ButtonEvent* a_event) override
+		{
+			if (g_searchTyping && a_event && a_event->device.get() == RE::INPUT_DEVICE::kKeyboard) {
+				return;
+			}
+			RE::IMenu::OnButtonEvent(a_event);
 		}
 
 		// Finds the AS3 menu clip and attaches BGSCodeObj to it. The game's
@@ -7156,6 +7228,7 @@ namespace
 		}
 
 	private:
+		bool          _textEntry = false;  // turned text entry mode on (search)
 		int           _repeatSteps = 0;  // hold-to-scroll repeats sent for the current hold
 		std::uint32_t _repeatPress = 0;  // which press _repeatSteps belongs to
 
@@ -7206,8 +7279,18 @@ namespace
 			// furniture); a new one goes where the cast was placed.
 			const auto here = search ? GetPlayerScene().furniture : ChosenFurnitureType();
 			const auto found = search ? std::vector<Furniture::Found>{} : PickerFurniture();
+			// What's been typed (search): names that have it, any case, as
+			// OStim's SearchMenu (name contains the query).
+			const auto lower = [](std::string a_text) {
+				std::ranges::transform(a_text, a_text.begin(), [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+				return a_text;
+			};
+			const std::string query = search ? lower(g_searchQuery) : std::string{};
 			std::erase_if(scenes, [&](SceneRegistry::SceneSummary& a_scene) {
 				if (!FurnitureFits(a_scene.furniture, here)) {
+					return true;
+				}
+				if (!query.empty() && lower(a_scene.name).find(query) == std::string::npos) {
 					return true;
 				}
 				const auto full = a_scene.id.starts_with(SEQUENCE_PREFIX) ? nullptr : SceneRegistry::Find(a_scene.id);
@@ -7237,11 +7320,17 @@ namespace
 				list.PushBack(entry);
 			}
 
-			const std::string title = search ? "Change scene" : solo ? "Solo scenes" : std::format("Scenes for {}", actorCount);
+			const std::string title = search ? (g_searchQuery.empty() ? TR("$4Stim_SearchTitle", "Search: type a scene's name") :
+			                                                            TRF("$4Stim_SearchTitleQuery", "Search: {}_", g_searchQuery)) :
+			                          solo ? "Solo scenes" : std::format("Scenes for {}", actorCount);
 			Scaleform::GFx::Value args[2];
 			args[0] = list;
 			args[1] = title.c_str();
 			menuObj.Invoke("SetScenes", nullptr, args, 2);
+			if (search && menuObj.HasMember("SetFooter")) {
+				Scaleform::GFx::Value footer(TR("$4Stim_SearchFooter", "Type to filter   Backspace: delete   Esc: close").c_str());
+				menuObj.Invoke("SetFooter", nullptr, &footer, 1);
+			}
 			REX::INFO("Picker: sent {} scene(s) and {} sequence(s) ({}{} actor(s)), {} furniture piece(s) near", scenes.size() - sequencesLeft, sequencesLeft, search ? "search, " : "", actorCount, found.size());
 		}
 
@@ -7882,6 +7971,78 @@ namespace
 
 	bool g_shiftDown = false;  // main thread (the input hook)
 
+	// The picker while typing a search, or nullptr.
+	PickerMenu* TypingPicker()
+	{
+		if (!g_searchTyping) {
+			return nullptr;
+		}
+		const auto ui = RE::UI::GetSingleton();
+		const auto menu = ui ? ui->GetMenu(PICKER_MENU) : Scaleform::Ptr<RE::IMenu>{};
+		return menu ? static_cast<PickerMenu*>(menu.get()) : nullptr;
+	}
+
+	// A typed character (text entry mode, the picker's search): added to
+	// the search. Printable ASCII and other Unicode, as UTF-8.
+	void HandleCharacter(const RE::CharacterEvent* a_event)
+	{
+		const auto picker = TypingPicker();
+		const auto c = a_event->charCode;
+		if (!picker || c < 32 || c == 127 || g_searchQuery.size() >= 64) {
+			return;
+		}
+		if (c < 0x80) {
+			g_searchQuery += static_cast<char>(c);
+		} else if (c < 0x800) {
+			g_searchQuery += static_cast<char>(0xC0 | (c >> 6));
+			g_searchQuery += static_cast<char>(0x80 | (c & 0x3F));
+		} else if (c < 0x10000) {
+			g_searchQuery += static_cast<char>(0xE0 | (c >> 12));
+			g_searchQuery += static_cast<char>(0x80 | ((c >> 6) & 0x3F));
+			g_searchQuery += static_cast<char>(0x80 | (c & 0x3F));
+		} else {
+			return;
+		}
+		picker->Refresh();
+	}
+
+	// The keyboard's keys while typing a search (the picker ignores the
+	// keyboard then): Backspace deletes, the arrows and Enter as usual.
+	// Esc closes it (HandleButton's escape hatch). Keyboard codes are Windows
+	// virtual-key codes.
+	void HandleTypingKey(PickerMenu* a_picker, std::uint32_t a_code)
+	{
+		switch (a_code) {
+		case 0x08:  // Backspace: the last character (a whole UTF-8 one)
+			if (!g_searchQuery.empty()) {
+				auto end = g_searchQuery.size() - 1;
+				while (end > 0 && (static_cast<unsigned char>(g_searchQuery[end]) & 0xC0) == 0x80) {
+					--end;
+				}
+				g_searchQuery.erase(end);
+				a_picker->Refresh();
+			}
+			break;
+		case 0x26:
+			a_picker->SendUserEvent("Up");
+			break;
+		case 0x28:
+			a_picker->SendUserEvent("Down");
+			break;
+		case 0x21:  // Page Up / Down
+			a_picker->SendUserEvent("Left");
+			break;
+		case 0x22:
+			a_picker->SendUserEvent("Right");
+			break;
+		case 0x0D:
+			a_picker->SendUserEvent("Accept");
+			break;
+		default:
+			break;
+		}
+	}
+
 	void HandleButton(const RE::ButtonEvent* a_event)
 	{
 		// Hold-to-scroll tracking for the picker: arrow keys and d-pad up/down.
@@ -7954,6 +8115,11 @@ namespace
 		if (const auto ui = RE::UI::GetSingleton(); ui && ui->GetMenuOpen(PICKER_MENU)) {
 			const auto code = static_cast<std::uint32_t>(a_event->idCode);
 			const auto device = a_event->device.get();
+			if (device == RE::INPUT_DEVICE::kKeyboard) {
+				if (const auto picker = TypingPicker()) {
+					HandleTypingKey(picker, code);
+				}
+			}
 			if ((device == RE::INPUT_DEVICE::kKeyboard && code == 0x1B) || (device == RE::INPUT_DEVICE::kGamepad && code == 0x2000)) {
 				if (const auto queue = RE::UIMessageQueue::GetSingleton()) {
 					queue->AddMessage(PICKER_MENU, RE::UI_MESSAGE_TYPE::kHide);
@@ -8064,6 +8230,11 @@ namespace
 				return;
 			}
 			if (a_action == "pullout") {
+				// OStim's No key in its align menu (4Stim: the pull-out key,
+				// with the Align tab open): the next step size.
+				if (HUD::CycleAlignStep()) {
+					return;
+				}
 				if (const auto active = FindActiveScene(focused.role0); active && !AutoPullOut(*active)) {
 					Notify(TR("$4Stim_NoPullout", "4Stim: nowhere to pull out to from here"));
 				}
@@ -8122,6 +8293,8 @@ namespace
 			for (auto event = a_queueHead; event; event = event->next) {
 				if (const auto button = event->As<RE::ButtonEvent>()) {
 					HandleButton(button);
+				} else if (const auto character = event->As<RE::CharacterEvent>()) {
+					HandleCharacter(character);
 				}
 			}
 			original(a_this, a_queueHead);  // always let the game process the input too
@@ -12681,6 +12854,13 @@ namespace FourStim
 			a_offset.bend = a_role < settled->actors.size() ? settled->actors[a_role].penisBend : 0.0F;
 		}
 		return true;
+	}
+
+	std::string GetFocusedAlignKey()
+	{
+		const auto focused = GetPlayerScene();
+		const auto active = focused.Active() ? FindActiveScene(focused.role0) : nullptr;
+		return active ? active->alignKey : std::string{};
 	}
 
 	void SetFocusedAlignment(std::size_t a_role, const Alignment::Offset& a_offset)

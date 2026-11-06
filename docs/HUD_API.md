@@ -241,16 +241,18 @@ Every function is on `Menu_mc`. All of them are required except where marked.
 | `GetApiVersion():int` | Return the API version you were written for (`1`). |
 | `SetScreen(left:Number, top:Number, right:Number, bottom:Number):void` | The visible area in your movie's coordinates. On a 16:9 screen it's 0, 0, 1280, 720; wider screens have a negative `left` and a `right` past 1280. |
 | `SetTheme(theme:Object):void` | The parsed theme JSON, with defaults filled in. |
-| `SetScene(scene:Object):void` | `{ id, name, actorCount, tags:Array }`. |
+| `SetScene(scene:Object):void` | `{ id, name, modpack, actorCount, tags:Array }`. `modpack` is OStim's pack the scene comes from ("" for none; added later, so treat it as optional). The default HUD shows the name under the list's header and the pack at the header's other end, and comes back from its fade on every new scene, as OStim's menu does. |
 | `SetActors(actors:Array):void` | One object per role, in role order: `{ role:int, name:String, sex:"male"\|"female"\|"other", isPlayer:Boolean, meter:Number }`. `meter` is `0.0`–`1.0`, the actor's excitement, or `-1` when nothing fills the meters (excitement off in `4Stim.ini`). |
 | `SetSpeed(level:int, count:int):void` | `level` 0 = slowest, `count` = number of speeds (1 if the scene has only one). |
+| `SetSpeedLabel(label:String):void` | *Optional.* OStim's speed number for this speed, the scene's `displaySpeed` (`"1.5"`), or `""` when the scene gives none. Sent after every `SetSpeed`. The default HUD shows it under the speed meter, else `level+1 / count`. |
+| `SetBarOptions(options:Object):void` | *Optional.* OStim's excitement bar settings: `{ player, npc, autoHide, matchGender }` (`enablePlayerBar`, `enableNpcBar`, `SetAutoHideBar`, `SetMatchColorToGender`, SETTINGS.md). The default HUD draws bars only for the actors they allow, keeps them up when it fades unless `autoHide`, and colors them by role (the first `meterMale`, the second `meterFemale`, the rest `meterOther`, as OStim's blue, pink and purple) unless `matchGender` (by sex). Sent with the control scheme. |
 | `SetNavigation(entries:Array):void` | `{ id, label, icon, kind:"scene"\|"speedUp"\|"speedDown"\|"end", border }` in display order. `"speedUp"` / `"speedDown"` ("Faster" / "Slower", OStim's speed buttons under its options) come before the end entries, when the scene has more than one speed: answer them with `ChangeSpeed(1)` / `ChangeSpeed(-1)`. Labels already have actor names filled in. The `"end"` entry ("End scene") is always last. `icon` is a path under `Data\Interface\` ready for a `Loader` (e.g. `4Stim/Icons/MyPack/Kneel.dds`; mount a `.dds` with F4SE's `MountImage` and load it as `img://<name>`, see `hud\F4SE.as`), or empty. |
 | `SetUtility(entries:Array):void` | `{ id, label, icon, border }`, already sorted and filtered for this scene. `icon` as above. In an options page (OPTIONS.md) it's that page's rows, Back first. |
 | `SetFocus(focused:Boolean):void` | `true` while the HUD has the navigation keys. It gets them as soon as it opens; the 4Stim hotkey (or `Cancel`) gives them back to the game, and the hotkey takes them again. While not focused the HUD is display-only. |
 | `SetPaused(paused:Boolean):void` | A game menu opened or closed over the HUD. |
 | `ProcessUserEvent(name:String, down:Boolean):Boolean` | Input while focused: `down` is `true` on press and `false` on release. Return `true` if you used it. Holding `Up` or `Down` repeats the press, so you don't need your own repeat timer. The names and their keys are below. |
 | `SetMeters(values:Array):void` | *Optional.* Faster update of just the actor meters, one `Number` per role, without resending names. Sent up to ten times a second while excitement changes; a HUD without it only gets the values with `SetActors`. |
-| `SetAlign(data:Object):void` | *Optional.* The Align tab's data (ALIGNMENT.md): `{ available, role, roleCount, name, x, y, z, rot, scale, bend, step }`: the role being adjusted (0-based) and its name ("You" for the player), its offset in this scene, its penis bend (SoS steps, -9 to +9, -10 flaccid; `bend` was added later, so treat it as optional), and the step size. Sent with the scene data and after every alignment call. |
+| `SetAlign(data:Object):void` | *Optional.* The Align tab's data (ALIGNMENT.md): `{ available, role, roleCount, name, sex, x, y, z, rot, scale, bend, step, stepIndex, sceneID, sceneName, modpack, key }`: the role being adjusted (0-based) and its name ("You" for the player) and sex, its offset in this scene, its penis bend (SoS steps, -9 to +9, -10 flaccid), the step size (OStim's: 10, 1, 0.1, 0.01, 0.001; `stepIndex` 0-4), and OStim's align readout: the scene's id, name and pack and the actor set's alignment key (`M100x0&F100x0`). Everything after `step` was added later, so treat it as optional. Sent with the scene data and after every alignment call. |
 | `PlayClimax(strength:Number, size:Number = 0.07):void` | *Optional.* An actor in the focused scene climaxed: play a flash. `strength` is `0.0`–`1.0` (`fClimaxFlash`); `size` is how far in from the edges it reaches, as a share of the screen's smaller side (`fClimaxGlowSize`; a movie that takes only `strength` still works). The default HUD fades a faint white glow in along the screen's edges only and out over about 1.5 s, behind its panels. |
 | `SetStrings(table:Object):void` | *Optional.* The plugin's translations, `{ "$4Stim_...": text }` (TRANSLATIONS.md), before the theme: for the labels the movie writes itself (tab names, titles, Align rows). |
 | entry `border` | *Optional to draw.* In `SetNavigation` and `SetUtility` entries: OStim's icon border color as a number (`0xRRGGBB`), only when one other than white is given. The default HUD draws a ring of it around the icon's tile. |
@@ -270,7 +272,7 @@ Input names while the HUD is focused:
 | `Accept` | Enter, numpad 7 (OStim's Yes) | A |
 | `Cancel` | Esc, Backspace | |
 | `Back` | | B: from the list to the tab buttons; from the tab buttons, call `Hide` (the plugin shows the HUD again on A) |
-| `Toggle` | Numpad 9 (OStim's Toggle): between the list and the tab buttons | |
+| `Toggle` | Numpad 9 (OStim's Toggle): in the default HUD's Align tab the next actor (OStim's align menu), elsewhere between the list and the tab buttons | |
 | `PrevTab`, `NextTab`, `SpeedUp`, `SpeedDown` | not sent any more (the controller's other buttons are `[Controller]`'s scene keys); a HUD may still handle them | |
 
 ### Movie → plugin (`BGSCodeObj`)
@@ -288,8 +290,9 @@ Input names while the HUD is focused:
 | `Log(message:String)` | Write a line to `4Stim.log`, tagged with your movie. |
 | `AlignAdjust(field:String, direction:int)` | One step of the role being adjusted: `field` is `"x"`, `"y"`, `"z"`, `"rot"`, `"scale"` or `"bend"` (one SoS step at a time, whatever the step size), `direction` `+1` / `-1`. Saved and applied at once; answered with `SetAlign`. |
 | `AlignActor(direction:int)` | The next (`+1`) or previous (`-1`) role to adjust. |
-| `AlignStep(direction:int)` | The next or previous step size (0.5, 1, 2, 5, 10). |
+| `AlignStep(direction:int)` | The next or previous step size (OStim's: 10, 1, 0.1, 0.01, 0.001; starts at 1). The pull-out key also takes the next one while the Align tab shows (see `TabChanged`). |
 | `AlignReset()` | The role being adjusted back to no offset (and the scene's own penis bend). |
+| `TabChanged(id:String)` | *Optional.* The tab the movie shows now (`"navigation"`, `"align"`, ...), on every change and after `Ready`. While it's `"align"` and the HUD has the keys, the pull-out key steps the alignment instead (OStim's No key in its align menu). |
 | `SetHorizontalRepeat(on:Boolean)` | While `true`, holding `Left` / `Right` repeats them like `Up` / `Down` (the default HUD turns it on while an Align value is selected). |
 
 The Align tab, the actor meters and OStim's alignment and hide-UI keys were added to version 1 as optional functions (`SetAlign`, `SetMeters`, `ShowTab`, `SetHidden`): a HUD without them still works, it just doesn't show them.

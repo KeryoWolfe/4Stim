@@ -955,6 +955,66 @@
 							"$4Stim_MCM_sTheme_1"
 						]
 					}
+				},
+				{
+					"id": "b4S_enablePlayerBar:HUD",
+					"text": "$4Stim_MCM_enablePlayerBar",
+					"help": "$4Stim_MCM_enablePlayerBar_Help",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "switcher",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "b4S_enableNpcBar:HUD",
+					"text": "$4Stim_MCM_enableNpcBar",
+					"help": "$4Stim_MCM_enableNpcBar_Help",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "switcher",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "b4S_SetAutoHideBar:HUD",
+					"text": "$4Stim_MCM_SetAutoHideBar",
+					"help": "$4Stim_MCM_SetAutoHideBar_Help",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "switcher",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "b4S_SetMatchColorToGender:HUD",
+					"text": "$4Stim_MCM_SetMatchColorToGender",
+					"help": "$4Stim_MCM_SetMatchColorToGender_Help",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "switcher",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
 				}
 			]
 		},

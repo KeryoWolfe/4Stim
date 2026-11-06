@@ -76,6 +76,15 @@ package
 			}
 		}
 
+		// The key hints at the bottom, for a mode with keys of its own (search:
+		// typing filters). SetStrings puts the usual ones back.
+		public function SetFooter(a_text:String):void
+		{
+			if (_footer != null) {
+				_footer.text = a_text;
+			}
+		}
+
 		public function SetScenes(a_list:Array, a_title:String):void
 		{
 			_scenes = a_list != null ? a_list : [];

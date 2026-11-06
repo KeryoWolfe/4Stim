@@ -36,6 +36,10 @@ package hud
 		private var _screen:Object = { x1: 0, y1: 0, x2: 1280, y2: 720 };
 
 		private var _root:Sprite = new Sprite();  // positioned on the anchor corner
+		// The bars, positioned as _root but kept out of its fade: as OStim's
+		// bars stay up all scene unless SetAutoHideBar (_autoHideBars).
+		private var _barsRoot:Sprite = new Sprite();
+		private var _autoHideBars:Boolean = false;
 		private var _frame:Frame = new Frame();
 		private var _tabs:TabBar = new TabBar(TAB_LIST);
 		private var _list:NavList = new NavList(NAV.w, NAV.h);
@@ -44,7 +48,7 @@ package hud
 		private var _logo:IconSlot = new IconSlot(LOGO.size);
 		private var _glow:ClimaxGlow = new ClimaxGlow();  // full screen, behind the panels
 
-		private var _scene:Object = { id: "", name: "", actorCount: 0, tags: [] };
+		private var _scene:Object = { id: "", name: "", modpack: "", actorCount: 0, tags: [] };
 		private var _navigation:Array = [];
 		private var _utility:Array = [];
 		private var _align:Object = null;  // SetAlign's data
@@ -70,6 +74,7 @@ package hud
 		private var _fade:Number = 1;     // 0 faded out .. 1 shown
 		private var _lastFrame:int = 0;
 		private var _opacity:Number = 1;  // the theme's
+		private var _lastTab:String = "";  // the tab last told to the plugin (TabChanged)
 
 		public function HUDPanel()
 		{
@@ -78,13 +83,14 @@ package hud
 			mouseChildren = false;
 			addChild(_glow);
 			addChild(_root);
+			addChild(_barsRoot);
 			// Back to front: the L, tabs and list sit under the corner disc, so
 			// their corners tuck behind it.
 			_root.addChild(_frame);
 			_root.addChild(_tabs);
 			_root.addChild(_list);
 			_root.addChild(_frame.disc);
-			_root.addChild(_meters);
+			_barsRoot.addChild(_meters);
 			_root.addChild(_logo);
 			_logo.addEventListener(Event.COMPLETE, onLogoLoaded);
 			_tabs.selectID("navigation");
@@ -130,13 +136,14 @@ package hud
 		public function SetScene(a_scene:Object):void
 		{
 			var changed:Boolean = a_scene == null || String(a_scene.id) != String(_scene.id);
-			if (String(_scene.id) == "" && a_scene != null) {
-				wake();  // a new scene: shown, as OStim's menu opens with it
+			if (changed && a_scene != null && String(a_scene.id) != "") {
+				wake();  // every new scene: shown again, as OStim's menu comes back on a node change
 			}
-			_scene = a_scene != null ? a_scene : { id: "", name: "", actorCount: 0, tags: [] };
+			_scene = a_scene != null ? a_scene : { id: "", name: "", modpack: "", actorCount: 0, tags: [] };
 			if (changed) {
 				callLogo("onSceneChanged", [String(_scene.id), int(_scene.actorCount)]);
 			}
+			showInfo();
 		}
 
 		public function SetActors(a_actors:Array):void
@@ -147,6 +154,22 @@ package hud
 		public function SetMeters(a_values:Array):void
 		{
 			_meters.setMeters(a_values);
+		}
+
+		// Optional (HUD_API.md): OStim's speed number for the speed now (the
+		// scene's displaySpeed), "" when the scene gives none.
+		public function SetSpeedLabel(a_label:String):void
+		{
+			_meters.setSpeedLabel(a_label);
+		}
+
+		// Optional (HUD_API.md): OStim's bar settings, { player, npc,
+		// autoHide, matchGender }.
+		public function SetBarOptions(a_options:Object):void
+		{
+			_meters.setOptions(a_options);
+			_autoHideBars = a_options != null && a_options.autoHide === true;
+			updateBarsAlpha();
 		}
 
 		public function SetSpeed(a_level:int, a_count:int):void
@@ -203,6 +226,7 @@ package hud
 		public function SetHidden(a_hidden:Boolean):void
 		{
 			_root.visible = !a_hidden;
+			_barsRoot.visible = !a_hidden;
 			if (!a_hidden) {
 				wake();
 			}
@@ -311,10 +335,14 @@ package hud
 				code("ReleaseFocus");
 				return true;
 			}
-			// OStim's Toggle key (numpad 9): between the list and the tab buttons.
+			// OStim's Toggle key (numpad 9): in the Align tab, the next actor
+			// (OStim's align menu); elsewhere between the list and the tab
+			// buttons (4Stim's).
 			if (a_name == "Toggle") {
 				if (_tabFocus) {
 					leaveTabs();
+				} else if (_tabs.selectedID == "align" && _align != null && _align.available === true) {
+					code("AlignActor", 1);
 				} else {
 					enterTabs();
 				}
@@ -494,6 +522,7 @@ package hud
 			}
 			_fade = target > _fade ? Math.min(1, _fade + dt / 0.2) : Math.max(0, _fade - dt / 0.6);
 			_root.alpha = _opacity * _fade;
+			updateBarsAlpha();
 			if (_fade == 0 && _focused) {
 				code("ReleaseFocus");
 			}
@@ -518,6 +547,8 @@ package hud
 				_ready = true;
 				HUDLog.attach(BGSCodeObj);
 				BGSCodeObj.Ready();
+				_lastTab = _tabs.selectedID;
+				code("TabChanged", _lastTab);
 			}
 		}
 
@@ -576,6 +607,24 @@ package hud
 			}
 		}
 
+		private function updateBarsAlpha():void
+		{
+			_barsRoot.alpha = _opacity * (_autoHideBars ? _fade : 1);
+		}
+
+		// The list's info line: the scene's name and pack; in the Align tab,
+		// OStim's align readout (the scene's id and the actor set's key).
+		private function showInfo():void
+		{
+			if (_tabs.selectedID == "align" && _align != null && _align.available === true) {
+				var key:String = String(_align.key);
+				_list.setInfo(String(_align.sceneID) + (key != "" ? "  |  " + key : ""), String(_align.modpack));
+				return;
+			}
+			var pack:String = _scene.modpack != undefined ? String(_scene.modpack) : "";
+			_list.setInfo(String(_scene.name), pack);
+		}
+
 		// Fills the list for the selected tab.
 		private function showTab(a_keepSelection:Boolean):void
 		{
@@ -597,11 +646,18 @@ package hud
 					_list.setEntries(alignEntries(), "", a_keepSelection);
 					break;
 			}
+			showInfo();
+			if (_tabs.selectedID != _lastTab) {
+				_lastTab = _tabs.selectedID;
+				code("TabChanged", _lastTab);  // the plugin's pull-out key steps alignment while it's "align"
+			}
 			updateRepeat();
 		}
 
-		// The Align tab's rows, from SetAlign's data. Left / Right change the
-		// value of the row selected (ProcessUserEvent).
+		// The Align tab's rows, from SetAlign's data, in OStim's align menu's
+		// order (x, y, z, scale, rotation, bend). Left / Right change the
+		// value of the row selected (ProcessUserEvent); Toggle picks the next
+		// actor and the pull-out key the next step, as OStim's Toggle and No.
 		private function alignEntries():Array
 		{
 			if (_align == null || _align.available !== true) {
@@ -609,17 +665,33 @@ package hud
 			}
 			var name:String = String(_align.name);
 			var count:int = int(_align.roleCount);
+			var sex:String = String(_align.sex) == "male" ? "M" : String(_align.sex) == "female" ? "F" : "*";
+			var digits:int = stepDigits();
 			return [
-				{ id: "align_actor", label: "< " + name + (count > 1 ? " (" + (int(_align.role) + 1) + "/" + count + ")" : "") + " >", icon: "", kind: "alignActor" },
-				{ id: "align_x", label: Strings.t("$4Stim_AlignX", "Left / right") + "   " + signed(Number(_align.x), 1), icon: "", kind: "alignValue", field: "x" },
-				{ id: "align_y", label: Strings.t("$4Stim_AlignY", "Back / forward") + "   " + signed(Number(_align.y), 1), icon: "", kind: "alignValue", field: "y" },
-				{ id: "align_z", label: Strings.t("$4Stim_AlignZ", "Down / up") + "   " + signed(Number(_align.z), 1), icon: "", kind: "alignValue", field: "z" },
-				{ id: "align_rot", label: Strings.t("$4Stim_AlignTurn", "Turn") + "   " + signed(Number(_align.rot), 1) + " " + Strings.t("$4Stim_Degrees", "deg"), icon: "", kind: "alignValue", field: "rot" },
-				{ id: "align_scale", label: Strings.t("$4Stim_AlignSize", "Size") + "   " + Number(_align.scale).toFixed(3), icon: "", kind: "alignValue", field: "scale" },
+				{ id: "align_actor", label: "< " + name + " >   " + Strings.t("$4Stim_AlignRole", "Role") + " " + int(_align.role) + (count > 1 ? "/" + (count - 1) : "") + "  " + sex, icon: "", kind: "alignActor" },
+				{ id: "align_x", label: Strings.t("$4Stim_AlignX", "Left / right") + "   " + signed(Number(_align.x), digits), icon: "", kind: "alignValue", field: "x" },
+				{ id: "align_y", label: Strings.t("$4Stim_AlignY", "Back / forward") + "   " + signed(Number(_align.y), digits), icon: "", kind: "alignValue", field: "y" },
+				{ id: "align_z", label: Strings.t("$4Stim_AlignZ", "Down / up") + "   " + signed(Number(_align.z), digits), icon: "", kind: "alignValue", field: "z" },
+				{ id: "align_scale", label: Strings.t("$4Stim_AlignSize", "Size") + "   " + Number(_align.scale).toFixed(Math.max(2, digits)), icon: "", kind: "alignValue", field: "scale" },
+				{ id: "align_rot", label: Strings.t("$4Stim_AlignTurn", "Turn") + "   " + signed(Number(_align.rot), digits) + " " + Strings.t("$4Stim_Degrees", "deg"), icon: "", kind: "alignValue", field: "rot" },
 				{ id: "align_bend", label: Strings.t("$4Stim_AlignBend", "Penis bend") + "   " + signed(Number(_align.bend), 0), icon: "", kind: "alignValue", field: "bend" },
-				{ id: "align_step", label: Strings.t("$4Stim_AlignStep", "Step") + "   < " + Number(_align.step) + " >", icon: "", kind: "alignStep" },
+				{ id: "align_step", label: Strings.t("$4Stim_AlignStep", "Step") + "   < " + stepText() + " >", icon: "", kind: "alignStep" },
 				{ id: "align_reset", label: Strings.t("$4Stim_AlignReset", "Reset") + " " + name, icon: "", kind: "alignReset" }
 			];
+		}
+
+		// The step as OStim's align menu writes it: 10.00, 1.000, 0.100, 0.010, 0.001.
+		private function stepText():String
+		{
+			var step:Number = Number(_align.step);
+			return step >= 10 ? step.toFixed(2) : step.toFixed(3);
+		}
+
+		// Decimals worth showing at this step (1 at least, as before).
+		private function stepDigits():int
+		{
+			var step:Number = Number(_align.step);
+			return step >= 0.1 ? 1 : step >= 0.01 ? 2 : 3;
 		}
 
 		private static function signed(a_value:Number, a_digits:int):String
@@ -688,6 +760,10 @@ package hud
 			_root.alpha = _opacity * _fade;
 			_root.x = _mirror ? _screen.x2 - offsetX : _screen.x1 + offsetX;
 			_root.y = _screen.y2 - offsetY;
+			_barsRoot.scaleX = _barsRoot.scaleY = _root.scaleX;
+			_barsRoot.x = _root.x;
+			_barsRoot.y = _root.y;
+			updateBarsAlpha();
 		}
 
 		private function onLogoLoaded(a_event:Event):void

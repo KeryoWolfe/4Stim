@@ -68,6 +68,15 @@ namespace HUD
 	void               SetControllerOptions(bool a_classic, float a_fadeTime);
 	[[nodiscard]] bool PadClassic();
 
+	// OStim's excitement bar settings (bEnablePlayerBar, bEnableNpcBar,
+	// bAutoHideBars, bMatchColorToGender), sent with the control scheme.
+	void SetBarOptions(bool a_player, bool a_npc, bool a_autoHide, bool a_matchGender);
+
+	// OStim's No key in its align menu: with the Align tab shown and the HUD
+	// having the keys, the next step size. False (nothing done) otherwise.
+	// Main thread.
+	bool CycleAlignStep();
+
 	[[nodiscard]] bool IsOpen();
 	[[nodiscard]] bool IsFocused();
 	void               SetFocus(bool a_focused);  // any thread

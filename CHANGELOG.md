@@ -2,6 +2,16 @@
 
 ## 0.5.0 alpha (in progress)
 
+### The HUD, closer to OStim's (parity audit, 5 §1, §4, §9, §17, §21)
+- **The speed meter shows OStim's speed number** (the scene's `displaySpeed`, "1.5"), else speed / speeds as before; **the scene's name sits under the list's header**, its pack at the header's end.
+- **The HUD comes back on every scene change**, as OStim's menu does (before, only when a scene started).
+- **The excitement bars stay up when the HUD fades**, as OStim's, and **OStim's four bar settings** (docs/SETTINGS.md, MCM HUD page): `enablePlayerBar`, `enableNpcBar`, `SetAutoHideBar` (the bars fade with the HUD) and `SetMatchColorToGender`. **By default the bars are colored by role as OStim's** (the first blue, the second pink, the rest purple); turn `SetMatchColorToGender` on for the old colors by sex.
+- **The Align tab works as OStim's align menu** (docs/ALIGNMENT.md): its steps (10, 1, 0.1, 0.01, 0.001, for the size too), its order (size before turn), its readout (role, sex, the scene's id and pack, the alignment key), Toggle for the next actor, and the pull-out key for the next step while the tab shows. The controller's controls are as before (B, the d-pad, the Step row).
+- **Search takes typing** (the search key, or Search > Browse all scenes): type part of a scene's name to filter, Backspace deletes, the arrows, Enter, the controller and the mouse pick, Esc closes. As OStim's, only scenes for these actors and this furniture, no transitions. The game is paused while it's open.
+- HUD API (docs/HUD_API.md): optional `SetSpeedLabel`, `SetBarOptions` and the movie's `TabChanged`; `SetScene` gains `modpack` and `SetAlign` the readout. The picker movie gains `SetFooter`.
+
+Needs the plugin and both SWFs rebuilt (`Interface-src\build.bat`). No Papyrus changes.
+
 ### Aimed animations
 - **The `4StimPenisAim` annotation** (docs/EVENTS.md, docs/ALIGNMENT.md): AnimBridge now bends the whole penis chain toward the partner when it converts a pack and marks those animations with it. On them the scene file's penis bend is left out (it was written for SoS's straight schlong, and bent the aimed shaft off target); the Align tab's bend still counts.
 

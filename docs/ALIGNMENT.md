@@ -20,17 +20,19 @@ In a scene, give the HUD the keys (the hotkey), then go to the **Align** tab (Le
 
 | Row | Left / Right | Enter / A |
 |---|---|---|
-| **< Name (1/2) >** | the actor to adjust | the next actor |
+| **< Name >  Role 0/1  F** | the actor to adjust (role, and sex: M, F or *) | the next actor |
 | **Left / right** | moves them sideways (their right is +) | |
 | **Back / forward** | moves them forward (+) or back | |
 | **Down / up** | moves them up (+) or down | |
+| **Size** | scales them by the step (0.1 to 10) | |
 | **Turn** | turns them (degrees, clockwise +) | |
-| **Size** | scales them, by the step / 100 (0.5 to 2) | |
 | **Penis bend** | bends their penis up (+) or down, one step at a time (-9 to +9, and -10 for flaccid; below) | |
-| **Step < 1 >** | the step: 0.5, 1, 2, 5 or 10 units (or degrees) | the next step |
+| **Step < 1.000 >** | the step, as OStim's: 10, 1, 0.1, 0.01 or 0.001 units (or degrees, or times the size) | the next step |
 | **Reset _name_** | | back to no offset, and the scene's own penis bend |
 
-Hold Left / Right on a value to keep changing it. Every change moves the actor at once and is saved.
+The rows are in OStim's align menu's order, and as there the step is the same for every value, the size too (4Stim used to move the size by a hundredth of it). Above the rows, OStim's readout: the scene's id and the actor set's alignment key (the key in `alignment.json`, below), with the scene's pack at the header's end.
+
+OStim's keys work too: **Toggle** (numpad 9) picks the next actor, and the **pull-out key** takes the next step size (OStim's No key in its align menu; elsewhere it still pulls out). Hold Left / Right on a value to keep changing it. Every change moves the actor at once and is saved.
 
 Directions are the scene's: "forward" is the way the scene faces, so an offset means the same thing wherever the scene is played.
 
