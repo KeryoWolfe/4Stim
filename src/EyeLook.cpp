@@ -36,10 +36,60 @@ namespace EyeLook
 		std::mutex                               g_lock;
 		std::unordered_map<std::uint32_t, State> g_states;
 
-		RE::NiAVObject* EyeNode(RE::Actor* a_actor, int a_which)
+		// Every geometry under a_object, a_depth levels down at most.
+		void ForEachGeometry(RE::NiAVObject* a_object, int a_depth, const std::function<void(RE::BSGeometry*)>& a_do)
+		{
+			if (!a_object) {
+				return;
+			}
+			if (const auto geometry = a_object->IsGeometry()) {
+				a_do(geometry);
+			}
+			if (const auto node = a_depth > 0 ? a_object->IsNode() : nullptr) {
+				for (const auto& child : node->children) {
+					ForEachGeometry(child.get(), a_depth - 1, a_do);
+				}
+			}
+		}
+
+		std::string Lowered(const char* a_text)
+		{
+			std::string out = a_text ? a_text : "";
+			std::ranges::transform(out, out.begin(), [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+			return out;
+		}
+
+		// The eye bone: by name in the actor's 3D, else among the bones the
+		// head's and eyes' meshes are skinned to (a face skeleton outside the
+		// actor's tree: the owner's log, 7 November, had none by name).
+		RE::NiAVObject* EyeNode(RE::Actor* a_actor, int a_which, bool a_searchSkins)
 		{
 			const auto root = a_actor ? a_actor->Get3D(false) : nullptr;
-			return root ? root->GetObjectByName(RE::BSFixedString(a_which == 0 ? g_config.leftEye : g_config.rightEye)) : nullptr;
+			if (!root) {
+				return nullptr;
+			}
+			const auto& name = a_which == 0 ? g_config.leftEye : g_config.rightEye;
+			if (const auto node = root->GetObjectByName(RE::BSFixedString(name))) {
+				return node;
+			}
+			if (!a_searchSkins) {
+				return nullptr;  // searched once already, found nothing (the log says so)
+			}
+			const auto      wanted = Lowered(name.c_str());
+			RE::NiAVObject* found = nullptr;
+			ForEachGeometry(root, 64, [&](RE::BSGeometry* a_geometry) {
+				const auto skin = found ? nullptr : a_geometry->skinInstance.get();
+				if (!skin) {
+					return;
+				}
+				for (const auto bone : skin->bones) {
+					if (bone && Lowered(bone->name.c_str()) == wanted) {
+						found = bone;
+						return;
+					}
+				}
+			});
+			return found;
 		}
 
 		// A turn of a_angle radians about the unit axis a_axis (Rodrigues),
@@ -94,7 +144,7 @@ namespace EyeLook
 			const auto  turn = AxisTurn({ 0.0F, 0.0F, 1.0F }, std::clamp(state.left, -100.0F, 100.0F) / 100.0F * g_config.maxSide * DEG) * side;
 			bool        found = false;
 			for (int which = 0; which < 2; ++which) {
-				const auto node = EyeNode(actor, which);
+				const auto node = EyeNode(actor, which, !state.warned);
 				if (!node || !node->parent) {
 					continue;
 				}
@@ -138,8 +188,25 @@ namespace EyeLook
 				for (const auto& n : names) {
 					list += (list.empty() ? "" : ", ") + n;
 				}
-				REX::INFO("Eyes: {:08X} has no \"{}\" / \"{}\" bones: OStim's look directions skipped. In its 3D with \"eye\" in the name: {}", id, g_config.leftEye,
-					g_config.rightEye, list.empty() ? "nothing" : list);
+				// And the bones the eyes' meshes are skinned to: what turning
+				// them would take.
+				std::string skinned;
+				ForEachGeometry(actor->Get3D(false), 64, [&](RE::BSGeometry* a_geometry) {
+					const auto geometryName = Lowered(a_geometry->name.c_str());
+					const auto skin = a_geometry->skinInstance.get();
+					if (geometryName.find("eye") == std::string::npos || !skin || skinned.size() > 600) {
+						return;
+					}
+					std::string bones;
+					for (const auto bone : skin->bones) {
+						if (bone) {
+							bones += (bones.empty() ? "" : " ") + std::string(bone->name.c_str() ? bone->name.c_str() : "?");
+						}
+					}
+					skinned += std::format("{}{}: [{}]", skinned.empty() ? "" : "; ", a_geometry->name.c_str() ? a_geometry->name.c_str() : "?", bones);
+				});
+				REX::INFO("Eyes: {:08X} has no \"{}\" / \"{}\" bones: OStim's look directions skipped. In its 3D with \"eye\" in the name: {}. The eye meshes are skinned to: {}", id,
+					g_config.leftEye, g_config.rightEye, list.empty() ? "nothing" : list, skinned.empty() ? "nothing" : skinned);
 			}
 		}
 	}
@@ -155,7 +222,7 @@ namespace EyeLook
 			const auto actor = RE::TESForm::GetFormByID<RE::Actor>(id);
 			for (int which = 0; which < 2; ++which) {
 				const auto& eye = it->second.eyes[which];
-				if (const auto node = eye.known ? EyeNode(actor, which) : nullptr; node && node->local.rotate == eye.written) {
+				if (const auto node = eye.known ? EyeNode(actor, which, true) : nullptr; node && node->local.rotate == eye.written) {
 					node->SetLocalRotate(eye.base);
 				}
 			}

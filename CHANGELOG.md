@@ -2,6 +2,9 @@
 
 ## 0.5.0 alpha (in progress)
 
+### Eye directions: looking for the bones
+- **OStim's eye directions** find the eye bones among the bones the head and eye meshes are skinned to when they aren't in the actor's 3D by name (the owner's log, 7 November: neither the player nor a ghoul had them by name, so no eyes moved), and the "no bones" log line now lists what the eye meshes are skinned to.
+
 ### Tongues for ghouls and by hand
 - **Tongues drawn again**: the meshes rebuilt on 7 November had an empty bounding sphere on their head bone (the newer mesh library doesn't fill it), and Fallout 4 never draws a skinned shape like that; now set. Placed from HiPoly Faces' head and its JawOpen morph: 2.2 lower and 1.2 further back than head to head, on the open lower lip.
 - **Helmets and hats come off visibly again**: when the game takes a head item off the player but doesn't redraw him (the same shapes drawn), 4Stim redraws him, as for body clothes. Since 5 November only body clothes got that (redrawing for gloves was a stutter), so a helmet taken off for a kiss stayed on his head.
