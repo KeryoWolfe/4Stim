@@ -16,6 +16,7 @@ Needs the plugin rebuilt and Papyrus compiled (`FourStim.psc`, `FourStimScene.ps
 ### Finding the wall-scene shake
 - **`Shake watch:` lines with `bCollisionWatch=1`**: every frame, how far each scene actor (the reference and the drawn body) is from their spot and how often their movement turns back on itself, logged every 2 seconds. The owner's video of 6 November (a wall scene) has both actors moving about 2 pixels back and forth every frame while the camera and the wall stay still; the collision watch saw nothing touching them.
 - **`bTranslationLock`** (4Stim.ini, 1): 0 holds scene actors without the never-ending translation (placed once, put back if they drift), to tell whether the lock is what's fighting.
+- **The player is AI driven in scenes, as OStim's lock** (`SetAIDriven`; Papyrus `Game.SetPlayerAIDriven`), `bPlayerAIDriven=1`. The owner's player vibrated in every scene, start pose included, while the shake watch showed the reference and its root still and nothing touching him: 4Stim only blocked the player's input, so the player's own movement could pull against the lock between frames. Needs testing.
 
 ### Add-on settings, as OStim's (parity audit Tier 3)
 - **OStim's add-on settings folder**: add-ons' JSON files in `Data\F4SE\Plugins\4Stim\Settings\` (OStim's format) show on an **Add-Ons** MCM page, which 4Stim writes into its MCM config when the game starts (docs/MCM.md).

@@ -154,6 +154,10 @@ Function RememberSceneWeapon(Actor akActor, Form akWeapon) Global Native
 ; starts. FourStimScene.PrepareActor asks.
 bool Function RemoveWeaponsAtStart() Global Native
 
+; bPlayerAIDriven (4Stim.ini): the player is AI driven in scenes, as OStim's
+; lock. FourStimScene.LockForScene asks.
+bool Function PlayerAIDrivenInScenes() Global Native
+
 ; A drawn weapon put away (the game's own sheathe; Fallout 4's Papyrus has
 ; none). Called by FourStimScene.HolsterForScene.
 Function SheatheForScene(Actor akActor) Global Native

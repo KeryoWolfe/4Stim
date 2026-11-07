@@ -171,6 +171,12 @@ Function LockForScene(Actor akActor) Global
 		; which the free camera and first-person look need. The input layer
 		; already keeps the player from walking off.
 		FourStim.LockPlayerControls()
+		; As OStim's GameActor::lock (SetAIDriven): the game drives the
+		; player as it does an NPC, so the player's own movement doesn't pull
+		; against the scene's lock every frame (bPlayerAIDriven).
+		if FourStim.PlayerAIDrivenInScenes()
+			Game.SetPlayerAIDriven(true)
+		endif
 	else
 		akActor.SetRestrained(true)
 	endif
@@ -184,6 +190,7 @@ Function ReleaseFromScene(Actor akActor) Global
 	akActor.SetHeadTracking(true)
 	if IsPlayer(akActor)
 		FourStim.UnlockPlayerControls()
+		Game.SetPlayerAIDriven(false)
 	else
 		akActor.SetRestrained(false)
 		akActor.EvaluatePackage()  ; walk back into their routine

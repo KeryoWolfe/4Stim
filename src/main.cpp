@@ -205,6 +205,7 @@ namespace
 		bool          timeAnimCues = true;    // bTimeAnimCues: read and time the animation files' annotation cues (AnimCues.h)
 		bool          collisionWatch = false; // bCollisionWatch: log where scene actors' controllers and bodies are against their spots
 		bool          translationLock = true; // bTranslationLock: hold scene actors with a never-ending translation (0: placed once, for finding a shake)
+		bool          playerAIDriven = true;  // bPlayerAIDriven: the player is AI driven in scenes, as OStim's lock (SetAIDriven)
 		bool          furnitureOutOfWay = true; // bFurnitureOutOfTheWay: scene furniture doesn't collide with the scene's actors
 		float         transitionLead = 0.0F;   // seconds before a transition's length to move on (see 4Stim.ini)
 		bool          matchSex = true;         // SetOnlyGayAnimsInGayScenes (OStim's intended sex only): a role's sex must be the actor's
@@ -773,6 +774,8 @@ namespace
 					Physics::Settings().resetAfterScene = std::stoi(value) != 0;
 				} else if (key == "bcollisionwatch") {
 					g_settings.collisionWatch = std::stoi(value) != 0;
+				} else if (key == "bplayeraidriven") {
+					g_settings.playerAIDriven = std::stoi(value) != 0;
 				} else if (key == "btranslationlock") {
 					g_settings.translationLock = std::stoi(value) != 0;
 				} else if (key == "btimeanimcues") {
@@ -6044,6 +6047,11 @@ namespace
 		return Undress::Settings().removeWeaponsAtStart;
 	}
 
+	bool PlayerAIDrivenInScenes(std::monostate)
+	{
+		return g_settings.playerAIDriven;
+	}
+
 	void SheatheForScene(std::monostate, RE::Actor* a_actor)
 	{
 		if (a_actor) {
@@ -6900,6 +6908,11 @@ namespace
 		RestoreTimescale();
 		EndSlowMotion();
 		ReleaseSceneLayer();
+		if (locked && g_vm) {
+			// The player's AI driving (LockForScene) goes with the scene.
+			RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
+			Compat::DispatchStaticCall(g_vm, "Game"sv, "SetPlayerAIDriven"sv, callback, false);
+		}
 		if (wasActive) {
 			SetHUDVisible(true);
 		}
@@ -12990,6 +13003,7 @@ namespace
 		a_vm->BindNativeMethod(SCRIPT_NAME, "RememberSceneWeapon"sv, RememberSceneWeapon);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "SheatheForScene"sv, SheatheForScene);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "RemoveWeaponsAtStart"sv, RemoveWeaponsAtStart);
+		a_vm->BindNativeMethod(SCRIPT_NAME, "PlayerAIDrivenInScenes"sv, PlayerAIDrivenInScenes);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "TakeSceneWeaponID"sv, TakeSceneWeaponID);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "SetEquipObjectID"sv, SetEquipObjectID);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "GetEquipObjectID"sv, GetEquipObjectID);
