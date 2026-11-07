@@ -70,33 +70,33 @@ The short answer to "are we missing anything": yes, and it falls into five patte
 
 **Actions**
 - Action tags: done in 0.5.0 for what OStim's carry (their API forms, inverted `-tag` included); action custom data done in 0.5.0 (read from action files, FourMetadata's custom functions). Was: action tags aren't implemented (no `action tags` files, no inverted `-tag`), action custom data (`ints`, `floats`, `strings`, used by OCum and OEndurance) isn't read, and `Default.json` drifted from OStim's data (male masturbation peaks inverted, bathing lost its water requirement...) (3 §4-5, §13).
-- **Done in 0.5.0 (not yet built or tested):** per-actor action and event stimulation overrides, OStim's OData functions on `FourStim`, saved with the game. Still open: OStim's MCM page for them (Papyrus only). Was: missing (2 §9).
+- **Done in 0.5.0 (not yet built or tested):** per-actor action and event stimulation overrides, OStim's OData functions on `FourStim`, saved with the game. Kept as 4Stim's: no MCM page for them (Papyrus only), as Fallout 4's MCM can't list the installed actions. Was: missing (2 §9).
 
 **Climax**
 - **Done in 0.5.0 (not yet built or tested):** a climax and event reactions wait for the current moan to end, as OStim's. Was: they cut it off (2 §8, 4 §6).
 - **Done in 0.5.0 (not yet built or tested):** OStim's end rules in every scene (with `endNPCSceneOnOrgasm` on top for NPC scenes) and the end delay restarted by each climax, auto mode's main stage after any climax, the blur only for the player's climax, and 250 Action Points taken per climax (OStim's Stamina). Was: (2 §7, §12, §13, 1 §15, 5 §15).
-- **Done in 0.5.0 (not yet built or tested):** climax comments (`climaxCommentSelf` / `climaxCommentOther`), their sound part. Still open: dialogue / `talk` (4 §5, documented), so their dialogue part too.
+- **Done in 0.5.0 (not yet built or tested):** climax comments (`climaxCommentSelf` / `climaxCommentOther`), and OStim's dialogue: voice sets' `dialogue` lines on actions that `talk`, the dialogue countdowns, `playerDialogue`, `preventSameVoiceCrossTalk`, `postSceneDialogue` and `NoPostDialogue` (SOUND.md). Not read: OStim's `voice` (Fallout 4's `Say` can't take a voice type). Was: sound only (4 §5).
 
 **Furniture**
 - **Done in 0.5.0 (not yet built or tested):** OStim-layout furniture types' `rotation` in radians (3 §10); OStim's list types (one picker row per list type, `bed` and `bench` listed individually as OStim's data) (3 §9); all six condition kinds, ANDed (3 §11); furniture in use skipped (3 §14).
-- Still open: OStim's `offset*Global` (3 §14); picker rows for list types with no scenes for this many actors aren't dropped at the search, only later. Keywords are checked on the base object, not the reference.
+- **Done in 0.5.0 (not yet built or tested):** OStim's `offset*Global`, with OStim.esp's bed globals as `SetBedRealignment` / `bedOffset` (on the shipped beds too), and keywords checked on the reference as well as its base (3 §14). Matching in effect: rows for list types with no scenes for this many actors are dropped when the picker lists them, as OStim drops them at the search.
 - **Done in 0.5.0 (not yet built or tested):** the player is put back after a furniture scene with `SetResetPosition`, as OStim's (1 §11).
 
 **Sound**
-- OStim's old voice-set syntax (used by its own `defaultmale.json`) and single-object entries load as empty sets with nothing logged (4 §3).
+- **Done in 0.5.0 (not yet built or tested):** OStim's legacy voice-set syntax, single-object entries and `soundExpression`; fields 4Stim doesn't read, and sets with no sound, are logged (4 §3).
 - **Done in 0.5.0 (not yet built or tested):** sound descriptors play natively as OStim's `GameSound::play`, with volume, stopping and their real length; Papyrus `Sound.Play` only where the address isn't found (OLDGEN.md). Was: Papyrus only, no volume, can't be stopped, 2-second guess (4 §7).
 
 **Start flow and eligibility**
 - **Done in 0.5.0 (not yet built or tested):** player scenes from scripts go through OStim's start flow: they wait for dialogue to end, then ask about furniture, adding actors (`addActorsAtStart`, new) and the player's position, and sort with `PlayerAlways...`, in the picker as OStim's message boxes (API.md). 4Stim's: with a starting scene it asks about the furniture that scene plays on, not always a bed. `FourThreadBuilder.Create` checks OStim's `isEligible` (disabled, deleted, actor type added). Was: none of it (1 §12, 6 F18, 1 §13).
 
 **Settings and menus**
-- **Done in 0.5.0 (built, untested):** the search picker takes typing and filters by name, as OStim's search menu (5 §1). Still open: The scene key does something else in and out of a scene, undocumented, without OStim's hold-for-solo (5 §2).
-- `SetUseScreenShake` isn't read and shake is on by default; OStim's is off (5 §3).
+- **Done in 0.5.0 (built, untested):** the search picker takes typing and filters by name, as OStim's search menu (5 §1). **Done in 0.5.0 (not yet built or tested):** OStim's hold-for-solo on the scene key; the picker on a short press and the HUD's keys in a scene are documented departures (SETTINGS.md) (5 §2).
+- **Done in 0.5.0 (not yet built or tested):** `SetUseScreenShake` (off by default, as OStim's) gates climax and event shakes (5 §3); `SetCustomTimescale`.
 - **Done in 0.5.0 (built, untested):** OStim's four excitement bar settings (`enablePlayerBar`, `enableNpcBar`, `SetAutoHideBar`, `SetMatchColorToGender`, colored by role by default), and the bars stay up when the HUD fades (5 §4). Was: missing, and the meters faded with the HUD.
 - **Done in 0.5.0 (not yet built or tested):** OStim's per-form equip object choices and their lookup order (actor, base, race, sex, default file, any; `GetEquipObjectPairs` / `GetEquipObjectName` / `SetFormEquipObjectID`, saved), OStim's MCM defaults as 4Stim.ini settings (`sDefaultStrapOn`, `sPlayerStrapOn`, `sDefaultTongueMale` / `Female`, `sPlayerTongue`, `sPlayerVoice`), and `sPlayerLight` (on the MCM page). Not on the MCM page, as Fallout 4's MCM can't list what's installed: the strap-on, tongue and voice choices (ini, the HUD's options, Papyrus). The per-actor stimulation overrides have no page (Papyrus only). Was: (5 §6).
 - **Done in 0.5.0 (not yet built or tested):** OStim's add-on settings: `Settings\*.json` in OStim's format, shown on an Add-Ons MCM page that 4Stim writes into its config.json at startup, bound to the add-ons' globals (MCM.md). Not in 4Stim's export / import. Was: not read (5 §7).
-- Documented as not in yet, so not findings in the report: the custom timescale (`SetCustomTimescale`), the dialogue settings (countdowns, player dialogue, cross talk), `SetBedRealignment` / `bedOffset`, and per-toy / per-slot toy settings (5, "Documented gaps"; SETTINGS.md "Not in yet"). Listed here so this list has every OStim MCM setting 4Stim lacks.
-- Undressing: no `SetRemoveWeaponsAtStart`, no wig handling, no Papyrus override hook; `SetUndressingSlotMask` takes Fallout 4 slot bits (5 §14, 2 §15).
+- **Done in 0.5.0 (not yet built or tested):** what was documented as not in yet: the custom timescale, the dialogue settings, `SetBedRealignment` / `bedOffset`, and per-toy / per-slot toy settings (in `Toy Settings.json`, OStim's export layout, as 4Stim has no toy menu) (5, "Documented gaps").
+- **Done in 0.5.0 (not yet built or tested):** `SetRemoveWeaponsAtStart`, `SetRemoveWeaponsWithSlot`, OStim's Papyrus undressing hook (`FourUndress.UsePapyrusUndressing`), at-start undressing whatever the scene's `noStrip`, and OStim's slot overlap rule (5 §14, 2 §15). Kept as 4Stim's, documented: `SetUndressingSlotMask` takes Fallout 4 slot bits; no wig setting (Fallout 4's hair slots aren't undressed).
 
 ## Tier 4: small differences (Low)
 

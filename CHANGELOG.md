@@ -2,6 +2,17 @@
 
 ## 0.5.0 alpha (in progress)
 
+### The rest of Tier 3, as OStim's (parity audit)
+- **Dialogue**: voice sets' `dialogue` lines (said with Fallout 4's `Say`) on actions that `talk`, after a random number of moans (OStim's countdown settings), climax comment lines, `postSceneDialogue` as a scene ends, `playerDialogue`, `preventSameVoiceCrossTalk`; `FourThreadBuilder.NoPostDialogue` works (docs/SOUND.md).
+- **OStim's legacy voice-set syntax** (its own `defaultmale.json`), single-object entries and `soundExpression`; unread fields are logged.
+- **`SetUseScreenShake`** (off by default, as OStim's) turns on climax and event shakes; **`SetCustomTimescale`** sets the time scale in scenes with you.
+- **Furniture**: OStim's `offset*Global`, with its bed settings **`SetBedRealignment`** and **`bedOffset`** (MCM Furniture page); keywords checked on the reference too.
+- **The hotkey held 2 seconds** starts a scene with you alone, as OStim's (a short press opens the picker as before).
+- **Undressing**: **`SetRemoveWeaponsAtStart`** and **`SetRemoveWeaponsWithSlot`**; OStim's Papyrus undressing hook (`FourUndress.psc`); an item on an undress slot comes off when an action asks for any of its slots; undressing at the start ignores the first scene's `noStrip`.
+- **Per-toy and per-slot toy settings** in `Toy Settings.json` (OStim's layout), with `individual` for `sToySynchronization` / `sToyScaling`.
+
+Needs the plugin rebuilt and Papyrus compiled (`FourStim.psc`, `FourStimScene.psc`, `FourThreadBuilder.psc`, the new `FourUndress.psc`). New MCM settings on the General, Camera, Furniture, Undress, Sound and Toys pages.
+
 ### Finding the wall-scene shake
 - **`Shake watch:` lines with `bCollisionWatch=1`**: every frame, how far each scene actor (the reference and the drawn body) is from their spot and how often their movement turns back on itself, logged every 2 seconds. The owner's video of 6 November (a wall scene) has both actors moving about 2 pixels back and forth every frame while the camera and the wall stay still; the collision watch saw nothing touching them.
 - **`bTranslationLock`** (4Stim.ini, 1): 0 holds scene actors without the never-ending translation (placed once, put back if they drift), to tell whether the lock is what's fighting.
