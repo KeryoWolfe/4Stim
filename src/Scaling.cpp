@@ -210,10 +210,24 @@ namespace Scaling
 		return g_config;
 	}
 
+	// How tall the game draws a_actor before any scale of their own: their
+	// base's height times their race's height for their sex. The owner's
+	// log (7 November): an NPC of height 1.04 drawn at 1.019, the human
+	// race's 0.98 for women; 4Stim had divided by the 1.04 only, leaving
+	// women 2% small. (OStim: TESNPC::GetHeight.) Height max wasn't seen to
+	// differ from height in that log, so it's not used.
 	float NPCHeight(RE::Actor* a_actor)
 	{
 		const auto base = a_actor ? a_actor->GetNPC() : nullptr;
-		return base && base->height > 0.0F ? base->height : 1.0F;
+		float      height = base && base->height > 0.0F ? base->height : 1.0F;
+		if (const auto race = a_actor ? a_actor->race : nullptr) {
+			const auto  sex = Compat::GetSex(a_actor) == RE::SEX::kFemale ? 1 : 0;
+			const float raceHeight = race->data.height[sex];
+			if (raceHeight > 0.0F) {
+				height *= raceHeight;
+			}
+		}
+		return height;
 	}
 
 	float HeelHeight(RE::Actor* a_actor)

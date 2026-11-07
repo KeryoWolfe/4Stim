@@ -2,6 +2,10 @@
 
 ## 0.5.0 alpha (in progress)
 
+### NPC height and a crash
+- **Scaling counts the race's height** (parity audit 2 §21, checked in game): Fallout 4 draws an actor at their base's height times their race's height for their sex (0.98 for human women), and 4Stim divided by the base's height only, so women came out about 2% small.
+- **The collision watch only runs in the first 8 seconds after each scene plays**, not the whole scene: two crashes on 7 November were Havok's thread check tripping in another NPC's movement well into a scene, and the watch's physics reads every quarter second, alongside the game's own physics jobs, are the likeliest part of 4Stim to collide with them. Not proven: watch for the same crash (`hknpWorld::forceBodyPairCollisions` in a crash log).
+
 ### OStim's data, unchanged, checked against 4Stim
 - **`tools/check-ostim-data.py`** (parity audit, "never considered" 1): lists every field in OStim's data files that 4Stim's loader for that kind never reads, and every action or furniture type OStim's scenes use that 4Stim lacks. First run on OStim NG: no missing ids, one skipped field OStim uses.
 - **Expression delays**: a facial expression's modifier or phoneme `delay` / `delayVariance` (ms) now holds it back that long before it moves, as OStim's (they were read and ignored).

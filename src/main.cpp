@@ -4253,8 +4253,14 @@ namespace
 					HoldGravity(actor);  // see "No gravity in scenes"
 				}
 				// Without Getbhk since 0.5.0 (it crashed the owner's game from
-				// here, 1 November): see WatchCollisions.
-				if (actor && settled) {
+				// here, 1 November): see WatchCollisions. Only in the first
+				// seconds after each scene plays (from 1.5 to 8 s), not all
+				// scene long: the guard runs alongside the game's own actor
+				// and physics jobs, and two crashes on 7 November were Havok's
+				// thread check tripping in another NPC's movement
+				// (forceBodyPairCollisions) well into a scene. What touches
+				// the actors does so once they're placed.
+				if (actor && settled && now - active.lastPlayed < std::chrono::seconds(8)) {
 					WatchCollisions(actor, active.sceneID);
 				}
 				if (!actor || IsPlayer(actor)) {
