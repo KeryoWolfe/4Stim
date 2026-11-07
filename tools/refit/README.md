@@ -25,4 +25,6 @@ and the `.osp` slider set (output `meshes\4Stim\EquipObjects\OStimStrapOn`).
 folder> <output folder> <ZeX skeleton.nif>`): moved from Skyrim's head to
 Fallout 4's and weighted rigidly to HEAD, with HEAD's bind transform read
 from the skeleton (rotation included: a translation-only bind put the
-tongue out of the right cheek).
+tongue out of the right cheek), and set 2.5 lower and 0.6 further back
+than head to head, so it lies on the floor of Fallout 4's open mouth rather
+than under the upper lip.

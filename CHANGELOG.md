@@ -2,6 +2,9 @@
 
 ## 0.5.0 alpha (in progress)
 
+### Tongues seated in the mouth
+- **The 4Stim Equip Objects tongues** sit 2.5 lower and 0.6 further back: they came out from under the upper lip, floating above the open jaw (owner's screenshot, 7 November). Fallout 4's mouth is lower against the head bone than Skyrim's, and there's no jaw bone to follow, so they're placed for an open mouth (they only show with one). Rebuilt with `tools/refit/build_tongues.cpp`.
+
 ### Tier 4 of the parity audit: the small differences
 - **Settings export / import in OStim's layout**: one flat list under the settings' names (`mcmsettings.json`); import also takes OStim's own file copied from Skyrim (leaving out its keys and dropdowns, and settings 4Stim doesn't have) and 4Stim's older files, and warns when nothing was imported. MCM.md now says why OStim's auto export / import don't exist here.
 - **The MCM's volume sliders** run 0.1-1, as OStim's (they went to 2 while only 1 did anything).
