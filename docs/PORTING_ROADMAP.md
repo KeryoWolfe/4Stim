@@ -35,12 +35,12 @@ Claude writes the fix; the owner builds and tests; the result goes into TEST_RES
 
 | # | Problem | Status | Next step |
 |---|---|---|---|
-| 2.1 | Actor missing from a scene (camera fade, worst in wall scenes) | Built, untested | Owner: wall scene; look for `keeps being faded out`. |
+| 2.1 | Actor missing from a scene (camera fade, worst in wall scenes) | Done (owner, 7 November 2026) | None. |
 | 2.2 | Actor barely following a scene / turned 90° in a chair (weapon drawn) | Built, untested | Owner: draw a weapon, start a scene; look for `Weapons: ... puts their weapon away`. |
-| 2.3 | Actors shaking in chair scenes | Partly fixed (chair collision); player still shook in a corner | Owner: same corner chair; send the `Collision watch:` lines. Claude: fix from what they show. |
-| 2.4 | A-Body erect physics not swapping on the player | Diagnostics built, untested | Owner: send the `Physics: ... has no piece using` or `already uses` line. |
-| 2.5 | Penis left at an odd angle after scenes | Built, untested | Owner: three scenes in a row, check after each. |
-| 2.6 | Alignment: kisses missing, tongue on the top lip, hands clipping | Head tracking and foot IK now off (built, untested); tongue mesh open | Owner: kiss scenes. Claude: tongue position in the Equip Objects add-on. |
+| 2.3 | Actors shaking in chair scenes | Done (owner, 7 November 2026) | None. |
+| 2.4 | A-Body erect physics not swapping on the player | Working in the owner's 7 November log: at each scene start the player's A-Body physics goes `MaleBody.xml` -> `MaleBodyHard.xml` (`now uses ...MaleBodyHard.xml`), and back at the end | Owner: confirm in game that the penis holds its erect shape in scenes and goes soft after. |
+| 2.5 | Penis left at an odd angle after scenes | Bend OK (owner, 7 November 2026); the log puts it back to its own angle at the end. Misaligned in places mid-scene, expected until the animations carry the penis aim (converter, another agent) | Recheck once the aimed animations are in. |
+| 2.6 | Alignment: kisses missing, tongue on the top lip, hands clipping | Kisses and hands: animation-level, another agent (owner, 7 November 2026). Tongue: moved 1.5 up and 1.5 back into the mouth (7 November, untested) | Owner: tongue in a kneeling or licking scene. |
 | 2.7 | Penis clipping through bodies and faces | Open: animation-level. Checked 1 November against the reconverted test pack (AnimBridge, 946 files): animations carry all 128 ZeX tracks; the male role animates `Penis_00` (the base) and nothing further along: `Penis_01`–`05` and the balls hold one pose. | The converter: carry the source's segment motion over to `Penis_01`–`05`, if the OStim originals have it; until then, the per-scene bend and alignment. |
 | 2.8 | NPCs talk during scenes | Done (checked off by the owner, 7 November 2026) | None. |
 | 2.9 | Scene events pass `Actor[]` from native code (may arrive broken) | Open | Claude: test with a listening script; pass form IDs if broken. |
@@ -49,7 +49,7 @@ Claude writes the fix; the owner builds and tests; the result goes into TEST_RES
 | 2.12 | 1.10.163 (OG) tester: NPC stayed in a chair, player didn't follow, dialogue opened | Needs the current build and logs from the tester | Owner: send the tester the new build. |
 | 2.13 | Save loads taking 8+ minutes | External: ModSwitchFramework_NG (confirmed by the owner) | None for 4Stim; worth a report to its author. |
 | 2.14 | Crash at Tenpines Bluff (pathfinding) | External: navmesh, A Forest.esp / PRP | None for 4Stim. |
-| 2.15 | No erections on non-SMP bodies (BodyTalk, Atomic Muscle); SMP bodies rigid all scene | Built, untested (0.4.1, docs/ERECTION.md) | Owner / testers: a scene with each body; look for `Erection: ... body:`; bend -10 on the Align tab. |
+| 2.15 | No erections on non-SMP bodies (BodyTalk, Atomic Muscle); SMP bodies rigid all scene | Done (confirmed by a tester, 7 November 2026) | None. |
 | 2.16 | Clothes not coming off (1.10.163 tester) | The log shows every strip done, OStim's way (what each position needs) | Tester: say which clothes stayed on in which position, or try Undress at the start. |
 
 ## Phase 2b: code restructure (before beta)
