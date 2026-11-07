@@ -18,6 +18,7 @@
 
 #include "ActorProperties.h"
 #include "Bridge.h"
+#include "Lights.h"
 #include "Sounds.h"
 
 namespace EquipObjects
@@ -25,6 +26,7 @@ namespace EquipObjects
 	namespace
 	{
 		constexpr auto FOLDER = "Data/F4SE/Plugins/4Stim/Equip Objects";  // OStim: SKSE\Plugins\OStim\equip objects
+		constexpr auto LIGHT = "light";  // OStim's light type: 4Stim's Lights (Lights.h)
 
 		std::string Lower(std::string_view a_text)
 		{
@@ -116,6 +118,18 @@ namespace EquipObjects
 					++count;
 				} catch (const std::exception& ex) {
 					REX::WARN("Equip objects: {}: couldn't be read ({})", file, ex.what());
+				}
+			}
+			// OStim's lights are equip objects of type "light"; 4Stim's are
+			// its Lights files (placed lights, not armor), listed here so the
+			// equip-object API, choices and options reach them (Lights.h).
+			if (!g_byType.contains(LIGHT)) {
+				for (const auto& [id, name] : Lights::Catalog()) {
+					auto object = std::make_shared<Object>();
+					object->id = id;
+					object->type = LIGHT;
+					object->name = name;
+					g_byType[LIGHT].push_back(std::move(object));
 				}
 			}
 			REX::INFO("Equip objects: {} from {}, {} type(s)", count, FOLDER, g_byType.size());
@@ -231,6 +245,9 @@ namespace EquipObjects
 
 		bool EquipLocked(std::uint32_t a_id, ActorState& a_state, const std::string& a_type)
 		{
+			if (a_type == LIGHT) {
+				return false;  // Lights' own (Equip routes it there)
+			}
 			if (const auto it = a_state.handlers.find(a_type); it != a_state.handlers.end()) {
 				if (!it->second.equipped) {
 					PutOn(a_id, it->second);
@@ -249,6 +266,9 @@ namespace EquipObjects
 
 		void UnequipLocked(std::uint32_t a_id, ActorState& a_state, const std::string& a_type)
 		{
+			if (a_type == LIGHT) {
+				return;
+			}
 			if (const auto it = a_state.handlers.find(a_type); it != a_state.handlers.end()) {
 				TakeOff(a_id, it->second);
 			}
@@ -387,7 +407,7 @@ namespace EquipObjects
 		std::scoped_lock         lock(g_lock);
 		EnsureLoaded();
 		std::vector<std::string> out;
-		if (g_defaults.contains(a_type) || a_formID > FEMALE) {
+		if (g_defaults.contains(a_type) || a_type == LIGHT || a_formID > FEMALE) {
 			out.push_back("default");
 			out.push_back(TR("$4stim_generic_default", "Default"));
 		}
@@ -423,7 +443,7 @@ namespace EquipObjects
 			}
 		}
 		if (id.empty()) {
-			return g_defaults.contains(a_type) || a_formID > FEMALE ? TR("$4stim_generic_default", "Default") : TR("$4stim_generic_random", "Random");
+			return g_defaults.contains(a_type) || a_type == LIGHT || a_formID > FEMALE ? TR("$4stim_generic_default", "Default") : TR("$4stim_generic_random", "Random");
 		}
 		if (id == "default") {
 			return TR("$4stim_generic_default", "Default");
@@ -459,15 +479,58 @@ namespace EquipObjects
 	std::string Chosen(std::uint32_t a_id, std::string a_type)
 	{
 		a_type = Lower(a_type);
+		if (a_type == LIGHT) {
+			return ChosenOnly(a_id, a_type);  // "" = 4Stim.ini's light for their sex (Lights)
+		}
 		std::scoped_lock lock(g_lock);
 		const auto       object = Choose(a_id, a_type);
 		return object ? object->id : std::string{};
+	}
+
+	std::string ChosenOnly(std::uint32_t a_id, std::string a_type)
+	{
+		a_type = Lower(a_type);
+		std::scoped_lock lock(g_lock);
+		EnsureLoaded();
+		std::vector<std::uint32_t> keys{ a_id };
+		if (const auto actor = RE::TESForm::GetFormByID<RE::Actor>(a_id)) {
+			if (const auto npc = actor->GetNPC()) {
+				keys.push_back(npc->GetFormID());
+			}
+			if (actor->race) {
+				keys.push_back(actor->race->GetFormID());
+			}
+			keys.push_back(Compat::GetSex(actor) == RE::SEX::kFemale ? FEMALE : MALE);
+		}
+		for (const auto key : keys) {
+			if (const auto object = Step(key, a_type)) {
+				return (*object)->id;
+			}
+		}
+		return {};
 	}
 
 	bool SetChosen(std::uint32_t a_id, std::string a_type, std::string a_objectID)
 	{
 		a_type = Lower(a_type);
 		a_objectID = Lower(a_objectID);
+		if (a_type == LIGHT) {
+			{
+				std::scoped_lock lock(g_lock);
+				EnsureLoaded();
+				const auto list = g_byType.find(a_type);
+				if (list == g_byType.end() || std::ranges::none_of(list->second, [&](const auto& o) { return o->id == a_objectID; })) {
+					REX::WARN("Equip objects: no light \"{}\" to choose for {:08X}", a_objectID, a_id);
+					return false;
+				}
+				g_chosen[a_id][a_type] = a_objectID;
+			}
+			REX::INFO("Equip objects: {:08X} gets light \"{}\"", a_id, a_objectID);
+			if (Lights::IsLit(a_id)) {
+				Lights::Light(a_id, a_objectID);  // the one they have now, swapped
+			}
+			return true;
+		}
 		std::scoped_lock lock(g_lock);
 		EnsureLoaded();
 		const auto list = g_byType.find(a_type);
@@ -496,6 +559,9 @@ namespace EquipObjects
 	bool Equip(std::uint32_t a_id, std::string a_type)
 	{
 		a_type = Lower(a_type);
+		if (a_type == LIGHT) {
+			return Lights::Light(a_id, ChosenOnly(a_id, a_type));
+		}
 		std::scoped_lock lock(g_lock);
 		const auto       state = Find(a_id);
 		if (!state) {
@@ -512,6 +578,10 @@ namespace EquipObjects
 	void Unequip(std::uint32_t a_id, std::string a_type)
 	{
 		a_type = Lower(a_type);
+		if (a_type == LIGHT) {
+			Lights::Unlight(a_id);
+			return;
+		}
 		std::scoped_lock lock(g_lock);
 		if (const auto state = Find(a_id)) {
 			UnequipLocked(a_id, *state, a_type);
@@ -521,6 +591,9 @@ namespace EquipObjects
 	bool IsEquipped(std::uint32_t a_id, std::string a_type)
 	{
 		a_type = Lower(a_type);
+		if (a_type == LIGHT) {
+			return Lights::IsLit(a_id);
+		}
 		std::scoped_lock lock(g_lock);
 		const auto       state = Find(a_id);
 		if (!state) {

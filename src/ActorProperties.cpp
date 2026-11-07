@@ -76,7 +76,7 @@ namespace ActorProperties
 		std::recursive_mutex                                       g_lock;
 		bool                                                       g_loaded = false;
 		PropertyList<std::string>                                  g_types;
-		PropertyList<bool>                                         g_sexes;  // true = male (has a penis)
+		PropertyList<std::optional<bool>>                          g_sexes;  // true = male (has a penis), false = female, none = by the body (OStim's agender)
 		PropertyList<std::string>                                  g_expressions;
 		PropertyList<bool>                                         g_mutes;
 		PropertyList<bool>                                         g_muffles;
@@ -332,7 +332,11 @@ namespace ActorProperties
 				g_types.entries.push_back({ condition, Lower(v->get<std::string>()) });
 			}
 			if (const auto v = a_root.find("sex"); v != a_root.end() && v->is_string()) {
-				g_sexes.entries.push_back({ condition, Lower(v->get<std::string>()) == "male" });
+				// OStim's GameSexAPI::fromString: "male", "female", anything
+				// else agender, which still wins on priority but leaves the
+				// penis to the body (CompatibilityTable::hasSchlong).
+				const auto sex = Lower(v->get<std::string>());
+				g_sexes.entries.push_back({ condition, sex == "male" ? std::optional<bool>(true) : sex == "female" ? std::optional<bool>(false) : std::nullopt });
 			}
 			if (const auto v = a_root.find("expression"); v != a_root.end() && v->is_string()) {
 				g_expressions.entries.push_back({ condition, Lower(v->get<std::string>()) });
@@ -371,7 +375,7 @@ namespace ActorProperties
 			if (outer) {
 				t_inPenis = false;
 			}
-			return sex ? *sex : Compat::GetSex(a_actor) == RE::SEX::kMale;
+			return sex && *sex ? **sex : Compat::GetSex(a_actor) == RE::SEX::kMale;
 		}
 
 		SceneRegistry::ActorCondition ConditionLocked(RE::Actor* a_actor)
@@ -490,7 +494,13 @@ namespace ActorProperties
 	bool MaleClimax(RE::Actor* a_actor)
 	{
 		const bool female = a_actor && Compat::GetSex(a_actor) == RE::SEX::kFemale;
-		return HasPenis(a_actor) && (!female || g_config.futaUseMaleClimax);
+		return !female || (HasPenis(a_actor) && g_config.futaUseMaleClimax);  // OStim's: a man's body counts, penis or not
+	}
+
+	bool FemalePostClimax(RE::Actor* a_actor)
+	{
+		const bool female = a_actor && Compat::GetSex(a_actor) == RE::SEX::kFemale;
+		return !HasPenis(a_actor) || (female && !g_config.futaUseMaleExcitement);
 	}
 
 	void Remember(RE::Actor* a_actor)

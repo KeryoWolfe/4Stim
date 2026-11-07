@@ -8,6 +8,8 @@
 #include <cmath>
 #include <map>
 #include <memory>
+#include <optional>
+#include <string>
 #include <vector>
 
 #include <nlohmann/json.hpp>
@@ -401,6 +403,54 @@ namespace MCM
 		}
 	}
 
+	namespace
+	{
+		constexpr auto EXPORT_MARK = "4StimExport";  // 4Stim's own files (OStim's have no such key)
+
+		// A value as the JSON OStim writes (numbers as numbers; its globals
+		// are floats): 4Stim.ini's hex key codes as their number, the rest
+		// as text.
+		nlohmann::json ExportValue(const std::string& a_value)
+		{
+			try {
+				std::size_t used = 0;
+				if (a_value.starts_with("0x") || a_value.starts_with("0X")) {
+					const auto number = std::stoll(a_value, &used, 16);
+					if (used == a_value.size()) {
+						return number;
+					}
+				} else if (!a_value.empty()) {
+					const auto number = std::stod(a_value, &used);
+					if (used == a_value.size()) {
+						return number == std::floor(number) && std::fabs(number) < 1e15 ? nlohmann::json(static_cast<std::int64_t>(number)) : nlohmann::json(number);
+					}
+				}
+			} catch (...) {
+			}
+			return a_value;
+		}
+
+		std::string ImportText(const nlohmann::json& a_value)
+		{
+			if (a_value.is_string()) {
+				return a_value.get<std::string>();
+			}
+			if (a_value.is_boolean()) {
+				return a_value.get<bool>() ? "1" : "0";
+			}
+			if (a_value.is_number()) {
+				const auto number = a_value.get<double>();
+				return number == std::floor(number) && std::fabs(number) < 1e15 ? std::to_string(static_cast<std::int64_t>(number)) : FormatNumber(number);
+			}
+			return a_value.dump();
+		}
+	}
+
+	// OStim's mcmsettings.json layout (MCMTable::exportSettings): one flat
+	// object, each setting under its name. 4Stim.ini uses OStim's names
+	// wherever OStim has the setting, so they're OStim's keys; 4Stim's own
+	// settings sit alongside under theirs. Plus "4StimExport", so an import
+	// can tell 4Stim's file from OStim's.
 	bool Export()
 	{
 		auto base = Ini::Read(BASE);
@@ -414,10 +464,11 @@ namespace MCM
 				}
 			}
 		}
-		nlohmann::json out = nlohmann::json::object();
+		nlohmann::ordered_json out = nlohmann::ordered_json::object();
+		out[EXPORT_MARK] = 1;
 		for (const auto& [section, entries] : base.sections) {
 			for (const auto& [key, value] : entries) {
-				out[section][key] = value;
+				out[key] = ExportValue(value);
 			}
 		}
 		const auto      path = ExportPath();
@@ -429,10 +480,16 @@ namespace MCM
 			return false;
 		}
 		file << out.dump(2) << '\n';
-		REX::INFO("MCM: settings exported to {}", path.string());
+		REX::INFO("MCM: {} setting(s) exported to {}", out.size() - 1, path.string());
 		return true;
 	}
 
+	// Reads OStim's flat layout (4Stim's export, or OStim's own file copied
+	// over) and 4Stim's older one ({ "<ini section>": { ... } }). From an
+	// OStim file, keys (Skyrim's DirectX scan codes, not Fallout 4's key
+	// codes) and dropdowns (OStim's own numbering) are left out, and so is
+	// what 4Stim has no setting for; the log says how many. Not carried, as
+	// OStim's "actorData": the per-actor choices (they're in the save).
 	bool Import()
 	{
 		const auto path = ExportPath();
@@ -448,35 +505,86 @@ namespace MCM
 			REX::WARN("MCM: {} isn't valid JSON ({})", path.string(), e.what());
 			return false;
 		}
-		// Each value under MCM's name for it where MCM shows it, else under
-		// 4Stim.ini's (4Stim reads both from MCM's file).
+		if (!json.is_object()) {
+			REX::WARN("MCM: {} isn't a settings file", path.string());
+			return false;
+		}
 		auto defaults = Ini::Read(DEFAULTS);
+		auto base = Ini::Read(BASE);
 		auto user = Ini::Read(USER);
-		std::size_t count = 0;
-		for (const auto& [section, entries] : json.items()) {
-			if (!entries.is_object()) {
-				continue;
-			}
-			for (const auto& [key, value] : entries.items()) {
-				const auto text = value.is_string() ? value.get<std::string>() : value.dump();
-				std::string mcmKey = key;
-				if (const auto list = defaults.Section(section, false)) {
-					for (const auto& [name, unused] : *list) {
-						if (Lower(IniKeyOf(name)) == Lower(key)) {
-							mcmKey = name;
-							break;
-						}
+		// Where a_key goes: MCM's name for it and its section where MCM
+		// shows it, else 4Stim.ini's section; nullopt if 4Stim has no such
+		// setting.
+		auto place = [&](const std::string& a_key, const std::string& a_section) -> std::optional<std::pair<std::string, std::string>> {
+			const auto key = Lower(a_key);
+			for (const auto& [section, entries] : defaults.sections) {
+				if (!a_section.empty() && Lower(section) != Lower(a_section)) {
+					continue;
+				}
+				for (const auto& [name, unused] : entries) {
+					if (Lower(IniKeyOf(name)) == key) {
+						return std::pair{ section, name };
 					}
 				}
-				user.Set(section, mcmKey, ToMCMValue(mcmKey, text));
-				++count;
 			}
+			for (const auto& [section, entries] : base.sections) {
+				for (const auto& [name, unused] : entries) {
+					if (Lower(name) == key) {
+						return std::pair{ a_section.empty() ? section : a_section, name };
+					}
+				}
+			}
+			if (!a_section.empty()) {
+				return std::pair{ a_section, a_key };  // 4Stim's older layout: as it was written
+			}
+			return std::nullopt;
+		};
+		bool sectioned = false;  // 4Stim's older layout
+		for (auto it = json.begin(); it != json.end(); ++it) {
+			sectioned = sectioned || it->is_object();
+		}
+		const bool  ostim = !json.contains(EXPORT_MARK) && !sectioned;
+		std::size_t count = 0, unknown = 0, keys = 0;
+		auto take = [&](const std::string& a_key, const nlohmann::json& a_value, const std::string& a_section) {
+			if (a_value.is_object() || a_value.is_array() || a_value.is_null()) {
+				return;
+			}
+			const auto where = place(a_key, a_section);
+			if (!where) {
+				++unknown;
+				return;
+			}
+			const auto& [section, mcmKey] = *where;
+			const auto prefix = Lower(mcmKey.substr(0, std::min<std::size_t>(4, mcmKey.size())));
+			if (ostim && (prefix == "s4s_" || prefix == "i4s_")) {
+				++keys;
+				return;
+			}
+			user.Set(section, mcmKey, ToMCMValue(mcmKey, ImportText(a_value)));
+			++count;
+		};
+		for (const auto& [key, value] : json.items()) {
+			if (key == EXPORT_MARK) {
+				continue;
+			}
+			if (value.is_object()) {
+				for (const auto& [inner, innerValue] : value.items()) {
+					take(inner, innerValue, key);
+				}
+			} else {
+				take(key, value, {});
+			}
+		}
+		if (count == 0) {
+			REX::WARN("MCM: nothing in {} is a 4Stim setting: nothing imported", path.string());
+			return false;
 		}
 		if (!user.Write(USER)) {
 			REX::WARN("MCM: couldn't write {}", USER);
 			return false;
 		}
-		REX::INFO("MCM: {} setting(s) imported from {}", count, path.string());
+		REX::INFO("MCM: {} setting(s) imported from {}{}{}", count, path.string(), ostim ? " (OStim's file)" : "",
+			unknown + keys > 0 ? std::format("; left out: {} 4Stim doesn't have, {} key(s) and dropdown(s) from OStim", unknown, keys) : std::string{});
 		return true;
 	}
 

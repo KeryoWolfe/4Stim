@@ -257,12 +257,22 @@ EndFunction
 ; An NPC who was in a scene when the game was saved, whose scene isn't
 ; started again on load: let them go (they're still restrained, can't be
 ; talked to or activated, in the save). Called by the plugin.
+; As OStim's freeActor(byGameLoad) -> unlock: the translation stopped,
+; foot IK and head tracking back, out of the scene's idle; then (NPCs) free
+; and back to their routine. The player's controls and camera are the
+; plugin's (ResetPlayerSceneState).
 Function ReleaseAfterLoad(int aiActorID) Global
 	Actor akActor = Game.GetForm(aiActorID) as Actor
-	if akActor == None || IsPlayer(akActor)
+	if akActor == None || FourStim.IsInScene(akActor)
 		return
 	endif
 	akActor.StopTranslation()
+	akActor.SetAnimationVariableBool("bHumanoidFootIKDisable", false)
+	akActor.SetHeadTracking(true)
+	FourStim.StopScene(akActor)  ; OStim's IdleForceDefaultState
+	if IsPlayer(akActor)
+		return
+	endif
 	akActor.SetRestrained(false)
 	akActor.EvaluatePackage()
 	FourStim.RestoreInteraction(akActor)

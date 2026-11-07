@@ -5,7 +5,9 @@
 // plugin. No 4Stim code or libraries are needed to build against it.
 //
 // Getting the interface map, at F4SE's kPostLoad message or later (OStim:
-// SKSE's kPostLoad), either from 4Stim's exported requestInterfaceMap, as
+// SKSE's kPostLoad; 4Stim answers from its own F4SEPlugin_Load on, as
+// OStim's, so asking at your kPostLoad works whichever plugin's comes
+// first), either from 4Stim's exported requestInterfaceMap, as
 // OStim's getInferfaceMap (OStim's spelling; here getInterfaceMap):
 //
 //     auto map = FourStimAPI::getInterfaceMap();
@@ -31,6 +33,12 @@
 //   which 4Stim has too: include/4Stim/FourStimNG-API.h).
 // - ThreadActor has no undressPartial / redressPartial (4Stim undresses
 //   whole items, docs/UNDRESS.md).
+// - OStim's ABI 0x07050010 additions to the builder (its "...Safe"
+//   functions) aren't here, and Thread's isRunning sits elsewhere in its
+//   vtable than OStim's: build against this header, not OStim's.
+// - A builder's start isn't finished when start() returns: the thread ID
+//   is there, the scene follows on later frames (the start flow, placing
+//   the actors); its thread start event says when it plays.
 //
 // Every function is called on the game's main thread unless it says
 // otherwise, and listeners are called on it. Pointers 4Stim hands out
@@ -49,6 +57,10 @@ namespace FourStimAPI
 		PluginInterface() {}
 		virtual ~PluginInterface() {}
 
+		// As OStim's: 4Stim's version, packed as CommonLib's Version::pack
+		// (major << 24 | minor << 16 | patch << 4): 0.5.0 is 0x00050000.
+		// Earlier 4Stim answered 1, before this version check meant anything:
+		// the interface is the same from 0x00050000 on.
 		virtual std::uint32_t getVersion() = 0;
 	};
 

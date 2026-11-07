@@ -174,7 +174,7 @@ namespace Excitement
 		return climaxing;
 	}
 
-	void Climaxed(std::uint32_t a_id)
+	void Climaxed(std::uint32_t a_id, bool a_femaleRule)
 	{
 		std::scoped_lock lock(g_lock);
 		const auto s = Find(a_id);
@@ -183,9 +183,10 @@ namespace Excitement
 		}
 		s->climaxing = false;
 		++s->climaxes;
-		s->excitement = s->sex == SceneRegistry::Sex::kFemale ?
-		                    std::min(g_config.postClimax * static_cast<float>(s->climaxes), g_config.postClimaxMax) :
-		                    0.0F;
+		// OStim's climaxInner: -3 (a moment before it rises again), or for
+		// someone without a penis, or a woman without futaUseMaleExcitement,
+		// the post-climax value.
+		s->excitement = a_femaleRule ? std::min(g_config.postClimax * static_cast<float>(s->climaxes), g_config.postClimaxMax) : -3.0F;
 		s->cooldown = g_config.decayGrace;
 	}
 
@@ -193,7 +194,9 @@ namespace Excitement
 	{
 		std::scoped_lock lock(g_lock);
 		const auto s = Find(a_id);
-		return s ? s->excitement : -1.0F;
+		// Below 0 means "not in a scene" to 4Stim's callers (OStim reports
+		// its -3 after a climax as it is; here it's 0).
+		return s ? std::max(s->excitement, 0.0F) : -1.0F;
 	}
 
 	void Set(std::uint32_t a_id, float a_value)
@@ -291,5 +294,12 @@ namespace Excitement
 		std::scoped_lock lock(g_lock);
 		const auto s = Find(a_id);
 		return s ? Rate(*s) : 0.0F;
+	}
+
+	float BaseRate(std::uint32_t a_id)
+	{
+		std::scoped_lock lock(g_lock);
+		const auto s = Find(a_id);
+		return s ? s->base : 0.0F;
 	}
 }

@@ -262,15 +262,21 @@ namespace SexToys
 			float       value = c.maxScale;
 			switch (c.scaling) {
 			case 1:
-				value = Excitement::Rate(a_handler.actor);
+				// OStim's baseExcitementInc * (1 + relativeSpeed): no sex or
+				// actor multipliers.
+				value = Excitement::BaseRate(a_handler.actor);
 				break;
 			case 2:
-				value = Excitement::Get(a_handler.actor) / 100.0F;  // OStim's excitement is 0-100 too; 4Stim scales it to the 0-1 defaults
+				// Departure: OStim compares its raw 0-100 excitement with the
+				// 0-1 scale defaults, so it's at the maximum from 1 up; 4Stim
+				// scales it to 0-1 so the defaults mean something.
+				value = Excitement::Get(a_handler.actor) / 100.0F;
 				break;
 			case 3:
 				{
-					const int count = g_scene ? static_cast<int>(g_scene->speeds.size()) : 1;
-					value = count > 1 ? static_cast<float>(g_speed) / static_cast<float>(count - 1) : 0.0F;
+					// OStim's relativeSpeed: speed / number of speeds (never 1).
+					const int count = g_scene ? static_cast<int>(g_scene->speeds.size()) : 0;
+					value = count > 0 ? static_cast<float>(g_speed) / static_cast<float>(count) : 0.0F;
 				}
 				break;
 			default:
@@ -384,7 +390,12 @@ namespace SexToys
 		class InterfaceImpl : public FourStimAPI::SexToyInterface
 		{
 		public:
-			std::uint32_t getVersion() override { return 1; }
+			// As OStim's: the plugin version, packed (main.cpp's PACKED_VERSION).
+			std::uint32_t getVersion() override
+			{
+				return (static_cast<std::uint32_t>(FOURSTIM_VERSION_MAJOR) & 0xFF) << 24 | (static_cast<std::uint32_t>(FOURSTIM_VERSION_MINOR) & 0xFF) << 16 |
+				       (static_cast<std::uint32_t>(FOURSTIM_VERSION_PATCH) & 0xFFF) << 4;
+			}
 
 			void registerReloadListener(FourStimAPI::SexToyReloadListener* a_listener) override
 			{

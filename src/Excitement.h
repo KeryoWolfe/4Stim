@@ -58,8 +58,10 @@ namespace Excitement
 	// should climax now (each once, until Climaxed is called for them).
 	std::vector<std::uint32_t> Tick(float a_seconds);
 
-	// a_id climaxed: counts it and drops their excitement (see Config).
-	void Climaxed(std::uint32_t a_id);
+	// a_id climaxed: counts it and drops their excitement, as OStim's: to
+	// -3, or with a_femaleRule (no penis, or a woman without
+	// futaUseMaleExcitement) to the post-climax value (see Config).
+	void Climaxed(std::uint32_t a_id, bool a_femaleRule);
 
 	// Queries and changes, for Papyrus and the HUD. Get returns -1 for an
 	// actor not in a scene.
@@ -86,4 +88,8 @@ namespace Excitement
 	float TimeUntilClimax(std::uint32_t a_id);
 	// How fast a_id's excitement rises, per second (0 if not in a scene).
 	float Rate(std::uint32_t a_id);
+	// OStim's baseExcitementInc * (1 + relativeSpeed): the rate from the
+	// actions and the speed, without the sex and actor multipliers (the sex
+	// toys' "stimulation rate").
+	float BaseRate(std::uint32_t a_id);
 }

@@ -8,8 +8,8 @@
 		],
 		"soundMuffled": [
 			{
-				"info": "sucking sounds, as OStim's (it uses a perk condition for blowjobs; 4Stim lists the actions)",
-				"actions": [ "blowjob", "deepthroating", "suckingnipple", "penilelicking", "testicularlicking" ],
+				"info": "sucking sounds, as OStim's: only on the mouth's side of a blowjob or deepthroating (OStim's OStimBlowjobCondition perk: its blowjob actor faction); other muffled actions are silent",
+				"actions": [ "blowjob:actor", "deepthroating:actor" ],
 				"file": "fx/4Stim/effects/suck",
 				"moanIntervalOverride": 1.0
 			}

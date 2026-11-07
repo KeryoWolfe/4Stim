@@ -2,6 +2,27 @@
 
 ## 0.5.0 alpha (in progress)
 
+### Tier 4 of the parity audit: the small differences
+- **Settings export / import in OStim's layout**: one flat list under the settings' names (`mcmsettings.json`); import also takes OStim's own file copied from Skyrim (leaving out its keys and dropdowns, and settings 4Stim doesn't have) and 4Stim's older files, and warns when nothing was imported. MCM.md now says why OStim's auto export / import don't exist here.
+- **The MCM's volume sliders** run 0.1-1, as OStim's (they went to 2 while only 1 did anything).
+- **Options**: a plain option's function gets `asState` "" as OStim's (`toggle` / `object` for equip-object rows).
+- **Excitement after a climax** as OStim's: -3, or the post-climax value for anyone without a penis (and women with one unless `futaUseMaleExcitement`); a man's body counts as a man's climax for the ending settings, penis or not.
+- **An actor property's `sex`** other than `male` / `female` leaves the penis to the body (OStim's agender).
+- **Override expressions** fall through to the next set when one isn't installed (actor property, the role's own, then each action's); `"phonemes": []` closes the mouth.
+- **Climax faces only with a climax sound**, as OStim's (no voice set, muted, or an entry without an expression: none); with `bSounds=0` the entry's face still shows.
+- **Default voice sets as OStim's**: the women's sucking sound only for the mouth's side of `blowjob` / `deepthroating`, the men's set with no muffled sound. Voice-set `actions` take `"<action>:actor"` / `:target` / `:performer`.
+- **Sex toy inputs as OStim's**: the stimulation rate without the sex and actor multipliers, the speed as speed / number of speeds.
+- **Lights through the equip-object API** (type `light`, as OStim's): `SetEquipObjectID`, `SetFormEquipObjectID` (per base, race, sex), `EquipObject`, `UnequipObject`, `IsObjectEquipped` and options files with `"equipType": "light"`.
+- **After a load**, actors let go from a scene (the player too) get their foot IK, head tracking and idle reset, as OStim's unlock.
+- **The camera after a scene** is third person unless `SetForceFirstPerson`, as OStim's (4Stim went back to the view the scene started in).
+- **Role choice**: "gay" or "straight" by who has a penis, as OStim's (it compared body sex).
+- **API**: `FourThread.CallEvent` as OStim's (out-of-range positions do nothing, target -1 is the actor); `FourActor.GetExcitementMultiplier` -1 outside a scene, `FourMetadata.GetMaxSpeed` / `GetDefaultSpeed` 0 for an unknown scene; `IsMuted` right after `Mute` says muted; random scenes take the actors in the order given, as OStim's; new `FourEvent` (`IsChildOf`) and `FourData` (OStim's `OData`) scripts, `FourStim.IsEventChildOf`, `GetUndressingSlotMask`, `SetUndressingSlotMask`, `Localize`.
+- **Plugin interface**: `getVersion()` gives 4Stim's packed version (0.5.0: 0x00050000), and plugins can ask for the interface from 4Stim's load on (as OStim's), not only after 4Stim's kPostLoad.
+- **OStim's furniture type names** (`$ostim_furniture_bed`...) are translated.
+- **Diagnostics**: scaling log lines give the NPC's height, height max and drawn scale, to check NPC height in game (audit 2 §21).
+
+Needs the plugin rebuilt and Papyrus compiled (`FourStim.psc`, `FourStimScene.psc`, `FourThread.psc`, the new `FourData.psc` and `FourEvent.psc`); the MCM config and the translation file changed.
+
 ### The rest of Tier 3, as OStim's (parity audit)
 - **Dialogue**: voice sets' `dialogue` lines (said with Fallout 4's `Say`) on actions that `talk`, after a random number of moans (OStim's countdown settings), climax comment lines, `postSceneDialogue` as a scene ends, `playerDialogue`, `preventSameVoiceCrossTalk`; `FourThreadBuilder.NoPostDialogue` works (docs/SOUND.md).
 - **OStim's legacy voice-set syntax** (its own `defaultmale.json`), single-object entries and `soundExpression`; unread fields are logged.

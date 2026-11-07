@@ -79,6 +79,18 @@ Function SetMetaString(int ThreadID, string MetaID, string Value) Global Native
 
 ; Fires an event (docs\EVENTS.md); ActorPosition, Target and Performer are
 ; positions. (OStim calls the first "Actor", which Papyrus here takes for the type.)
+; As OStim's: nothing if a position is out of range (ActorPosition -1
+; too); Target and Performer -1 are the actor.
 Function CallEvent(int ThreadID, string EventName, int ActorPosition, int Target = -1, int Performer = -1) Global
+	int iCount = GetActors(ThreadID).Length
+	if ActorPosition < 0 || ActorPosition >= iCount || Target >= iCount || Performer >= iCount
+		return
+	endif
+	if Target < 0
+		Target = ActorPosition
+	endif
+	if Performer < 0
+		Performer = ActorPosition
+	endif
 	FourStim.CallEvent(GetActor(ThreadID, 0), EventName, ActorPosition, Target, Performer)
 EndFunction

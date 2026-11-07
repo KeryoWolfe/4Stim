@@ -65,6 +65,9 @@ namespace EquipObjects
 	// swapped). Any thread.
 	std::vector<std::pair<std::string, std::string>> ObjectsOf(std::string a_type);
 	std::string                                      Chosen(std::uint32_t a_id, std::string a_type);
+	// Only what's chosen for a_id's actor, base, race or sex (no type
+	// default): "" if nothing. For lights, whose fallback is 4Stim.ini's.
+	std::string                                      ChosenOnly(std::uint32_t a_id, std::string a_type);
 	bool                                             SetChosen(std::uint32_t a_id, std::string a_type, std::string a_objectID);
 
 	// OStim's OData equip object functions, by form ID (an actor base, a

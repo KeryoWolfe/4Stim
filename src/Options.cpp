@@ -507,8 +507,14 @@ namespace Options
 		// from here never reached the option's function (nothing ran, no
 		// Papyrus error).
 		const std::int32_t argCount = actor ? (parts[3].empty() ? 2 : 3) : 1;
+		// asState as OStim's MenuOption.currentState: "toggle" / "object" for
+		// an equipObject repeat, and "" for a plain option (OStim shows the
+		// first state's description but never sets the state). 4Stim's own
+		// "state" options and voice-set rows pass the state shown.
+		const auto repeat = Lower(option.repeat);
+		const bool named = !option.stateOf.empty() || repeat == "equipobject" || repeat == "voiceset";
 		const bool ok = Compat::DispatchStaticCall(vm, "FourStimOptions"sv, "Run"sv, callback, std::string(state->script), std::string(state->function),
-			std::string(state->name), static_cast<std::int32_t>(actor ? actor->GetFormID() : 0), std::string(parts[3]), argCount);
+			named ? std::string(state->name) : std::string{}, static_cast<std::int32_t>(actor ? actor->GetFormID() : 0), std::string(parts[3]), argCount);
 		if (!ok) {
 			REX::WARN("Options: couldn't call FourStimOptions.Run (is FourStimOptions.pex installed?)");
 		}

@@ -407,6 +407,9 @@ namespace SceneRegistry
 						role.feetOnGround = v->get<bool>();
 					}
 					role.expressionOverride = Lower(a.value("expressionOverride", std::string{}));
+					if (!role.expressionOverride.empty()) {
+						role.expressionOverrides.push_back(role.expressionOverride);
+					}
 					role.underlyingExpression = Lower(a.value("underlyingExpression", std::string{}));
 					if (const auto v = a.find("expressionAction"); v != a.end() && v->is_number_integer()) {
 						role.expressionAction = v->get<int>();
@@ -632,6 +635,9 @@ namespace SceneRegistry
 						part.muffled |= a_side.muffled;
 						if (part.expressionOverride.empty() && !a_side.expressionOverride.empty()) {
 							part.expressionOverride = a_side.expressionOverride;
+						}
+						if (!a_side.expressionOverride.empty() && std::ranges::find(part.expressionOverrides, a_side.expressionOverride) == part.expressionOverrides.end()) {
+							part.expressionOverrides.push_back(a_side.expressionOverride);
 						}
 					};
 					merge(actor, type->actor);

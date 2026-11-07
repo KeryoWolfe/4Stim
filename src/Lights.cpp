@@ -13,6 +13,7 @@
 
 #include <nlohmann/json.hpp>
 
+#include "EquipObjects.h"
 #include "Sounds.h"
 
 #include "RE/E/ExtraLight.h"
@@ -92,14 +93,21 @@ namespace Lights
 			REX::INFO("Lights: {} light(s) from {}", g_types.size(), LIGHT_FOLDER);
 		}
 
-		std::shared_ptr<const LightType> TypeFor(RE::Actor* a_actor)
+		// a_chosen: what the equip-object choices give for them (OStim's
+		// getEquipObject: the actor, their base, race, sex; "" if nothing
+		// is chosen there), worked out before the lock.
+		std::shared_ptr<const LightType> TypeFor(RE::Actor* a_actor, const std::string& a_chosen)
 		{
 			if (!g_loaded) {
 				LoadLocked();
 			}
-			// OStim's getEquipObject order: the player's own choice, else by sex.
+			// OStim's getEquipObject order: what's chosen for them, the
+			// player's light, else by sex (4Stim.ini's, OStim's MCM choices).
 			const bool  player = a_actor && a_actor == RE::PlayerCharacter::GetSingleton() && Lower(g_config.playerLight) != "default" && !g_config.playerLight.empty();
-			const auto& id = player ? g_config.playerLight : Compat::GetSex(a_actor) == RE::SEX::kFemale ? g_config.femaleLight : g_config.maleLight;
+			const auto& id = !a_chosen.empty() && Lower(a_chosen) != "default" ? a_chosen :
+			                 player                                           ? g_config.playerLight :
+			                 Compat::GetSex(a_actor) == RE::SEX::kFemale      ? g_config.femaleLight :
+			                                                                    g_config.maleLight;
 			const auto  it = g_types.find(Lower(id));
 			if (it == g_types.end()) {
 				if (Lower(id) != "nolight") {
@@ -206,6 +214,12 @@ namespace Lights
 
 	void Enter(const std::vector<std::uint32_t>& a_actors)
 	{
+		// The equip-object choices, before the lock (EquipObjects reads this
+		// module's lights under its own).
+		std::unordered_map<std::uint32_t, std::string> chosen;
+		for (const auto id : a_actors) {
+			chosen[id] = EquipObjects::ChosenOnly(id, "light");
+		}
 		std::scoped_lock lock(g_lock);
 		if (a_actors.empty() || std::ranges::all_of(a_actors, [](std::uint32_t id) { return g_lit.contains(id); })) {
 			return;
@@ -230,7 +244,7 @@ namespace Lights
 			}
 			auto&      lit = g_lit[id];
 			const auto actor = RE::TESForm::GetFormByID<RE::Actor>(id);
-			lit.type = actor ? TypeFor(actor) : nullptr;
+			lit.type = actor ? TypeFor(actor, chosen[id]) : nullptr;
 			if (lit.type) {
 				REX::INFO("Lights: {:08X} gets \"{}\"", id, lit.type->id);
 			}
@@ -283,6 +297,55 @@ namespace Lights
 				g_lit.erase(it);
 			}
 		}
+	}
+
+	std::vector<std::pair<std::string, std::string>> Catalog()
+	{
+		std::scoped_lock lock(g_lock);
+		if (!g_loaded) {
+			LoadLocked();
+		}
+		std::vector<std::pair<std::string, std::string>> out;
+		for (const auto& [id, type] : g_types) {
+			out.emplace_back(id, type->name.empty() ? id : type->name);
+		}
+		std::ranges::sort(out);
+		return out;
+	}
+
+	bool Light(std::uint32_t a_actor, const std::string& a_chosen)
+	{
+		const auto actor = RE::TESForm::GetFormByID<RE::Actor>(a_actor);
+		std::scoped_lock lock(g_lock);
+		const auto       it = g_lit.find(a_actor);
+		if (!actor || it == g_lit.end()) {
+			return false;  // not in a scene (Enter makes everyone's entry)
+		}
+		auto       type = TypeFor(actor, a_chosen);
+		auto&      lit = it->second;
+		if (lit.type != type) {
+			Remove(lit);
+			lit.type = std::move(type);
+			lit.failed = false;
+		}
+		REX::INFO("Lights: {:08X} now has \"{}\"", a_actor, lit.type ? lit.type->id : std::string("nolight"));
+		return lit.type != nullptr;
+	}
+
+	void Unlight(std::uint32_t a_actor)
+	{
+		std::scoped_lock lock(g_lock);
+		if (const auto it = g_lit.find(a_actor); it != g_lit.end()) {
+			Remove(it->second);
+			it->second.type = nullptr;  // the entry stays: none again this scene
+		}
+	}
+
+	bool IsLit(std::uint32_t a_actor)
+	{
+		std::scoped_lock lock(g_lock);
+		const auto       it = g_lit.find(a_actor);
+		return it != g_lit.end() && it->second.type != nullptr;
 	}
 
 	void RemoveAll()

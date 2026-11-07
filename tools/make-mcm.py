@@ -232,8 +232,8 @@ SETTINGS = {
     'bSounds': ('Sounds', 'bool'),
     'moanIntervalMin': ('Moan every (seconds, least)', 'ms', (0.25, 20, 0.25)),
     'moanIntervalMax': ('Moan every (seconds, most)', 'ms', (0.25, 20, 0.25)),
-    'moanVolume': ('Moan volume', 'float', (0, 2, 0.05)),
-    'soundVolume': ('Sound volume', 'float', (0, 2, 0.05)),
+    'moanVolume': ('Moan volume', 'float', (0.1, 1, 0.05)),  # OStim's 0.1-1
+    'soundVolume': ('Sound volume', 'float', (0.1, 1, 0.05)),  # OStim's 0.1-1
     'iSoundPriority': ('Sound priority', 'int', (0, 255, 1)),
     # Lights
     'sMaleLight': ('Light for men', 'choice'),

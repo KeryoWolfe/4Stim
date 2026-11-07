@@ -28,7 +28,11 @@ The Controls page sets `4Stim.ini`'s keys, laid out as OStim's Controls page: th
 
 ## Export and import
 
-As OStim's: **Export settings** writes the settings in effect to `Documents\My Games\Fallout4\4Stim\mcmsettings.json` (OStim's file name, next to `alignment.json`), by `4Stim.ini`'s sections and names; **Import settings** reads it back into the MCM's file. Copy the file to share settings, or keep it before trying something.
+As OStim's: **Export settings** writes the settings in effect to `Documents\My Games\Fallout4\4Stim\mcmsettings.json` (OStim's file name, next to `alignment.json`) in OStim's layout: one flat list, each setting under its `4Stim.ini` name (OStim's name wherever OStim has the setting), numbers as numbers, plus `"4StimExport": 1` to mark it as 4Stim's. **Import settings** reads it back into the MCM's file. Copy the file to share settings, or keep it before trying something.
+
+Import also takes OStim's own `mcmsettings.json` copied over from Skyrim: the settings 4Stim shares with OStim come across (same names and units). Left out of an OStim file: its keys (Skyrim's DirectX scan codes, which aren't Fallout 4's key codes), its dropdowns (OStim's own numbering) and the settings 4Stim doesn't have; `4Stim.log` says how many (`MCM: ... imported`), and warns when nothing was. Files from 4Stim before 0.5.0 (grouped by `4Stim.ini` section) still import. As OStim's export, neither carries the per-actor choices (OStim's `actorData`; in 4Stim they're in the save) nor add-on settings (globals in the save).
+
+Departure from OStim: OStim keeps its settings in global variables, so each save has its own, and offers **auto export** (on closing the MCM) and **auto import** (on every load, and always on a new game) to carry them between saves, plus **reset to defaults**. 4Stim's settings are `4Stim.ini` and the MCM's file, the same for every save, so there's nothing to carry and those two settings don't exist; **Use 4Stim.ini's settings** (General, Save and Load Settings) is the reset.
 
 ## Add-ons
 

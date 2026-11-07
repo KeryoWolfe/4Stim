@@ -160,7 +160,7 @@ namespace Expressions
 				for (const auto& p : *it) {
 					g.phonemes.push_back(ReadModifier(p));
 				}
-				g.mask |= g.phonemes.empty() ? 0 : 1 << kMouth;
+				g.mask |= 1 << kMouth;  // as OStim's: the key claims the mouth, "phonemes": [] closes it
 			}
 			if (const auto it = a_value.find("modifiers"); it != a_value.end() && it->is_array()) {
 				for (const auto& v : *it) {
@@ -525,11 +525,22 @@ namespace Expressions
 		// Override (OStim's updateOverrideExpression) and underlying.
 		state.overrides.clear();
 		// An actor property's expression (OStim's: a gag keeps the mouth
-		// open) overrules the scene's.
-		const auto fromActor = ActorProperties::Expression(actor);
-		if (const auto& set = fromActor.empty() ? a_scene.actors[a_role].expressionOverride : fromActor; !set.empty()) {
-			if (const auto list = Find(g_bySet, set)) {
+		// open) overrules the scene's; then the role's own and each action's
+		// (OStim's getOverrideExpressions). The first set that's loaded: one
+		// that isn't (an add-on's set not installed) is passed over.
+		std::vector<std::string> candidates;
+		if (const auto fromActor = ActorProperties::Expression(actor); !fromActor.empty()) {
+			candidates.push_back(fromActor);
+		}
+		const auto& role = a_scene.actors[a_role];
+		candidates.insert(candidates.end(), role.expressionOverrides.begin(), role.expressionOverrides.end());
+		if (role.expressionOverrides.empty() && !role.expressionOverride.empty()) {
+			candidates.push_back(role.expressionOverride);
+		}
+		for (const auto& set : candidates) {
+			if (const auto list = Find(g_bySet, set); list && !list->empty()) {
 				state.overrides = *list;
+				break;
 			}
 		}
 		state.override_ = MakeLayer(Pick(state.overrides), state.female, state.speed, excitement);

@@ -3477,8 +3477,16 @@ namespace
 				if (std::fabs(wanted - current) > 0.001F) {
 					CallActorMethod(actor, "ObjectReference"sv, "SetScale"sv, wanted);
 					a_active.appliedScale[role] = wanted;
-					REX::INFO("Scaling: {:08X} (role {}) scaled to {:.3f} (heels {:.1f}, feet on the ground {})", id, role, wanted,
-						role < a_active.heels.size() ? a_active.heels[role] : 0.0F, settled && role < settled->actors.size() && settled->actors[role].feetOnGround);
+					// With what the height is made of, to check NPC height in game
+					// (parity audit 2 §21: OStim scales by the base's height;
+					// whether Fallout 4 also uses heightMax or the race's height
+					// is unverified): the base's height and height max, and the
+					// 3D's scale before this change.
+					const auto npc = actor->GetNPC();
+					const auto root = actor->Get3D();
+					REX::INFO("Scaling: {:08X} (role {}) scaled to {:.3f} (heels {:.1f}, feet on the ground {}; NPC height {:.3f}, height max {:.3f}, drawn at scale {:.3f} before)", id, role, wanted,
+						role < a_active.heels.size() ? a_active.heels[role] : 0.0F, settled && role < settled->actors.size() && settled->actors[role].feetOnGround,
+						npc ? npc->height : 0.0F, npc ? npc->heightMax : 0.0F, root ? root->world.scale : 0.0F);
 				}
 			}
 			if (!g_lockScenes) {
@@ -4611,7 +4619,7 @@ namespace
 		const auto& config = Excitement::Settings();
 		std::erase_if(a_active.awaitingClimax, [&](const auto& a_entry) { return a_entry.actor == a_actorID; });
 		Sounds::HoldForClimax(a_actorID, false);
-		Excitement::Climaxed(a_actorID);
+		Excitement::Climaxed(a_actorID, ActorProperties::FemalePostClimax(RE::TESForm::GetFormByID<RE::Actor>(a_actorID)));
 		SexToys::Climax(a_actorID);
 		// As OStim's setAutoModeToMainStage: any climax moves auto mode on
 		// to its main stage, from foreplay too.
@@ -4781,7 +4789,7 @@ namespace
 				if (const auto active = FindActiveScene(id)) {
 					HandleClimax(*active, id);
 				} else {
-					Excitement::Climaxed(id);
+					Excitement::Climaxed(id, ActorProperties::FemalePostClimax(RE::TESForm::GetFormByID<RE::Actor>(id)));
 				}
 			}
 			for (auto& active : g_activeScenes) {
@@ -5787,7 +5795,8 @@ namespace
 
 	float GetExcitementMultiplier(std::monostate, RE::Actor* a_actor)
 	{
-		return a_actor ? Excitement::Multiplier(a_actor->GetFormID()) : 1.0F;
+		// As OStim's: -1 for an actor not in a scene.
+		return a_actor && Excitement::Get(a_actor->GetFormID()) >= 0.0F ? Excitement::Multiplier(a_actor->GetFormID()) : -1.0F;
 	}
 
 	void SetExcitementMultiplier(std::monostate, RE::Actor* a_actor, float a_multiplier)
@@ -6043,17 +6052,38 @@ namespace
 
 	// ---- Muting and choosing equip objects (OStim's OActor.Mute; the HUD's options) ----
 
+	// Mute / Unmute apply on the main thread; until they have, IsMuted
+	// answers what was asked, so a script reads back its own call (OStim's
+	// are synchronous; parity audit F21).
+	std::mutex                               g_muteLock;
+	std::unordered_map<std::uint32_t, bool> g_muteAsked;
+
+	void AskMute(std::uint32_t a_id, bool a_muted)
+	{
+		{
+			std::scoped_lock lock(g_muteLock);
+			g_muteAsked[a_id] = a_muted;
+		}
+		F4SE::GetTaskInterface()->AddTask([a_id, a_muted]() {
+			Sounds::SetMuted(a_id, a_muted);
+			std::scoped_lock lock(g_muteLock);
+			if (const auto it = g_muteAsked.find(a_id); it != g_muteAsked.end() && it->second == a_muted) {
+				g_muteAsked.erase(it);
+			}
+		});
+	}
+
 	void Mute(std::monostate, RE::Actor* a_actor)
 	{
 		if (a_actor) {
-			F4SE::GetTaskInterface()->AddTask([id = a_actor->GetFormID()]() { Sounds::SetMuted(id, true); });
+			AskMute(a_actor->GetFormID(), true);
 		}
 	}
 
 	void Unmute(std::monostate, RE::Actor* a_actor)
 	{
 		if (a_actor) {
-			F4SE::GetTaskInterface()->AddTask([id = a_actor->GetFormID()]() { Sounds::SetMuted(id, false); });
+			AskMute(a_actor->GetFormID(), false);
 		}
 	}
 
@@ -6235,7 +6265,16 @@ namespace
 
 	bool IsMuted(std::monostate, RE::Actor* a_actor)
 	{
-		return a_actor && Sounds::IsMuted(a_actor->GetFormID());  // read from a Papyrus thread, as IsInScene
+		if (!a_actor) {
+			return false;
+		}
+		{
+			std::scoped_lock lock(g_muteLock);
+			if (const auto it = g_muteAsked.find(a_actor->GetFormID()); it != g_muteAsked.end()) {
+				return it->second;  // asked, not applied yet
+			}
+		}
+		return Sounds::IsMuted(a_actor->GetFormID());  // read from a Papyrus thread, as IsInScene
 	}
 
 	// Which object of a type a_actor wears (its file name), and choosing it.
@@ -6341,6 +6380,47 @@ namespace
 	bool IsFurnitureChildOf(std::monostate, std::string a_superType, std::string a_subType)
 	{
 		return !a_superType.empty() && !a_subType.empty() && Furniture::IsA(a_subType, a_superType);
+	}
+
+	// OStim's OEvent.IsChildOf: a_subType is a_superType or has it among
+	// its supertypes.
+	bool IsEventChildOf(std::monostate, std::string a_superType, std::string a_subType)
+	{
+		return !a_superType.empty() && !a_subType.empty() && Events::IsChildOf(a_subType, a_superType);
+	}
+
+	// OStim's OData.GetUndressingSlotMask / SetUndressingSlotMask: the slots
+	// undressed, bit 0 = slot 30 (Fallout 4's slots). Set until the settings
+	// are read again (4Stim.ini and the MCM's are what last: OStim's is in
+	// the save).
+	std::int32_t GetUndressingSlotMask(std::monostate)
+	{
+		std::uint32_t mask = 0;
+		for (const auto slot : Undress::Settings().slots) {
+			if (slot >= 30 && slot <= 61) {
+				mask |= 1u << (slot - 30);
+			}
+		}
+		return static_cast<std::int32_t>(mask);
+	}
+
+	void SetUndressingSlotMask(std::monostate, std::int32_t a_mask)
+	{
+		const auto       mask = static_cast<std::uint32_t>(a_mask);
+		std::vector<int> slots;
+		for (int slot = 30; slot <= 61; ++slot) {
+			if (mask & (1u << (slot - 30))) {
+				slots.push_back(slot);
+			}
+		}
+		F4SE::GetTaskInterface()->AddTask([slots = std::move(slots)]() mutable { Undress::Settings().slots = std::move(slots); });
+	}
+
+	// OStim's OData.Localize / ToLocalizedString: a "$key" text translated
+	// (4Stim's translation files, OStim's own keys among them).
+	std::string LocalizeText(std::monostate, std::string a_text)
+	{
+		return Translations::Localize(a_text);
 	}
 
 	// OStim's OThread.GetFurniture: the furniture a_actor's scene is on (None
@@ -6915,9 +6995,11 @@ namespace
 				if (camera->QCameraEquals(RE::CameraState::kFree)) {
 					camera->ToggleFreeCameraMode(false);
 				}
-				// Back to the view the player started in, or first person with
-				// OStim's SetForceFirstPerson.
-				const bool firstPerson = g_startedFirstPerson || g_settings.forceFirstPerson;
+				// As OStim's endSceneMode: third person, or first person with
+				// SetForceFirstPerson (until 0.5.0 4Stim went back to the view
+				// the scene started in). g_startedFirstPerson is still noted,
+				// for the log.
+				const bool firstPerson = g_settings.forceFirstPerson;
 				const auto restore = firstPerson ? RE::CameraState::kFirstPerson : RE::CameraState::k3rdPerson;
 				if (!camera->QCameraEquals(restore)) {
 					camera->SetState(camera->cameraStates[restore].get());
@@ -6927,7 +7009,8 @@ namespace
 			RestoreFOV();
 			RestoreTimescale();
 			SetHUDVisible(true);
-			REX::INFO("Scene camera: restored ({})", g_startedFirstPerson || g_settings.forceFirstPerson ? "first person" : "third person");
+			REX::INFO("Scene camera: restored ({}; the scene started in {})", g_settings.forceFirstPerson ? "first person" : "third person",
+				g_startedFirstPerson ? "first person" : "third person");
 		});
 	}
 
@@ -7442,11 +7525,9 @@ namespace
 		if (a_cast.size() >= 3) {
 			return g_settings.playerSelectRoleThreesome;
 		}
-		const auto female = [](std::uint32_t a_id) {
-			const auto actor = RE::TESForm::GetFormByID<RE::Actor>(a_id);
-			return actor && Compat::GetSex(actor) == RE::SEX::kFemale;
-		};
-		return female(a_cast[0]) == female(a_cast[1]) ? g_settings.playerSelectRoleGay : g_settings.playerSelectRoleStraight;
+		// OStim's handleActorSorting: "gay" when both have a penis or
+		// neither does (hasSchlong, not the body).
+		return ActorProperties::Cached(a_cast[0]).penis == ActorProperties::Cached(a_cast[1]).penis ? g_settings.playerSelectRoleGay : g_settings.playerSelectRoleStraight;
 	}
 
 	// Snapshot of the running scenes for the picker. Main thread.
@@ -10477,7 +10558,7 @@ namespace
 	}
 
 	// OStim's OLibrary.GetRandom...: a random scene these actors can play
-	// (any role order that fits), on a_furniture ("" = off furniture), with
+	// in the order given (OStim's), on a_furniture ("" = off furniture), with
 	// the scene tags, actions and (for role a_position, or -1: any role)
 	// actor tags asked for; empty lists ask nothing. Not transitions or
 	// scenes marked noRandomSelection, as OStim. "" if none.
@@ -10491,7 +10572,8 @@ namespace
 		}
 		std::vector<std::shared_ptr<const SceneRegistry::Scene>> pool;
 		for (const auto& scene : ScenesForActors(cast, LowerCopy(a_furniture))) {
-			if (scene->IsTransition() || scene->noRandomSelection) {
+			// As OStim's Node::fulfilledBy: the actors in the order given.
+			if (scene->IsTransition() || scene->noRandomSelection || !SexesFit(*scene, cast)) {
 				continue;
 			}
 			if ((!a_anyTags.empty() && !HasAnyOf(scene->tags, a_anyTags)) || !HasAllOf(scene->tags, a_allTags)) {
@@ -10630,7 +10712,7 @@ namespace
 		}
 		std::vector<std::shared_ptr<const SceneRegistry::Scene>> pool;
 		for (const auto& scene : ScenesForActors(cast, LowerCopy(a_furniture))) {
-			if (!scene->IsTransition() && !scene->noRandomSelection && a_condition(*scene)) {
+			if (!scene->IsTransition() && !scene->noRandomSelection && SexesFit(*scene, cast) && a_condition(*scene)) {  // in the order given, as OStim's
 				pool.push_back(scene);
 			}
 		}
@@ -11353,12 +11435,12 @@ namespace
 	std::int32_t M_GetMaxSpeed(std::monostate, std::string a_id)
 	{
 		const auto scene = SceneRegistry::Find(a_id);
-		return scene ? static_cast<std::int32_t>(scene->speeds.size()) - 1 : -1;
+		return scene ? static_cast<std::int32_t>(scene->speeds.size()) - 1 : 0;  // OStim's 0 for an unknown scene
 	}
 	std::int32_t M_GetDefaultSpeed(std::monostate, std::string a_id)
 	{
 		const auto scene = SceneRegistry::Find(a_id);
-		return scene ? scene->defaultSpeed : -1;
+		return scene ? scene->defaultSpeed : 0;  // OStim's 0 for an unknown scene
 	}
 	std::vector<std::string> M_GetNavigations(std::monostate, std::string a_id)
 	{
@@ -11966,6 +12048,13 @@ namespace
 			std::int32_t id;
 		};
 
+		// As OStim's getVersion: the plugin's version packed as CommonLib's
+		// Version::pack does (major << 24 | minor << 16 | patch << 4), so
+		// 0.5.0 is 0x00050000 (OStim 7.5.1: 0x07050010).
+		constexpr std::uint32_t PACKED_VERSION = (static_cast<std::uint32_t>(FOURSTIM_VERSION_MAJOR) & 0xFF) << 24 |
+		                                         (static_cast<std::uint32_t>(FOURSTIM_VERSION_MINOR) & 0xFF) << 16 |
+		                                         (static_cast<std::uint32_t>(FOURSTIM_VERSION_PATCH) & 0xFFF) << 4;
+
 		using ThreadListeners = std::vector<FourStimAPI::ThreadEventListener*>;
 		ThreadListeners                                     g_onStart, g_onSpeed, g_onNode, g_onStop;
 		std::vector<FourStimAPI::ThreadActorEventListener*> g_onClimax;
@@ -11973,7 +12062,7 @@ namespace
 		class ThreadInterfaceImpl final : public FourStimAPI::ThreadInterface
 		{
 		public:
-			std::uint32_t getVersion() override { return 1; }
+			std::uint32_t getVersion() override { return PACKED_VERSION; }
 
 			FourStimAPI::Thread* getThread(std::int32_t a_threadID) override
 			{
@@ -12019,7 +12108,7 @@ namespace
 		class AlignmentInterfaceImpl final : public FourStimAPI::AlignmentInterface
 		{
 		public:
-			std::uint32_t getVersion() override { return 1; }
+			std::uint32_t getVersion() override { return PACKED_VERSION; }
 
 			bool getOffset(std::int32_t a_threadID, std::uint32_t a_position, FourStimAPI::AlignmentOffset* a_offset) override
 			{
@@ -13005,6 +13094,10 @@ namespace
 		a_vm->BindNativeMethod(SCRIPT_NAME, "ChangeFurniture"sv, ChangeFurnitureNative);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "GetFurnitureType"sv, GetFurnitureType);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "IsFurnitureChildOf"sv, IsFurnitureChildOf);
+		a_vm->BindNativeMethod(SCRIPT_NAME, "IsEventChildOf"sv, IsEventChildOf);
+		a_vm->BindNativeMethod(SCRIPT_NAME, "GetUndressingSlotMask"sv, GetUndressingSlotMask);
+		a_vm->BindNativeMethod(SCRIPT_NAME, "SetUndressingSlotMask"sv, SetUndressingSlotMask);
+		a_vm->BindNativeMethod(SCRIPT_NAME, "Localize"sv, LocalizeText);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "GetSceneFurniture"sv, GetSceneFurniture);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "GetSceneFurnitureType"sv, GetSceneFurnitureType);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "OpenFurnitureMenu"sv, OpenFurnitureMenu);
@@ -13633,7 +13726,10 @@ namespace
 				RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
 				Compat::DispatchStaticCall(g_vm, "FourStimScene"sv, "RearmByID"sv, callback, static_cast<std::int32_t>(id));
 			}
-			if (!IsPlayer(actor) && g_vm) {
+			if (g_vm) {
+				// The player too (OStim's freeActor(byGameLoad) unlocks
+				// everyone); their controls, camera and AI driving are
+				// ResetPlayerSceneState's.
 				RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
 				Compat::DispatchStaticCall(g_vm, "FourStimScene"sv, "ReleaseAfterLoad"sv, callback, static_cast<std::int32_t>(id));
 			}
@@ -13747,9 +13843,6 @@ namespace
 		switch (a_msg->type) {
 		case F4SE::MessagingInterface::kPostLoad:
 			REX::INFO("kPostLoad");
-			// Every plugin is loaded now: any of them may ask for the plugin
-			// interface (a nullptr sender: messages from all of them).
-			F4SE::GetMessagingInterface()->RegisterListener(API::OnPluginMessage, std::string_view{});
 			SceneEvents::SetNativeListener(API::OnSceneEvent);
 			Intiface::Start();  // 4Stim's own toy plugin (connects while bIntiface=1)
 			break;
@@ -14175,6 +14268,11 @@ F4SE_PLUGIN_LOAD(const F4SE::LoadInterface* a_f4se)
 	PlaybackSpeed::Install();
 	ScenePackage::Install();
 	F4SE::GetMessagingInterface()->RegisterListener(OnMessage);
+	// The plugin interface, for any plugin that asks (a nullptr sender:
+	// messages from all of them), from now on as OStim's (registered in
+	// SKSEPlugin_Load): a plugin asking at its own kPostLoad gets it even
+	// if that comes before 4Stim's.
+	F4SE::GetMessagingInterface()->RegisterListener(API::OnPluginMessage, std::string_view{});
 	F4SE::GetPapyrusInterface()->Register(RegisterPapyrusFunctions);
 	if (const auto serialization = F4SE::GetSerializationInterface()) {
 		serialization->SetUniqueID(SAVE_UID);

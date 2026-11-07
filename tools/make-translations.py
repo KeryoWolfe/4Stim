@@ -1,6 +1,6 @@
 """
 Writes Data/Interface/Translations/4Stim_en.txt (docs/TRANSLATIONS.md): every
-"$4stim_..." text with its English, from
+"$4stim_..." text with its English (and OStim's furniture type names), from
 
   - the plugin's TR("$4stim_key", "English") / TRF(...) calls (src/),
   - the movies' Strings.t("$4stim_key", "English") (Interface-src/),
@@ -22,6 +22,16 @@ import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, 'Data', 'Interface', 'Translations', '4Stim_en.txt')
+
+OSTIM_TEXTS = {
+    '$ostim_furniture_bed': 'Bed',
+    '$ostim_furniture_bench': 'Bench',
+    '$ostim_furniture_chair': 'Chair',
+    '$ostim_furniture_cooking_pot': 'Cooking Pot',
+    '$ostim_furniture_shelf': 'Shelf',
+    '$ostim_furniture_table': 'Table',
+    '$ostim_furniture_wall': 'Wall',
+}
 
 CALL = re.compile(r'\b(?:TR|TRF|Strings\.t)\(\s*"(\$4stim_[A-Za-z0-9_]+)"\s*,\s*"((?:[^"\\]|\\.)*)"')
 
@@ -55,6 +65,11 @@ def main():
         data = json.load(open(path, encoding='utf-8'))
         for key, english in data.get('english', {}).items():
             add(key, english, os.path.basename(path))
+
+    # OStim's own keys that OStim files copied over unchanged use (parity
+    # audit 3 §17): its furniture types' names, with OStim's English.
+    for key, english in OSTIM_TEXTS.items():
+        add(key, english, 'OStim')
 
     if problems:
         print('The same key with different English:', *problems, sep='\n  ')

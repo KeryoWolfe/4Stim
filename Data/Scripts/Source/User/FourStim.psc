@@ -197,6 +197,19 @@ String Function GetFurnitureType(ObjectReference akFurniture) Global Native
 ; type, or a kind of it: a bench is a kind of chair). OStim's IsChildOf.
 bool Function IsFurnitureChildOf(String asSuperType, String asSubType) Global Native
 
+; Whether event asSubType is asSuperType or has it among its supertypes
+; (OStim's OEvent.IsChildOf).
+bool Function IsEventChildOf(String asSuperType, String asSubType) Global Native
+
+; The undressing slots as a mask, bit 0 = slot 30 (OStim's OData
+; Get/SetUndressingSlotMask; Fallout 4's slots). Set lasts until the settings
+; are read again (4Stim.ini and the MCM's): OStim keeps it in the save.
+int Function GetUndressingSlotMask() Global Native
+Function SetUndressingSlotMask(int aiMask) Global Native
+
+; A "$key" text translated from the translation files (OStim's OData.Localize).
+String Function Localize(String asText) Global Native
+
 ; The furniture akActor's scene is on (None off furniture, or at a wall,
 ; which is no object), and its type ("" = none).
 ObjectReference Function GetSceneFurniture(Actor akActor) Global Native

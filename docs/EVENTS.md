@@ -52,7 +52,7 @@ Events are in `Data\F4SE\Plugins\4Stim\Events\`, one per file, the id being the 
 ### Firing events
 
 - **Animations:** the `4StimEvent` annotation (OStim's `OStimEvent`): `4StimEvent.spank,1` (the actor playing this animation spanked role 1) or `4StimEvent.spank,0,1,0` (role 0 spanked role 1, role 0 moving). The animation converter should turn OStim's annotations into these.
-- **Papyrus:** `FourStim.CallEvent(akInScene, "spank", aiActor, aiTarget, aiPerformer)` (roles of the scene akInScene is in; `aiActor` -1 = akInScene's own). `FourStim.GetEvents()` lists them.
+- **Papyrus:** `FourStim.CallEvent(akInScene, "spank", aiActor, aiTarget, aiPerformer)` (roles of the scene akInScene is in; `aiActor` -1 = akInScene's own, `aiTarget` -1 = none, `aiPerformer` -1 = the actor). OStim's `FourThread.CallEvent(ThreadID, "spank", ActorPosition, Target, Performer)` works as OStim's: nothing if a position is out of range (`ActorPosition` -1 too), and `Target` / `Performer` -1 are the actor. `FourStim.GetEvents()` lists them.
 - **Listening:** scripts registered with `FourStim.RegisterForSceneEvents` get `FourStim_OnEvent(String asEvent, Actor akActor, Actor akTarget, Actor akPerformer, Actor[] akActors, String asSceneID)`.
 
 ## Other annotations

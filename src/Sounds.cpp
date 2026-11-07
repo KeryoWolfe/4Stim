@@ -564,7 +564,7 @@ namespace Sounds
 		// first and a catch-all last. Randomness comes from inside an entry
 		// (a folder of files, or the sound descriptor's own). Returns the
 		// entry played, or null.
-		const SoundEntry* PlayReaction(RE::Actor* a_actor, State& a_state, const ReactionSet& a_set)
+		const SoundEntry* PlayReaction(RE::Actor* a_actor, State& a_state, const ReactionSet& a_set, const SoundEntry** a_fits = nullptr)
 		{
 			const SoundEntry* first = nullptr;
 			for (const auto& e : a_state.muffled ? a_set.soundMuffled : a_set.sound) {
@@ -572,6 +572,9 @@ namespace Sounds
 					first = &e;
 					break;
 				}
+			}
+			if (a_fits) {
+				*a_fits = first;  // the entry that fits, played or not
 			}
 			if (!first || g_config.disabled || g_config.moanVolume <= 0.0F) {
 				return nullptr;
@@ -677,7 +680,7 @@ namespace Sounds
 
 		// OStim's playSound: a line (where the scene lets them talk, or always
 		// for a_ignoreChecks: climaxes and reactions), else a sound.
-		void StartReaction(std::uint32_t a_id, State& a_state, const ReactionSet& a_set, const char* a_fallbackEvent, bool a_ignoreChecks = true)
+		void StartReaction(std::uint32_t a_id, State& a_state, const ReactionSet& a_set, bool a_ignoreChecks = true)
 		{
 			const auto actor = RE::TESForm::GetFormByID<RE::Actor>(a_id);
 			if (!actor) {
@@ -690,11 +693,17 @@ namespace Sounds
 				a_state.cooldown = RandomInterval();
 				return;
 			}
-			const auto entry = PlayReaction(actor, a_state, a_set);
-			const auto event = entry && !entry->expression.empty() ? entry->expression : std::string(a_fallbackEvent ? a_fallbackEvent : "");
-			if (!event.empty()) {
-				// With a sound: until it ends; without, for the expression's own duration.
-				a_state.eventExpression = Expressions::SetEvent(a_id, event, entry == nullptr) && entry != nullptr;
+			const SoundEntry* fits = nullptr;
+			const auto        entry = PlayReaction(actor, a_state, a_set, &fits);
+			// As OStim's playSound: the face comes only from the sound set
+			// that plays (its "expression"; legacy sets default to "climax" /
+			// "moan"), so no set, no face. With 4Stim's bSounds=0 (OStim has
+			// no such switch) the set that would play still gives its face,
+			// for the expression's own duration.
+			if (entry && !entry->expression.empty()) {
+				a_state.eventExpression = Expressions::SetEvent(a_id, entry->expression, false);
+			} else if (!entry && fits && g_config.disabled && !fits->expression.empty()) {
+				Expressions::SetEvent(a_id, fits->expression, true);
 			}
 			a_state.cooldown = entry && entry->moanIntervalOverride > 0.0F ? entry->moanIntervalOverride : RandomInterval();
 		}
@@ -932,6 +941,18 @@ namespace Sounds
 			if (action.actor == a_role || action.target == a_role || action.performer == a_role) {
 				state.actions.push_back(action.type->id);
 			}
+			// "<id>:actor" / ":target" / ":performer": only on that side (as
+			// OStim's default set's sucking sound, for the mouth's side of a
+			// blowjob only: its actor faction).
+			if (action.actor == a_role) {
+				state.actions.push_back(action.type->id + ":actor");
+			}
+			if (action.target == a_role) {
+				state.actions.push_back(action.type->id + ":target");
+			}
+			if (action.performer == a_role) {
+				state.actions.push_back(action.type->id + ":performer");
+			}
 		}
 		// OStim's Node::getPrimaryPartner: the other side of the first
 		// action this role is on (themselves if none), the target of their
@@ -972,8 +993,7 @@ namespace Sounds
 		}
 		const auto it = g_states.find(a_id);
 		if (it == g_states.end()) {
-			Expressions::SetEvent(a_id, "climax", true);
-			return;
+			return;  // as OStim's: no voice set, no climax sound and no climax face
 		}
 		auto& state = it->second;
 		state.heldForClimax = false;
@@ -981,10 +1001,8 @@ namespace Sounds
 		state.reaction = nullptr;
 		state.dialogueCountdown = 0;  // as OStim's playClimaxSound
 		if (state.voice && !state.mutedByHand) {
-			StartReaction(a_id, state, state.voice->climax, "climax");
-		} else {
-			Expressions::SetEvent(a_id, "climax", true);
-		}
+			StartReaction(a_id, state, state.voice->climax);
+		}  // as OStim's: muted, or no voice set, no climax face either
 		// Their own comment, 1 s after the climax sound (OStim: not the
 		// player's, whose comment would cut the climax off).
 		if (!a_isPlayer && state.voice && !state.voice->climaxCommentSelf.Empty()) {
@@ -1052,7 +1070,7 @@ namespace Sounds
 					state.reaction = nullptr;
 					if (!state.mutedByHand) {
 						StopSound(id, state);  // the moan's face, in case the reaction plays nothing
-						StartReaction(id, state, *reaction, nullptr);
+						StartReaction(id, state, *reaction);
 					}
 				}
 				continue;
@@ -1061,7 +1079,7 @@ namespace Sounds
 				continue;
 			}
 			if ((state.cooldown -= a_seconds) <= 0.0F) {
-				StartReaction(id, state, state.voice->moan, nullptr, false);
+				StartReaction(id, state, state.voice->moan, false);
 			}
 		}
 	}

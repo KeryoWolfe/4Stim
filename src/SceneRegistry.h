@@ -97,6 +97,9 @@ namespace SceneRegistry
 		bool        talk = false;
 		bool        muffled = false;
 		std::string expressionOverride;
+		// Every override set to try, in OStim's order (Node::getOverrideExpressions:
+		// the role's own, then each action's): the first one loaded is used.
+		std::vector<std::string> expressionOverrides;
 		std::string underlyingExpression;
 		int         expressionAction = -1;
 		// OStim's eye directions (its lookUp / lookDown, lookLeft /

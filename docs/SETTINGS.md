@@ -14,7 +14,7 @@ Times given with OStim's names are in milliseconds, as in OStim. `SetFurnitureSe
 | OStim name | Default | Older 4Stim name | What it does |
 |---|---|---|---|
 | `SetKeyMap` | `0x26` (Up arrow) | `iHotkey` | Let go: the picker, to start a scene (OStim starts one with whoever is under the crosshair at once; 4Stim's picker lets you choose who and where). Held 2 s and let go: a scene with you alone, as OStim's. In a scene: give the HUD the keys (OStim's opens furniture selection, which is the HUD's Utility here) |
-| `keyNpcSceneStart` | 0 (Shift + `SetKeyMap`) | `iNPCSceneKey` | Start a scene between NPCs |
+| `keyNpcSceneStart` | 0 (Shift + `SetKeyMap`) | `iNPCSceneKey` | Start a scene between NPCs. Departure: OStim's 0 means no key (it ships unbound), its key does nothing during your own scene, and it asks with message boxes whom to add; 4Stim's 0 is Shift + the scene key, it works during your scene, and it opens the picker |
 | `SetKeyUp` / `SetKeyDown` | `0x6B` / `0x6D` (numpad + / -) | `iSpeedUpKey` / `iSpeedDownKey` | Faster / slower |
 | `SetControlToggle` | `0x60` (numpad 0) | `iAutoModeKey` | Auto mode on / off |
 | `SetPullOut` | `0x61` (numpad 1) | | Pull out |
@@ -30,11 +30,11 @@ Times given with OStim's names are in milliseconds, as in OStim. `SetFurnitureSe
 | `enablePlayerBar` / `enableNpcBar` (`[HUD]`) | 1 / 1 | | An excitement bar for you / for each NPC in the scene |
 | `SetAutoHideBar` (`[HUD]`) | 0 | | The bars fade with the HUD (off: they stay up all scene, as OStim's). OStim hides them after 15 s without player input; 4Stim uses the HUD's fade (`fHUDFadeTime`) |
 | `SetMatchColorToGender` (`[HUD]`) | 0 | | Bar colors by sex (blue male, pink female, purple other); off, by role as OStim's (the first blue, the second pink, the rest purple) |
-| `SetOsaYesKey` / `SetOsaTogKey` | `0x67` / `0x69` (numpad 7 / 9) | | The HUD's choose (Enter works too) / between the list and the tab buttons |
+| `SetOsaYesKey` / `SetOsaTogKey` | `0x67` / `0x69` (numpad 7 / 9) | | The HUD's choose (Enter works too) / in the Align tab the next actor, as OStim's Toggle (its only use); elsewhere 4Stim's: between the list and the tab buttons |
 | `SetUseFreeCam` | 1 | | Free camera in scenes with you |
 | `SetCameraSpeed` | 3 | `fFreeCameraSpeed` (a multiplier) | Free camera speed (the game's `fFreeCameraTranslationSpeed`) |
 | `SetFreeCamFOV` | 45 | | Field of view during the scene |
-| `SetForceFirstPerson` | 0 | | First person after the scene |
+| `SetForceFirstPerson` | 0 | | First person after the scene; otherwise third person, as OStim's (whatever view the scene started in) |
 | `SetUseFades` | 1 | | Fade to black as scenes with you start and end |
 | `SetUseAutoFades` | 0 | | Also fade when auto mode jumps to another scene |
 | `SetCustomTimescale` | 0 | | The game's time scale during scenes with you, put back after (0 = unchanged) |

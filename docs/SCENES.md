@@ -117,6 +117,8 @@ The first scene has two speeds and one navigation option. The second uses the si
 
 Every field of OStim NG's scene files is read and used. `playbackSpeed`: OStim sets its `OStimSpeed` behavior variable, which only OStim's Skyrim behavior patch has; 4Stim speeds up or slows down the actors' animation updates instead (`bUsePlaybackSpeed`, API.md).
 
+Not read: OStim's legacy OSex XML scenes (`Meshes\0SA\mod\0Sex\scene`), which OStim still loads; no Fallout 4 content uses that format. Small differences when OStim files are read unchanged: a navigation `border` of `ffffff` (OStim's default) draws no border, where OStim draws a white one; a furniture type named by one of OStim's keys (`$ostim_furniture_bed`...) shows OStim's English name (4Stim's translation file has OStim's furniture keys).
+
 ## YAML
 
 Any scene or sequence file can be YAML instead of JSON (`.yaml` or `.yml`), with the same fields, in either layout; both kinds load side by side from the same folders. This is 4Stim's: OStim reads JSON only. YAML is easier to write by hand: comments with `#`, no quotes or commas needed. The example above ("Example") as YAML:

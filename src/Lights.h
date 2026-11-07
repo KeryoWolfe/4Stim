@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <string>
+#include <utility>
 #include <vector>
 
 // Lights on actors during scenes (docs/LIGHTS.md), as OStim's light equip
@@ -38,6 +39,19 @@ namespace Lights
 
 	// The actors left their scene: their lights go.
 	void Leave(const std::vector<std::uint32_t>& a_actors);
+
+	// OStim's light equip objects through the equip-object API (type
+	// "light", EquipObjects routes it here). The lights there are: id, name.
+	std::vector<std::pair<std::string, std::string>> Catalog();
+
+	// Puts a light on a_actor now (OStim's EquipObject(actor, "light")):
+	// a_chosen ("" = by sex, as at the start), replacing the one they have.
+	// False if they're not in a scene or it's "nolight".
+	bool Light(std::uint32_t a_actor, const std::string& a_chosen);
+	// Takes it off (UnequipObject); they get none again this scene.
+	void Unlight(std::uint32_t a_actor);
+	// Whether they have a light on (IsObjectEquipped).
+	bool IsLit(std::uint32_t a_actor);
 
 	// Removes every light placed (before a save; the next Tick puts them
 	// back) or forgets them (a game loaded).

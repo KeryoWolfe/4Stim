@@ -12,6 +12,8 @@ What other mods can use: OStim NG's Papyrus API scripts with 4Stim's names, scen
 | `OFurniture` | `FourFurniture` | furniture types and finding furniture |
 | `OActorUtil` | `FourActorUtil` | actor arrays, sorting, conditions, actors in range |
 | `OSequence` | `FourSequence` | random sequences by furniture and tags |
+| `OEvent` | `FourEvent` | `IsChildOf` for events |
+| `OData` | `FourData` | OStim's data functions: equip objects, voice sets, stimulation, undressing mask, settings export / import, `Localize`; `ReloadScene` reloads every scene |
 | `OSexIntegrationMain` events | `FourStim.RegisterForSceneEvents` | scene events (below) |
 | `PluginInterface` (SKSE) | `include/4Stim/PluginInterface.h` (F4SE) | C++ |
 | `OstimNG-API` (SKSE) | `include/4Stim/FourStimNG-API.h` (F4SE) | C++: scenes and threads for external UIs |
@@ -69,7 +71,7 @@ When a thread ends, as OStim's: 4Stim frees its actors first (unrestrained, coll
 
 ## FourLibrary
 
-Random scenes for a set of actors, with OStim's function names: `GetRandomScene(actors)`, `GetRandomFurnitureScene(actors, type)`, and for each, scene tags (`...WithSceneTag`, `...WithAnySceneTag`, `...WithAllSceneTags`, `CSV` versions), one actor's tags (`...WithSingleActorTag(actors, position, tag)`, `Any` / `All`, `CSV`), any actor's tags (`...WithMultiActorTagForAny`), and actions (`...WithAction`, `...WithAnyAction`, `...WithAllActions`, `CSV`), each also as `GetRandomFurnitureScene...` with a furniture type. A scene qualifies if these actors can play it (any role order that fits their sexes and actor properties), it's not a transition, and it isn't marked `noRandomSelection`. They return "" when none fits.
+Random scenes for a set of actors, with OStim's function names: `GetRandomScene(actors)`, `GetRandomFurnitureScene(actors, type)`, and for each, scene tags (`...WithSceneTag`, `...WithAnySceneTag`, `...WithAllSceneTags`, `CSV` versions), one actor's tags (`...WithSingleActorTag(actors, position, tag)`, `Any` / `All`, `CSV`), any actor's tags (`...WithMultiActorTagForAny`), and actions (`...WithAction`, `...WithAnyAction`, `...WithAllActions`, `CSV`), each also as `GetRandomFurnitureScene...` with a furniture type. A scene qualifies if these actors can play it in the order given, as OStim's (role 0 the first actor, by their sexes and actor properties; sort them first, `FourActorUtil.Sort`), it's not a transition, and it isn't marked `noRandomSelection`. They return "" when none fits.
 
 All 97 of OLibrary's functions are there, under OStim's names and arguments, wrapping five natives mods can also call directly: `FindRandomScene(actors, furnitureType, anySceneTags, allSceneTags, anyActions, allActions, position, anyActorTags, allActorTags)` for scene tags, actions and one role's tags; `FindRandomSceneByRoleTags(actors, furnitureType, actorTags, allPerRole, forAll, sceneTags, sceneMode)` for OStim's multi-actor tags (`"a,b;c"`: one list per role, any or all of each, for any role or all of them, with any / all scene tags); `FindRandomSceneByActionRoles(actors, furnitureType, types, all, byActor, actorPosition, byTarget, targetPosition)` for the actions done by or to a role; `FindRandomSceneSuperload(actors, furnitureType, filters)` behind `GetRandomSceneSuperloadCSV` (its 44 filter strings, in OStim's order and formats); and `GetScenesInRange(id, actors, distance)`, the scenes up to `distance` navigations away that the actors can play, sorted by name, as OStim's. As in OStim, only the superload matches an action by its type's tags as well as its type. One difference: the random picks accept any actor order that fits a scene, where OStim's keep the order given, so a role's tags are checked on the scene's roles, not on the actor given in that place. `GetAllScenes()` lists every scene, `SplitCSV("a,b")` splits a list.
 
@@ -225,7 +227,7 @@ OStim's sex toys: a device plugin (for buttplug.io, say) registers toys through 
 - a `peak(fToyClimaxMagnitude, 1)` when its actor climaxes (`bToyClimax`);
 - `stop()` when the scene moves on, `turnOn()` / `turnOff()` as it gets used and when the scene ends.
 
-The strength comes from `sToyScaling`: none (always the strongest, OStim's default), the excitement rate, the excitement (0-1), or the scene speed (0-1), between `fToyMinScale` and `fToyMaxScale`. Departures in the inputs: 4Stim's rate includes the sex and actor excitement multipliers (OStim's is the base rate times 1 + the relative speed), its excitement is 0-1 (OStim passes 0-100, so with its 0-1 scale defaults it's always at the top), and its speed reaches 1 at the top speed (OStim's speed / speed count never does). Toys are registered again on every save load and each time the player's scene starts (OStim's reload).
+The strength comes from `sToyScaling`: none (always the strongest, OStim's default), the excitement rate, the excitement (0-1), or the scene speed (0-1), between `fToyMinScale` and `fToyMaxScale`. As OStim's, the rate is the actions' base rate times 1 + the relative speed (no sex or actor multipliers) and the speed is the speed / the number of speeds (it never reaches 1). Departure: the excitement is 0-1 (OStim passes 0-100, so with its 0-1 scale defaults it's always at the top). Toys are registered again on every save load and each time the player's scene starts (OStim's reload).
 
 ### Intiface Central, built in
 

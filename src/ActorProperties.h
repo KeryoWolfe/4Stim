@@ -53,6 +53,9 @@ namespace ActorProperties
 	// The excitement rate and climax of a man (OStim's futa settings).
 	bool MaleExcitement(RE::Actor* a_actor);
 	bool MaleClimax(RE::Actor* a_actor);
+	// OStim's post-climax rule: no penis, or a woman without
+	// futaUseMaleExcitement, gets the post-climax excitement.
+	bool FemalePostClimax(RE::Actor* a_actor);
 
 	// Conditions are worked out on the main thread and kept, for the
 	// picker's lists (read on the interface's thread): Remember works them

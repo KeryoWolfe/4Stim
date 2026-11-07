@@ -13,7 +13,7 @@ Voice sets are in `Data\F4SE\Plugins\4Stim\Voice Sets\`, one per file, in OStim'
   "moan": {
     "sound": [ { "file": "fx/4Stim/actor/moan/female", "expression": "moan" } ],
     "soundMuffled": [
-      { "actions": ["blowjob", "deepthroating"], "file": "fx/4Stim/effects/suck", "moanIntervalOverride": 1.0 }
+      { "actions": ["blowjob:actor", "deepthroating:actor"], "file": "fx/4Stim/effects/suck", "moanIntervalOverride": 1.0 }
     ]
   },
   "climax": {
@@ -37,14 +37,14 @@ And can have:
 - `expression`: the event expression shown while it plays (docs/EXPRESSIONS.md).
 - `moanIntervalOverride`: seconds to the next moan, in place of `moanIntervalMin` / `Max`.
 - `condition` (OStim's): a perk (`{ "mod", "formid" }`) whose conditions must hold, with the actor as the subject and their primary partner as the target (the other side of the first action they're on; themselves if none). A perk that isn't loaded is logged and the entry plays without it, as OStim's.
-- **4Stim: `actions`**: only while the actor takes part in one of these actions. No plugin needed; 4Stim's default sets use it for the sucking sounds, where OStim's use a perk.
+- **4Stim: `actions`**: only while the actor takes part in one of these actions, on any side; `"<action>:actor"`, `":target"` or `":performer"` for that side only. No plugin needed; 4Stim's default sets use it for the sucking sounds, where OStim's use a perk.
 
 ## When
 
 As in OStim:
 
 - **Moans:** an actor moans if one of their actions says so (`moan` in `Actions\Default.json`), every `moanIntervalMin` to `moanIntervalMax` milliseconds (2500 / 4000), muffled if one says `muffled`.
-- **Climax:** at a climax, its climax sound, with the climax expression.
+- **Climax:** at a climax, its climax sound, with the expression its entry names (`"expression"`; in OStim's legacy syntax `climaxExpression`, default `climax`). As OStim's, the face comes only with the sound: an entry without an expression, a muted actor or one with no voice set makes no climax face (with `bSounds=0` the entry that would play still gives its face).
 
 `moanVolume` (0-1) sets how loud. Sounds follow the actor.
 
@@ -76,7 +76,7 @@ A voice set can react to events (docs/EVENTS.md), as OStim's: `eventActorReactio
 
 ## The default sets
 
-4Stim's default sets use the OStim sounds in `4Stim Core\Sound\fx\4Stim\`: `actor\moan\female|male`, `actor\climax\female|male`, and `effects\suck` for muffled moans during oral.
+4Stim's default sets use the OStim sounds in `4Stim Core\Sound\fx\4Stim\`: `actor\moan\female|male` and `actor\climax\female|male`. As OStim's: the women's set plays `effects\suck` while muffled only on the mouth's side of `blowjob` and `deepthroating` (`"actions": ["blowjob:actor", "deepthroating:actor"]`, where OStim's checks a perk for its blowjob faction) and is silent in other muffled actions; the men's set has no muffled sound, so men are silent while muffled.
 
 ## Dialogue
 

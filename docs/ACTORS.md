@@ -70,6 +70,8 @@ In Fallout 4, futa comes from an equippable penis, not from the body. Give those
 }
 ```
 
+A property's `"sex"` is `"male"` (a penis), `"female"` (none) or, as OStim's, anything else (`"agender"`): that one still wins over lower priorities, but whether they have a penis goes by the body.
+
 They then go first, wear no strap-on, and, with OStim's settings (`4Stim.ini`, `[Roles]`): take men's roles too (`futaUseMaleRole`, default on), gain excitement at the male rate (`futaUseMaleExcitement`, off), and climax as men (`futaUseMaleClimax`, on: for `SetEndOnOrgasm`).
 
 ## Roles
@@ -126,7 +128,7 @@ An actor wears one:
 
 Everything put on is taken off and away when the scene ends (also from a save loaded with the scene running). Undressing leaves equip objects on.
 
-Departures from OStim: lights are 4Stim's own (`LIGHTS.md`), not equip objects, since they'd need armors with lights in their meshes. Which object of a type an actor wears follows OStim's order: what's chosen for the actor in the HUD's options (each actor's page, OPTIONS.md, or `FourStim.SetEquipObjectID`; 4Stim's, OStim has no per-reference choice), then for their base, their race, their sex, then the type's `default` file, then any. A choice can be an object, `random` or `default` (the next step down). The steps above the actor are OStim's `OData` functions on `FourStim` (`GetEquipObjectPairs`, `GetEquipObjectName`, and `SetFormEquipObjectID`, OStim's `SetEquipObjectID`), by form ID: OStim's `0x0` for men and `0x1` for women, the player's base `0x7`. All are saved with the game. OStim's MCM choices are in 4Stim.ini, where the save has none: `sDefaultStrapOn` (women's), `sPlayerStrapOn`, `sDefaultTongueMale`, `sDefaultTongueFemale`, `sPlayerTongue` (an object's file name, `random` or `default`). They aren't on the MCM page: Fallout 4's MCM can't list choices that depend on what's installed.
+Lights are equip objects of type `light` as OStim's, chosen and put on through the same functions, but placed as game lights rather than worn (`LIGHTS.md`). Which object of a type an actor wears follows OStim's order: what's chosen for the actor in the HUD's options (each actor's page, OPTIONS.md, or `FourStim.SetEquipObjectID`; 4Stim's, OStim has no per-reference choice), then for their base, their race, their sex, then the type's `default` file, then any. A choice can be an object, `random` or `default` (the next step down). The steps above the actor are OStim's `OData` functions on `FourStim` (`GetEquipObjectPairs`, `GetEquipObjectName`, and `SetFormEquipObjectID`, OStim's `SetEquipObjectID`), by form ID: OStim's `0x0` for men and `0x1` for women, the player's base `0x7`. All are saved with the game. OStim's MCM choices are in 4Stim.ini, where the save has none: `sDefaultStrapOn` (women's), `sPlayerStrapOn`, `sDefaultTongueMale`, `sDefaultTongueFemale`, `sPlayerTongue` (an object's file name, `random` or `default`). They aren't on the MCM page: Fallout 4's MCM can't list choices that depend on what's installed.
 
 ## NPCs in a scene
 
