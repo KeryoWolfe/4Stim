@@ -2,6 +2,11 @@
 
 ## 0.5.0 alpha (in progress)
 
+### Add-on settings, as OStim's (parity audit Tier 3)
+- **OStim's add-on settings folder**: add-ons' JSON files in `Data\F4SE\Plugins\4Stim\Settings\` (OStim's format) show on an **Add-Ons** MCM page, which 4Stim writes into its MCM config when the game starts (docs/MCM.md).
+
+Needs the plugin rebuilt.
+
 ### Per-actor and per-sex choices, as OStim's (parity audit Tier 3)
 - **Equip objects (strap-ons, tongues) are chosen in OStim's order**: the actor, their base, race, sex, then the default file. OStim's `GetEquipObjectPairs`, `GetEquipObjectName` and `SetEquipObjectID` (as `SetFormEquipObjectID`) are on `FourStim`, with OStim's 0x0 / 0x1 for men and women (docs/ACTORS.md).
 - **OStim's MCM choices as 4Stim.ini settings**: `sDefaultStrapOn`, `sPlayerStrapOn`, `sDefaultTongueMale`, `sDefaultTongueFemale`, `sPlayerTongue`, `sPlayerVoice`; and `sPlayerLight` (also on the MCM's General page).

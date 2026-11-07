@@ -291,5 +291,6 @@
 	"tooltip_add_actors_at_start": "Show message boxes at scene start to add more actors to the scene. This only works on scenes that don't have a designated starting animation.",
 	"player_light_mode": "Player light mode",
 	"tooltip_player_light_mode": "Sets the light for the player.",
-	"generic_default": "Default"
+	"generic_default": "Default",
+	"page_addons": "Add-Ons"
 }

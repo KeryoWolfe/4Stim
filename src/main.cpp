@@ -43,6 +43,7 @@
 #include "ApiForms.h"
 #include "EyeLook.h"
 #include "Translations.h"
+#include "AddonSettings.h"
 #include "MCM.h"
 #include "Options.h"
 #include "SexToys.h"
@@ -13877,6 +13878,7 @@ F4SE_PLUGIN_LOAD(const F4SE::LoadInterface* a_f4se)
 		}
 	}
 
+	AddonSettings::WritePage();  // OStim's add-on settings: the MCM's Add-Ons page, before any menu reads it
 	MCM::Sync();  // whichever of 4Stim.ini and the MCM's settings changed last wins
 	LoadSettings();
 	InputHook::Install();

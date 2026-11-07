@@ -30,6 +30,12 @@ The Controls page sets `4Stim.ini`'s keys, laid out as OStim's Controls page: th
 
 As OStim's: **Export settings** writes the settings in effect to `Documents\My Games\Fallout4\4Stim\mcmsettings.json` (OStim's file name, next to `alignment.json`), by `4Stim.ini`'s sections and names; **Import settings** reads it back into the MCM's file. Copy the file to share settings, or keep it before trying something.
 
+## Add-ons
+
+OStim's add-on settings work as OStim's: an add-on puts a JSON file in `Data\F4SE\Plugins\4Stim\Settings\` (OStim's `settings` folder and format, `README.txt` there), with toggles, sliders, dropdowns and keymaps, each kept in one of its global variables, and they show on an **Add-Ons** page (before About), a header per add-on. Texts starting with `$` are translated, from the add-on's own translation file (`Interface\Translations\<its plugin>_en.txt`).
+
+Departure from OStim, forced by Fallout 4: SkyUI builds pages while the game runs; Fallout 4's MCM reads a fixed `config.json`. So when the game starts, before any menu is read, 4Stim writes the Add-Ons page into its own `Data\MCM\Config\4Stim\config.json`, bound straight to the add-ons' globals (MCM's `GlobalValue`), and takes it out again when no add-on has settings; `4Stim.log` says what it found (`Add-on settings: ...`). A new or changed file shows after restarting the game. As OStim's, the values are the globals, saved with the game; they aren't in 4Stim's export / import. Untested so far: whether MCM's key input writes a keymap's global.
+
 ## For authors
 
 `tools/make-mcm.py` writes the page (`config.json`, `settings.ini`, `keybinds.json`) from `4Stim.ini`: its tables have the pages (OStim's), each setting's kind and range, and which of OStim's label and tooltip keys it takes. Its texts are translated like the rest (TRANSLATIONS.md), under OStim's keys with "4stim" for "ostim" (`$ostim_reset_position` is `$4stim_reset_position`, `$ostim_tooltip_fades` is `$4stim_tooltip_fades`) and OStim's English from `tools/ostim-mcm-english.json` ("OStim" written "4Stim"). 4Stim's own settings get keys in the same style, `$4stim_<setting in snake case>` and `$4stim_tooltip_<...>` (`bLockScenes`: `$4stim_lock_scenes`), with their `4Stim.ini` comment as help; an OStim setting that works differently in 4Stim keeps OStim's label key but its help has a key of its own (`$4stim_tooltip_reset_position_4stim`), so an OStim translation can't put OStim's description on it.

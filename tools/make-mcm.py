@@ -696,6 +696,9 @@ def main():
         ],
         'pages': pages,
     }
+    # The Add-Ons page's name: the plugin writes that page at startup from
+    # add-ons' settings files (src/AddonSettings.cpp), so only its text is here.
+    ostim_text('page_addons')
     # No MCM hotkeys any more: the Controls page sets 4Stim.ini's keys
     # (an empty list, so an older install's file doesn't keep them).
     keybinds = {'modName': '4Stim', 'keybinds': []}
