@@ -1,5 +1,5 @@
 {
-	"_comment": "4Stim's own HUD options, in OStim's options format (docs/OPTIONS.md): a page per actor with undressing, muting, their voice set, and their strap-on and tongue (on / off, and which one). \"state\" (4Stim's) picks the state shown; \"english\" holds the English of the $4stim_ texts (docs/TRANSLATIONS.md).",
+	"_comment": "4Stim's own HUD options, in OStim's options format (docs/OPTIONS.md): a page per actor with undressing, muting, their voice set, and their strap-on, tongue and light (OStim's facelight options) (on / off, and which one). \"state\" (4Stim's) picks the state shown; \"english\" holds the English of the $4stim_ texts (docs/TRANSLATIONS.md).",
 	"pages": [
 		{
 			"name": "4StimActors",
@@ -31,6 +31,12 @@
 			"name": "4StimTongue",
 			"description": "$4stim_options_tongue_page",
 			"icon": "4Stim/sensual/kissing",
+			"parent": "4StimActor"
+		},
+		{
+			"name": "4StimLight",
+			"description": "$4stim_options_light_page",
+			"icon": "4Stim/symbols/lightbulb_on",
 			"parent": "4StimActor"
 		}
 	],
@@ -125,6 +131,25 @@
 					"function": "FourStimOptions/ChooseTongue"
 				}
 			}
+		},
+		{
+			"name": "Light",
+			"page": "4StimLight",
+			"repeat": "equipObject",
+			"equipType": "light",
+			"states": {
+				"toggle": {
+					"description": "$4stim_options_light_toggle",
+					"icon": "4Stim/symbols/lightbulb_off",
+					"function": "FourStimOptions/ToggleLight"
+				},
+				"object": {
+					"description": "$4stim_options_wear_object",
+					"icon": "4Stim/symbols/lightbulb_on",
+					"border": "ffff00",
+					"function": "FourStimOptions/ChooseLight"
+				}
+			}
 		}
 	],
 	"english": {
@@ -141,6 +166,8 @@
 		"$4stim_options_wear_object": "Wear {type}",
 		"$4stim_options_voice_page": "Voice",
 		"$4stim_options_voice_default": "{type} voice for {actor}",
-		"$4stim_options_voice_set": "Voice: {type}"
+		"$4stim_options_voice_set": "Voice: {type}",
+		"$4stim_options_light_page": "Light",
+		"$4stim_options_light_toggle": "Light on / off for {actor}"
 	}
 }

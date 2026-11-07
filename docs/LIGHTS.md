@@ -43,4 +43,4 @@ OStim's lights are armor items with a light in their mesh. 4Stim has no plugin o
 
 ## Not in yet
 
-The check for actors who already have a light from another mod (OStim's `hasLight`), and a lights page in the HUD's options (an options file with `"equipType": "light"` works; 4Stim ships none).
+The check for actors who already have a light from another mod (OStim's `hasLight`). A light can be changed during a scene on each actor's **Light** page in the HUD's options (OStim's facelight options).

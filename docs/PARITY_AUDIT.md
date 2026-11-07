@@ -127,7 +127,7 @@ All done in 0.5.0 except where noted (CHANGELOG, "Tier 4"). The Low findings, ea
 
 Beyond single findings, five things were never treated as requirements:
 
-1. **Running OStim content unmodified as a test.** A load of OStim NG's own `data` folder (scenes, actions, furniture types, expressions, voice sets) with a log line for every field 4Stim skips would have caught tier 1 items 4 to 9 at once. This is the cheapest guard against more "redo" cycles.
+1. **Running OStim content unmodified as a test.** A load of OStim NG's own `data` folder (scenes, actions, furniture types, expressions, voice sets) with a log line for every field 4Stim skips would have caught tier 1 items 4 to 9 at once. This is the cheapest guard against more "redo" cycles. **Done in 0.5.0:** `tools/check-ostim-data.py` checks OStim's data folder, unchanged, against 4Stim's loaders and ids (every field the loader for that kind never names, and every action or furniture type a scene uses that 4Stim lacks). Its first run (OStim NG `2c98cb2`): no missing ids; one field OStim reads that 4Stim skipped, the facial expressions' `delay` / `delayVariance`, now read and used; the rest are fields OStim doesn't read either. It finds skipped fields, not misread ones, and runs outside the game (OStim's scenes name Skyrim animations, so they can't play here).
 2. **Failure paths.** Death, combat, cell change, failed starts, loading a save mid-scene, actors released after a load. OStim handles each; 4Stim handles almost none.
 3. **The API's timing model.** OStim's API is synchronous; 4Stim's is not, and nothing tells script authors.
 4. **A plugin file.** Factions, form lists and keywords are part of OStim's API, not extras.

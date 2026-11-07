@@ -2,6 +2,13 @@
 
 ## 0.5.0 alpha (in progress)
 
+### OStim's data, unchanged, checked against 4Stim
+- **`tools/check-ostim-data.py`** (parity audit, "never considered" 1): lists every field in OStim's data files that 4Stim's loader for that kind never reads, and every action or furniture type OStim's scenes use that 4Stim lacks. First run on OStim NG: no missing ids, one skipped field OStim uses.
+- **Expression delays**: a facial expression's modifier or phoneme `delay` / `delayVariance` (ms) now holds it back that long before it moves, as OStim's (they were read and ignored).
+- **A Light page on each actor's HUD options** (OStim's facelight options): the light on or off, and which one.
+
+Needs the plugin rebuilt and `FourStimOptions.psc` compiled.
+
 ### Tongues seated in the mouth
 - **The 4Stim Equip Objects tongues** sit 2.5 lower and 0.6 further back: they came out from under the upper lip, floating above the open jaw (owner's screenshot, 7 November). Fallout 4's mouth is lower against the head bone than Skyrim's, and there's no jaw bone to follow, so they're placed for an open mouth (they only show with one). Rebuilt with `tools/refit/build_tongues.cpp`.
 

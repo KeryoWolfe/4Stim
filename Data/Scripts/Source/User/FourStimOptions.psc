@@ -61,6 +61,19 @@ Function ChooseTongue(String asState, Actor akActor, String asID) Global
 	FourStim.SetEquipObjectID(akActor, "tongue", asID)
 EndFunction
 
+; The Light page: OStim's facelight options (OSANative.ApplyFaceLight /
+; SetFaceLight), lights being equip objects of type "light".
+Function ToggleLight(String asState, Actor akActor) Global
+	ToggleObject(akActor, "light")
+EndFunction
+
+Function ChooseLight(String asState, Actor akActor, String asID) Global
+	FourStim.SetEquipObjectID(akActor, "light", asID)
+	if !FourStim.IsObjectEquipped(akActor, "light")
+		FourStim.EquipObject(akActor, "light")
+	endif
+EndFunction
+
 Function ToggleObject(Actor akActor, String asType) Global
 	if FourStim.IsObjectEquipped(akActor, asType)
 		FourStim.UnequipObject(akActor, asType)

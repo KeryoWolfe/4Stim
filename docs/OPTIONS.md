@@ -2,7 +2,7 @@
 
 OStim's in-scene options menu, in the HUD's Utility tab: pages of options, per actor or for the scene, each calling a Papyrus function. 4Stim reads **OStim's options files** in `Data\F4SE\Plugins\4Stim\Options\` (subfolders too; OStim's `SKSE\Plugins\OStim\options`), so an add-on's options work the same way.
 
-4Stim's own, in `Options\4Stim.json`: **Actors**, a page for each actor in the scene with **Undress / Dress**, **Mute / Unmute**, and their **Strap-on** and **Tongue** (on / off, and which one they wear, from the equip objects there are: ACTORS.md). The one an actor wears is marked `*`.
+4Stim's own, in `Options\4Stim.json`: **Actors**, a page for each actor in the scene with **Undress / Dress**, **Mute / Unmute**, and their **Strap-on**, **Tongue** and **Light** (on / off, and which one they wear, from the equip objects and lights there are: ACTORS.md, LIGHTS.md; the Light page is OStim's facelight options). The one an actor wears is marked `*`.
 
 ## Using it
 

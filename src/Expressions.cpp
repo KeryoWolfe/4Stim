@@ -48,6 +48,10 @@ namespace Expressions
 			float variance = 0.0F;
 			float speedMultiplier = 0.0F;
 			float excitementMultiplier = 0.0F;
+			// OStim's delay / delayVariance (ms): it starts moving that long
+			// after the expression is applied, plus up to the variance.
+			float delay = 0.0F;
+			float delayVariance = 0.0F;
 		};
 
 		struct GenderExpression
@@ -91,6 +95,9 @@ namespace Expressions
 			std::shared_ptr<const Expression> source;
 			const GenderExpression*           expression = nullptr;
 			std::array<Values, kSlotCount>    slots{};
+			// Seconds before each morph starts toward its value (OStim's
+			// modifier delays, randomized when the layer is made).
+			std::array<Values, kSlotCount> delays{};
 		};
 
 		struct State
@@ -113,6 +120,7 @@ namespace Expressions
 			Values               target{};
 			Values               current{};
 			Values               rate{};          // points per second, per morph
+			Values               wait{};          // seconds before each morph starts moving (OStim's delays)
 			Values               applied{};       // last value sent to the game
 			bool                 anyApplied = false;
 			float                sendIn = 0.0F;   // morphs are sent at most every SEND_INTERVAL
@@ -142,6 +150,8 @@ namespace Expressions
 			m.variance = std::max(number("variance"), 0.0F);
 			m.speedMultiplier = number("speedMultiplier");
 			m.excitementMultiplier = number("excitementMultiplier");
+			m.delay = std::max(number("delay"), 0.0F);
+			m.delayVariance = std::max(number("delayVariance"), 0.0F);
 			return m;
 		}
 
@@ -344,15 +354,29 @@ namespace Expressions
 			return std::clamp(value, 0.0F, 100.0F);
 		}
 
-		void AddMapped(Values& a_out, std::size_t a_kind, int a_type, float a_value)
+		void AddMapped(Values& a_out, Values& a_delays, std::size_t a_kind, int a_type, float a_value, float a_delay)
 		{
 			const auto it = g_morphMap[a_kind].find(a_type);
 			if (it == g_morphMap[a_kind].end()) {
 				return;
 			}
 			for (const auto& [morph, weight] : it->second) {
-				a_out[morph] = std::max(a_out[morph], std::clamp(a_value * weight, 0.0F, 100.0F));
+				const float value = std::clamp(a_value * weight, 0.0F, 100.0F);
+				if (value > a_out[morph]) {
+					a_out[morph] = value;
+					a_delays[morph] = a_delay;  // the delay of what sets it
+				}
 			}
+		}
+
+		// OStim's randomizeDelay: delay + 0..delayVariance, in seconds.
+		float Delay(const Modifier& a_m)
+		{
+			float ms = a_m.delay;
+			if (a_m.delayVariance > 0.0F) {
+				ms += std::uniform_real_distribution<float>(0.0F, a_m.delayVariance)(g_random);
+			}
+			return ms / 1000.0F;
 		}
 
 		std::optional<Layer> MakeLayer(const std::shared_ptr<const Expression>& a_source, bool a_female, float a_speed, float a_excitement)
@@ -365,16 +389,16 @@ namespace Expressions
 			layer.expression = a_female ? &a_source->female : &a_source->male;
 			const auto& g = *layer.expression;
 			if (g.expression) {
-				AddMapped(layer.slots[kEmotion], 0, g.expression->type, Calculate(*g.expression, a_speed, a_excitement));
+				AddMapped(layer.slots[kEmotion], layer.delays[kEmotion], 0, g.expression->type, Calculate(*g.expression, a_speed, a_excitement), 0.0F);  // OStim: at once
 			}
 			for (const auto& p : g.phonemes) {
-				AddMapped(layer.slots[kMouth], 1, p.type, Calculate(p, a_speed, a_excitement));
+				AddMapped(layer.slots[kMouth], layer.delays[kMouth], 1, p.type, Calculate(p, a_speed, a_excitement), Delay(p));
 			}
 			for (const auto& m : g.lids) {
-				AddMapped(layer.slots[kLids], 2, m.type, Calculate(m, a_speed, a_excitement));
+				AddMapped(layer.slots[kLids], layer.delays[kLids], 2, m.type, Calculate(m, a_speed, a_excitement), Delay(m));
 			}
 			for (const auto& m : g.brows) {
-				AddMapped(layer.slots[kBrows], 2, m.type, Calculate(m, a_speed, a_excitement));
+				AddMapped(layer.slots[kBrows], layer.delays[kBrows], 2, m.type, Calculate(m, a_speed, a_excitement), Delay(m));
 			}
 			for (const auto& m : g.morphs) {
 				if (m.type >= 0 && static_cast<std::size_t>(m.type) < MORPHS) {
@@ -408,6 +432,7 @@ namespace Expressions
 			a_state.dirty = false;
 			Values target{};
 			Values rate{};
+			Values wait{};
 			for (std::size_t slot = 0; slot < kSlotCount; ++slot) {
 				const int   bit = 1 << slot;
 				const Layer* layer = nullptr;
@@ -446,6 +471,7 @@ namespace Expressions
 				for (std::size_t m = 0; m < MORPHS; ++m) {
 					if (layer->slots[slot][m] > target[m]) {
 						target[m] = layer->slots[slot][m];
+						wait[m] = layer->delays[slot][m];
 					}
 					rate[m] = std::max(rate[m], speed);
 				}
@@ -454,6 +480,7 @@ namespace Expressions
 				a_state.rate[m] = rate[m] > 0.0F ? rate[m] : 50.0F;  // morphs no layer uses go back to 0 slowly
 			}
 			a_state.target = target;
+			a_state.wait = wait;
 		}
 
 		// Moves the face toward its target and sends the morphs whose value
@@ -469,7 +496,9 @@ namespace Expressions
 			for (std::size_t m = 0; m < MORPHS; ++m) {
 				const float goal = g_config.disabled ? 0.0F : a_state.target[m];
 				auto&       cur = a_state.current[m];
-				if (cur != goal) {
+				if (a_state.wait[m] > 0.0F && !g_config.disabled) {
+					a_state.wait[m] -= elapsed;  // OStim's delay: not moving yet
+				} else if (cur != goal) {
 					const float step = a_state.rate[m] * elapsed;
 					cur = cur < goal ? std::min(cur + step, goal) : std::max(cur - step, goal);
 				}
