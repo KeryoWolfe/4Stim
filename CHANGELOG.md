@@ -3,6 +3,7 @@
 ## 0.5.0 alpha (in progress)
 
 ### Tongues for ghouls and by hand
+- **Helmets and hats come off visibly again**: when the game takes a head item off the player but doesn't redraw him (the same shapes drawn), 4Stim redraws him, as for body clothes. Since 5 November only body clothes got that (redrawing for gloves was a stutter), so a helmet taken off for a kiss stayed on his head.
 - **Ghouls wear the 4Stim Equip Objects add-on's tongues and strap-on**: their armor addons now list the ghoul race too (they were humans only, so a ghoul got the item with nothing drawn). Rebuilt with `tools/make-equip-plugin.py`.
 - **A tongue put on by hand holds the mouth open** (the `tongue` face) until it's taken off: put on from the HUD's options it sat inside a closed mouth, out of sight.
 

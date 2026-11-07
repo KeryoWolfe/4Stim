@@ -239,12 +239,15 @@ namespace Undress
 					const bool same = after == before;
 					REX::INFO("Undress check: {:08X}: {} of {} item(s) still on; drawn {} -> {} shape(s){}", a_id, on, items.size(), before.size(), after.size(),
 						same ? ", unchanged" : "");
-					// Only for clothes on the body (slot 33): items that change
-					// nothing drawn (gloves, a ring, a hat over hair) leave the
-					// same shapes when taken off, and redrawing the player for
-					// them was a visible stutter in the next scene (the owner's
-					// "Turn around" after a standing hold took off his gloves, 5
-					// November). The tester's stuck clothes were body clothes.
+					// Only for clothes on the body (slot 33) and the head (30-32,
+					// 46-49: hats, helmets, masks): redrawing the player for
+					// gloves or a ring was a visible stutter in the next scene
+					// (the owner's "Turn around" after a standing hold took off
+					// his gloves, 5 November), but a helmet left drawn is plain
+					// to see (the owner's, 7 November: "Rider Helmet Silver
+					// Shroud" off by the game, the same 212 shapes drawn, still
+					// on his head through a kiss). The tester's stuck clothes
+					// were body clothes.
 					std::uint32_t slots = 0;
 					for (const auto item : items) {
 						if (const auto form = RE::TESForm::GetFormByID(item)) {
@@ -253,9 +256,11 @@ namespace Undress
 							}
 						}
 					}
-					const bool body = (slots & (1u << (33 - 30))) != 0;
+					constexpr std::uint32_t SEEN = (1u << (33 - 30)) | (1u << 0) | (1u << 1) | (1u << 2) | (1u << (46 - 30)) | (1u << (47 - 30)) | (1u << (48 - 30)) |
+					                               (1u << (49 - 30));
+					const bool body = (slots & SEEN) != 0;
 					if (on == 0 && same && IsPlayer(a_id) && !body) {
-						REX::INFO("Undress check: nothing on the body came off (slots {:08X}): the shapes drawn staying the same is expected, no redraw", slots);
+						REX::INFO("Undress check: nothing on the body or head came off (slots {:08X}): the shapes drawn staying the same is expected, no redraw", slots);
 					} else if (on == 0 && same && IsPlayer(a_id)) {
 						if (Compat::CanReset3D()) {
 							REX::WARN("Undress check: the player's clothes are off but still drawn: redrawing them");
