@@ -2,6 +2,10 @@
 
 ## 0.5.0 alpha (in progress)
 
+### Tongues for ghouls and by hand
+- **Ghouls wear the 4Stim Equip Objects add-on's tongues and strap-on**: their armor addons now list the ghoul race too (they were humans only, so a ghoul got the item with nothing drawn). Rebuilt with `tools/make-equip-plugin.py`.
+- **A tongue put on by hand holds the mouth open** (the `tongue` face) until it's taken off: put on from the HUD's options it sat inside a closed mouth, out of sight.
+
 ### NPC height and a crash
 - **Scaling counts the race's height** (parity audit 2 §21, checked in game): Fallout 4 draws an actor at their base's height times their race's height for their sex (0.98 for human women), and 4Stim divided by the base's height only, so women came out about 2% small.
 - **The collision watch only runs in the first 8 seconds after each scene plays**, not the whole scene: two crashes on 7 November were Havok's thread check tripping in another NPC's movement well into a scene, and the watch's physics reads every quarter second, alongside the game's own physics jobs, are the likeliest part of 4Stim to collide with them. Not proven: watch for the same crash (`hknpWorld::forceBodyPairCollisions` in a crash log).

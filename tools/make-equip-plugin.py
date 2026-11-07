@@ -12,6 +12,10 @@ import struct, sys
 
 PLUGIN = '4Stim - Equip Objects.esp'
 HUMAN_RACE = 0x00013746
+# Races that wear them besides humans (the addon's additional races): ghouls
+# (GhoulRace; AAF's race data has the same ID). Without it a ghoul got the
+# armor but nothing drawn (the owner's test, 7 November).
+OTHER_RACES = [0x000EAFB6]
 # Biped slots (30-61): free on vanilla clothes, outside 4Stim's undress slots.
 STRAPON_SLOT = 57
 TONGUE_SLOT = 58
@@ -65,7 +69,7 @@ def main(out):
             sub('DNAM', bytes(12)),
         ] + ([sub('MOD2', zstr(male))] if male else []) + [
             sub('MOD3', zstr(model)),
-        ])))
+        ] + [sub('MODL', struct.pack('<I', race)) for race in OTHER_RACES])))
         armo.append(record('ARMO', fid(armor), b''.join([
             sub('EDID', zstr(edid)),
             sub('OBND', bytes(12)),

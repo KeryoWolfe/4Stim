@@ -107,6 +107,8 @@ namespace Expressions
 			float          speed = 0.0F;
 			ExpressionList node;       // underlying candidates
 			ExpressionList overrides;  // override candidates (empty: none)
+			ExpressionList sceneOverrides;  // the scene's (and actor property's), under a held set
+			std::string    held;  // a set held over the scene's (a tongue worn by hand: "tongue")
 			std::optional<Layer> underlying, event, override_;
 			float                underlyingIn = 0.0F;
 			float                eventIn = -1.0F;  // timed event: seconds left (< 0 = until cleared)
@@ -566,11 +568,16 @@ namespace Expressions
 		if (role.expressionOverrides.empty() && !role.expressionOverride.empty()) {
 			candidates.push_back(role.expressionOverride);
 		}
+		state.sceneOverrides.clear();
 		for (const auto& set : candidates) {
 			if (const auto list = Find(g_bySet, set); list && !list->empty()) {
-				state.overrides = *list;
+				state.sceneOverrides = *list;
 				break;
 			}
+		}
+		state.overrides = state.sceneOverrides;
+		if (const auto list = state.held.empty() ? nullptr : Find(g_bySet, state.held); list && !list->empty()) {
+			state.overrides = *list;
 		}
 		state.override_ = MakeLayer(Pick(state.overrides), state.female, state.speed, excitement);
 		state.overrideIn = state.override_ ? RandomDuration() : -1.0F;
@@ -578,6 +585,30 @@ namespace Expressions
 		state.underlying = MakeLayer(Pick(state.node), state.female, state.speed, excitement);
 		state.underlyingIn = RandomDuration();
 		state.dirty = true;
+	}
+
+	void Hold(std::uint32_t a_id, const std::string& a_set)
+	{
+		std::scoped_lock lock(g_lock);
+		EnsureLoaded();
+		const auto it = g_states.find(a_id);
+		if (it == g_states.end()) {
+			return;
+		}
+		auto& state = it->second;
+		const auto set = Lower(a_set);
+		if (state.held == set) {
+			return;
+		}
+		state.held = set;
+		state.overrides = state.sceneOverrides;
+		if (const auto list = set.empty() ? nullptr : Find(g_bySet, set); list && !list->empty()) {
+			state.overrides = *list;
+		}
+		state.override_ = MakeLayer(Pick(state.overrides), state.female, state.speed, Excitement::Get(a_id));
+		state.overrideIn = state.override_ ? RandomDuration() : -1.0F;
+		state.dirty = true;
+		REX::INFO("Expressions: {:08X} {}", a_id, set.empty() ? std::string("back to the scene's faces") : std::format("holds \"{}\" faces", set));
 	}
 
 	bool SetEvent(std::uint32_t a_id, const std::string& a_event, bool a_timed)

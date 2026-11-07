@@ -5950,15 +5950,33 @@ namespace
 	}
 
 	// Equip objects (OStim's OActor functions), for actors in a scene.
+	bool IsTongue(std::string a_type)
+	{
+		std::ranges::transform(a_type, a_type.begin(), [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+		return a_type == "tongue";
+	}
+
 	bool EquipObject(std::monostate, RE::Actor* a_actor, std::string a_type)
 	{
-		return a_actor && EquipObjects::Equip(a_actor->GetFormID(), std::move(a_type));
+		if (!a_actor) {
+			return false;
+		}
+		const bool tongue = IsTongue(a_type);
+		const bool ok = EquipObjects::Equip(a_actor->GetFormID(), std::move(a_type));
+		if (ok && tongue) {
+			Expressions::Hold(a_actor->GetFormID(), "tongue");  // its mouth open, or it can't be seen (Expressions::Hold)
+		}
+		return ok;
 	}
 
 	void UnequipObject(std::monostate, RE::Actor* a_actor, std::string a_type)
 	{
 		if (a_actor) {
+			const bool tongue = IsTongue(a_type);
 			EquipObjects::Unequip(a_actor->GetFormID(), std::move(a_type));
+			if (tongue) {
+				Expressions::Hold(a_actor->GetFormID(), "");
+			}
 		}
 	}
 

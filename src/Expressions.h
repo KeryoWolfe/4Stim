@@ -39,6 +39,13 @@ namespace Expressions
 	// Main thread.
 	void Enter(std::uint32_t a_id, const SceneRegistry::Scene& a_scene, std::size_t a_role, float a_relativeSpeed);
 
+	// 4Stim's: holds a_set's faces as a_id's override ("" lets go), over
+	// the scene's. A tongue put on by hand (the HUD's options, Papyrus) is
+	// held with "tongue", which opens the mouth: Fallout 4 has no jaw bone,
+	// so a tongue sits inside a closed mouth and can't be seen. OStim only
+	// puts tongues on with these faces (phonemeObjects).
+	void Hold(std::uint32_t a_id, const std::string& a_set);
+
 	// An event expression ("moan", "climax"): kept until ClearEvent, or for
 	// its own duration with a_timed. Returns false if there's none for it.
 	bool SetEvent(std::uint32_t a_id, const std::string& a_event, bool a_timed);
