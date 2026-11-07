@@ -316,5 +316,7 @@
 	"player_dialogue": "Player dialogue",
 	"tooltip_player_dialogue": "If enabled the player character will say dialogues during scenes.\\n(note: OStim does not come with any dialogue, you need addons for that!)",
 	"prevent_same_voice_cross_talk": "Prevent same voice cross talk",
-	"tooltip_prevent_same_voice_cross_talk": "Prevents two actors with the same voice type from talking at the same time. This can be used to prevent them from saying the same thing when using small dialogue libraries."
+	"tooltip_prevent_same_voice_cross_talk": "Prevents two actors with the same voice type from talking at the same time. This can be used to prevent them from saying the same thing when using small dialogue libraries.",
+	"synchronization_type_individual": "Individual",
+	"scaling_type_individual": "Individual"
 }

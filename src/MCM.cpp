@@ -51,8 +51,8 @@ namespace MCM
 			{ "sfemalelight", { "nolight", "facelight", "facelightdim", "crotchlight", "crotchlightdim", "asslight", "asslightdim" } },
 			{ "splayerlight", { "default", "nolight", "facelight", "facelightdim", "crotchlight", "crotchlightdim", "asslight", "asslightdim" } },
 			{ "spadscheme", { "Modern", "Classic" } },
-			{ "stoysynchronization", { "player", "male", "female", "scene" } },
-			{ "stoyscaling", { "none", "rate", "value", "speed" } },
+			{ "stoysynchronization", { "player", "male", "female", "scene", "individual" } },
+			{ "stoyscaling", { "none", "rate", "value", "speed", "individual" } },
 			// Controller buttons ([Controller]).
 			{ "spadhotkey", { "None", "LB", "RB", "LT", "RT", "X", "Y", "LS", "RS", "Back" } },
 			{ "spadnpcscene", { "None", "LB", "RB", "LT", "RT", "X", "Y", "LS", "RS", "Back" } },

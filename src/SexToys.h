@@ -31,8 +31,8 @@ namespace SexToys
 	struct Config
 	{
 		bool  enabled = true;           // bToysEnabled (OStim: the global slot's "enabled")
-		int   synchronization = 3;      // sToySynchronization: 0 player, 1 male, 2 female, 3 scene (anyone)
-		int   scaling = 0;              // sToyScaling: 0 none (max), 1 rate (stimulation rate), 2 value (stimulation value), 3 speed
+		int   synchronization = 3;      // sToySynchronization: 0 player, 1 male, 2 female, 3 scene (anyone), 4 individual (per toy / slot, Toy Settings.json)
+		int   scaling = 0;              // sToyScaling: 0 none (max), 1 rate (stimulation rate), 2 value (stimulation value), 3 speed, 4 individual
 		float minScale = 0.0F;          // fToyMinScale
 		float maxScale = 1.0F;          // fToyMaxScale
 		float minMagnitude = 0.1F;      // fToyMinMagnitude

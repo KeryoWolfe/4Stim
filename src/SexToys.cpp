@@ -2,8 +2,13 @@
 #include "compat/Fallbacks.h"
 
 #include <array>
+#include <filesystem>
+#include <fstream>
 #include <mutex>
 #include <thread>
+#include <unordered_map>
+
+#include <nlohmann/json.hpp>
 
 #include "4Stim/PluginInterface.h"
 #include "Actions.h"
@@ -50,9 +55,31 @@ namespace SexToys
 			}
 		};
 
+		// OStim's SlotSettings: what a toy does in a slot. Its
+		// synchronization and scaling types have a fifth value, Individual
+		// (4): the next level down decides.
+		struct SlotSettings
+		{
+			bool  enabled = true;
+			int   synchronization = 4;
+			int   scaling = 4;
+			float minScale = 0.0F;
+			float maxScale = 1.0F;
+			float minMagnitude = 0.1F;
+			float maxMagnitude = 0.5F;
+			bool  peaks = true;
+			float minPeak = 0.6F;
+			float maxPeak = 1.0F;
+			bool  climax = true;
+			float climaxMagnitude = 1.0F;
+		};
+		constexpr int  INDIVIDUAL = 4;
+		constexpr auto ALL = "all";  // OStim's GLOBAL_KEY, for toys and slots
+
 		// One toy in one slot (OStim's ToyHandler).
 		struct Handler
 		{
+			SlotSettings  settings;  // OStim's getSlotSettings: the level whose scaling isn't Individual
 			std::uint32_t actor = 0;
 			std::string   slot;
 			std::size_t   toy = 0;           // index into g_toys
@@ -72,6 +99,12 @@ namespace SexToys
 		};
 
 		Config                                     g_config;
+		// OStim's per-toy and per-slot settings (toy id -> slot -> settings;
+		// "all" for every toy or slot), from Toy Settings.json. "all" / "all"
+		// is 4Stim.ini's [SexToys].
+		constexpr auto TOY_SETTINGS_FILE = "Data/F4SE/Plugins/4Stim/Toy Settings.json";
+		std::unordered_map<std::string, std::unordered_map<std::string, SlotSettings>> g_table;
+		bool                                       g_tableLoaded = false;
 		std::mutex                                 g_lock;
 		std::vector<Toy>                           g_toys;
 		std::vector<FourStimAPI::SexToyReloadListener*> g_listeners;
@@ -89,10 +122,114 @@ namespace SexToys
 			return actor && Compat::GetSex(actor) == RE::SEX::kMale;
 		}
 
-		// OStim's SynchronizationType: does the actor in this slot get a toy?
-		bool Synced(std::uint32_t a_actor)
+		// 4Stim.ini's [SexToys]: OStim's "all" toy's "all" slot.
+		SlotSettings GlobalSettings()
 		{
-			switch (g_config.synchronization) {
+			const auto& c = g_config;
+			return { c.enabled, c.synchronization, c.scaling, c.minScale, c.maxScale, c.minMagnitude, c.maxMagnitude, c.peaks, c.minPeak, c.maxPeak, c.climax, c.climaxMagnitude };
+		}
+
+		// OStim's Settings::getToySettings(toy)->getSlotSettings(slot): its
+		// defaults where nothing is set.
+		SlotSettings At(const std::string& a_toy, const std::string& a_slot)
+		{
+			if (a_toy == ALL && a_slot == ALL) {
+				return GlobalSettings();
+			}
+			if (const auto toy = g_table.find(a_toy); toy != g_table.end()) {
+				if (const auto slot = toy->second.find(a_slot); slot != toy->second.end()) {
+					return slot->second;
+				}
+			}
+			return {};
+		}
+
+		// OStim's ToyThread::getSynchronizationType: the first of every toy
+		// and slot, every toy in this slot, this toy in every slot, this toy
+		// in this slot that isn't Individual.
+		int SyncFor(const std::string& a_toy, const std::string& a_slot)
+		{
+			for (const auto& [toy, slot] : { std::pair{ std::string(ALL), std::string(ALL) }, std::pair{ std::string(ALL), a_slot }, std::pair{ a_toy, std::string(ALL) } }) {
+				if (const int sync = At(toy, slot).synchronization; sync != INDIVIDUAL) {
+					return sync;
+				}
+			}
+			return At(a_toy, a_slot).synchronization;
+		}
+
+		// OStim's ToyHandler getSlotSettings: the same order, by scaling type.
+		SlotSettings SettingsFor(const std::string& a_toy, const std::string& a_slot)
+		{
+			for (const auto& [toy, slot] : { std::pair{ std::string(ALL), std::string(ALL) }, std::pair{ std::string(ALL), a_slot }, std::pair{ a_toy, std::string(ALL) } }) {
+				if (auto settings = At(toy, slot); settings.scaling != INDIVIDUAL) {
+					return settings;
+				}
+			}
+			return At(a_toy, a_slot);
+		}
+
+		// Toy Settings.json, in OStim's export layout: {"toySettings": {"<toy
+		// id>" or "all": {"slotSettings": {"<slot>" or "all": {"enabled",
+		// "synchronizationType", "scalingType", "minScale", "maxScale",
+		// "minMagnitude", "maxMagnitude", "doPeaks", "minPeak", "maxPeak",
+		// "doClimax", "climaxMagnitude"}}}}}, or that inside "toys".
+		void LoadTable()
+		{
+			g_tableLoaded = true;
+			g_table.clear();
+			std::error_code ec;
+			if (!std::filesystem::exists(TOY_SETTINGS_FILE, ec)) {
+				return;
+			}
+			try {
+				std::ifstream in(TOY_SETTINGS_FILE);
+				auto          root = nlohmann::json::parse(in, nullptr, true, true);
+				if (root.contains("toys")) {
+					root = root["toys"];
+				}
+				const auto toys = root.find("toySettings");
+				if (toys == root.end() || !toys->is_object()) {
+					REX::WARN("Sex toys: {} has no \"toySettings\"", TOY_SETTINGS_FILE);
+					return;
+				}
+				std::size_t count = 0;
+				for (const auto& [toy, value] : toys->items()) {
+					const auto slots = value.find("slotSettings");
+					if (slots == value.end() || !slots->is_object()) {
+						continue;
+					}
+					for (const auto& [slot, j] : slots->items()) {
+						if (toy == ALL && slot == ALL) {
+							REX::INFO("Sex toys: {}: \"all\" / \"all\" is 4Stim.ini's [SexToys], left out", TOY_SETTINGS_FILE);
+							continue;
+						}
+						SlotSettings set;
+						set.enabled = j.value("enabled", set.enabled);
+						set.synchronization = std::clamp(j.value("synchronizationType", set.synchronization), 0, 4);
+						set.scaling = std::clamp(j.value("scalingType", set.scaling), 0, 4);
+						set.minScale = j.value("minScale", set.minScale);
+						set.maxScale = std::max(j.value("maxScale", set.maxScale), 0.001F);
+						set.minMagnitude = j.value("minMagnitude", set.minMagnitude);
+						set.maxMagnitude = j.value("maxMagnitude", set.maxMagnitude);
+						set.peaks = j.value("doPeaks", set.peaks);
+						set.minPeak = j.value("minPeak", set.minPeak);
+						set.maxPeak = j.value("maxPeak", set.maxPeak);
+						set.climax = j.value("doClimax", set.climax);
+						set.climaxMagnitude = j.value("climaxMagnitude", set.climaxMagnitude);
+						g_table[toy][slot] = set;
+						++count;
+					}
+				}
+				REX::INFO("Sex toys: {} toy / slot setting(s) from {}", count, TOY_SETTINGS_FILE);
+			} catch (const std::exception& ex) {
+				REX::WARN("Sex toys: {} couldn't be read ({})", TOY_SETTINGS_FILE, ex.what());
+			}
+		}
+
+		// OStim's SynchronizationType: does the actor in this slot get a toy?
+		bool Synced(std::uint32_t a_actor, int a_sync)
+		{
+			switch (a_sync) {
 			case 0:
 				{
 					const auto player = RE::PlayerCharacter::GetSingleton();
@@ -101,7 +238,7 @@ namespace SexToys
 			case 1:
 			case 2:
 				{
-					const bool male = g_config.synchronization == 1;
+					const bool male = a_sync == 1;
 					for (const auto id : g_actors) {
 						if (IsMale(id) == male) {
 							return id == a_actor;  // the first of that sex only
@@ -121,7 +258,7 @@ namespace SexToys
 				return;
 			}
 			a_handler.cooldown = a_handler.updateInterval;
-			const auto& c = g_config;
+			const auto& c = a_handler.settings;
 			float       value = c.maxScale;
 			switch (c.scaling) {
 			case 1:
@@ -151,7 +288,8 @@ namespace SexToys
 				baseline = c.minMagnitude + (c.maxMagnitude - c.minMagnitude) * scale;
 				peak = c.minPeak + (c.maxPeak - c.minPeak) * scale;
 			}
-			g_toys[a_handler.toy].Update(baseline, peak, c.peaks ? static_cast<std::int16_t>(std::clamp(a_peakInterval, -1, 32767)) : std::int16_t{ -1 });
+			// As OStim's: without peaks, no peak strength or interval.
+			g_toys[a_handler.toy].Update(baseline, c.peaks ? peak : -1.0F, c.peaks ? static_cast<std::int16_t>(std::clamp(a_peakInterval, -1, 32767)) : std::int16_t{ -1 });
 		}
 
 		void StopGroups()
@@ -174,8 +312,18 @@ namespace SexToys
 			if (!g_config.enabled || !g_scene || g_reloading || g_toys.empty()) {
 				return;
 			}
+			if (!g_tableLoaded) {
+				LoadTable();
+			}
 			std::vector<bool> used(g_toys.size(), false);
 			std::size_t       inUse = 0;
+			// As OStim's: a toy turned off in every slot isn't used at all.
+			for (std::size_t t = 0; t < g_toys.size(); ++t) {
+				if (!At(g_toys[t].id, ALL).enabled) {
+					used[t] = true;
+					++inUse;
+				}
+			}
 			bool              anySlot = false;
 			for (std::size_t a = 0; a < g_scene->actions.size() && inUse < g_toys.size(); ++a) {
 				const auto& action = g_scene->actions[a];
@@ -192,7 +340,11 @@ namespace SexToys
 					anySlot = anySlot || !side->toySlots.empty();
 					for (const auto& slot : side->toySlots) {
 						for (std::size_t t = 0; t < g_toys.size(); ++t) {
-							if (used[t] || !Synced(actor)) {
+							if (used[t]) {
+								continue;
+							}
+							const auto& id = g_toys[t].id;
+							if (!At(id, slot).enabled || !At(ALL, slot).enabled || !Synced(actor, SyncFor(id, slot))) {
 								continue;
 							}
 							used[t] = true;
@@ -202,6 +354,7 @@ namespace SexToys
 							handler.slot = slot;
 							handler.toy = t;
 							handler.updateInterval = g_toys[t].toy->getUpdateInterval();
+							handler.settings = SettingsFor(id, slot);
 							group.toys.push_back(std::move(handler));
 							g_toys[t].TurnOn();
 						}
@@ -285,9 +438,9 @@ namespace SexToys
 		if (a_key == "btoysenabled") {
 			c.enabled = std::stoi(a_value) != 0;
 		} else if (a_key == "stoysynchronization") {
-			c.synchronization = Pick(a_value, { "player", "male", "female", "scene" }, 3);
+			c.synchronization = Pick(a_value, { "player", "male", "female", "scene", "individual" }, 3);
 		} else if (a_key == "stoyscaling") {
-			c.scaling = Pick(a_value, { "none", "rate", "value", "speed" }, 0);
+			c.scaling = Pick(a_value, { "none", "rate", "value", "speed", "individual" }, 0);
 		} else if (a_key == "ftoyminscale") {
 			c.minScale = std::max(std::stof(a_value), 0.0F);
 		} else if (a_key == "ftoymaxscale") {
@@ -326,6 +479,7 @@ namespace SexToys
 			if (g_reloading || g_listeners.empty()) {
 				return;
 			}
+			g_tableLoaded = false;  // Toy Settings.json read again
 			StopGroups();
 			TurnAllOff();
 			g_reloading = true;
@@ -418,14 +572,11 @@ namespace SexToys
 	void Climax(std::uint32_t a_actor)
 	{
 		std::scoped_lock lock(g_lock);
-		if (!g_config.climax) {
-			return;
-		}
 		for (auto& group : g_groups) {
 			for (auto& handler : group.toys) {
-				if (handler.actor == a_actor && handler.toy < g_toys.size()) {
+				if (handler.actor == a_actor && handler.toy < g_toys.size() && handler.settings.climax) {
 					handler.cooldown = 1000;
-					g_toys[handler.toy].Peak(g_config.climaxMagnitude, 1.0F);
+					g_toys[handler.toy].Peak(handler.settings.climaxMagnitude, 1.0F);
 				}
 			}
 		}

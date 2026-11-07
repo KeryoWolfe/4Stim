@@ -3550,7 +3550,7 @@
 				{
 					"id": "i4S_sToySynchronization:SexToys",
 					"text": "$4stim_toy_slot_synchronization_type",
-					"help": "$4stim_tooltip_toy_slot_synchronization_type_4stim",
+					"help": "$4stim_tooltip_toy_slot_synchronization_type",
 					"action": {
 						"type": "CallGlobalFunction",
 						"script": "FourStimMCM",
@@ -3564,7 +3564,8 @@
 							"$4stim_synchronization_type_player",
 							"$4stim_synchronization_type_male",
 							"$4stim_synchronization_type_female",
-							"$4stim_synchronization_type_scene"
+							"$4stim_synchronization_type_scene",
+							"$4stim_synchronization_type_individual"
 						]
 					}
 				},
@@ -3575,7 +3576,7 @@
 				{
 					"id": "i4S_sToyScaling:SexToys",
 					"text": "$4stim_toy_slot_scaling_type",
-					"help": "$4stim_tooltip_toy_slot_scaling_type_4stim",
+					"help": "$4stim_tooltip_toy_slot_scaling_type",
 					"action": {
 						"type": "CallGlobalFunction",
 						"script": "FourStimMCM",
@@ -3589,7 +3590,8 @@
 							"$4stim_scaling_type_none",
 							"$4stim_scaling_type_stimulation_rate",
 							"$4stim_scaling_type_stimulation_value",
-							"$4stim_scaling_type_speed"
+							"$4stim_scaling_type_speed",
+							"$4stim_scaling_type_individual"
 						]
 					}
 				},

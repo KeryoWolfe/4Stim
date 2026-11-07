@@ -42,8 +42,8 @@ PAD_LABELS = ['None', 'LB', 'RB', 'LT', 'RT', 'X', 'Y', 'Left stick (press)', 'R
 for _k in PAD_KEYS:
     CHOICES[_k] = PAD_BUTTONS
 CHOICES['sPadScheme'] = ['Modern', 'Classic']
-CHOICES['sToySynchronization'] = ['player', 'male', 'female', 'scene']
-CHOICES['sToyScaling'] = ['none', 'rate', 'value', 'speed']
+CHOICES['sToySynchronization'] = ['player', 'male', 'female', 'scene', 'individual']
+CHOICES['sToyScaling'] = ['none', 'rate', 'value', 'speed', 'individual']
 CHOICE_LABELS = {
     'sTargetMode': ['Crosshair', 'Nearest'],
     'sHUDControls': ['Tabs', 'Columns (OStim)'],
@@ -55,8 +55,8 @@ CHOICE_LABELS = {
 for _k in PAD_KEYS:
     CHOICE_LABELS[_k] = PAD_LABELS
 CHOICE_LABELS['sPadScheme'] = ['4Stim Modern', 'OStim Classic']
-CHOICE_LABELS['sToySynchronization'] = ['The player', 'The first man', 'The first woman', 'Anyone']
-CHOICE_LABELS['sToyScaling'] = ['None (strongest)', 'Excitement rate', 'Excitement', 'Scene speed']
+CHOICE_LABELS['sToySynchronization'] = ['The player', 'The first man', 'The first woman', 'Anyone', 'Per toy and slot']
+CHOICE_LABELS['sToyScaling'] = ['None (strongest)', 'Excitement rate', 'Excitement', 'Scene speed', 'Per toy and slot']
 
 # key: (label, kind, options). kind: bool; int / float (min, max, step);
 # choice; key (an MCM key input: "keycode,modifiers", a string); ms (OStim's
@@ -481,8 +481,8 @@ OSTIM_KEYS = {
     'alignmentGroupBySex': ('alignment_group_by_sex', 'tooltip_alignment_group_by_sex'),
     'alignmentGroupByHeight': ('alignment_group_by_height', 'tooltip_alignment_group_by_height'),
     'alignmentGroupByHeels': ('alignment_group_by_heels', 'tooltip_alignment_group_by_heels'),
-    'sToySynchronization': ('toy_slot_synchronization_type', None),  # one setting for every toy, no "individual"
-    'sToyScaling': ('toy_slot_scaling_type', None),
+    'sToySynchronization': ('toy_slot_synchronization_type', 'tooltip_toy_slot_synchronization_type'),
+    'sToyScaling': ('toy_slot_scaling_type', 'tooltip_toy_slot_scaling_type'),
     'fToyMinScale': ('toy_slot_min_scale', 'tooltip_toy_slot_min_scale'),
     'fToyMaxScale': ('toy_slot_max_scale', 'tooltip_toy_slot_max_scale'),
     'fToyMinMagnitude': ('toy_slot_min_magnitude', 'tooltip_toy_slot_min_magnitude'),
@@ -523,8 +523,8 @@ OSTIM_CHOICES = {
     'sMaleLight': ['light_none', 'light_face', 'light_face_dim', 'light_crotch', 'light_crotch_dim', 'light_ass', 'light_ass_dim'],
     'sFemaleLight': ['light_none', 'light_face', 'light_face_dim', 'light_crotch', 'light_crotch_dim', 'light_ass', 'light_ass_dim'],
     'sPlayerLight': ['generic_default', 'light_none', 'light_face', 'light_face_dim', 'light_crotch', 'light_crotch_dim', 'light_ass', 'light_ass_dim'],
-    'sToySynchronization': ['synchronization_type_player', 'synchronization_type_male', 'synchronization_type_female', 'synchronization_type_scene'],
-    'sToyScaling': ['scaling_type_none', 'scaling_type_stimulation_rate', 'scaling_type_stimulation_value', 'scaling_type_speed'],
+    'sToySynchronization': ['synchronization_type_player', 'synchronization_type_male', 'synchronization_type_female', 'synchronization_type_scene', 'synchronization_type_individual'],
+    'sToyScaling': ['scaling_type_none', 'scaling_type_stimulation_rate', 'scaling_type_stimulation_value', 'scaling_type_speed', 'scaling_type_individual'],
 }
 
 # OStim's English, made to fit 4Stim where it names Skyrim-only mods or

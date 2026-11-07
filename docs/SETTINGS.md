@@ -115,4 +115,4 @@ OStim settings left out on purpose: `useSoSSex` and `useTNGSex` (SoS and TNG are
 
 ## Not in yet
 
-OStim settings that come with features 4Stim doesn't have yet: per-toy and per-slot toy settings. They'll take OStim's names when they come.
+OStim's per-toy and per-slot toy settings are in `Toy Settings.json` (API.md), as 4Stim has no toy menu.
