@@ -192,7 +192,7 @@ Navigate to the transition as to any scene (the player picks "turn around"); whe
 
 Three things about the transition idle and clip:
 
-- **Play it once.** Its idle record's animation event must be `dyn_Activation`, not `dyn_ActivationLoop`. Leaving a looping idle makes the game blend from the clip's *first* frames for a moment, a bounce back.
+- **Play it once.** Its idle record's animation event should be `dyn_Activation`, not `dyn_ActivationLoop`: a looping idle makes the game blend from the clip's *first* frames for a moment, a bounce back. Converters write `dyn_ActivationLoop` for every Idle, so 4Stim sets a transition's Idles to `dyn_Activation` in memory when it loads the scenes (logged: `Scenes: <n> transition Idle(s) set to play once`); the plugin needn't be edited. An Idle a looping scene also uses is left as it is.
 - **Hold the last pose for about 0.5 s at its end.** The game starts blending a one-shot clip back to the base pose about 0.35 s before the clip's end, so motion in that stretch would never be seen, and the base pose would show through. Set the scene's `length` to the motion, not the padded clip. The converter's `hold_end.py` adds the held frames: `python hold_end.py --seconds=0.5 <clips or folder>`.
 - **Its last pose should be the destination's first.** During the transition, the HUD already lists the destination's options; picking one waits for the transition to finish and then goes there instead of the destination. A transition without a `length`, or whose destination doesn't exist, is logged and plays like an ordinary scene.
 

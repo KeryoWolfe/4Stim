@@ -15,6 +15,7 @@
 #include <mutex>
 #include <optional>
 #include <unordered_map>
+#include <unordered_set>
 
 #include <nlohmann/json.hpp>
 
@@ -1105,6 +1106,47 @@ namespace SceneRegistry
 					++brokenTransitions;
 				} else {
 					scene.destination = dest->second.id;  // the ID's real spelling
+				}
+			}
+
+			// A transition plays once: its Idles' animation event must be
+			// "dyn_Activation". A looping one ("dyn_ActivationLoop", what
+			// converters write for every Idle) makes the game blend back from
+			// the clip's first frames as it ends, a bounce at each transition
+			// (SCENES.md). 4Stim sets it right in memory for every pack, so
+			// their plugins needn't be edited (the game reads the field when
+			// the idle plays; nothing is saved). A clip shared with a looping
+			// scene stays as it is.
+			{
+				std::unordered_set<RE::TESIdleForm*> looping;
+				for (const auto& [key, scene] : g_scenes) {
+					if (!scene.IsTransition()) {
+						for (const auto& set : scene.speeds) {
+							looping.insert(set.begin(), set.end());
+						}
+					}
+				}
+				std::vector<RE::TESIdleForm*> once;
+				for (const auto& [key, scene] : g_scenes) {
+					if (!scene.IsTransition()) {
+						continue;
+					}
+					for (const auto& set : scene.speeds) {
+						for (const auto idle : set) {
+							if (idle && !looping.contains(idle) && _stricmp(idle->animEventName.c_str(), "dyn_ActivationLoop") == 0 &&
+								std::ranges::find(once, idle) == once.end()) {
+								once.push_back(idle);
+							}
+						}
+					}
+				}
+				if (!once.empty()) {
+					REX::INFO("Scenes: {} transition Idle(s) set to play once (dyn_ActivationLoop -> dyn_Activation)", once.size());
+					F4SE::GetTaskInterface()->AddTask([once]() {
+						for (const auto idle : once) {
+							idle->animEventName = "dyn_Activation";
+						}
+					});
 				}
 			}
 

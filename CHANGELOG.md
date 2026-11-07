@@ -2,6 +2,9 @@
 
 ## 0.5.0 alpha (in progress)
 
+### Fixed
+- **The bounce at transitions in converted packs** (the Lovemaking Compendium's table and bed transitions): their Idles loop (`dyn_ActivationLoop`, all 708 in its plugin), which makes the game blend back from the clip's start. 4Stim now sets every transition's Idles to play once (`dyn_Activation`) when it loads the scenes, for any pack, as the test pack's plugin already had by hand (docs/SCENES.md).
+
 ### Climax and stimulation, as OStim's (parity audit Tier 3)
 - **A climax waits for the moan the actor is making to end**, as OStim's, and so do event reactions: no more moans cut off mid-sound.
 - **Climax comments**: voice sets' `climaxCommentSelf` and `climaxCommentOther` (their sound part) play after a climax (docs/SOUND.md).
