@@ -2518,6 +2518,39 @@
 					}
 				},
 				{
+					"id": "b4S_SetRemoveWeaponsAtStart:Undress",
+					"text": "$4stim_remove_weapons_start",
+					"help": "$4stim_tooltip_remove_weapons_start",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "switcher",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "i4S_SetRemoveWeaponsWithSlot:Undress",
+					"text": "$4stim_remove_weapons_slot",
+					"help": "$4stim_tooltip_remove_weapons_slot",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "slider",
+					"valueOptions": {
+						"min": 0,
+						"max": 61,
+						"step": 1,
+						"sourceType": "ModSettingInt"
+					}
+				},
+				{
 					"type": "section",
 					"text": "$4stim_undress_slots_header"
 				},

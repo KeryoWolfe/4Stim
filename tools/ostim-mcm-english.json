@@ -299,5 +299,9 @@
 	"bed_realignment": "Bed realignment",
 	"tooltip_bed_realignment": "Move actors forward/back by this amount on a bed. (negative values move them to the head end)",
 	"bed_offset": "Bed offset",
-	"tooltip_bed_offset": "Move actors up/down by this amount on a bed."
+	"tooltip_bed_offset": "Move actors up/down by this amount on a bed.",
+	"remove_weapons_start": "Remove Weapons at Start",
+	"tooltip_remove_weapons_start": "Always remove the weapons at the start of the scene, no matter the undressing settings.",
+	"remove_weapons_slot": "Remove Weapon with Slot",
+	"tooltip_remove_weapons_slot": "If partial undressing is enabled remove weapons when this slot is getting undressed."
 }

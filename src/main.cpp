@@ -843,6 +843,10 @@ namespace
 					Undress::Settings().itemDelay = std::clamp(std::stof(value), 0.0F, 5.0F);
 				} else if (key == "banimateredress") {
 					Undress::Settings().animateRedress = std::stoi(value) != 0;
+				} else if (key == "setremoveweaponsatstart") {
+					Undress::Settings().removeWeaponsAtStart = std::stoi(value) != 0;
+				} else if (key == "setremoveweaponswithslot") {
+					Undress::Settings().removeWeaponsWithSlot = std::stoi(value);
 				} else if (key == "setundressingslotmask") {
 					// OStim's name: a mask, bit 0 = slot 30.
 					const auto       mask = static_cast<std::uint32_t>(std::stoll(value, nullptr, 0));
@@ -6020,6 +6024,11 @@ namespace
 
 	// FourStim.SheatheForScene: HolsterForScene puts a drawn weapon away
 	// before taking it off (see SheatheNow).
+	bool RemoveWeaponsAtStart(std::monostate)
+	{
+		return Undress::Settings().removeWeaponsAtStart;
+	}
+
 	void SheatheForScene(std::monostate, RE::Actor* a_actor)
 	{
 		if (a_actor) {
@@ -12962,6 +12971,7 @@ namespace
 		a_vm->BindNativeMethod(SCRIPT_NAME, "GetActorVoiceSetName"sv, GetActorVoiceSetName);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "RememberSceneWeapon"sv, RememberSceneWeapon);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "SheatheForScene"sv, SheatheForScene);
+		a_vm->BindNativeMethod(SCRIPT_NAME, "RemoveWeaponsAtStart"sv, RemoveWeaponsAtStart);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "TakeSceneWeaponID"sv, TakeSceneWeaponID);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "SetEquipObjectID"sv, SetEquipObjectID);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "GetEquipObjectID"sv, GetEquipObjectID);
@@ -13672,6 +13682,9 @@ namespace
 		case F4SE::MessagingInterface::kNewGame:
 			// Scene-event registrations aren't saved: scripts register again on
 			// load. Scenes don't survive loading either, so the HUD goes too.
+			if (a_msg->type == F4SE::MessagingInterface::kNewGame) {
+				Undress::QueryPapyrusUndressing();
+			}
 			SceneEvents::Clear();
 			ModEvents::Clear();  // as SKSE's: scripts register again after a load
 			SetPlayerScene({});
@@ -13733,6 +13746,7 @@ namespace
 			}
 			break;
 		case F4SE::MessagingInterface::kPostLoadGame:
+			Undress::QueryPapyrusUndressing();  // as OStim: asked at every load
 			ResumeSavedScenes();
 			SexToys::Reload();  // OStim: device plugins register their toys on every save load
 			break;

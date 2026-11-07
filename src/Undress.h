@@ -28,8 +28,20 @@ namespace Undress
 		// (47), mouth (49), the modders' slots (54-58). Not hair, head, beard,
 		// neck, ring, scalp, decapitation, shield, Pip-Boy or FX.
 		std::vector<int> slots{ 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 49, 54, 55, 56, 57, 58 };
+		// OStim's SetRemoveWeaponsAtStart: weapons come off as a scene starts
+		// (0: only put away), and SetRemoveWeaponsWithSlot: taking off this
+		// slot takes the weapon too (OStim's 32, Skyrim's body, is Fallout
+		// 4's 33; 0 = none).
+		bool removeWeaponsAtStart = true;
+		int  removeWeaponsWithSlot = 33;
+		// OStim's UsePapyrusUndressing (FourUndress.psc): an add-on does all
+		// undressing and dressing. Asked at every game load.
+		bool papyrusUndressing = false;
 	};
 	Config& Settings();
+
+	// Asks FourUndress.UsePapyrusUndressing (at a game load, as OStim).
+	void QueryPapyrusUndressing();
 
 	// a_ids[role] play a_scene: takes off what its actions need (and at a
 	// scene's start, with atStart, everything). Main thread.

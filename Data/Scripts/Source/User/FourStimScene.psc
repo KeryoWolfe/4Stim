@@ -133,7 +133,13 @@ Function PrepareActor(Actor akActor) Global
 	if !IsPlayer(akActor)
 		FourStim.SuppressInteraction(akActor)
 	endif
-	HolsterForScene(akActor)
+	; OStim's SetRemoveWeaponsAtStart (on by default): the weapon comes off;
+	; else it's only put away (and comes off with SetRemoveWeaponsWithSlot).
+	if FourStim.RemoveWeaponsAtStart()
+		HolsterForScene(akActor)
+	else
+		FourStim.SheatheForScene(akActor)
+	endif
 EndFunction
 
 Function LockForScene(Actor akActor) Global

@@ -47,11 +47,6 @@ namespace Undress
 		std::unordered_map<std::uint32_t, State> g_states;
 		std::unordered_set<std::uint32_t>        g_blocked;  // OStim's NoUndressing (a thread builder's): not undressed by scenes
 
-		bool Allowed(int a_slot)
-		{
-			return std::ranges::find(g_config.slots, a_slot) != g_config.slots.end();
-		}
-
 		bool IsPlayer(std::uint32_t a_id)
 		{
 			const auto player = RE::PlayerCharacter::GetSingleton();
@@ -295,7 +290,10 @@ namespace Undress
 				std::scoped_lock lock(g_lock);
 				auto& state = g_states[a_id];
 				for (const auto slot : a_slots) {
-					if (slot < 30 || slot > 61 || !Allowed(slot)) {
+					// As OStim's canUndress + overlaps: the slots asked for, and
+					// below, items that also cover an undress slot (an outfit on
+					// 33 and 50 comes off for an action asking for 50).
+					if (slot < 30 || slot > 61) {
 						continue;
 					}
 					const auto bit = std::uint64_t{ 1 } << (slot - 30);
@@ -311,17 +309,48 @@ namespace Undress
 				return;
 			}
 			const bool full = a_slots == g_config.slots;
-			F4SE::GetTaskInterface()->AddTask([a_id, mask, full]() {
+			std::uint32_t allowed = 0;
+			for (const auto slot : g_config.slots) {
+				if (slot >= 30 && slot <= 61) {
+					allowed |= 1u << (slot - 30);
+				}
+			}
+			if (a_byHand) {
+				allowed = mask;  // by hand: what was asked for, undress slots or not
+			}
+			if (g_config.papyrusUndressing && !a_byHand) {
+				// OStim's UsePapyrusUndressing: an add-on's FourUndress does it.
+				if (const auto vm = FourStim::GetVM()) {
+					REX::INFO("Undress: {:08X}, slots 0x{:08X}: FourUndress.UndressPartial (Papyrus undressing)", a_id, mask & allowed);
+					RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
+					Compat::DispatchStaticCall(vm, "FourUndress"sv, "UndressPartial"sv, callback, static_cast<std::int32_t>(a_id), static_cast<std::int32_t>(mask & allowed));
+				}
+				return;
+			}
+			// OStim's SetRemoveWeaponsWithSlot: taking off that slot takes the
+			// weapon too (weapons are off from the start with
+			// SetRemoveWeaponsAtStart, the default).
+			if (const int ws = g_config.removeWeaponsWithSlot; !g_config.removeWeaponsAtStart && ws >= 30 && ws <= 61 && (mask & allowed & (1u << (ws - 30)))) {
+				if (const auto vm = FourStim::GetVM()) {
+					RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
+					Compat::DispatchStaticCall(vm, "FourStimScene"sv, "HolsterByID"sv, callback, static_cast<std::int32_t>(a_id));
+				}
+			}
+			F4SE::GetTaskInterface()->AddTask([a_id, mask, allowed, full]() {
 				const auto actor = RE::TESForm::GetFormByID<RE::Actor>(a_id);
 				if (!actor) {
 					return;
 				}
 				auto items = WornIn(actor, mask);
-				std::erase_if(items, [](std::uint32_t a_item) {
+				std::erase_if(items, [allowed](std::uint32_t a_item) {
 					if (EquipObjects::IsObjectItem(a_item) || Erection::IsErectionItem(a_item)) {
 						return true;  // 4Stim's own strap-ons, erect bodysuits and such stay on
 					}
 					const auto armor = RE::TESForm::GetFormByID<RE::TESObjectARMO>(a_item);
+					// Not on any undress slot: it stays (OStim's canUndress).
+					if (armor && !(armor->GetFilledSlots() & allowed)) {
+						return true;
+					}
 					return armor && NoStrip(armor);
 				});
 				std::string names;
@@ -354,11 +383,51 @@ namespace Undress
 		return g_config;
 	}
 
+	namespace
+	{
+		// FourUndress.UsePapyrusUndressing's answer.
+		class UsePapyrusAnswer : public RE::BSScript::IStackCallbackFunctor
+		{
+		public:
+			void CallQueued() override {}
+			void CallCanceled() override {}
+			void StartMultiDispatch() override {}
+			void EndMultiDispatch() override {}
+			void operator()(RE::BSScript::Variable a_result) override
+			{
+				const bool use = a_result.is<bool>() && RE::BSScript::get<bool>(a_result);
+				if (use != g_config.papyrusUndressing) {
+					REX::INFO("Undress: Papyrus undressing {} (FourUndress.UsePapyrusUndressing)", use ? "on: an add-on undresses and dresses actors" : "off");
+				}
+				g_config.papyrusUndressing = use;
+			}
+		};
+	}
+
+	void QueryPapyrusUndressing()
+	{
+		if (const auto vm = FourStim::GetVM()) {
+			RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback(new UsePapyrusAnswer());
+			Compat::DispatchStaticCall(vm, "FourUndress"sv, "UsePapyrusUndressing"sv, callback);
+		}
+	}
+
 	void SceneEntered(const std::vector<std::uint32_t>& a_ids, const SceneRegistry::Scene& a_scene, bool a_start)
 	{
 		// A new scene: steps left from the last one won't happen.
 		std::erase_if(g_timed, [&](const Timed& t) { return std::ranges::find(a_ids, t.actor) != a_ids.end(); });
-		if (!g_config.enabled || a_scene.noStrip) {
+		if (!g_config.enabled) {
+			return;
+		}
+		// As OStim's: undressing at the start happens as actors join,
+		// whatever the first scene says (its noStrip is for its actions).
+		if (a_start && g_config.atStart) {
+			for (const auto id : a_ids) {
+				Strip(id, g_config.slots);
+			}
+			return;
+		}
+		if (a_scene.noStrip) {
 			return;
 		}
 		for (const auto& step : a_scene.undress) {
@@ -367,10 +436,6 @@ namespace Undress
 			}
 		}
 		for (std::size_t role = 0; role < a_ids.size(); ++role) {
-			if (a_start && g_config.atStart) {
-				Strip(a_ids[role], g_config.slots);
-				continue;
-			}
 			// OStim's actor noStrip: no undressing by this role's actions.
 			if (role < a_scene.actors.size() && a_scene.actors[role].noStrip) {
 				continue;
@@ -421,7 +486,7 @@ namespace Undress
 
 	void Enforce(RE::Actor* a_actor)
 	{
-		if (!a_actor) {
+		if (!a_actor || g_config.papyrusUndressing) {
 			return;
 		}
 		const auto id = a_actor->GetFormID();
@@ -475,6 +540,13 @@ namespace Undress
 
 	void RedressMask(std::uint32_t a_id, std::uint32_t a_mask)
 	{
+		if (g_config.papyrusUndressing) {
+			if (const auto vm = FourStim::GetVM()) {
+				RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
+				Compat::DispatchStaticCall(vm, "FourUndress"sv, "RedressPartial"sv, callback, static_cast<std::int32_t>(a_id), static_cast<std::int32_t>(a_mask));
+			}
+			return;
+		}
 		std::vector<std::int32_t> items;
 		{
 			std::scoped_lock lock(g_lock);
@@ -537,6 +609,19 @@ namespace Undress
 
 	void Redress(std::uint32_t a_id, bool a_force, bool a_afterScene)
 	{
+		if (g_config.papyrusUndressing) {
+			// OStim's UsePapyrusUndressing: the add-on's FourUndress dresses them.
+			{
+				std::scoped_lock lock(g_lock);
+				g_states.erase(a_id);
+			}
+			if (const auto vm = (g_config.redress || a_force) ? FourStim::GetVM() : nullptr) {
+				REX::INFO("Undress: {:08X}: FourUndress.Redress (Papyrus undressing)", a_id);
+				RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
+				Compat::DispatchStaticCall(vm, "FourUndress"sv, "Redress"sv, callback, static_cast<std::int32_t>(a_id));
+			}
+			return;
+		}
 		std::vector<std::int32_t> items;
 		{
 			std::scoped_lock lock(g_lock);

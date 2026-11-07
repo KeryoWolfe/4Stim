@@ -91,8 +91,12 @@ A slot that isn't checked is skipped anyway.
 
 What's been taken off is kept in the save with the scene: a scene that starts again on load still dresses everyone at the end, and one that doesn't dresses them on load (`bResumeScenes`, `4Stim.ini`).
 
-The plugin finds what each actor wears in which slots; `FourStimUndress.psc` (vanilla Papyrus) takes it off and puts it back on.
+The plugin finds what each actor wears in which slots; `FourStimUndress.psc` (vanilla Papyrus) takes it off and puts it back on. As OStim's, an item comes off when any of its slots is one an action asks for and any is an undress slot (an outfit on 33 and 50 comes off for an action asking for 50), and undressing at the start (`SetAlwaysUndressAtStart`) happens whatever the first scene's `noStrip` says.
+
+**Papyrus undressing** (OStim's `OUndress`): an add-on that wants to do all undressing itself ships its own `FourUndress.pex` whose `UsePapyrusUndressing()` returns true (asked at every game load). 4Stim then calls its `UndressPartial(aiActorID, aiSlotMask)`, `RedressPartial(aiActorID, aiSlotMask)` and `Redress(aiActorID)` instead of undressing anyone, and leaves Enforce (taking off what came back on) to it. Departures from OStim's, forced by Fallout 4: actors by form ID, Fallout 4's slot masks, no thread ID or returned items, no `AnimateRedress`.
+
+**Wigs:** OStim's `undressWigs` keeps Skyrim wigs (hair-slot items drawn with the hair tint shader) on. Fallout 4's hair slots (30, 31) aren't undress slots by default, so wigs stay on anyway; there's no setting.
 
 ## Weapons
 
-Everyone's weapon comes off as their scene starts (a drawn weapon's arm pose would show over the animation), as OStim's default (`SetRemoveWeaponsAtStart=1`). OStim lets you turn that off and also takes weapons with the slot `SetRemoveWeaponsWithSlot`; 4Stim has neither setting yet. 4Stim remembers which weapon it was and puts it back on when the scene ends, for the player and NPCs alike, as long as they still have it and aren't holding another. A scene saved and loaded keeps it too. The weapon goes back on by its base item, so with several of the same weapon (different mods on each), the game may pick another of them.
+Everyone's weapon comes off as their scene starts (a drawn weapon's arm pose would show over the animation), as OStim's `SetRemoveWeaponsAtStart=1`. With 0 it's only put away, and comes off when the slot `SetRemoveWeaponsWithSlot` is taken off (OStim's 32, Skyrim's body, is Fallout 4's 33, the default; 0 = never). 4Stim remembers which weapon it was and puts it back on when the scene ends, for the player and NPCs alike, as long as they still have it and aren't holding another. A scene saved and loaded keeps it too. The weapon goes back on by its base item, so with several of the same weapon (different mods on each), the game may pick another of them.

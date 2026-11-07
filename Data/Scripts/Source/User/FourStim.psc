@@ -150,6 +150,10 @@ String Function GetActorVoiceSetName(Actor akActor) Global Native
 ; forgotten once taken). Kept in the save with the scene.
 Function RememberSceneWeapon(Actor akActor, Form akWeapon) Global Native
 
+; OStim's SetRemoveWeaponsAtStart (4Stim.ini): weapons come off as a scene
+; starts. FourStimScene.PrepareActor asks.
+bool Function RemoveWeaponsAtStart() Global Native
+
 ; A drawn weapon put away (the game's own sheathe; Fallout 4's Papyrus has
 ; none). Called by FourStimScene.HolsterForScene.
 Function SheatheForScene(Actor akActor) Global Native

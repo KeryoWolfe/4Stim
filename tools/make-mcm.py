@@ -120,6 +120,8 @@ SETTINGS = {
     'SetEnableFurniture': ('Use furniture', 'bool'),
     'SetSelectFurniture': ('Ask where (furniture)', 'bool'),
     'SetResetClutter': ('Put back clutter', 'bool'),
+    'SetRemoveWeaponsAtStart': ('Weapons off at the start', 'bool'),
+    'SetRemoveWeaponsWithSlot': ('Weapons off with slot (0 = none)', 'int', (0, 61, 1)),
     'SetResetClutterRadius': ('Clutter within (x100 units)', 'int', (1, 20, 1)),
     'SetBedRealignment': ('Bed realignment', 'float', (-100, 100, 1)),
     'bedOffset': ('Bed offset', 'float', (-20, 20, 0.5)),
@@ -315,7 +317,7 @@ PAGES = [
     ]),
     ('page_undress', [
         'bUndress', 'SetAlwaysUndressAtStart', 'SetUndressIfNeed', 'SetPartialUndressing', 'SetAnimateRedress',
-        'bUndressPlayer', 'bRedress', 'fUndressItemDelay',
+        'bUndressPlayer', 'bRedress', 'fUndressItemDelay', 'SetRemoveWeaponsAtStart', 'SetRemoveWeaponsWithSlot',
         ('#', 'undress_slots_header'), *[f'bUndressSlot{s}' for s in range(30, 62)],
     ]),
     ('page_expression', [
@@ -445,6 +447,8 @@ OSTIM_KEYS = {
     'SetSelectFurniture': ('select_furniture', 'tooltip_select_furniture'),
     'SetFurnitureSearchDistance': ('furniture_search_rad', 'tooltip_furniture_search_dist'),
     'SetResetClutter': ('reset_clutter', 'tooltip_reset_clutter'),
+    'SetRemoveWeaponsAtStart': ('remove_weapons_start', 'tooltip_remove_weapons_start'),
+    'SetRemoveWeaponsWithSlot': ('remove_weapons_slot', 'tooltip_remove_weapons_slot'),
     'SetResetClutterRadius': ('reset_clutter_radius', 'tooltip_reset_clutter_radius'),
     'SetBedRealignment': ('bed_realignment', 'tooltip_bed_realignment'),
     'bedOffset': ('bed_offset', 'tooltip_bed_offset'),

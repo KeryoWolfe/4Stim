@@ -86,6 +86,7 @@ Times given with OStim's names are in milliseconds, as in OStim. `SetFurnitureSe
 | `autoSpeedControlIntervalMin` / `Max` | 2500 / 7500 ms | `fAutoSpeedIntervalMin` / `Max` (s) | How often |
 | `autoSpeedControlExcitementMin` / `Max` | 15 / 85 | `fAutoSpeedExcitementMin` / `Max` | Chance from 0 to certain |
 | `SetAlwaysUndressAtStart` | 0 | `bUndressAtStart` | Everything off at the start |
+| `SetRemoveWeaponsAtStart` / `SetRemoveWeaponsWithSlot` | 1 / 33 | | Weapons off at the start; else off with that slot (Fallout 4's; OStim's 32 is Skyrim's body) |
 | `SetPartialUndressing` | 1 | `bPartialUndress` | What each action needs |
 | `SetUndressIfNeed` | 1 | `bFullUndressMidScene` | Everything off for actions that need it |
 | `SetAnimateRedress` | 0 | `bAnimateRedress` | Redress animations after a scene |
