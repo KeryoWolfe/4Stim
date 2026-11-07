@@ -671,6 +671,10 @@ namespace
 					g_settings.logFurniture = std::stoi(value) != 0;
 				} else if (key == "setenablefurniture") {
 					g_settings.useFurniture = std::stoi(value) != 0;
+				} else if (key == "setbedrealignment") {
+					Furniture::Settings().bedRealignment = std::stof(value);
+				} else if (key == "bedoffset") {
+					Furniture::Settings().bedOffset = std::stof(value);
 				} else if (key == "setselectfurniture") {
 					g_settings.selectFurniture = std::stoi(value) != 0;
 				} else if (key == "setresetclutter") {

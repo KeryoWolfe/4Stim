@@ -30,6 +30,8 @@
 				0,
 				32
 			],
+			"offsetYGlobal": { "mod": "OStim.esp", "formid": "0xDFE" },
+			"offsetZGlobal": { "mod": "OStim.esp", "formid": "0xDFF" },
 			"supertype": "none",
 			"faction": {
 				"info": "4StimBedFaction",
@@ -64,6 +66,8 @@
 				0,
 				32
 			],
+			"offsetYGlobal": { "mod": "OStim.esp", "formid": "0xDFE" },
+			"offsetZGlobal": { "mod": "OStim.esp", "formid": "0xDFF" },
 			"supertype": "bed",
 			"priority": 10,
 			"maxMarkers": 1,
@@ -96,6 +100,8 @@
 				0,
 				32
 			],
+			"offsetYGlobal": { "mod": "OStim.esp", "formid": "0xDFE" },
+			"offsetZGlobal": { "mod": "OStim.esp", "formid": "0xDFF" },
 			"supertype": "bed",
 			"priority": 20,
 			"minMarkers": 2

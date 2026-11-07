@@ -121,6 +121,8 @@ SETTINGS = {
     'SetSelectFurniture': ('Ask where (furniture)', 'bool'),
     'SetResetClutter': ('Put back clutter', 'bool'),
     'SetResetClutterRadius': ('Clutter within (x100 units)', 'int', (1, 20, 1)),
+    'SetBedRealignment': ('Bed realignment', 'float', (-100, 100, 1)),
+    'bedOffset': ('Bed offset', 'float', (-20, 20, 0.5)),
     'bLogFurniture': ('Log furniture (for authors)', 'bool'),
     'SetResetPosition': ('NPCs go back where they stood', 'bool'),
     'bEndOnDamage': ('End scenes when someone is hurt', 'bool'),
@@ -309,7 +311,7 @@ PAGES = [
         ('#', 'header_futanari'), 'futaUseMaleRole', 'futaUseMaleExcitement', 'futaUseMaleClimax',
     ]),
     ('page_furniture', [
-        'SetEnableFurniture', 'SetSelectFurniture', 'SetFurnitureSearchDistance', 'fFurnitureHeight', 'SetResetClutter', 'SetResetClutterRadius',
+        'SetEnableFurniture', 'SetSelectFurniture', 'SetFurnitureSearchDistance', 'fFurnitureHeight', 'SetResetClutter', 'SetResetClutterRadius', 'SetBedRealignment', 'bedOffset',
     ]),
     ('page_undress', [
         'bUndress', 'SetAlwaysUndressAtStart', 'SetUndressIfNeed', 'SetPartialUndressing', 'SetAnimateRedress',
@@ -444,6 +446,8 @@ OSTIM_KEYS = {
     'SetFurnitureSearchDistance': ('furniture_search_rad', 'tooltip_furniture_search_dist'),
     'SetResetClutter': ('reset_clutter', 'tooltip_reset_clutter'),
     'SetResetClutterRadius': ('reset_clutter_radius', 'tooltip_reset_clutter_radius'),
+    'SetBedRealignment': ('bed_realignment', 'tooltip_bed_realignment'),
+    'bedOffset': ('bed_offset', 'tooltip_bed_offset'),
     'SetAlwaysUndressAtStart': ('undress_start', 'tooltip_always_undress'),
     'SetUndressIfNeed': ('undress_need', 'tooltip_undress_if_need'),
     'SetPartialUndressing': ('partial_undressing', 'tooltip_partial_undressing'),

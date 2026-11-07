@@ -1,9 +1,11 @@
 #include "Furniture.h"
 #include "Actions.h"
+#include "Sounds.h"
 #include "Translations.h"
 #include "compat/ScrapFunction.h"
 
 #include <algorithm>
+#include <array>
 #include <cctype>
 #include <cmath>
 #include <filesystem>
@@ -35,7 +37,7 @@ namespace Furniture
 		{
 			enum class Kind
 			{
-				kAnyKeyword,        // any of keywords, on the base object
+				kAnyKeyword,        // any of keywords, on the reference or its base (OStim's)
 				kKeywordBlacklist,  // none of keywords
 				kFormList,          // the base object is in the form list
 				kFormBlacklist,     // it isn't
@@ -60,6 +62,17 @@ namespace Furniture
 			std::string                    supertype;  // "" = none
 			int                            priority = 0;
 			std::vector<std::uint32_t>     factions;   // OStim's "faction": scene actors on it are in these (4Stim.esl's), its supertypes' too
+			// OStim's offsetXGlobal / Y / Z: a global variable's value added to
+			// the offset when the scene is placed. setting: OStim.esp's bed
+			// globals, which are 4Stim.ini settings here (1 SetBedRealignment,
+			// 2 bedOffset).
+			struct GlobalOffset
+			{
+				std::uint32_t form = 0;
+				int           setting = 0;
+			};
+			std::array<GlobalOffset, 3>    offsetGlobals{};
+			bool                           ostimLayout = false;  // its file is in OStim's layout
 			std::vector<RE::ENUM_FORM_ID>  forms;            // base object types it can be
 			std::vector<std::string>       models;           // any of these in the model path (lowercase)
 			std::vector<std::string>       excludeModels;    // none of these
@@ -174,6 +187,26 @@ namespace Furniture
 			} catch (...) {
 				return {};
 			}
+		}
+
+		Config g_config;
+
+		// A type's offset*Global values now (OStim reads its globals as the
+		// scene is placed).
+		RE::NiPoint3 GlobalOffsets(const Type& a_type)
+		{
+			float v[3]{};
+			for (int axis = 0; axis < 3; ++axis) {
+				const auto& g = a_type.offsetGlobals[axis];
+				if (g.setting == 1) {
+					v[axis] = g_config.bedRealignment;
+				} else if (g.setting == 2) {
+					v[axis] = g_config.bedOffset;
+				} else if (const auto global = g.form ? RE::TESForm::GetFormByID<RE::TESGlobal>(g.form) : nullptr) {
+					v[axis] = global->value;
+				}
+			}
+			return { v[0], v[1], v[2] };
 		}
 
 		// One type from its JSON object, with 4Stim's field names and OStim's
@@ -309,6 +342,31 @@ namespace Furniture
 			type.offset.x = entry.value("offsetX", type.offset.x);
 			type.offset.y = entry.value("offsetY", type.offset.y);
 			type.offset.z = entry.value("offsetZ", type.offset.z);
+			type.ostimLayout = a_ostimLayout;
+			for (int axis = 0; axis < 3; ++axis) {
+				const auto key = std::format("offset{}Global", static_cast<char>('X' + axis));
+				const auto it = entry.find(key);
+				if (it == entry.end() || !it->is_object()) {
+					continue;
+				}
+				// OStim.esp's SetBedRealignment (0xDFE) and bedOffset (0xDFF).
+				const auto mod = Lower(it->value("mod", std::string{}));
+				std::uint32_t raw = 0;
+				try {
+					const auto& formid = (*it)["formid"];
+					raw = formid.is_string() ? static_cast<std::uint32_t>(std::stoul(formid.get<std::string>(), nullptr, 16)) : formid.get<std::uint32_t>();
+				} catch (...) {
+				}
+				if (mod == "ostim.esp" && (raw & 0xFFF) == 0xDFE) {
+					type.offsetGlobals[axis].setting = 1;
+				} else if (mod == "ostim.esp" && (raw & 0xFFF) == 0xDFF) {
+					type.offsetGlobals[axis].setting = 2;
+				} else if (const auto form = Sounds::ReadForm(*it); form && RE::TESForm::GetFormByID<RE::TESGlobal>(form)) {
+					type.offsetGlobals[axis].form = form;
+				} else {
+					REX::WARN("Furniture: {}: type \"{}\": {} isn't a loaded global variable", file, type.id, key);
+				}
+			}
 			type.rotation = entry.value("rotation", 0.0F) * (a_ostimLayout ? 1.0F : DEG);
 			type.listIndividually = entry.value("listIndividually", false);
 			type.multiplyScale = entry.value("multiplyScale", 1.0F);
@@ -409,6 +467,23 @@ namespace Furniture
 			return std::ranges::any_of(a_keywords, [&](const std::string& kw) { return form->HasKeywordString(kw); });
 		}
 
+		// The same on the reference, as OStim's conditions check it
+		// (ObjectReference.HasKeyword): its base's keywords, and any the
+		// reference itself has.
+		bool HasAnyKeyword(RE::TESObjectREFR* a_ref, RE::TESBoundObject* a_base, const std::vector<std::string>& a_keywords)
+		{
+			if (HasAnyKeyword(a_base, a_keywords)) {
+				return true;
+			}
+			if (!a_ref) {
+				return false;
+			}
+			return std::ranges::any_of(a_keywords, [&](const std::string& kw) {
+				const auto keyword = RE::TESForm::GetFormByEditorID<RE::BGSKeyword>(kw);
+				return keyword && a_ref->HasKeywordHelper(keyword, nullptr);
+			});
+		}
+
 		// OStim's markercount: a_ref's furniture markers (its model's) of
 		// that kind and height. Fallout 4's marker animation bits: 1 sit, 2
 		// lie (OStim's "sleep").
@@ -418,9 +493,9 @@ namespace Furniture
 		{
 			switch (a_c.kind) {
 			case Condition::Kind::kAnyKeyword:
-				return HasAnyKeyword(a_base, a_c.keywords);
+				return HasAnyKeyword(a_ref, a_base, a_c.keywords);
 			case Condition::Kind::kKeywordBlacklist:
-				return !HasAnyKeyword(a_base, a_c.keywords);
+				return !HasAnyKeyword(a_ref, a_base, a_c.keywords);
 			case Condition::Kind::kFormList:
 			case Condition::Kind::kFormBlacklist:
 				{
@@ -454,7 +529,7 @@ namespace Furniture
 			// 4Stim's models / keywords: one of them; OStim's conditions: all.
 			if (!a_type.models.empty() || !a_type.keywords.empty()) {
 				const bool modelHit = std::ranges::any_of(a_type.models, [&](const std::string& m) { return a_model.find(m) != std::string::npos; });
-				if (!modelHit && !HasAnyKeyword(a_base, a_type.keywords)) {
+				if (!modelHit && !HasAnyKeyword(a_ref, a_base, a_type.keywords)) {
 					return false;
 				}
 			}
@@ -464,7 +539,7 @@ namespace Furniture
 			if (std::ranges::any_of(a_type.excludeModels, [&](const std::string& m) { return a_model.find(m) != std::string::npos; })) {
 				return false;
 			}
-			if (HasAnyKeyword(a_base, a_type.excludeKeywords)) {
+			if (HasAnyKeyword(a_ref, a_base, a_type.excludeKeywords)) {
 				return false;
 			}
 			const int markers = MarkerCount(a_base);
@@ -937,6 +1012,11 @@ namespace Furniture
 		return out;
 	}
 
+	Config& Settings()
+	{
+		return g_config;
+	}
+
 	std::string Name(std::string_view a_type)
 	{
 		std::scoped_lock lock(g_lock);
@@ -1259,6 +1339,14 @@ namespace Furniture
 		// only takes its height.
 		const bool floorOnEdge = type.edge && a_floorScene;
 		local = local + RE::NiPoint3{ floorOnEdge ? 0.0F : type.offset.x, floorOnEdge ? 0.0F : type.offset.y, zFromMarker ? 0.0F : type.offset.z };
+		// OStim's offset*Global: in OStim's layout added to the offset, as
+		// OStim's getOffset; in 4Stim's, along the scene (x right, y forward
+		// as the actors face, z up), which is what OStim's bed realignment
+		// means ("forward / back").
+		const RE::NiPoint3 globals = GlobalOffsets(type);
+		if (type.ostimLayout) {
+			local = local + RE::NiPoint3{ floorOnEdge ? 0.0F : globals.x, floorOnEdge ? 0.0F : globals.y, globals.z };
+		}
 		local = local * scale;
 
 		const float c = std::cos(yaw);
@@ -1266,6 +1354,12 @@ namespace Furniture
 		const auto  origin = a_ref->GetPosition();
 		spot.position = { origin.x + local.x * c + local.y * s, origin.y - local.x * s + local.y * c, origin.z + local.z };
 		spot.heading = yaw + localHeading + type.rotation;
+		if (!type.ostimLayout && (globals.x != 0.0F || globals.y != 0.0F || globals.z != 0.0F)) {
+			const float ch = std::cos(spot.heading), sh = std::sin(spot.heading);
+			spot.position.x += (globals.x * ch + globals.y * sh) * scale;
+			spot.position.y += (-globals.x * sh + globals.y * ch) * scale;
+			spot.position.z += globals.z * scale;
+		}
 		// A spot at the furniture's own origin height (a chair without
 		// markers): the object can be sunk into the floor, and an actor locked
 		// below the floor has the floor pushing their character controller up

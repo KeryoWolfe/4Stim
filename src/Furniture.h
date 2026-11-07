@@ -15,6 +15,16 @@
 // of that type or of any of its subtypes (a bench is a kind of chair).
 namespace Furniture
 {
+	// OStim's bed settings, which its singlebed / doublebed types add
+	// through their offsetYGlobal / offsetZGlobal (OStim.esp's 0xDFE and
+	// 0xDFF; 4Stim keeps OStim's globals as 4Stim.ini settings).
+	struct Config
+	{
+		float bedRealignment = 0.0F;  // SetBedRealignment: forward / back along the scene (negative: the head end)
+		float bedOffset = 0.0F;       // bedOffset: up / down (OStim's default is 3, for Skyrim's beds)
+	};
+	Config& Settings();
+
 	// Where a scene on a piece of furniture is placed: the point and
 	// direction the actors' animations start from.
 	struct Spot

@@ -295,5 +295,9 @@
 	"page_addons": "Add-Ons",
 	"screenshake": "Use extra screenshake",
 	"timescale": "Custom timescale",
-	"tooltip_custom_timescale": "Changes the timescale during scenes, and reverts it back to what it was after the scene ends.\\nUseful if you don't want them taking an entire day.\\n0 = this feature is disabled."
+	"tooltip_custom_timescale": "Changes the timescale during scenes, and reverts it back to what it was after the scene ends.\\nUseful if you don't want them taking an entire day.\\n0 = this feature is disabled.",
+	"bed_realignment": "Bed realignment",
+	"tooltip_bed_realignment": "Move actors forward/back by this amount on a bed. (negative values move them to the head end)",
+	"bed_offset": "Bed offset",
+	"tooltip_bed_offset": "Move actors up/down by this amount on a bed."
 }

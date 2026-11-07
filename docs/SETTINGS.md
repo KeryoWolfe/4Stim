@@ -56,6 +56,7 @@ Times given with OStim's names are in milliseconds, as in OStim. `SetFurnitureSe
 | `SetFurnitureSearchDistance` | 15 (1600 units) | `fFurnitureRadius` (units) | How far to look for furniture |
 | `SetEnableFurniture` | 1 | | Use furniture at all (0: scenes start right here) |
 | `SetSelectFurniture` | 1 | | Ask where (the picker's "Where?" step); 0: the nearest furniture any scene fits, else right here |
+| `SetBedRealignment` / `bedOffset` | 0 / 0 | | Scenes on beds moved forward / back (negative: the head end) and up / down (OStim's bed offset default is 3, for Skyrim's beds) |
 | `SetResetClutter` | 1 | | Put back loose items a furniture scene knocked about, when it leaves the furniture (OStim's is switched off in its code; 4Stim's works, FURNITURE.md) |
 | `SetResetClutterRadius` | 5 (500 units) | | How far around, in steps of 100 units |
 | `SetsexExcitementMult` / `SetFemaleSexExcitementMult` | 1 / 1 | `fMaleExcitementMult` / `fFemaleExcitementMult` | Excitement multipliers |
@@ -111,4 +112,4 @@ OStim settings left out on purpose: `useSoSSex` and `useTNGSex` (SoS and TNG are
 
 ## Not in yet
 
-OStim settings that come with features 4Stim doesn't have yet: dialogue, and the rest of OStim's MCM (`SetBedRealignment` / `bedOffset` for double beds, per-toy and per-slot toy settings). They'll take OStim's names when they come.
+OStim settings that come with features 4Stim doesn't have yet: dialogue, and the rest of OStim's MCM (per-toy and per-slot toy settings). They'll take OStim's names when they come.
