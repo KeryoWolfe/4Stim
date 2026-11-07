@@ -42,7 +42,7 @@ Claude writes the fix; the owner builds and tests; the result goes into TEST_RES
 | 2.5 | Penis left at an odd angle after scenes | Built, untested | Owner: three scenes in a row, check after each. |
 | 2.6 | Alignment: kisses missing, tongue on the top lip, hands clipping | Head tracking and foot IK now off (built, untested); tongue mesh open | Owner: kiss scenes. Claude: tongue position in the Equip Objects add-on. |
 | 2.7 | Penis clipping through bodies and faces | Open: animation-level. Checked 1 November against the reconverted test pack (AnimBridge, 946 files): animations carry all 128 ZeX tracks; the male role animates `Penis_00` (the base) and nothing further along: `Penis_01`–`05` and the balls hold one pose. | The converter: carry the source's segment motion over to `Penis_01`–`05`, if the OStim originals have it; until then, the per-scene bend and alignment. |
-| 2.8 | NPCs talk during scenes | Open | Claude: silence scene actors and bystanders' greetings for the scene. |
+| 2.8 | NPCs talk during scenes | Done (checked off by the owner, 7 November 2026) | None. |
 | 2.9 | Scene events pass `Actor[]` from native code (may arrive broken) | Open | Claude: test with a listening script; pass form IDs if broken. |
 | 2.10 | Short hitch when a transition starts | Open | Claude: measure from the log; preload transition clips. |
 | 2.11 | First-person / True First Person body hidden | Open; needs first person allowed in scenes to test | Owner decides whether 0.4 tests first person. |
@@ -102,7 +102,7 @@ Once 4Stim is public, most reports will come with no logs: a sentence, maybe a s
 
 ## Later (after 1.0)
 
-From docs/TODO.md, unchanged: automatic body-mesh detection, in-game HUD editor, YAML scene files, NPC greetings, race filtering, claim registry, first-person camera. Separate projects: the animation converter rebuild (which also fixes 2.7), the Sim Settlements 2 furniture module, placeable scene markers.
+From docs/TODO.md, unchanged: in-game HUD editor, YAML scene files, NPC greetings, race filtering, claim registry, first-person camera. Separate projects: the animation converter rebuild (which also fixes 2.7, and now takes automatic body-mesh detection), the Sim Settlements 2 furniture module, placeable scene markers.
 
 Pinned by the owner (1 November 2026): **an A-Body patch on 4Stim's events** instead of AAF's (A-Body's own swap script, listening to `FourStim_OnSceneStart` / `End`), after beta. Needs first: the scene events' actor arrays checked (2.9); 4Stim's own A-Body swap skipped when the patch is there; the receiving end and the undress redraw handled by the patch; a plugin (4Stim has none) or A-Body's author's permission to replace their script.
 
