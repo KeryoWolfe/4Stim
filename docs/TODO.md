@@ -1,5 +1,13 @@
 # To do
 
+## Before Beta Release
+
+- **Code restructure (a modder's review, 7 November 2026).** Behaviour stays the same; each stage is its own commit, built (`xmake build -r`) before the next.
+  1. **Papyrus natives out of main.cpp, namespaces for prefixes.** The `T_` / `M_` / `L_` / `F_` / `J_` / `A_` prefixes keep apart natives of different scripts with the same name (`IsRunning`, `GetScene`, `GetMetadata`) in one anonymous namespace. They become `Natives::Thread::IsRunning` and so on, one file per script under `src/Natives/` (FourThread, FourMetadata, FourLibrary...).
+  2. **Settings into `Settings.cpp`, read with glaze.** `LoadSettings` is one long `if (key == ...)` chain. Glaze's reflection matches each ini key to its struct field, so a new setting is one struct member, not edits in three places. 4Stim.ini stays an ini (glaze doesn't read it as such); the line reader stays, the chain goes. OStim's names, units and the MCM mapping keep working. Test: settings and the MCM in game.
+  3. **The rest of main.cpp (14,342 lines) split by area:** alignment, camera, scene running, a thin `main.cpp` that registers and loads. One commit each.
+  4. **JSON loaders from nlohmann to glaze**, one file type at a time, scenes last: faster loading and no hand-written field reading. Every OStim file that loads today must still load (optional fields, fallbacks, a string or a list). Test: scenes, actions and voice sets in game.
+
 ## V1.0 cleanup (before release)
 
 - **Short hitch when picking a transition.** Choosing a scene that starts a transition freezes the game very briefly. It's likely the game loading the transition's animation file on first play; worth measuring (time from the pick to `PlayIdle` returning in the log) and, if so, preloading the clips of a scene's transitions while it plays.
