@@ -16,8 +16,8 @@ EndFunction
 string[] Function PairsToNames(string[] Pairs) Global
 	int iCount = Pairs.Length / 2
 	if iCount < 1
-		string[] None
-		return None
+		string[] Empty  ; never given a value: None, an empty array to Papyrus
+		return Empty
 	endif
 	string[] Names = new string[iCount]
 	int i = 0
