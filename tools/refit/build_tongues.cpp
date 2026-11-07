@@ -44,17 +44,17 @@ int main(int argc, char** argv)
 			return 1;
 		}
 	}
-	// Skyrim's NPC Head (y -1.55, z 120.34) to Fallout 4's HEAD, then down
-	// into Fallout 4's mouth. Head to head alone left the tongue's root at
-	// the upper lip (z 118.2-119.0): Fallout 4's mouth sits lower against
-	// HEAD than Skyrim's (ZeX's Tongue_00-04 bones, an at-rest tongue, run
-	// y 3.5-7.4 at z 117.4-116.9), and neither game has a jaw bone (the
-	// mouth opens by morphs), so the tongue, which only shows with an open
-	// mouth (phonemeObjects), is placed for one: 2.5 down and 0.6 back puts
-	// its root on the mouth's floor behind the lower teeth and its tip out
-	// over the lower lip (the owner's screenshot, 7 November: it floated
-	// out from under the upper lip).
-	const Vector3 shift(0.0f, 0.67f - 0.6f, 0.5f - 2.5f);
+	// Skyrim's NPC Head (y -1.55, z 120.34) to Fallout 4's HEAD, then into
+	// Fallout 4's open mouth. Head to head alone left the tongue's root at
+	// the upper lip (z 118.2-119.0). Neither game has a jaw bone (the mouth
+	// opens by morphs), so the tongue, which only shows with an open mouth
+	// (phonemeObjects, or 4Stim's held "tongue" face), is placed for one:
+	// from HiPoly Faces' female head and its JawOpen morph (the owner's), the
+	// upper lip ends at z 118.45 and the open lower lip's top is at z 116.0,
+	// y 5.8 (the jaw swings back as it drops). 2.2 down and 1.2 back puts
+	// the root behind the lower teeth, its top just over the lower lip, and
+	// the tip out over it.
+	const Vector3 shift(0.0f, 0.67f - 1.2f, 0.5f - 2.2f);
 	int count = 0;
 	for (const auto& entry : std::filesystem::directory_iterator(in)) {
 		if (entry.path().extension() != ".nif") {
@@ -92,6 +92,15 @@ int main(int argc, char** argv)
 			std::vector<float>   bw{ 1.0f };
 			for (size_t i = 0; i < v.size(); ++i) {
 				nif.SetShapeVertWeights(shape->name.get(), (uint16_t)i, bid, bw);
+			}
+			// HEAD's bounding sphere, in its own space: Fallout 4 culls a
+			// skinned shape by its bones' spheres, and a zero one (what the
+			// newer nifly leaves) hides it (the owner's tongues, 7 November:
+			// worn, never drawn).
+			{
+				BoundingSphere sphere(v);
+				sphere.center = head.InverseTransform().ApplyTransform(sphere.center);
+				nif.SetShapeBoneBounds(shape->name.get(), 0, sphere);
 			}
 			nif.CalcNormalsForShape(shape);
 			nif.CalcTangentsForShape(shape);
