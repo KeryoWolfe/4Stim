@@ -207,6 +207,7 @@ namespace
 		bool          translationLock = true; // bTranslationLock: hold scene actors with a never-ending translation (0: placed once, for finding a shake)
 		bool          playerAIDriven = true;  // bPlayerAIDriven: the player is AI driven in scenes, as OStim's lock (SetAIDriven)
 		bool          furnitureOutOfWay = true; // bFurnitureOutOfTheWay: scene furniture doesn't collide with the scene's actors
+		bool          passThroughWalls = true;  // bPassThroughWalls: a scene actor touching a wall (no reference) collides with nothing for the scene
 		float         transitionLead = 0.0F;   // seconds before a transition's length to move on (see 4Stim.ini)
 		bool          matchSex = true;         // SetOnlyGayAnimsInGayScenes (OStim's intended sex only): a role's sex must be the actor's
 		// Who the player is in a scene for two (OStim's): always the first
@@ -772,6 +773,8 @@ namespace
 					g_settings.furnitureOutOfWay = std::stoi(value) != 0;
 				} else if (key == "bresetphysicsafterscene") {
 					Physics::Settings().resetAfterScene = std::stoi(value) != 0;
+				} else if (key == "bpassthroughwalls") {
+					g_settings.passThroughWalls = std::stoi(value) != 0;
 				} else if (key == "bcollisionwatch") {
 					g_settings.collisionWatch = std::stoi(value) != 0;
 				} else if (key == "bplayeraidriven") {
@@ -1991,7 +1994,8 @@ namespace
 	// calls Getbhk: the touched bodies are matched against the collision
 	// objects of the references around the actor (their 3D, as the furniture
 	// change reads it from the same task queue without trouble). A body no
-	// reference near them owns (a precombined wall) is logged and left.
+	// reference near them owns (a precombined wall) can't join the group:
+	// with bPassThroughWalls the actor collides with nothing instead.
 	// bCollisionWatch now only adds the position lines.
 	struct TouchedBody
 	{
@@ -2057,6 +2061,12 @@ namespace
 		}
 		return nullptr;
 	}
+
+	// Each scene actor's controller filter before the scene (the shared
+	// group, a wall's no collision), restored at scene end
+	// (RestoreCollisionNow). Not save-persisted: character controllers are
+	// rebuilt on load anyway. Main thread.
+	std::unordered_map<std::uint32_t, std::uint32_t> g_savedFilters;
 
 	void WatchCollisions(RE::Actor* a_actor, const std::string& a_sceneID)
 	{
@@ -2147,9 +2157,34 @@ namespace
 			}
 			const auto owner = OwnerOf(a_actor, body);
 			if (!owner) {
-				if (g_touchLogged[id].insert(body).second) {
-					REX::INFO("Collision watch: {:08X} in \"{}\" touches a body no reference near them owns (layer {}, filter {:08X}; a precombined wall?): left as it is",
-						id, a_sceneID, std::to_underlying(layer), filter.filter);
+				const bool first = g_touchLogged[id].insert(body).second;
+				if (!g_settings.passThroughWalls) {
+					if (first) {
+						REX::INFO("Collision watch: {:08X} in \"{}\" touches a body no reference near them owns (layer {}, filter {:08X}; a precombined wall?): left as it is",
+							id, a_sceneID, std::to_underlying(layer), filter.filter);
+					}
+					continue;
+				}
+				// A wall (precombined: no reference, so it can't join the
+				// group). Wall scenes' spot is 15 units out from it, inside the
+				// actors' capsules, so the wall pushed them about 10 units off
+				// it and the lock put them back, every frame: the owner's wall
+				// shake (6 November; with bTranslationLock=0 they sat 10-11
+				// units off the spot instead). The actor's own controller then
+				// collides with nothing for the scene: their gravity is 0 and
+				// the lock holds them, so they don't need the floor. Back with
+				// their filter (RestoreCollisionNow). Not in OStim (Skyrim's
+				// lock leaves the capsule out of it).
+				if (!ownFilter.QNoCollision()) {
+					g_savedFilters.try_emplace(id, own->m_collisionFilterInfo);
+					RE::CFilter none = ownFilter;
+					none.SetNoCollision(true);
+					const auto ok = controller->SetCollisionFilterInfo(none);
+					REX::INFO("Collision watch: {:08X} in \"{}\" touches a body no reference near them owns (layer {}, filter {:08X}; a wall): {:08X} collides with nothing this scene ({})",
+						id, a_sceneID, std::to_underlying(layer), filter.filter, id, ok);
+					if (ok) {
+						return;
+					}
 				}
 				continue;
 			}
@@ -5297,9 +5332,8 @@ namespace
 	// they keep standing on the ground. (The kNoCollision flag would also
 	// drop ground collision, so it's deliberately not used.)
 
-	// Original filter per actor, restored at scene end. Not save-persisted:
-	// character controllers are rebuilt on load anyway.
-	std::unordered_map<std::uint32_t, std::uint32_t> g_savedFilters;
+	// g_savedFilters (each actor's filter before the scene) is with the
+	// collision watch above.
 
 	RE::bhkCharacterController* GetCharController(RE::Actor* a_actor)
 	{
