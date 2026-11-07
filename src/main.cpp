@@ -553,6 +553,8 @@ namespace
 					Lights::Settings().maleLight = value;
 				} else if (key == "sfemalelight") {
 					Lights::Settings().femaleLight = value;
+				} else if (key == "splayerlight") {
+					Lights::Settings().playerLight = value;
 				} else if (key == "isoundflags") {
 					Sounds::Settings().flags = static_cast<std::uint32_t>(std::stoul(value, nullptr, 0));
 				} else if (key == "isoundpriority") {
@@ -730,6 +732,18 @@ namespace
 					Erection::Settings().enabled = std::stoi(value) != 0;
 				} else if (key == "unequipstraponifnotneeded") {
 					EquipObjects::Settings().unequipStrapOnIfNotNeeded = std::stoi(value) != 0;
+				} else if (key == "sdefaultstrapon") {
+					EquipObjects::Settings().defaults[EquipObjects::FEMALE]["strapon"] = value;  // OStim's Default Strap-On (0x1)
+				} else if (key == "splayerstrapon") {
+					EquipObjects::Settings().defaults[EquipObjects::PLAYER]["strapon"] = value;
+				} else if (key == "sdefaulttonguemale") {
+					EquipObjects::Settings().defaults[EquipObjects::MALE]["tongue"] = value;
+				} else if (key == "sdefaulttonguefemale") {
+					EquipObjects::Settings().defaults[EquipObjects::FEMALE]["tongue"] = value;
+				} else if (key == "splayertongue") {
+					EquipObjects::Settings().defaults[EquipObjects::PLAYER]["tongue"] = value;
+				} else if (key == "splayervoice") {
+					Sounds::Settings().playerVoice = value;
 				} else if (key == "bfurnitureoutoftheway") {
 					g_settings.furnitureOutOfWay = std::stoi(value) != 0;
 				} else if (key == "bresetphysicsafterscene") {
@@ -6054,6 +6068,25 @@ namespace
 	std::string GetEquipObjectID(std::monostate, RE::Actor* a_actor, std::string a_type)
 	{
 		return a_actor ? EquipObjects::Chosen(a_actor->GetFormID(), std::move(a_type)) : std::string{};
+	}
+
+	// OStim's OData.GetEquipObjectPairs / GetEquipObjectName / SetEquipObjectID,
+	// by form ID (an actor base, a race, 0x0 men, 0x1 women; the player's
+	// base is 0x7). SetEquipObjectID is 4Stim's by actor, so OStim's is
+	// SetFormEquipObjectID here.
+	std::vector<std::string> GetEquipObjectPairs(std::monostate, std::int32_t a_formID, std::string a_type)
+	{
+		return EquipObjects::PairsFor(static_cast<std::uint32_t>(a_formID), std::move(a_type));
+	}
+
+	std::string GetEquipObjectName(std::monostate, std::int32_t a_formID, std::string a_type)
+	{
+		return EquipObjects::NameFor(static_cast<std::uint32_t>(a_formID), std::move(a_type));
+	}
+
+	void SetFormEquipObjectID(std::monostate, std::int32_t a_formID, std::string a_type, std::string a_id)
+	{
+		EquipObjects::SetFor(static_cast<std::uint32_t>(a_formID), std::move(a_type), std::move(a_id));
 	}
 
 	// ---- The MCM page (docs/MCM.md) ----
@@ -12730,6 +12763,9 @@ namespace
 		a_vm->BindNativeMethod(SCRIPT_NAME, "TakeSceneWeaponID"sv, TakeSceneWeaponID);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "SetEquipObjectID"sv, SetEquipObjectID);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "GetEquipObjectID"sv, GetEquipObjectID);
+		a_vm->BindNativeMethod(SCRIPT_NAME, "GetEquipObjectPairs"sv, GetEquipObjectPairs);
+		a_vm->BindNativeMethod(SCRIPT_NAME, "GetEquipObjectName"sv, GetEquipObjectName);
+		a_vm->BindNativeMethod(SCRIPT_NAME, "SetFormEquipObjectID"sv, SetFormEquipObjectID);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "RegisterForSceneEvents"sv, RegisterForSceneEvents);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "UnregisterForSceneEvents"sv, UnregisterForSceneEvents);
 		// OStim's API scripts (docs/API.md).
@@ -13117,7 +13153,8 @@ namespace
 			std::uint32_t id = 0, types = 0;
 			a_intfc->ReadRecordData(id);
 			a_intfc->ReadRecordData(types);
-			const auto resolved = a_intfc->ResolveFormID(id).value_or(0);
+			// OStim's per-sex pseudo IDs (0x0 men, 0x1 women) aren't forms.
+			const auto resolved = id <= EquipObjects::FEMALE ? std::optional<std::uint32_t>(id) : a_intfc->ResolveFormID(id);
 			for (std::uint32_t t = 0; t < types && t < 256; ++t) {
 				std::string type, object;
 				if (!ReadString(a_intfc, type) || !ReadString(a_intfc, object)) {
@@ -13126,7 +13163,7 @@ namespace
 					return;
 				}
 				if (resolved) {
-					chosen[resolved][type] = object;
+					chosen[*resolved][type] = object;
 				}
 			}
 		}

@@ -2,6 +2,12 @@
 
 ## 0.5.0 alpha (in progress)
 
+### Per-actor and per-sex choices, as OStim's (parity audit Tier 3)
+- **Equip objects (strap-ons, tongues) are chosen in OStim's order**: the actor, their base, race, sex, then the default file. OStim's `GetEquipObjectPairs`, `GetEquipObjectName` and `SetEquipObjectID` (as `SetFormEquipObjectID`) are on `FourStim`, with OStim's 0x0 / 0x1 for men and women (docs/ACTORS.md).
+- **OStim's MCM choices as 4Stim.ini settings**: `sDefaultStrapOn`, `sPlayerStrapOn`, `sDefaultTongueMale`, `sDefaultTongueFemale`, `sPlayerTongue`, `sPlayerVoice`; and `sPlayerLight` (also on the MCM's General page).
+
+Needs the plugin rebuilt and `FourStim.psc` compiled.
+
 ### Starting scenes from scripts, and sound descriptors, as OStim's (parity audit Tier 3)
 - **A script's scene with you goes through OStim's start flow**: it waits until you're out of dialogue, then asks which furniture to use (or "use the nearby ...?" with a starting scene), whether to add actors near you, and your position, as OStim's settings say, and sorts with `PlayerAlways...`. The questions come up in the picker (docs/API.md).
 - **New setting `addActorsAtStart`** (OStim's, on by default, MCM General page).

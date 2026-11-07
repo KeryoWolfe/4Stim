@@ -56,6 +56,7 @@ namespace Sounds
 			// GetVoiceSetPairs; for a set without a target (4Stim's mute),
 			// its file name. "" for the default sets, which aren't listed.
 			std::string key;
+			std::string file;          // its file name, lowercase, without .json (sPlayerVoice may name it)
 			std::uint32_t target = 0;  // its target's form ID (0: none, or a default set)
 			std::string name;
 			ReactionSet moan;
@@ -255,6 +256,7 @@ namespace Sounds
 					const auto    root = nlohmann::json::parse(in, nullptr, true, true);
 					auto          voice = std::make_shared<VoiceSet>();
 					voice->name = Translations::Localize(root.value("name", e.path().stem().string()));  // translated, as OStim
+					voice->file = Lower(e.path().stem().string());
 					voice->moan = ReadReaction(root, "moan");
 					voice->climax = ReadReaction(root, "climax");
 					voice->climaxCommentSelf = ReadReaction(root, "climaxCommentSelf");
@@ -361,6 +363,15 @@ namespace Sounds
 				if (const auto it = g_choices.find(base); it != g_choices.end()) {
 					chosen = it->second;
 				}
+			}
+			if (chosen.empty() && a_actor == RE::PlayerCharacter::GetSingleton() && !g_config.playerVoice.empty() && g_config.playerVoice != "0") {
+				// 4Stim.ini's sPlayerVoice: a voice set's key, file name or name.
+				const auto want = Lower(g_config.playerVoice);
+				const auto it = std::ranges::find_if(g_listed, [&](const auto& v) { return v->key == want || v->file == want || Lower(v->name) == want; });
+				if (it != g_listed.end()) {
+					return found(*it, "sPlayerVoice");
+				}
+				REX::WARN("Sound: sPlayerVoice \"{}\" isn't a voice set", g_config.playerVoice);
 			}
 			if (!chosen.empty()) {
 				if (const auto set = ByKeyLocked(chosen)) {

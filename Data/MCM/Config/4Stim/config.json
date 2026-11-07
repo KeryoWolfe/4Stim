@@ -336,6 +336,31 @@
 					}
 				},
 				{
+					"id": "i4S_sPlayerLight:Lights",
+					"text": "$4stim_player_light_mode",
+					"help": "$4stim_tooltip_player_light_mode",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "dropdown",
+					"valueOptions": {
+						"sourceType": "ModSettingInt",
+						"options": [
+							"$4stim_generic_default",
+							"$4stim_light_none",
+							"$4stim_light_face",
+							"$4stim_light_face_dim",
+							"$4stim_light_crotch",
+							"$4stim_light_crotch_dim",
+							"$4stim_light_ass",
+							"$4stim_light_ass_dim"
+						]
+					}
+				},
+				{
 					"id": "b4S_SetOnlyLightInDark:Lights",
 					"text": "$4stim_dark_light",
 					"help": "$4stim_tooltip_dark_light",

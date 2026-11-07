@@ -126,7 +126,7 @@ An actor wears one:
 
 Everything put on is taken off and away when the scene ends (also from a save loaded with the scene running). Undressing leaves equip objects on.
 
-Departures from OStim: lights are 4Stim's own (`LIGHTS.md`), not equip objects, since they'd need armors with lights in their meshes. Which object of a type an actor wears can be chosen in the HUD's options (each actor's page, OPTIONS.md) or with `FourStim.SetEquipObjectID`, and the choice is saved with the game; otherwise it's the default one, or random. There's no MCM setting for it per race or sex.
+Departures from OStim: lights are 4Stim's own (`LIGHTS.md`), not equip objects, since they'd need armors with lights in their meshes. Which object of a type an actor wears follows OStim's order: what's chosen for the actor in the HUD's options (each actor's page, OPTIONS.md, or `FourStim.SetEquipObjectID`; 4Stim's, OStim has no per-reference choice), then for their base, their race, their sex, then the type's `default` file, then any. A choice can be an object, `random` or `default` (the next step down). The steps above the actor are OStim's `OData` functions on `FourStim` (`GetEquipObjectPairs`, `GetEquipObjectName`, and `SetFormEquipObjectID`, OStim's `SetEquipObjectID`), by form ID: OStim's `0x0` for men and `0x1` for women, the player's base `0x7`. All are saved with the game. OStim's MCM choices are in 4Stim.ini, where the save has none: `sDefaultStrapOn` (women's), `sPlayerStrapOn`, `sDefaultTongueMale`, `sDefaultTongueFemale`, `sPlayerTongue` (an object's file name, `random` or `default`). They aren't on the MCM page: Fallout 4's MCM can't list choices that depend on what's installed.
 
 ## NPCs in a scene
 

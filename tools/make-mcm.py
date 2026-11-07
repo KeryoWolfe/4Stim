@@ -34,6 +34,7 @@ CHOICES = {
     'sTheme': ['Color', 'PipBoy'],
     'sMaleLight': ['nolight', 'facelight', 'facelightdim', 'crotchlight', 'crotchlightdim', 'asslight', 'asslightdim'],
     'sFemaleLight': ['nolight', 'facelight', 'facelightdim', 'crotchlight', 'crotchlightdim', 'asslight', 'asslightdim'],
+    'sPlayerLight': ['default', 'nolight', 'facelight', 'facelightdim', 'crotchlight', 'crotchlightdim', 'asslight', 'asslightdim'],
 }
 PAD_KEYS = ['sPadHotkey', 'sPadNPCScene', 'sPadSpeedUp', 'sPadSpeedDown', 'sPadAutoMode', 'sPadPullOut', 'sPadEnd', 'sPadSearch', 'sPadAlign', 'sPadFreeCam', 'sPadHideUI']
 PAD_BUTTONS = ['None', 'LB', 'RB', 'LT', 'RT', 'X', 'Y', 'LS', 'RS', 'Back']
@@ -49,6 +50,7 @@ CHOICE_LABELS = {
     'sTheme': ['Color', 'Pip-Boy'],
     'sMaleLight': ['None', 'Face', 'Face, dim', 'Crotch', 'Crotch, dim', 'Rear', 'Rear, dim'],
     'sFemaleLight': ['None', 'Face', 'Face, dim', 'Crotch', 'Crotch, dim', 'Rear', 'Rear, dim'],
+    'sPlayerLight': ['Default', 'None', 'Face', 'Face, dim', 'Crotch', 'Crotch, dim', 'Rear', 'Rear, dim'],
 }
 for _k in PAD_KEYS:
     CHOICE_LABELS[_k] = PAD_LABELS
@@ -224,6 +226,7 @@ SETTINGS = {
     # Lights
     'sMaleLight': ('Light for men', 'choice'),
     'sFemaleLight': ('Light for women', 'choice'),
+    'sPlayerLight': ('Your light', 'choice'),
     'SetOnlyLightInDark': ('Only in the dark', 'bool'),
     'fLightLevelDark': ('Dark below light level', 'float', (0, 200, 1)),
     # General
@@ -265,7 +268,7 @@ PAGES = [
         ('#', 'header_scenes'), 'SetResetPosition', 'SetUseFades', 'SetUseIntroScenes', 'addActorsAtStart',
         'bResumeScenes', 'bEndOnDamage', 'bStayWhenInterrupted', 'fTransitionLead', 'bUsePlaybackSpeed', 'bLockScenes', 'bGuardScenes',
         ('#', 'header_partner'), 'sTargetMode', 'fMaxDistance', 'fCrosshairCone', 'fProximityRadius', 'fActorRadius',
-        ('#', 'header_lights'), 'sMaleLight', 'sFemaleLight', 'SetOnlyLightInDark', 'fLightLevelDark',
+        ('#', 'header_lights'), 'sMaleLight', 'sFemaleLight', 'sPlayerLight', 'SetOnlyLightInDark', 'fLightLevelDark',
         ('#', 'header_hud'), 'bEnableHUD', 'sHUDControls', 'sTheme', 'fHUDFadeTime',
         ('#', 'header_save_load'), '@saveload',
     ]),
@@ -355,6 +358,7 @@ OSTIM_KEYS = {
     'addActorsAtStart': ('add_actors_at_start', 'tooltip_add_actors_at_start'),
     'sMaleLight': ('male_light_mode', 'tooltip_male_light_mode'),
     'sFemaleLight': ('female_light_mode', 'tooltip_female_light_mode'),
+    'sPlayerLight': ('player_light_mode', 'tooltip_player_light_mode'),
     'SetOnlyLightInDark': ('dark_light', 'tooltip_dark_light'),
     'SetKeyMap': ('main_key', None),  # 4Stim's hotkey: the picker, then the HUD's keys
     'keyNpcSceneStart': ('npc_start_key', 'tooltip_npc_start_key'),
@@ -491,6 +495,7 @@ PAD_LABEL_KEYS = {
 OSTIM_CHOICES = {
     'sMaleLight': ['light_none', 'light_face', 'light_face_dim', 'light_crotch', 'light_crotch_dim', 'light_ass', 'light_ass_dim'],
     'sFemaleLight': ['light_none', 'light_face', 'light_face_dim', 'light_crotch', 'light_crotch_dim', 'light_ass', 'light_ass_dim'],
+    'sPlayerLight': ['generic_default', 'light_none', 'light_face', 'light_face_dim', 'light_crotch', 'light_crotch_dim', 'light_ass', 'light_ass_dim'],
     'sToySynchronization': ['synchronization_type_player', 'synchronization_type_male', 'synchronization_type_female', 'synchronization_type_scene'],
     'sToyScaling': ['scaling_type_none', 'scaling_type_stimulation_rate', 'scaling_type_stimulation_value', 'scaling_type_speed'],
 }

@@ -97,7 +97,9 @@ namespace Lights
 			if (!g_loaded) {
 				LoadLocked();
 			}
-			const auto& id = Compat::GetSex(a_actor) == RE::SEX::kFemale ? g_config.femaleLight : g_config.maleLight;
+			// OStim's getEquipObject order: the player's own choice, else by sex.
+			const bool  player = a_actor && a_actor == RE::PlayerCharacter::GetSingleton() && Lower(g_config.playerLight) != "default" && !g_config.playerLight.empty();
+			const auto& id = player ? g_config.playerLight : Compat::GetSex(a_actor) == RE::SEX::kFemale ? g_config.femaleLight : g_config.maleLight;
 			const auto  it = g_types.find(Lower(id));
 			if (it == g_types.end()) {
 				if (Lower(id) != "nolight") {

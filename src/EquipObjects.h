@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #include "SceneRegistry.h"
@@ -19,9 +20,20 @@
 // lights), not equip objects, since 4Stim has no plugin for light armors.
 namespace EquipObjects
 {
+	// OStim's pseudo form IDs for its per-sex choices, and the player's
+	// base (0x7 in both games).
+	inline constexpr std::uint32_t MALE = 0x0;
+	inline constexpr std::uint32_t FEMALE = 0x1;
+	inline constexpr std::uint32_t PLAYER = 0x7;
+
 	struct Config
 	{
 		bool unequipStrapOnIfNotNeeded = false;  // OStim's: off in roles that don't need one (else only when one needs a vagina)
+		// 4Stim.ini's defaults for OStim's MCM choices, used where the save
+		// has none: form ID (MALE, FEMALE, PLAYER) -> type -> object id
+		// ("default", "random" or a file name). sDefaultStrapOn (women's),
+		// sPlayerStrapOn, sDefaultTongueMale / Female, sPlayerTongue.
+		std::unordered_map<std::uint32_t, std::unordered_map<std::string, std::string>> defaults;
 	};
 	Config& Settings();
 
@@ -54,6 +66,15 @@ namespace EquipObjects
 	std::vector<std::pair<std::string, std::string>> ObjectsOf(std::string a_type);
 	std::string                                      Chosen(std::uint32_t a_id, std::string a_type);
 	bool                                             SetChosen(std::uint32_t a_id, std::string a_type, std::string a_objectID);
+
+	// OStim's OData equip object functions, by form ID (an actor base, a
+	// race, or MALE / FEMALE): "id", "name" pairs to choose from ("default"
+	// unless it's MALE / FEMALE and the type has no default file, then
+	// "random", then each object), the name of what's chosen, and choosing
+	// ("" or "default": back to the next step; saved with the game).
+	std::vector<std::string> PairsFor(std::uint32_t a_formID, std::string a_type);
+	std::string              NameFor(std::uint32_t a_formID, std::string a_type);
+	void                     SetFor(std::uint32_t a_formID, std::string a_type, std::string a_id);
 
 	// Times variants (SetVariant with a duration). Main thread.
 	void Tick(float a_seconds);

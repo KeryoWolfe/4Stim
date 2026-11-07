@@ -90,6 +90,18 @@ String[] Function GetEquipObjectTypes() Global Native
 ; options do this (docs\OPTIONS.md).
 String Function GetEquipObjectID(Actor akActor, String asType) Global Native
 bool Function SetEquipObjectID(Actor akActor, String asType, String asID) Global Native
+; OStim's OData.GetEquipObjectPairs / GetEquipObjectName / SetEquipObjectID,
+; by form ID: an actor base, a race, 0x0 (men) or 0x1 (women); the
+; player's base is 0x7. Pairs are "id", "name": "default" (not for 0x0 /
+; 0x1 when the type has no default file), "random", then each object.
+; An actor wears, as OStim: what's chosen for them (SetEquipObjectID
+; above), their base, race, sex (4Stim.ini's sDefaultStrapOn...), the
+; default file, any. SetFormEquipObjectID is OStim's SetEquipObjectID
+; (that name is taken by the one above); "" clears it. Saved
+; with the game.
+String[] Function GetEquipObjectPairs(int aiFormID, String asType) Global Native
+String Function GetEquipObjectName(int aiFormID, String asType) Global Native
+Function SetFormEquipObjectID(int aiFormID, String asType, String asID) Global Native
 
 ; OStim's OActor.Mute / Unmute / IsMuted, for actors in a scene: no moans,
 ; climax or event sounds while muted (an actor property's "mute" counts as

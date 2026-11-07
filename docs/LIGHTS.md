@@ -9,6 +9,7 @@ In `4Stim.ini`, `[Lights]`:
 | Setting | Default | Meaning |
 |---|---|---|
 | `sMaleLight` / `sFemaleLight` | `nolight` | The light men / women get: a file name in `Data\F4SE\Plugins\4Stim\Lights\` without `.json`. |
+| `sPlayerLight` | `default` | Yours (OStim's player light mode): one of those, or `default` for your sex's. |
 | `SetOnlyLightInDark` | 0 | 1 = only when it's dark where the scene starts (OStim's setting). |
 | `fLightLevelDark` | 80 | Below this light level counts as dark: the game's own measure, as for stealth. OStim's 20 is Skyrim's scale; in Fallout 4 dark places at night read about 70-75; `4Stim.log` gives the level at each scene start, at the first actor and at you (`Lights: light level ...`), so you can tune it. It is the game's GetLightLevel (the condition function), at the actor. |
 

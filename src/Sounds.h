@@ -28,6 +28,10 @@ namespace Sounds
 		float moanVolume = 1.0F;       // moanVolume, 0-1
 		float soundVolume = 1.0F;      // soundVolume, 0-1: action and event sounds
 		bool  disabled = false;        // 4Stim: bSounds=0
+		// sPlayerVoice: OStim's Player voice (its MCM choice for 0x7): a voice
+		// set's id, "" / "0" = the default. A choice saved with the game (the
+		// HUD's options, FourStim.SetVoiceSet) wins.
+		std::string playerVoice;
 		// 4Stim: how sound files are played (BSAudioManager usage flags
 		// and priority; iSoundFlags / iSoundPriority). OStim has no such
 		// setting: Skyrim plays its voice sets from sound descriptors.

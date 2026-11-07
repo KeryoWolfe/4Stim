@@ -1,6 +1,7 @@
 #include "EquipObjects.h"
 #include "Translations.h"
 #include "compat/ScrapFunction.h"
+#include "compat/Fallbacks.h"
 
 #include <algorithm>
 #include <cctype>
@@ -8,6 +9,7 @@
 #include <fstream>
 #include <memory>
 #include <mutex>
+#include <optional>
 #include <random>
 #include <unordered_map>
 #include <unordered_set>
@@ -126,20 +128,65 @@ namespace EquipObjects
 			}
 		}
 
-		// The object of a_type a_id wears (OStim's getEquipObject): the one
-		// chosen for them (the HUD's options), else the default one, else any.
+		// One step of OStim's getEquipObject: what's set for a_key (a choice
+		// in g_chosen, else 4Stim.ini's default for it). "random": any of the
+		// type; "", "default" or an object that isn't there: nullopt (the
+		// next step decides).
+		std::optional<std::shared_ptr<const Object>> Step(std::uint32_t a_key, const std::string& a_type)
+		{
+			std::string id;
+			if (const auto actor = g_chosen.find(a_key); actor != g_chosen.end()) {
+				if (const auto chosen = actor->second.find(a_type); chosen != actor->second.end()) {
+					id = chosen->second;
+				}
+			}
+			if (id.empty()) {
+				if (const auto key = g_config.defaults.find(a_key); key != g_config.defaults.end()) {
+					if (const auto it = key->second.find(a_type); it != key->second.end()) {
+						id = Lower(it->second);
+					}
+				}
+			}
+			if (id.empty() || id == "default") {
+				return std::nullopt;
+			}
+			const auto list = g_byType.find(a_type);
+			if (list == g_byType.end() || list->second.empty()) {
+				return std::nullopt;
+			}
+			if (id == "random") {
+				static std::mt19937 rng{ std::random_device{}() };
+				return list->second[std::uniform_int_distribution<std::size_t>(0, list->second.size() - 1)(rng)];
+			}
+			for (const auto& object : list->second) {
+				if (object->id == id) {
+					return object;
+				}
+			}
+			return std::nullopt;
+		}
+
+		// The object of a_type a_id wears, as OStim's getEquipObject: what's
+		// chosen for the actor themselves (4Stim: the HUD's options), their
+		// base (the player's is 0x7, as Skyrim's), their race, then for
+		// their sex (OStim's 0x0 men, 0x1 women; MCM defaults in 4Stim.ini),
+		// else the type's default file, else any.
 		std::shared_ptr<const Object> Choose(std::uint32_t a_id, const std::string& a_type)
 		{
 			EnsureLoaded();
-			if (const auto actor = g_chosen.find(a_id); actor != g_chosen.end()) {
-				if (const auto chosen = actor->second.find(a_type); chosen != actor->second.end()) {
-					if (const auto list = g_byType.find(a_type); list != g_byType.end()) {
-						for (const auto& object : list->second) {
-							if (object->id == chosen->second) {
-								return object;
-							}
-						}
-					}
+			std::vector<std::uint32_t> keys{ a_id };
+			if (const auto actor = RE::TESForm::GetFormByID<RE::Actor>(a_id)) {
+				if (const auto npc = actor->GetNPC()) {
+					keys.push_back(npc->GetFormID());
+				}
+				if (actor->race) {
+					keys.push_back(actor->race->GetFormID());
+				}
+				keys.push_back(Compat::GetSex(actor) == RE::SEX::kFemale ? FEMALE : MALE);
+			}
+			for (const auto key : keys) {
+				if (auto object = Step(key, a_type)) {
+					return *object;
 				}
 			}
 			if (const auto it = g_defaults.find(a_type); it != g_defaults.end()) {
@@ -332,6 +379,81 @@ namespace EquipObjects
 			}
 		}
 		return out;
+	}
+
+	std::vector<std::string> PairsFor(std::uint32_t a_formID, std::string a_type)
+	{
+		a_type = Lower(a_type);
+		std::scoped_lock         lock(g_lock);
+		EnsureLoaded();
+		std::vector<std::string> out;
+		if (g_defaults.contains(a_type) || a_formID > FEMALE) {
+			out.push_back("default");
+			out.push_back(TR("$4stim_generic_default", "Default"));
+		}
+		out.push_back("random");
+		out.push_back(TR("$4stim_generic_random", "Random"));
+		if (const auto it = g_byType.find(a_type); it != g_byType.end()) {
+			auto objects = it->second;
+			std::ranges::sort(objects, [](const auto& a, const auto& b) { return a->id < b->id; });
+			for (const auto& object : objects) {
+				out.push_back(object->id);
+				out.push_back(object->name.empty() ? object->id : object->name);
+			}
+		}
+		return out;
+	}
+
+	std::string NameFor(std::uint32_t a_formID, std::string a_type)
+	{
+		a_type = Lower(a_type);
+		std::scoped_lock lock(g_lock);
+		EnsureLoaded();
+		std::string id;
+		if (const auto actor = g_chosen.find(a_formID); actor != g_chosen.end()) {
+			if (const auto it = actor->second.find(a_type); it != actor->second.end()) {
+				id = it->second;
+			}
+		}
+		if (id.empty()) {
+			if (const auto key = g_config.defaults.find(a_formID); key != g_config.defaults.end()) {
+				if (const auto it = key->second.find(a_type); it != key->second.end()) {
+					id = Lower(it->second);
+				}
+			}
+		}
+		if (id.empty()) {
+			return g_defaults.contains(a_type) || a_formID > FEMALE ? TR("$4stim_generic_default", "Default") : TR("$4stim_generic_random", "Random");
+		}
+		if (id == "default") {
+			return TR("$4stim_generic_default", "Default");
+		}
+		if (id == "random") {
+			return TR("$4stim_generic_random", "Random");
+		}
+		if (const auto it = g_byType.find(a_type); it != g_byType.end()) {
+			for (const auto& object : it->second) {
+				if (object->id == id) {
+					return object->name.empty() ? object->id : object->name;
+				}
+			}
+		}
+		return TR("$4stim_generic_invalid", "Invalid");
+	}
+
+	void SetFor(std::uint32_t a_formID, std::string a_type, std::string a_id)
+	{
+		a_type = Lower(a_type);
+		a_id = Lower(a_id);
+		std::scoped_lock lock(g_lock);
+		if (a_id.empty()) {
+			if (const auto it = g_chosen.find(a_formID); it != g_chosen.end()) {
+				it->second.erase(a_type);
+			}
+		} else {
+			g_chosen[a_formID][a_type] = a_id;  // "default" stays: it overrides 4Stim.ini's default, as OStim's saved choice
+		}
+		REX::INFO("Equip objects: {:08X}'s {}: {}", a_formID, a_type, a_id.empty() ? std::string("(none)") : a_id);
 	}
 
 	std::string Chosen(std::uint32_t a_id, std::string a_type)

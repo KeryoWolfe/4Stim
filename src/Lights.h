@@ -22,6 +22,7 @@ namespace Lights
 		float       darkLevel = 80.0F;           // 4Stim: fLightLevelDark (OStim's fixed 20 is Skyrim's scale)
 		std::string maleLight = "nolight";       // 4Stim: sMaleLight (OStim: the MCM's equip object)
 		std::string femaleLight = "nolight";     // 4Stim: sFemaleLight
+		std::string playerLight = "default";     // sPlayerLight (OStim's player light mode, 0x7): "default" = by sex
 	};
 	Config& Settings();
 
