@@ -78,9 +78,13 @@ A voice set can react to events (docs/EVENTS.md), as OStim's: `eventActorReactio
 
 4Stim's default sets use the OStim sounds in `4Stim Core\Sound\fx\4Stim\`: `actor\moan\female|male`, `actor\climax\female|male`, and `effects\suck` for muffled moans during oral.
 
-## Not in yet
+## Dialogue
 
-Dialogue (comments, the dialogue part of climax comments, post-scene lines), `talk`.
+As OStim's: a reaction set (`moan`, `climax`, `climaxCommentSelf`, `climaxCommentOther`, the event reactions) can have `dialogue` lines besides its sounds: a list of `{"dialogue": {"mod", "formid"}, "condition", "expression", "dialogueThreshold", "moanIntervalOverride"}` (a dialogue topic, DIAL), or one topic on its own. An actor whose scene's actions let them `talk` counts moans down from a random number (`maleDialogueCountdownMin` / `Max`, 3-6, `femaleDialogueCountdownMin` / `Max`, 1-3) and says the first line that fits once the count is at or below its `dialogueThreshold` (0 by default); then the count starts again. A climax and a climax comment with lines always say one. Lines are said with Fallout 4's `Say` (`FourStimScene.SayTopic`) to the actor's primary partner, and nothing else plays until they've finished. Not while muted or muffled; the player only with `playerDialogue` (1); with `preventSameVoiceCrossTalk` (0), not while someone with the same voice type is talking.
+
+A voice set's `postSceneDialogue` (a topic) is said by each NPC as their scene ends, 1-2 s on, to the player in a scene with them, else to their partner: not by the player, not in a scene of one, only the first NPC of each voice type, and not after `FourThreadBuilder.NoPostDialogue`.
+
+Not read: OStim's `voice` (lines said in another voice type, its `sayAs`): Fallout 4's `Say` can only borrow another actor's voice. 4Stim comes with no dialogue; add-ons bring it.
 
 ## Choosing a voice set
 

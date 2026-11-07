@@ -97,6 +97,8 @@ Times given with OStim's names are in milliseconds, as in OStim. `SetFurnitureSe
 | `SetExpressionDurationMin` / `Max` | 1000 / 3000 ms | | How long a picked expression stays |
 | `moanIntervalMin` / `Max` | 2500 / 4000 ms | | Time between moans (`SOUND.md`) |
 | `moanVolume` | 1 | | Moan and climax volume, 0-1 |
+| `maleDialogueCountdownMin` / `Max`, `femaleDialogueCountdownMin` / `Max` | 3 / 6, 1 / 3 | | Moans before a dialogue line (SOUND.md, Dialogue) |
+| `playerDialogue` / `preventSameVoiceCrossTalk` | 1 / 0 | | The player says lines too; no two actors with the same voice type talking at once |
 | `sPlayerVoice` | (empty) | | Your voice set (OStim's Player voice): a file name or name; not on the MCM page (SOUND.md) |
 | `soundVolume` | 1 | | Action and event sound volume, 0-1 (`SOUND.md`) |
 | `SetOnlyLightInDark` | 0 | | Lights only in the dark (`LIGHTS.md`) |
@@ -113,4 +115,4 @@ OStim settings left out on purpose: `useSoSSex` and `useTNGSex` (SoS and TNG are
 
 ## Not in yet
 
-OStim settings that come with features 4Stim doesn't have yet: dialogue, and the rest of OStim's MCM (per-toy and per-slot toy settings). They'll take OStim's names when they come.
+OStim settings that come with features 4Stim doesn't have yet: per-toy and per-slot toy settings. They'll take OStim's names when they come.

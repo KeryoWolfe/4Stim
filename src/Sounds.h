@@ -32,6 +32,16 @@ namespace Sounds
 		// set's id, "" / "0" = the default. A choice saved with the game (the
 		// HUD's options, FourStim.SetVoiceSet) wins.
 		std::string playerVoice;
+		// OStim's dialogue (voice sets' "dialogue", on actions that "talk"):
+		// how many moans before a line (a random count in the range, per sex),
+		// whether the player talks, and no two actors with the same voice
+		// type talking over each other.
+		int  maleDialogueCountdownMin = 3;
+		int  maleDialogueCountdownMax = 6;
+		int  femaleDialogueCountdownMin = 1;
+		int  femaleDialogueCountdownMax = 3;
+		bool playerDialogue = true;
+		bool preventSameVoiceCrossTalk = false;
 		// 4Stim: how sound files are played (BSAudioManager usage flags
 		// and priority; iSoundFlags / iSoundPriority). OStim has no such
 		// setting: Skyrim plays its voice sets from sound descriptors.
@@ -125,6 +135,8 @@ namespace Sounds
 	void                     ClearVoiceChoices();
 
 	// The actors left their scene: stop their sounds.
-	void Leave(const std::vector<std::uint32_t>& a_ids);
+	// a_postDialogue: as OStim's, NPCs say their voice set's
+	// postSceneDialogue (a scene of two or more, not NoPostDialogue).
+	void Leave(const std::vector<std::uint32_t>& a_ids, bool a_postDialogue = false);
 	void Clear();
 }

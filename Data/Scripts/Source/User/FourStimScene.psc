@@ -111,6 +111,22 @@ Function RearmAfterScene(Actor akActor) Global
 	endif
 EndFunction
 
+; OStim's dialogue (voice sets' "dialogue" and "postSceneDialogue"): the
+; speaker says a line of the topic to the target, after afDelay seconds
+; (OStim's SayTo and its SayPostDialogue). Called by the plugin.
+Function SayTopic(int aiSpeakerID, int aiTopicID, int aiTargetID, float afDelay) Global
+	Actor akSpeaker = Game.GetForm(aiSpeakerID) as Actor
+	Topic akTopic = Game.GetForm(aiTopicID) as Topic
+	ObjectReference akTarget = Game.GetForm(aiTargetID) as ObjectReference
+	if akSpeaker == None || akTopic == None
+		return
+	endif
+	if afDelay > 0.0
+		Utility.Wait(afDelay)
+	endif
+	akSpeaker.Say(akTopic, None, false, akTarget)
+EndFunction
+
 ; HolsterForScene by form ID (the plugin's C++ interface: an Actor passed
 ; from the plugin doesn't arrive in Papyrus).
 Function HolsterByID(int aiActorID) Global

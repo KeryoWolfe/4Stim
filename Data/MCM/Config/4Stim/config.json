@@ -3195,6 +3195,112 @@
 				},
 				{
 					"type": "section",
+					"text": "$4stim_header_dialogue"
+				},
+				{
+					"id": "i4S_maleDialogueCountdownMin:Sound",
+					"text": "$4stim_male_dialogue_countdown_min",
+					"help": "$4stim_tooltip_male_dialogue_countdown_min",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "slider",
+					"valueOptions": {
+						"min": 0,
+						"max": 20,
+						"step": 1,
+						"sourceType": "ModSettingInt"
+					}
+				},
+				{
+					"id": "i4S_maleDialogueCountdownMax:Sound",
+					"text": "$4stim_male_dialogue_countdown_max",
+					"help": "$4stim_tooltip_male_dialogue_countdown_max",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "slider",
+					"valueOptions": {
+						"min": 0,
+						"max": 20,
+						"step": 1,
+						"sourceType": "ModSettingInt"
+					}
+				},
+				{
+					"id": "i4S_femaleDialogueCountdownMin:Sound",
+					"text": "$4stim_female_dialogue_countdown_min",
+					"help": "$4stim_tooltip_female_dialogue_countdown_min",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "slider",
+					"valueOptions": {
+						"min": 0,
+						"max": 20,
+						"step": 1,
+						"sourceType": "ModSettingInt"
+					}
+				},
+				{
+					"id": "i4S_femaleDialogueCountdownMax:Sound",
+					"text": "$4stim_female_dialogue_countdown_max",
+					"help": "$4stim_tooltip_female_dialogue_countdown_max",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "slider",
+					"valueOptions": {
+						"min": 0,
+						"max": 20,
+						"step": 1,
+						"sourceType": "ModSettingInt"
+					}
+				},
+				{
+					"id": "b4S_playerDialogue:Sound",
+					"text": "$4stim_player_dialogue",
+					"help": "$4stim_tooltip_player_dialogue",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "switcher",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "b4S_preventSameVoiceCrossTalk:Sound",
+					"text": "$4stim_prevent_same_voice_cross_talk",
+					"help": "$4stim_tooltip_prevent_same_voice_cross_talk",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "switcher",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"type": "section",
 					"text": "$4stim_header_sounds"
 				},
 				{

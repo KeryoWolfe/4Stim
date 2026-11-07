@@ -753,6 +753,18 @@ namespace
 					EquipObjects::Settings().defaults[EquipObjects::FEMALE]["tongue"] = value;
 				} else if (key == "splayertongue") {
 					EquipObjects::Settings().defaults[EquipObjects::PLAYER]["tongue"] = value;
+				} else if (key == "maledialoguecountdownmin") {
+					Sounds::Settings().maleDialogueCountdownMin = std::max(std::stoi(value), 0);
+				} else if (key == "maledialoguecountdownmax") {
+					Sounds::Settings().maleDialogueCountdownMax = std::max(std::stoi(value), 0);
+				} else if (key == "femaledialoguecountdownmin") {
+					Sounds::Settings().femaleDialogueCountdownMin = std::max(std::stoi(value), 0);
+				} else if (key == "femaledialoguecountdownmax") {
+					Sounds::Settings().femaleDialogueCountdownMax = std::max(std::stoi(value), 0);
+				} else if (key == "playerdialogue") {
+					Sounds::Settings().playerDialogue = std::stoi(value) != 0;
+				} else if (key == "preventsamevoicecrosstalk") {
+					Sounds::Settings().preventSameVoiceCrossTalk = std::stoi(value) != 0;
 				} else if (key == "splayervoice") {
 					Sounds::Settings().playerVoice = value;
 				} else if (key == "bfurnitureoutoftheway") {
@@ -1533,6 +1545,7 @@ namespace
 		bool                                         noAutoMode = false;
 		bool                                         noPlayerControl = false;
 		bool                                         noUndress = false;
+		bool                                         noPostDialogue = false;  // OStim's NoPostDialogue (a thread builder's)
 		bool                                         endAfterSequence = false;
 
 		// Its end has begun (EndActiveScene, or the player's end key / menu):
@@ -1644,6 +1657,7 @@ namespace
 		bool  noAutoMode = false;
 		bool  noPlayerControl = false;
 		bool  noUndress = false;
+		bool  noPostDialogue = false;
 		bool  endAfterSequence = false;
 		// Metadata (OStim's thread metadata), lowercase keys.
 		std::vector<std::string>                     metadata;
@@ -2425,6 +2439,7 @@ namespace
 			scene.noAutoMode = start->noAutoMode;
 			scene.noPlayerControl = start->noPlayerControl;
 			scene.noUndress = start->noUndress;
+			scene.noPostDialogue = start->noPostDialogue;
 			scene.endAfterSequence = start->endAfterSequence;
 			for (const auto id : a_actors) {
 				Undress::Block(id, start->noUndress);
@@ -2608,7 +2623,7 @@ namespace
 		Excitement::Leave(ended.actors);
 		AnimCues::Stop(ended.actors);
 		Expressions::Leave(ended.actors);
-		Sounds::Leave(ended.actors);
+		Sounds::Leave(ended.actors, !ended.noPostDialogue);  // OStim's post-scene dialogue, unless NoPostDialogue
 		Peaks::Leave(ended.actors);
 		SexToys::Leave(ended.actors);
 		PlaybackSpeed::Set(ended.actors, 1.0F);
@@ -9307,6 +9322,7 @@ namespace
 		bool                                      noAutoMode = false;
 		bool                                      noPlayerControl = false;
 		bool                                      noUndress = false;
+		bool                                      noPostDialogue = false;
 		std::vector<std::string>                  metadata;
 	};
 	std::mutex                                        g_buildersLock;
@@ -9882,6 +9898,7 @@ namespace
 			record.noAutoMode = a_builder.noAutoMode;
 			record.noPlayerControl = a_builder.noPlayerControl;
 			record.noUndress = a_builder.noUndress;
+			record.noPostDialogue = a_builder.noPostDialogue;
 			record.endAfterSequence = a_builder.endAfterSequence;
 			record.metadata = a_builder.metadata;
 			if (withPlayer) {
@@ -9983,6 +10000,7 @@ namespace
 	void TB_NoAutoMode(std::monostate, std::int32_t a_id) { WithBuilder(a_id, [](ThreadBuilder& b) { b.noAutoMode = true; }); }
 	void TB_NoPlayerControl(std::monostate, std::int32_t a_id) { WithBuilder(a_id, [](ThreadBuilder& b) { b.noPlayerControl = true; }); }
 	void TB_NoUndressing(std::monostate, std::int32_t a_id) { WithBuilder(a_id, [](ThreadBuilder& b) { b.noUndress = true; }); }
+	void TB_NoPostDialogue(std::monostate, std::int32_t a_id) { WithBuilder(a_id, [](ThreadBuilder& b) { b.noPostDialogue = true; }); }
 	void TB_NoFurniture(std::monostate, std::int32_t a_id) { WithBuilder(a_id, [](ThreadBuilder& b) { b.noFurniture = true; }); }
 	void TB_SetMetadata(std::monostate, std::int32_t a_id, std::vector<std::string> a_metadata)
 	{
@@ -13027,6 +13045,7 @@ namespace
 		a_vm->BindNativeMethod(BUILDER, "NoAutoMode"sv, TB_NoAutoMode);
 		a_vm->BindNativeMethod(BUILDER, "NoPlayerControl"sv, TB_NoPlayerControl);
 		a_vm->BindNativeMethod(BUILDER, "NoUndressing"sv, TB_NoUndressing);
+		a_vm->BindNativeMethod(BUILDER, "NoPostDialogue"sv, TB_NoPostDialogue);
 		a_vm->BindNativeMethod(BUILDER, "NoFurniture"sv, TB_NoFurniture);
 		a_vm->BindNativeMethod(BUILDER, "SetMetadata"sv, TB_SetMetadata);
 		a_vm->BindNativeMethod(BUILDER, "SetMetadataCSV"sv, TB_SetMetadataCSV);

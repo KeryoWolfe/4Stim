@@ -54,7 +54,7 @@ Action types are defined in JSON files in `Data\F4SE\Plugins\4Stim\Actions\`. Al
 | `requirements` | Body parts that side needs (see below). |
 | `fullStrip` | `true`: that side's actor takes everything off (UNDRESS.md). |
 | `undressSlots` | Otherwise, the Fallout 4 biped slots (30–61) that side's actor takes off, e.g. `[34, 35]` for gloves. |
-| `moan`, `talk`, `muffled`, `expressionOverride` | That side's actor moans, may talk (kept for dialogue), sounds muffled, makes this expression (`SOUND.md`, `EXPRESSIONS.md`). |
+| `moan`, `talk`, `muffled`, `expressionOverride` | That side's actor moans, may talk (says voice sets' dialogue lines, SOUND.md), sounds muffled, makes this expression (`SOUND.md`, `EXPRESSIONS.md`). |
 | `equipObject` | Equip object types that side's actor wears while doing it (OStim's field: a type or a list, e.g. `"tongue"`; `ACTORS.md`). |
 | `toySlot` | Sex toy slots that side drives (OStim's field: a slot or a list, e.g. `"genital"`, `"anus"`; API.md). |
 | `faction`, `statFaction`, `playerStatFaction`, `climaxStatFaction`, `partnerClimaxStatFaction`, `playerClimaxStatFaction`, `playerPartnerClimaxStatFaction`, `playerStatList`, `playerClimaxStatList`, `playerPartnerClimaxStatList` | OStim's API forms for that side: `{"mod", "formid"}` or a list (API.md, "Factions, form lists and keywords"). `"OStim.esp"` means `4Stim.esl`. |

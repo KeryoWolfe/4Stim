@@ -303,5 +303,18 @@
 	"remove_weapons_start": "Remove Weapons at Start",
 	"tooltip_remove_weapons_start": "Always remove the weapons at the start of the scene, no matter the undressing settings.",
 	"remove_weapons_slot": "Remove Weapon with Slot",
-	"tooltip_remove_weapons_slot": "If partial undressing is enabled remove weapons when this slot is getting undressed."
+	"tooltip_remove_weapons_slot": "If partial undressing is enabled remove weapons when this slot is getting undressed.",
+	"header_dialogue": "Dialogue",
+	"male_dialogue_countdown_min": "Minimum male dialogue countdown",
+	"tooltip_male_dialogue_countdown_min": "Minimum amount of times a male actor has to play regular moans before he plays a dialogue again.\\n(note: OStim does not come with any dialogue, you need addons for that!)",
+	"male_dialogue_countdown_max": "Maximum male dialogue countdown",
+	"tooltip_male_dialogue_countdown_max": "Maximum amount of times a male actor has to play regular moans before he plays a dialogue again.\\n(note: OStim does not come with any dialogue, you need addons for that!)",
+	"female_dialogue_countdown_min": "Minimum female dialogue countdown",
+	"tooltip_female_dialogue_countdown_min": "Minimum amount of times a female actor has to play regular moans before she plays a dialogue again.\\n(note: OStim does not come with any dialogue, you need addons for that!)",
+	"female_dialogue_countdown_max": "Maximum female dialogue countdown",
+	"tooltip_female_dialogue_countdown_max": "Maximum amount of times a female actor has to play regular moans before she plays a dialogue again.\\n(note: OStim does not come with any dialogue, you need addons for that!)",
+	"player_dialogue": "Player dialogue",
+	"tooltip_player_dialogue": "If enabled the player character will say dialogues during scenes.\\n(note: OStim does not come with any dialogue, you need addons for that!)",
+	"prevent_same_voice_cross_talk": "Prevent same voice cross talk",
+	"tooltip_prevent_same_voice_cross_talk": "Prevents two actors with the same voice type from talking at the same time. This can be used to prevent them from saying the same thing when using small dialogue libraries."
 }

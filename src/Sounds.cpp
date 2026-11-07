@@ -41,12 +41,20 @@ namespace Sounds
 			// 4Stim's addition: only while the actor takes part in one of
 			// these actions (ids). Empty = always.
 			std::vector<std::string> actions;
+			// OStim's dialogue entries: a dialogue topic (DIAL) said instead of
+			// a sound, and dialogueThreshold (said once the countdown is at or
+			// below it).
+			std::uint32_t            topic = 0;
+			int                      threshold = 0;
 		};
 
 		struct ReactionSet
 		{
 			std::vector<SoundEntry> sound;
 			std::vector<SoundEntry> soundMuffled;
+			std::vector<SoundEntry> dialogue;  // OStim's
+
+			[[nodiscard]] bool Empty() const { return sound.empty() && soundMuffled.empty() && dialogue.empty(); }
 		};
 
 		struct VoiceSet
@@ -67,6 +75,7 @@ namespace Sounds
 			std::unordered_map<std::string, ReactionSet> eventActorReactions;
 			std::unordered_map<std::string, ReactionSet> eventTargetReactions;
 			std::unordered_map<std::string, ReactionSet> eventPerformerReactions;
+			std::uint32_t                                postSceneDialogue = 0;  // OStim's: a topic said as the scene ends
 		};
 
 		struct State
@@ -86,6 +95,12 @@ namespace Sounds
 			bool                                  heldForClimax = false;  // OStim's awaitingClimaxInner: nothing new starts
 			std::vector<std::string>              actions;  // action type ids the actor takes part in
 			std::uint32_t                         partner = 0;  // OStim's primary partner (conditions' target); 0 = themselves
+			bool                                  talk = false;     // the scene's actions let them talk (OStim's graphActor->talk)
+			bool                                  talking = false;  // saying a line now (OStim's isTalking)
+			float                                 grace = 0.0F;     // OStim's soundGracePeriod: nothing new for this long
+			int                                   dialogueCountdown = 0;
+			bool                                  female = false;
+			bool                                  player = false;
 		};
 
 		Config g_config;
@@ -232,6 +247,59 @@ namespace Sounds
 			return out;
 		}
 
+		// OStim's loadDialogueSets: a list of {"dialogue": topic, "condition",
+		// "expression", "dialogueThreshold", "moanIntervalOverride"}, or one
+		// topic on its own.
+		std::vector<SoundEntry> ReadDialogue(const nlohmann::json& a_set)
+		{
+			std::vector<SoundEntry> out;
+			const auto list = a_set.find("dialogue");
+			if (list == a_set.end()) {
+				return out;
+			}
+			auto topicOf = [](const nlohmann::json& a_form) -> std::uint32_t {
+				const auto id = ReadForm(a_form);
+				return id && RE::TESForm::GetFormByID<RE::TESTopic>(id) ? id : 0;
+			};
+			if (list->is_object()) {
+				SoundEntry entry;
+				entry.topic = topicOf(*list);
+				if (entry.topic) {
+					out.push_back(std::move(entry));
+				} else {
+					REX::WARN("Sound: \"dialogue\" ({}) isn't a loaded dialogue topic", list->dump());
+				}
+				return out;
+			}
+			if (!list->is_array()) {
+				return out;
+			}
+			for (const auto& e : *list) {
+				if (!e.is_object() || !e.contains("dialogue")) {
+					continue;
+				}
+				SoundEntry entry;
+				entry.topic = topicOf(e["dialogue"]);
+				if (!entry.topic) {
+					REX::WARN("Sound: a dialogue entry's topic ({}) isn't loaded", e["dialogue"].dump());
+					continue;
+				}
+				entry.expression = Lower(e.value("expression", std::string{}));
+				entry.threshold = e.value("dialogueThreshold", 0);
+				if (const auto o = e.find("moanIntervalOverride"); o != e.end() && o->is_number()) {
+					entry.moanIntervalOverride = o->get<float>();
+				}
+				if (const auto c = e.find("condition"); c != e.end()) {
+					entry.condition = ReadFormRaw(*c, false).value_or(0);
+					if (!entry.condition || !RE::TESForm::GetFormByID<RE::BGSPerk>(entry.condition)) {
+						entry.condition = 0;
+					}
+				}
+				out.push_back(std::move(entry));
+			}
+			return out;
+		}
+
 		ReactionSet ReadReactionSet(const nlohmann::json& a_set)
 		{
 			ReactionSet set;
@@ -240,11 +308,7 @@ namespace Sounds
 				const auto expression = a_set.value("soundExpression", std::string{});
 				set.sound = ReadEntries(a_set, "sound", expression);
 				set.soundMuffled = ReadEntries(a_set, "soundMuffled", expression);
-				for (const auto field : { "dialogue" }) {
-					if (a_set.contains(field)) {
-						REX::INFO("Sound: \"{}\" in a voice set isn't supported yet: left out", field);
-					}
-				}
+				set.dialogue = ReadDialogue(a_set);
 			}
 			return set;
 		}
@@ -308,8 +372,16 @@ namespace Sounds
 						voice->eventTargetReactions = ReadReactionMap(root, "eventTargetReactions");
 						voice->eventPerformerReactions = ReadReactionMap(root, "eventPerformerReactions");
 					}
-					// OStim's fields 4Stim doesn't have yet: said, not dropped silently.
-					for (const auto field : { "voice", "postSceneDialogue" }) {
+					if (const auto post = root.find("postSceneDialogue"); post != root.end()) {
+						const auto id = ReadForm(*post);
+						voice->postSceneDialogue = id && RE::TESForm::GetFormByID<RE::TESTopic>(id) ? id : 0;
+						if (!voice->postSceneDialogue) {
+							REX::WARN("Sound: {}: postSceneDialogue isn't a loaded dialogue topic", file);
+						}
+					}
+					// OStim's "voice" (lines said in another voice type): Fallout 4's
+					// Say can only borrow another actor's voice, so not read.
+					for (const auto field : { "voice" }) {
 						if (root.contains(field)) {
 							REX::INFO("Sound: {}: \"{}\" isn't supported yet: left out", file, field);
 						}
@@ -529,10 +601,93 @@ namespace Sounds
 			}
 		}
 
-		void StartReaction(std::uint32_t a_id, State& a_state, const ReactionSet& a_set, const char* a_fallbackEvent)
+		// OStim's setDialogueCountdown: moans until the next line, by sex.
+		void SetDialogueCountdown(State& a_state)
+		{
+			const int lo = a_state.female ? g_config.femaleDialogueCountdownMin : g_config.maleDialogueCountdownMin;
+			const int hi = std::max(lo, a_state.female ? g_config.femaleDialogueCountdownMax : g_config.maleDialogueCountdownMax);
+			a_state.dialogueCountdown = std::uniform_int_distribution<int>(lo, hi)(g_random) + 1;
+		}
+
+		RE::BGSVoiceType* VoiceTypeOf(RE::Actor* a_actor)
+		{
+			const auto npc = a_actor ? a_actor->GetNPC() : nullptr;
+			return npc ? npc->voiceType : nullptr;
+		}
+
+		// OStim's canTalk.
+		bool CanTalk(std::uint32_t a_id, const State& a_state, RE::Actor* a_actor)
+		{
+			if (a_state.mutedByHand || a_state.mutedByProperty || a_state.muffled || a_state.playing) {
+				return false;
+			}
+			if (a_state.player && !g_config.playerDialogue) {
+				return false;
+			}
+			if (a_actor->IsTalking()) {
+				return false;
+			}
+			if (g_config.preventSameVoiceCrossTalk) {
+				const auto voice = VoiceTypeOf(a_actor);
+				for (const auto& [other, state] : g_states) {
+					const auto actor = other != a_id && voice ? RE::TESForm::GetFormByID<RE::Actor>(other) : nullptr;
+					if (actor && VoiceTypeOf(actor) == voice && actor->IsTalking()) {
+						return false;
+					}
+				}
+			}
+			return true;
+		}
+
+		// OStim's playSound, the dialogue part: a line from a_set if the
+		// countdown has come down to its threshold. True if one was said.
+		bool SayLine(std::uint32_t a_id, State& a_state, RE::Actor* a_actor, const ReactionSet& a_set)
+		{
+			--a_state.dialogueCountdown;
+			const SoundEntry* entry = nullptr;
+			for (const auto& e : a_set.dialogue) {
+				if (Fits(e, a_actor, a_state)) {
+					entry = &e;
+					break;
+				}
+			}
+			if (!entry || a_state.dialogueCountdown > entry->threshold) {
+				return false;
+			}
+			const auto vm = FourStim::GetVM();
+			if (!vm) {
+				return false;
+			}
+			if (!entry->expression.empty()) {
+				a_state.eventExpression = Expressions::SetEvent(a_id, entry->expression, false);
+			}
+			// Fallout 4's ObjectReference.Say, to their primary partner (OStim's
+			// SayTo console command).
+			RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
+			Compat::DispatchStaticCall(vm, "FourStimScene"sv, "SayTopic"sv, callback, static_cast<std::int32_t>(a_id), static_cast<std::int32_t>(entry->topic),
+				static_cast<std::int32_t>(a_state.partner ? a_state.partner : a_id), 0.0F);
+			a_state.talking = true;
+			// As OStim's: IsTalking takes a moment to come on (longer for the player).
+			a_state.grace = a_state.player ? 1.5F : 0.25F;
+			a_state.cooldown = entry->moanIntervalOverride > 0.0F ? entry->moanIntervalOverride : RandomInterval();
+			SetDialogueCountdown(a_state);
+			REX::INFO("Sound: {:08X} says topic {:08X}", a_id, entry->topic);
+			return true;
+		}
+
+		// OStim's playSound: a line (where the scene lets them talk, or always
+		// for a_ignoreChecks: climaxes and reactions), else a sound.
+		void StartReaction(std::uint32_t a_id, State& a_state, const ReactionSet& a_set, const char* a_fallbackEvent, bool a_ignoreChecks = true)
 		{
 			const auto actor = RE::TESForm::GetFormByID<RE::Actor>(a_id);
 			if (!actor) {
+				return;
+			}
+			if ((a_ignoreChecks || a_state.talk) && !a_set.dialogue.empty() && CanTalk(a_id, a_state, actor) && SayLine(a_id, a_state, actor, a_set)) {
+				return;
+			}
+			if (!a_ignoreChecks && !a_state.moan) {
+				a_state.cooldown = RandomInterval();
 				return;
 			}
 			const auto entry = PlayReaction(actor, a_state, a_set);
@@ -765,6 +920,12 @@ namespace Sounds
 			state.muffledAlways = ActorProperties::Muffled(actor);  // OStim's actor property "muffle"
 		}
 		state.moan = a_scene.actors[a_role].moan;
+		state.talk = a_scene.actors[a_role].talk;
+		if (added) {
+			state.female = actor && Compat::GetSex(actor) == RE::SEX::kFemale;
+			state.player = actor && actor == RE::PlayerCharacter::GetSingleton();
+			SetDialogueCountdown(state);
+		}
 		state.muffled = a_scene.actors[a_role].muffled || state.muffledAlways;
 		state.actions.clear();
 		for (const auto& action : a_scene.actions) {
@@ -801,7 +962,10 @@ namespace Sounds
 				continue;
 			}
 			const auto o = g_states.find(other);
-			if (o != g_states.end() && o->second.voice && !o->second.voice->climaxCommentOther.sound.empty()) {
+			if (o != g_states.end() && o->second.voice && !o->second.voice->climaxCommentOther.Empty()) {
+				if (!o->second.voice->climaxCommentOther.dialogue.empty()) {
+					o->second.dialogueCountdown = 0;  // as OStim's: the comment's line is said
+				}
 				o->second.reaction = &o->second.voice->climaxCommentOther;
 				o->second.reactionIn = 0.75F;
 			}
@@ -815,6 +979,7 @@ namespace Sounds
 		state.heldForClimax = false;
 		StopSound(a_id, state);  // nothing's playing by now (the climax waited); this clears the face
 		state.reaction = nullptr;
+		state.dialogueCountdown = 0;  // as OStim's playClimaxSound
 		if (state.voice && !state.mutedByHand) {
 			StartReaction(a_id, state, state.voice->climax, "climax");
 		} else {
@@ -822,7 +987,10 @@ namespace Sounds
 		}
 		// Their own comment, 1 s after the climax sound (OStim: not the
 		// player's, whose comment would cut the climax off).
-		if (!a_isPlayer && state.voice && !state.voice->climaxCommentSelf.sound.empty()) {
+		if (!a_isPlayer && state.voice && !state.voice->climaxCommentSelf.Empty()) {
+			if (!state.voice->climaxCommentSelf.dialogue.empty()) {
+				state.dialogueCountdown = 0;
+			}
 			state.reaction = &state.voice->climaxCommentSelf;
 			state.reactionIn = 1.0F;
 		}
@@ -844,7 +1012,24 @@ namespace Sounds
 	void Tick(float a_seconds)
 	{
 		for (auto& [id, state] : g_states) {
-			// As OStim's loopSound: what's playing plays to its end first.
+			// As OStim's loopSound: a grace period after something started,
+			// a line being said, then what's playing, plays to its end first.
+			if (state.grace > 0.0F) {
+				state.grace -= a_seconds;
+				continue;
+			}
+			if (state.talking) {
+				const auto actor = RE::TESForm::GetFormByID<RE::Actor>(id);
+				if (actor && actor->IsTalking()) {
+					continue;
+				}
+				state.talking = false;
+				if (state.eventExpression) {
+					state.eventExpression = false;
+					Expressions::ClearEvent(id);
+				}
+				continue;
+			}
 			if (state.playing) {
 				if (state.sound.IsPlaying()) {
 					continue;
@@ -872,11 +1057,11 @@ namespace Sounds
 				}
 				continue;
 			}
-			if (!state.moan || !state.voice || state.mutedByHand) {
+			if ((!state.moan && !state.talk) || !state.voice || state.mutedByHand) {
 				continue;
 			}
 			if ((state.cooldown -= a_seconds) <= 0.0F) {
-				StartReaction(id, state, state.voice->moan, nullptr);
+				StartReaction(id, state, state.voice->moan, nullptr, false);
 			}
 		}
 	}
@@ -978,8 +1163,40 @@ namespace Sounds
 		g_choices.clear();
 	}
 
-	void Leave(const std::vector<std::uint32_t>& a_ids)
+	void Leave(const std::vector<std::uint32_t>& a_ids, bool a_postDialogue)
 	{
+		// OStim's post-scene dialogue: each NPC with a postSceneDialogue says
+		// it to the player (in a scene with them) or their partner, 1-2 s
+		// on; only the first of several with the same voice type; not when
+		// muted, nor in a scene of one.
+		if (a_postDialogue && a_ids.size() > 1) {
+			const auto player = RE::PlayerCharacter::GetSingleton();
+			const bool withPlayer = player && std::ranges::find(a_ids, player->GetFormID()) != a_ids.end();
+			std::vector<RE::BGSVoiceType*> spoken;
+			for (const auto id : a_ids) {
+				const auto it = g_states.find(id);
+				const auto actor = RE::TESForm::GetFormByID<RE::Actor>(id);
+				if (it == g_states.end() || !actor || actor == player || !it->second.voice || !it->second.voice->postSceneDialogue ||
+					it->second.mutedByHand || it->second.mutedByProperty) {
+					continue;
+				}
+				const auto voice = VoiceTypeOf(actor);
+				if (std::ranges::find(spoken, voice) != spoken.end()) {
+					continue;
+				}
+				spoken.push_back(voice);
+				std::uint32_t target = withPlayer ? player->GetFormID() : it->second.partner;
+				if (target == id || !target) {
+					target = a_ids.front() != id ? a_ids.front() : a_ids.back();
+				}
+				if (const auto vm = FourStim::GetVM()) {
+					RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
+					Compat::DispatchStaticCall(vm, "FourStimScene"sv, "SayTopic"sv, callback, static_cast<std::int32_t>(id),
+						static_cast<std::int32_t>(it->second.voice->postSceneDialogue), static_cast<std::int32_t>(target),
+						std::uniform_real_distribution<float>(1.0F, 2.0F)(g_random));
+				}
+			}
+		}
 		for (const auto id : a_ids) {
 			const auto it = g_states.find(id);
 			if (it == g_states.end()) {

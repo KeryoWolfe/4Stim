@@ -35,9 +35,8 @@ Function UndressActors(int BuilderID) Global Native
 Function NoAutoMode(int BuilderID) Global Native
 ; The player's speed, navigation and auto mode keys leave it alone (it plays in auto mode).
 Function NoPlayerControl(int BuilderID) Global Native
-; OStim's: 4Stim has no post-scene dialogue yet, so there's nothing to turn off.
-Function NoPostDialogue(int BuilderID) Global
-EndFunction
+; No post-scene dialogue (voice sets' postSceneDialogue) when it ends.
+Function NoPostDialogue(int BuilderID) Global Native
 Function NoUndressing(int BuilderID) Global Native
 Function NoFurniture(int BuilderID) Global Native
 

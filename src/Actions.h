@@ -55,7 +55,7 @@ namespace Actions
 		bool                     fullStrip = false;        // undress this side's actor completely (docs/UNDRESS.md)
 		std::vector<int>         undressSlots;             // else take off what's in these biped slots (30-61)
 		bool                     moan = false;             // this side's actor moans (docs/SOUND.md)
-		bool                     talk = false;             // and may talk (kept for dialogue, not used yet)
+		bool                     talk = false;             // and may talk (voice sets' dialogue lines)
 		bool                     muffled = false;          // their mouth is busy: muffled sounds
 		std::string              expressionOverride;       // facial expression set while doing it ("openmouth", "tongue"...)
 		std::vector<std::string> equipObjects;             // OStim's "equipObject": equip object types this side's actor wears ("tongue"...), lowercase
