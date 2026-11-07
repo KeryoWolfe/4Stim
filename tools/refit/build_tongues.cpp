@@ -51,10 +51,12 @@ int main(int argc, char** argv)
 	// (phonemeObjects, or 4Stim's held "tongue" face), is placed for one:
 	// from HiPoly Faces' female head and its JawOpen morph (the owner's), the
 	// upper lip ends at z 118.45 and the open lower lip's top is at z 116.0,
-	// y 5.8 (the jaw swings back as it drops). 2.2 down and 1.2 back puts
-	// the root behind the lower teeth, its top just over the lower lip, and
-	// the tip out over it.
-	const Vector3 shift(0.0f, 0.67f - 1.2f, 0.5f - 2.2f);
+	// y 5.8 (the jaw swings back as it drops). 2.2 down and 1.2 back put
+	// the root behind the lower teeth, but in game (the owner, 7 November)
+	// the tongue came out of nothing at the lower lip and clipped the
+	// teeth: 1.5 higher and 1.5 further back (0.7 down, 2.7 back) puts its
+	// root inside the mouth, between the teeth.
+	const Vector3 shift(0.0f, 0.67f - 2.7f, 0.5f - 0.7f);
 	int count = 0;
 	for (const auto& entry : std::filesystem::directory_iterator(in)) {
 		if (entry.path().extension() != ".nif") {
