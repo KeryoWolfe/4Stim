@@ -8556,6 +8556,30 @@ namespace
 		}
 	}
 
+	// The hotkey went down and waits to be let go (OStim's hold-for-solo).
+	bool g_hotkeyHeld = false;
+
+	// A scene with the player alone, as OStim's held hotkey (a thread
+	// builder with the player: OStim's start flow follows).
+	void StartSoloScene();
+
+	bool IsHotkeyEvent(const RE::ButtonEvent* a_event)
+	{
+		const auto code = static_cast<std::uint32_t>(a_event->idCode);
+		if (a_event->device.get() == RE::INPUT_DEVICE::kKeyboard) {
+			return code != 0 && code == g_settings.hotkey;
+		}
+		return a_event->device.get() == RE::INPUT_DEVICE::kGamepad && code != 0 && code == g_settings.padHotkey;
+	}
+
+	// Out of a scene the hotkey acts when it's let go (a short press: the
+	// picker; held: alone). In a scene with the HUD it switches the HUD's
+	// focus at once, as before.
+	bool HotkeyWaitsForRelease()
+	{
+		return !(GetPlayerScene().Active() && HUD::IsOpen());
+	}
+
 	void HandleButton(const RE::ButtonEvent* a_event)
 	{
 		// Hold-to-scroll tracking for the picker: arrow keys and d-pad up/down.
@@ -8619,6 +8643,25 @@ namespace
 			}
 		}
 
+		// OStim's hold-for-solo: the hotkey is acted on when it's let go.
+		// Held 2 s or more, out of a scene: a scene with you alone (OStim
+		// starts one when no one is under the crosshair; 4Stim's picker
+		// finds the partner, so a short press opens it as before).
+		if (a_event->QReleased() && g_hotkeyHeld && IsHotkeyEvent(a_event)) {
+			g_hotkeyHeld = false;
+			const auto ui = RE::UI::GetSingleton();
+			if (ui && (ui->menuMode > 0 || ui->GetMenuOpen("Console"))) {
+				return;
+			}
+			if (a_event->QHeldDownSecs() >= 2.0F && !GetPlayerScene().Active()) {
+				REX::INFO("Hotkey held {:.1f} s: a scene with you alone", a_event->QHeldDownSecs());
+				StartSoloScene();
+			} else {
+				RunKeyAction("hotkey");
+			}
+			return;
+		}
+
 		if (!a_event->QJustPressed()) {
 			return;
 		}
@@ -8675,6 +8718,10 @@ namespace
 			                                   button == st.padNpcScene ? "npcscene"sv :
 			                                   button == st.padHotkey ? "hotkey"sv :
 			                                                            ""sv;
+			if (padAction == "hotkey"sv && HotkeyWaitsForRelease()) {
+				g_hotkeyHeld = true;
+				return;
+			}
 			if (!padAction.empty()) {
 				RunKeyAction(padAction);
 			}
@@ -8711,6 +8758,10 @@ namespace
 		                                npcKey ? "npcscene"sv :
 		                                code == g_settings.hotkey ? "hotkey"sv :
 		                                                            ""sv;
+		if (action == "hotkey"sv && HotkeyWaitsForRelease()) {
+			g_hotkeyHeld = true;
+			return;
+		}
 		if (!action.empty()) {
 			RunKeyAction(action);
 		}
@@ -9956,6 +10007,15 @@ namespace
 	{
 		std::scoped_lock lock(g_buildersLock);
 		g_builders.erase(a_id);
+	}
+
+	void StartSoloScene()
+	{
+		const auto player = RE::PlayerCharacter::GetSingleton();
+		const auto id = player ? BuilderCreate({ player }) : -1;
+		if (id < 0 || TB_Start({}, id) < 0) {
+			Notify(TR("$4stim_solo_failed", "4Stim: couldn't start a scene with you alone (see 4Stim.log)"));
+		}
 	}
 
 	// FourThread (OThread)

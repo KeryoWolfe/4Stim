@@ -13,7 +13,7 @@ Times given with OStim's names are in milliseconds, as in OStim. `SetFurnitureSe
 
 | OStim name | Default | Older 4Stim name | What it does |
 |---|---|---|---|
-| `SetKeyMap` | `0x26` (Up arrow) | `iHotkey` | Start a scene; in one, give the HUD the keys |
+| `SetKeyMap` | `0x26` (Up arrow) | `iHotkey` | Let go: the picker, to start a scene (OStim starts one with whoever is under the crosshair at once; 4Stim's picker lets you choose who and where). Held 2 s and let go: a scene with you alone, as OStim's. In a scene: give the HUD the keys (OStim's opens furniture selection, which is the HUD's Utility here) |
 | `keyNpcSceneStart` | 0 (Shift + `SetKeyMap`) | `iNPCSceneKey` | Start a scene between NPCs |
 | `SetKeyUp` / `SetKeyDown` | `0x6B` / `0x6D` (numpad + / -) | `iSpeedUpKey` / `iSpeedDownKey` | Faster / slower |
 | `SetControlToggle` | `0x60` (numpad 0) | `iAutoModeKey` | Auto mode on / off |
