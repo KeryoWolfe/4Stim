@@ -3973,8 +3973,8 @@ namespace
 	// (kOut, alpha 0) is pushed back to invisible every frame, whatever the
 	// scene guard does to the 3D: a 1.10.163 tester's male NPCs, "keeps
 	// being faded out" 57 times a second even with the camera's fade off.
-	// A plain fade-out on a scene actor is turned into a fade-in (the game
-	// then brings them back itself), and an alphaMult below 1 is put back to
+	// A plain fade-out on a scene actor (or a fade-in still under way) is
+	// ended at once, fully shown, and an alphaMult below 1 is put back to
 	// 1; each logged once a scene. Teleport fades (a MoveTo with a fade) and
 	// fades before disabling or deleting are the game's and left alone.
 	// Both fields are where AE has them on 1.10.163 too (checked against its
@@ -3993,10 +3993,18 @@ namespace
 			}
 		};
 		if (const auto high = process->high) {
+			// Done here, not left to the game: turned into a fade-in (kIn),
+			// the player's never got anywhere (the owner's log, 6 November:
+			// a chair scene's start, the camera fading him out before its
+			// fade was off; then "actor fade state 1, alpha 0.00" for the
+			// whole scene, invisible). So a fade-out, or a fade-in still
+			// short of 1, ends at once: no fade, fully shown.
 			using FADE = RE::HighProcessData::FADE_STATE;
-			if (high->fadeState.get() == FADE::kOut) {
-				log(std::format("was fading out (the game's own actor fade, alpha {:.2f}): fading them in again", high->fadeAlpha));
-				high->fadeState = FADE::kIn;
+			const auto state = high->fadeState.get();
+			if (state == FADE::kOut || (state == FADE::kIn && high->fadeAlpha < 0.99F)) {
+				log(std::format("was fading {} (the game's own actor fade, alpha {:.2f}): shown again", state == FADE::kOut ? "out" : "in", high->fadeAlpha));
+				high->fadeState = FADE::kNormal;
+				high->fadeAlpha = 1.0F;
 			}
 		}
 		if (const auto middle = process->middleHigh; middle && middle->alphaMult < 0.99F) {
