@@ -33,6 +33,7 @@ namespace Excitement
 
 		// What the player sees at a climax in a scene they're in or watching.
 		float shake = 1.0F;           // camera shake strength (0 = off)
+		bool  useScreenShake = false; // OStim's SetUseScreenShake: any shake at all (climax and events), off by default
 		bool  blurOn = true;          // a brief full-screen blur (OStim's SetBlurOrgasms)...
 		float blur = 0.5F;            // ...this strong (0 = off)
 		float flash = 1.0F;           // white glow at the screen's edges (0 = off), from the HUD

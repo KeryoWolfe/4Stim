@@ -45,7 +45,7 @@ Events are in `Data\F4SE\Plugins\4Stim\Events\`, one per file, the id being the 
 
 - `actor`, `target`, `performer`: who did it, who it was done to, who's moving. For each: `stimulation` added to their excitement at once (with their multiplier), only while it's below `maxStimulation` (so spanking alone can't make anyone climax), and `reactionDelay` (seconds) before they react: their voice set's reaction to this event, if it has one (docs/SOUND.md).
 - The sound plays on the event's actor: OStim's `sound` (a sound descriptor form), or 4Stim's `file` (a sound file or folder under `Data\Sound\`), at `soundVolume`.
-- `cameraShakeStrength` / `Duration` (0-1, seconds) and `controllerRumbleStrength` / `Duration`: only in a scene you're in or watching (OStim shakes for any scene), and only with shakes on (`fClimaxShake` above 0) and rumble on (`SetUseRumble`).
+- `cameraShakeStrength` / `Duration` (0-1, seconds) and `controllerRumbleStrength` / `Duration`: only in a scene you're in or watching (OStim shakes for any scene), and only with shakes on (OStim's `SetUseScreenShake`, off by default as OStim's, and `fClimaxShake` above 0) and rumble on (`SetUseRumble`).
 - `supertype`: another event whose values this one uses where it has none (`spankleft` is a `spank`). Reactions look for the event, then its supertype.
 - `tags`: kept for other mods.
 

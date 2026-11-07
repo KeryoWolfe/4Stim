@@ -104,6 +104,8 @@ SETTINGS = {
     'SetCameraSpeed': ('Free camera speed', 'float', (0.5, 20, 0.5)),
     'SetFreeCamFOV': ('Free camera field of view', 'float', (20, 120, 1)),
     'SetForceFirstPerson': ('First person after scenes', 'bool'),
+    'SetUseScreenShake': ('Screen shake', 'bool'),
+    'SetCustomTimescale': ('Time scale in scenes (0 = unchanged)', 'float', (0, 100, 1)),
     'SetUseFades': ('Fade at the start and end', 'bool'),
     'SetUseAutoFades': ('Fade between auto mode scenes', 'bool'),
     'SetUseIntroScenes': ('Start with intro scenes', 'bool'),
@@ -265,7 +267,7 @@ OSTIM_TEXTS = os.path.join(ROOT, 'tools', 'ostim-mcm-english.json')
 
 PAGES = [
     ('page_general', [
-        ('#', 'header_scenes'), 'SetResetPosition', 'SetUseFades', 'SetUseIntroScenes', 'addActorsAtStart',
+        ('#', 'header_scenes'), 'SetResetPosition', 'SetCustomTimescale', 'SetUseFades', 'SetUseIntroScenes', 'addActorsAtStart',
         'bResumeScenes', 'bEndOnDamage', 'bStayWhenInterrupted', 'fTransitionLead', 'bUsePlaybackSpeed', 'bLockScenes', 'bGuardScenes',
         ('#', 'header_partner'), 'sTargetMode', 'fMaxDistance', 'fCrosshairCone', 'fProximityRadius', 'fActorRadius',
         ('#', 'header_lights'), 'sMaleLight', 'sFemaleLight', 'sPlayerLight', 'SetOnlyLightInDark', 'fLightLevelDark',
@@ -289,7 +291,7 @@ PAGES = [
         'autoModePulloutThresholdMin', 'autoModePulloutThresholdMax', 'bAutoModeStandingOnFloor',
     ]),
     ('page_camera', [
-        ('#', 'header_freecam'), 'SetUseFreeCam', 'SetFreeCamFOV', 'SetCameraSpeed', 'SetForceFirstPerson',
+        ('#', 'header_freecam'), 'SetUseFreeCam', 'SetFreeCamFOV', 'SetCameraSpeed', 'SetUseScreenShake', 'SetForceFirstPerson',
     ]),
     ('page_excitement', [
         ('#', 'header_excitement_calculation'), 'bEnableExcitement', 'SetsexExcitementMult', 'SetFemaleSexExcitementMult', 'excitementDecayRate',
@@ -406,6 +408,8 @@ OSTIM_KEYS = {
     'SetFreeCamFOV': ('freecam_fov', 'tooltip_fov'),
     'SetCameraSpeed': ('freecam_speed', 'tooltip_fc_speed'),
     'SetForceFirstPerson': ('force_first', 'tooltip_force_first'),
+    'SetUseScreenShake': ('screenshake', None),  # OStim's tooltip is about thrusts
+    'SetCustomTimescale': ('timescale', 'tooltip_custom_timescale'),
     'SetsexExcitementMult': ('excitement_mult_male', 'tooltip_excitement_mult_male'),
     'SetFemaleSexExcitementMult': ('excitement_mult_female', 'tooltip_excitement_mult_female'),
     'excitementDecayRate': ('excitement_decay_rate', 'tooltip_excitement_decay_rate'),
@@ -478,6 +482,7 @@ OWN_TOOLTIPS = {
     'SetControlToggle': 'Turns auto mode on or off for the scene you\'re in or watching.',
     'keyAlignment': 'Opens the alignment menu (the HUD\'s Align tab); pressed again, goes back to navigation. Changes are saved at once.',
     'SetUseRumble': 'Rumble a controller when an actor climaxes, if a controller is being used.',
+    'SetUseScreenShake': 'Shake the camera at climaxes and on events like spanks, as strong as the Climax camera shake setting and the event say.',
     'SetOsaTogKey': 'In the alignment menu this key changes actors. Elsewhere it moves between the HUD\'s list and its tab buttons.',
     'SetAutoHideBar': 'Hide the bars when the HUD fades out. If disabled the bars stay up for the whole scene.',
     'sToySynchronization': 'Changes which actor in the scene the toys are synchronized with, for every toy.',

@@ -163,6 +163,7 @@ namespace
 		bool          useFades = true;           // SetUseFades: fade to black as scenes with the player start and end
 		bool          useAutoFades = false;      // SetUseAutoFades: and as auto mode jumps to another scene
 		bool          useIntroScenes = true;     // SetUseIntroScenes: scenes with the player start with one tagged "intro"
+		float         customTimescale = 0.0F;    // SetCustomTimescale: the game's TimeScale in scenes with the player (0 = unchanged)
 		bool          addActorsAtStart = true;   // addActorsAtStart: a script's player scene asks to add actors near (OStim's start flow)
 		float         npcSceneDuration = 300.0F; // NPCSceneDuration (OStim: ms): scenes without the player end after this many seconds (0 = never)
 		// OStim's scene keys, with OStim's defaults (as virtual-key codes):
@@ -565,6 +566,10 @@ namespace
 					Scaling::Settings().disabled = std::stoi(value) != 0;
 				} else if (key == "buseintroscenes") {
 					g_settings.useIntroScenes = std::stoi(value) != 0;
+				} else if (key == "setcustomtimescale") {
+					g_settings.customTimescale = std::max(std::stof(value), 0.0F);
+				} else if (key == "setusescreenshake") {
+					Excitement::Settings().useScreenShake = std::stoi(value) != 0;
 				} else if (key == "addactorsatstart") {
 					g_settings.addActorsAtStart = std::stoi(value) != 0;
 				} else if (key == "buseautofades") {
@@ -4393,7 +4398,9 @@ namespace
 		if (config.slowMo && a_withPlayer) {
 			StartSlowMotion();
 		}
-		if (config.shake > 0.0F && freeCamera) {
+		// OStim's SetUseScreenShake gates every shake (off by default).
+		const bool shakeOn = config.useScreenShake && config.shake > 0.0F;
+		if (shakeOn && freeCamera) {
 			if (g_climaxShake.active) {
 				// Already shaking: restart it from where the camera is now.
 				g_climaxShake.start = std::chrono::steady_clock::now();
@@ -4412,7 +4419,7 @@ namespace
 			HUD::PlayClimax(std::min(config.flash, 1.0F), config.glowSize);
 		}
 		// The normal cameras' shake and the rumble go through Papyrus.
-		const bool papyrusShake = config.shake > 0.0F && !freeCamera;
+		const bool papyrusShake = shakeOn && !freeCamera;
 		if ((papyrusShake || config.rumble) && g_vm) {
 			RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
 			Compat::DispatchStaticCall(g_vm, "FourStimMenu"sv, "ClimaxEffects"sv, callback, papyrusShake ? config.shake : 0.0F, config.rumble);
@@ -4437,7 +4444,7 @@ namespace
 			const auto& config = Excitement::Settings();
 			// SetUseScreenShake / SetUseRumble, as OStim's CameraUtil and
 			// ControlUtil check (4Stim: fClimaxShake 0 turns shakes off).
-			const float shake = config.shake > 0.0F && effects.shakeDuration > 0.0F ? effects.shakeStrength : 0.0F;
+			const float shake = config.useScreenShake && config.shake > 0.0F && effects.shakeDuration > 0.0F ? effects.shakeStrength : 0.0F;
 			const float rumble = config.rumble && effects.rumbleDuration > 0.0F ? effects.rumbleStrength : 0.0F;
 			const bool  freeCamera = FreeCamera() != nullptr;
 			if (shake > 0.0F && freeCamera) {
@@ -6665,6 +6672,40 @@ namespace
 		g_savedWorldFOV = -1.0F;
 	}
 
+	// OStim's SetCustomTimescale: the game's TimeScale during a scene with
+	// the player (0 = unchanged), put back after. Fallout4.esm's TimeScale
+	// global is 0x3A, as Skyrim.esm's.
+	float g_savedTimescale = -1.0F;  // < 0: nothing saved
+
+	RE::TESGlobal* TimescaleGlobal()
+	{
+		return RE::TESForm::GetFormByID<RE::TESGlobal>(0x3A);
+	}
+
+	void SetSceneTimescale()
+	{
+		const auto global = g_settings.customTimescale > 0.0F ? TimescaleGlobal() : nullptr;
+		if (!global) {
+			return;
+		}
+		if (g_savedTimescale < 0.0F) {
+			g_savedTimescale = global->value;
+		}
+		global->value = g_settings.customTimescale;
+		REX::INFO("Scene camera: time scale {} -> {} (SetCustomTimescale)", g_savedTimescale, global->value);
+	}
+
+	void RestoreTimescale()
+	{
+		if (g_savedTimescale < 0.0F) {
+			return;
+		}
+		if (const auto global = TimescaleGlobal()) {
+			global->value = g_savedTimescale;
+		}
+		g_savedTimescale = -1.0F;
+	}
+
 	void RestoreFreeCameraSpeed()
 	{
 		if (g_savedFreeCamSpeed < 0.0f) {
@@ -6776,6 +6817,7 @@ namespace
 			g_sceneCameraActive = true;
 			SetHUDVisible(false);
 			SetSceneFOV();
+			SetSceneTimescale();
 			if (g_settings.useFreeCam) {
 				ScaleFreeCameraSpeed();
 				EnterFreeCamera(0);
@@ -6805,6 +6847,7 @@ namespace
 			}
 			RestoreFreeCameraSpeed();
 			RestoreFOV();
+			RestoreTimescale();
 			SetHUDVisible(true);
 			REX::INFO("Scene camera: restored ({})", g_startedFirstPerson || g_settings.forceFirstPerson ? "first person" : "third person");
 		});
@@ -6826,6 +6869,7 @@ namespace
 		g_sceneFade = false;
 		RestoreFreeCameraSpeed();
 		RestoreFOV();
+		RestoreTimescale();
 		EndSlowMotion();
 		ReleaseSceneLayer();
 		if (wasActive) {

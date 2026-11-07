@@ -169,11 +169,33 @@ namespace Sounds
 			return files;
 		}
 
-		std::vector<SoundEntry> ReadEntries(const nlohmann::json& a_set, const char* a_key)
+		// OStim's loadSoundSets: a list of entries, or (as OStim) one sound
+		// on its own, a sound descriptor ({"mod", "formid"}) or 4Stim's
+		// {"file"}, which plays with a_expression.
+		std::vector<SoundEntry> ReadEntries(const nlohmann::json& a_set, const char* a_key, const std::string& a_expression = {})
 		{
 			std::vector<SoundEntry> out;
 			const auto list = a_set.find(a_key);
-			if (list == a_set.end() || !list->is_array()) {
+			if (list == a_set.end()) {
+				return out;
+			}
+			if (list->is_object()) {
+				SoundEntry entry;
+				if (list->contains("file")) {
+					entry.sound = ReadSound(*list);
+				} else {
+					entry.sound.descriptor = ReadForm(*list);
+				}
+				if (entry.sound.Empty()) {
+					REX::WARN("Sound: \"{}\" ({}) isn't a loaded sound", a_key, list->dump());
+				} else {
+					entry.expression = Lower(a_expression);
+					out.push_back(std::move(entry));
+				}
+				return out;
+			}
+			if (!list->is_array()) {
+				REX::WARN("Sound: \"{}\" is neither a list nor a sound", a_key);
 				return out;
 			}
 			for (const auto& e : *list) {
@@ -185,7 +207,7 @@ namespace Sounds
 				if (entry.sound.Empty()) {
 					continue;
 				}
-				entry.expression = Lower(e.value("expression", std::string{}));
+				entry.expression = Lower(e.value("expression", a_expression));
 				if (const auto acts = e.find("actions"); acts != e.end() && acts->is_array()) {
 					for (const auto& a : *acts) {
 						if (a.is_string()) {
@@ -214,8 +236,15 @@ namespace Sounds
 		{
 			ReactionSet set;
 			if (a_set.is_object()) {
-				set.sound = ReadEntries(a_set, "sound");
-				set.soundMuffled = ReadEntries(a_set, "soundMuffled");
+				// OStim's soundExpression: the entries' expression when they name none.
+				const auto expression = a_set.value("soundExpression", std::string{});
+				set.sound = ReadEntries(a_set, "sound", expression);
+				set.soundMuffled = ReadEntries(a_set, "soundMuffled", expression);
+				for (const auto field : { "dialogue" }) {
+					if (a_set.contains(field)) {
+						REX::INFO("Sound: \"{}\" in a voice set isn't supported yet: left out", field);
+					}
+				}
 			}
 			return set;
 		}
@@ -257,20 +286,46 @@ namespace Sounds
 					auto          voice = std::make_shared<VoiceSet>();
 					voice->name = Translations::Localize(root.value("name", e.path().stem().string()));  // translated, as OStim
 					voice->file = Lower(e.path().stem().string());
-					voice->moan = ReadReaction(root, "moan");
-					voice->climax = ReadReaction(root, "climax");
-					voice->climaxCommentSelf = ReadReaction(root, "climaxCommentSelf");
-					voice->climaxCommentOther = ReadReaction(root, "climaxCommentOther");
-					voice->eventActorReactions = ReadReactionMap(root, "eventActorReactions");
-					voice->eventTargetReactions = ReadReactionMap(root, "eventTargetReactions");
-					voice->eventPerformerReactions = ReadReactionMap(root, "eventPerformerReactions");
+					const auto file = e.path().filename().string();
+					if (const auto moan = root.find("moan"); moan != root.end() && moan->is_object() && moan->contains("mod")) {
+						// OStim's legacy syntax (its own defaultmale.json): one sound
+						// each for moan, moanMuffled, climax and climaxMuffled, with
+						// moanExpression / climaxExpression (default "moan" /
+						// "climax"). As OStim, nothing else is read then.
+						const auto moanExpression = root.value("moanExpression", std::string("moan"));
+						const auto climaxExpression = root.value("climaxExpression", std::string("climax"));
+						voice->moan.sound = ReadEntries(root, "moan", moanExpression);
+						voice->moan.soundMuffled = ReadEntries(root, "moanMuffled", moanExpression);
+						voice->climax.sound = ReadEntries(root, "climax", climaxExpression);
+						voice->climax.soundMuffled = ReadEntries(root, "climaxMuffled", climaxExpression);
+						REX::INFO("Sound: {}: OStim's legacy voice set syntax", file);
+					} else {
+						voice->moan = ReadReaction(root, "moan");
+						voice->climax = ReadReaction(root, "climax");
+						voice->climaxCommentSelf = ReadReaction(root, "climaxCommentSelf");
+						voice->climaxCommentOther = ReadReaction(root, "climaxCommentOther");
+						voice->eventActorReactions = ReadReactionMap(root, "eventActorReactions");
+						voice->eventTargetReactions = ReadReactionMap(root, "eventTargetReactions");
+						voice->eventPerformerReactions = ReadReactionMap(root, "eventPerformerReactions");
+					}
+					// OStim's fields 4Stim doesn't have yet: said, not dropped silently.
+					for (const auto field : { "voice", "postSceneDialogue" }) {
+						if (root.contains(field)) {
+							REX::INFO("Sound: {}: \"{}\" isn't supported yet: left out", file, field);
+						}
+					}
+					if (voice->moan.sound.empty() && voice->moan.soundMuffled.empty() && voice->climax.sound.empty() && voice->climax.soundMuffled.empty()) {
+						REX::WARN("Sound: {}: no moan or climax sound read from it", file);
+					}
 					const auto targetJSON = root.value("target", nlohmann::json::object());
 					const auto targetID = ReadFormRaw(targetJSON, true);
 					if (targetID && *targetID > 1) {
 						voice->target = *targetID;
 						voice->key = std::to_string(static_cast<std::int32_t>(*targetID));
 					} else if (!targetID && !targetJSON.contains("formid")) {
-						voice->key = Lower(e.path().stem().string());  // 4Stim's: no target, chosen by name only
+						// 4Stim's: no target, chosen by name only (OStim skips such a file).
+						voice->key = Lower(e.path().stem().string());
+						REX::INFO("Sound: {}: no \"target\": only used when chosen", file);
 					} else if (!targetID) {
 						REX::WARN("Sound: {}: its target isn't loaded, so it's not used", e.path().filename().string());
 						continue;

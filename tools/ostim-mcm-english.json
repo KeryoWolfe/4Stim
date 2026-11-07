@@ -292,5 +292,8 @@
 	"player_light_mode": "Player light mode",
 	"tooltip_player_light_mode": "Sets the light for the player.",
 	"generic_default": "Default",
-	"page_addons": "Add-Ons"
+	"page_addons": "Add-Ons",
+	"screenshake": "Use extra screenshake",
+	"timescale": "Custom timescale",
+	"tooltip_custom_timescale": "Changes the timescale during scenes, and reverts it back to what it was after the scene ends.\\nUseful if you don't want them taking an entire day.\\n0 = this feature is disabled."
 }
