@@ -2,6 +2,14 @@
 
 ## 0.5.0 alpha (in progress)
 
+### Starting scenes from scripts, and sound descriptors, as OStim's (parity audit Tier 3)
+- **A script's scene with you goes through OStim's start flow**: it waits until you're out of dialogue, then asks which furniture to use (or "use the nearby ...?" with a starting scene), whether to add actors near you, and your position, as OStim's settings say, and sorts with `PlayerAlways...`. The questions come up in the picker (docs/API.md).
+- **New setting `addActorsAtStart`** (OStim's, on by default, MCM General page).
+- **`FourThreadBuilder.Create` returns -1 for an ineligible actor**, as OStim's: disabled, deleted, a child, dead, no actor type, or already in a scene.
+- **OStim-style sound descriptors play natively**, as OStim's: with `moanVolume` / `soundVolume`, stopped by muting, climax and the scene's end, and timed by their real length (docs/SOUND.md). Before, through Papyrus `Sound.Play`, counted as 2 seconds.
+
+Needs the plugin rebuilt; no Papyrus or SWF changes. The MCM's config.json, settings.ini and 4Stim_en.txt are new.
+
 ### Furniture, as OStim's (parity audit Tier 3)
 - **One picker row per furniture list type**, the nearest piece: single and double beds are one "Bed" row, the bench keeps its own (OStim's `listIndividually`; docs/FURNITURE.md). Before, each type had a row, and a `listIndividually` type listed every piece.
 - **Furniture someone is using is left out of the picker**, as OStim's: a chair an NPC sits in, a bed someone sleeps in.

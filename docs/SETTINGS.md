@@ -38,6 +38,7 @@ Times given with OStim's names are in milliseconds, as in OStim. `SetFurnitureSe
 | `SetUseFades` | 1 | | Fade to black as scenes with you start and end |
 | `SetUseAutoFades` | 0 | | Also fade when auto mode jumps to another scene |
 | `SetUseIntroScenes` | 1 | | Scenes with you start with an `intro` scene |
+| `addActorsAtStart` | 1 | | A scene with you that a script starts without a starting scene asks whether to add the actors near you (API.md, the start flow) |
 | `NPCSceneDuration` | 300000 ms | | Scenes without you end after this long |
 | `SetResetPosition` | 1 | `bResetPosition` | NPCs go back to where they stood |
 | `SetScaling` | 0 | | 1 = don't scale actors to the animation (`SCALING.md`) |

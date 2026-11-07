@@ -66,6 +66,21 @@
 					}
 				},
 				{
+					"id": "b4S_addActorsAtStart:General",
+					"text": "$4stim_add_actors_at_start",
+					"help": "$4stim_tooltip_add_actors_at_start",
+					"action": {
+						"type": "CallGlobalFunction",
+						"script": "FourStimMCM",
+						"function": "SettingChanged",
+						"params": []
+					},
+					"type": "switcher",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
 					"id": "bResumeScenes:General",
 					"text": "$4stim_resume_scenes",
 					"help": "$4stim_tooltip_resume_scenes",

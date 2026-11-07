@@ -514,7 +514,8 @@ namespace Sounds
 		if (!started || std::chrono::steady_clock::now() >= until) {
 			return false;
 		}
-		// A descriptor (no handle) counts as playing until its estimate.
+		// A descriptor through Papyrus (no handle) counts as playing until
+		// its estimate.
 		return handle.soundID == static_cast<std::uint32_t>(-1) || handle.IsPlaying();
 	}
 
@@ -577,52 +578,85 @@ namespace Sounds
 		}
 	}
 
+	namespace
+	{
+		// Volume, position and the actor to follow, then play: the same for
+		// files and descriptors (OStim's GameSound::play: SetObjectToFollow,
+		// SetVolume, Play; Fallout 4's handle has no SetVolume, so the volume
+		// is an attenuation, as for files).
+		void PlayHandle(Playing& a_playing, RE::NiAVObject* a_root, float a_volume, const RE::BSISoundOutputModel* a_model)
+		{
+			if (a_volume < 1.0F) {
+				// Attenuation in hundredths of a decibel.
+				const float db = -20.0F * std::log10(a_volume);
+				a_playing.handle.SetStaticAttenuation(static_cast<std::uint16_t>(std::clamp(db * 100.0F, 0.0F, 10000.0F)));
+			}
+			if (a_model) {
+				a_playing.handle.SetOutputModel(a_model);
+			}
+			if (Compat::CanSetSoundPosition()) {
+				a_playing.handle.SetPosition(a_root->world.translate);
+			}
+			a_playing.handle.SetObjectToFollow(a_root);
+			a_playing.handle.Play();
+			a_playing.until = std::chrono::steady_clock::now() + std::chrono::seconds(10);  // safety net
+			a_playing.started = true;
+		}
+	}
+
 	Playing Play(const Sound& a_sound, RE::Actor* a_actor, float a_volume)
 	{
 		Playing playing;
 		if (a_sound.Empty() || !a_actor || g_config.disabled || a_volume <= 0.0F) {
 			return playing;
 		}
+		const auto audio = RE::BSAudioManager::GetSingleton();
+		const auto root = a_actor->Get3D();
+		if (!audio || !root) {
+			return playing;
+		}
 		if (!a_sound.files.empty()) {
-			const auto audio = RE::BSAudioManager::GetSingleton();
-			const auto root = a_actor->Get3D();
-			if (!audio || !root) {
-				return playing;
-			}
 			const auto& file = a_sound.files[std::uniform_int_distribution<std::size_t>(0, a_sound.files.size() - 1)(g_random)];
 			audio->GetSoundHandleByFile(playing.handle, Compat::ResourceID(file.c_str()), g_config.flags, g_config.priority);
 			if (playing.handle.soundID == static_cast<std::uint32_t>(-1)) {
 				REX::WARN("Sound: couldn't load {}", file);
 				return playing;
 			}
-			if (a_volume < 1.0F) {
-				// Attenuation in hundredths of a decibel.
-				const float db = -20.0F * std::log10(a_volume);
-				playing.handle.SetStaticAttenuation(static_cast<std::uint16_t>(std::clamp(db * 100.0F, 0.0F, 10000.0F)));
-			}
 			// Positional, on the actor (OutputModel: else it's 2D).
-			if (const auto model = OutputModel()) {
-				playing.handle.SetOutputModel(model);
-			}
-			if (Compat::CanSetSoundPosition()) {
-				playing.handle.SetPosition(root->world.translate);
-			}
-			playing.handle.SetObjectToFollow(root);
-			playing.handle.Play();
-			playing.until = std::chrono::steady_clock::now() + std::chrono::seconds(10);  // safety net
-		} else {
-			// A sound descriptor: through Papyrus (Sound.Play), which has no
-			// volume; its length isn't known here, so it counts as playing
-			// for 2 s.
-			const auto vm = FourStim::GetVM();
-			if (!vm) {
+			PlayHandle(playing, root, a_volume, OutputModel());
+			return playing;
+		}
+		// A sound descriptor, played natively as OStim's GameSound::play
+		// (BSAudioManager::GetSoundHandle): its volume, a real handle that
+		// mute, climax and the scene's end stop, and its real length. The
+		// descriptor's own output model, so none is set. OStim passes
+		// Skyrim's usage flags 0x10; here the files' iSoundFlags.
+		const auto form = RE::TESForm::GetFormByID<RE::BGSSoundDescriptorForm>(a_sound.descriptor);
+		if (!form) {
+			REX::WARN("Sound: {:08X} isn't a sound descriptor", a_sound.descriptor);
+			return playing;
+		}
+		if (Compat::CanPlaySoundDescriptors()) {
+			const RE::BSISoundDescriptor* descriptor = form;
+			if (audio->GetSoundHandle(playing.handle, descriptor, 0.0F, g_config.flags) &&
+				playing.handle.soundID != static_cast<std::uint32_t>(-1)) {
+				PlayHandle(playing, root, a_volume, nullptr);
 				return playing;
 			}
-			RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
-			Compat::DispatchStaticCall(vm, "FourStimScene"sv, "PlaySoundForm"sv, callback, static_cast<std::int32_t>(a_sound.descriptor),
-				static_cast<std::int32_t>(a_actor->GetFormID()));
-			playing.until = std::chrono::steady_clock::now() + std::chrono::seconds(2);
+			REX::WARN("Sound: couldn't play sound descriptor {:08X}", a_sound.descriptor);
+			return playing;
 		}
+		// 4Stim: where GetSoundHandle isn't found (docs/OLDGEN.md), through
+		// Papyrus (Sound.Play), which has no volume and can't be stopped; its
+		// length isn't known here, so it counts as playing for 2 s.
+		const auto vm = FourStim::GetVM();
+		if (!vm) {
+			return playing;
+		}
+		RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
+		Compat::DispatchStaticCall(vm, "FourStimScene"sv, "PlaySoundForm"sv, callback, static_cast<std::int32_t>(a_sound.descriptor),
+			static_cast<std::int32_t>(a_actor->GetFormID()));
+		playing.until = std::chrono::steady_clock::now() + std::chrono::seconds(2);
 		playing.started = true;
 		return playing;
 	}

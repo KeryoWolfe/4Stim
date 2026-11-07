@@ -23,6 +23,8 @@ namespace Compat
 		{ 2195747, "4Stim releases its raycasts' Havok world reference itself" },
 		{ 2231227, "NPCs using furniture or an idle marker are taken out of it through Papyrus (MoveTo their own spot)" },
 		{ 2267064, "4Stim's sounds follow the actor without a start position" },
+		{ 2188686, "a script's player scene doesn't wait for dialogue to end" },
+		{ 2267105, "OStim-style sound descriptors play through Papyrus (Sound.Play): no volume, can't be stopped" },
 		{ 2269259, "4Stim works out sound files' resource IDs itself" },
 		{ 2295298, "MCM texts are added to the game's translator by 4Stim itself" },
 		{ 2211661, "the scene package is Fallout4.esm's MQ101VaultTecRepDoNothingScene, not one made by 4Stim" },
@@ -67,6 +69,8 @@ namespace Compat
 
 	bool CanStopInteractingQuick();  // Actor::StopInteractingQuick
 	bool CanSetSoundPosition();      // BSSoundHandle::SetPosition
+	bool CanCheckDialogue();         // IsPlayerInDialogue (main.cpp's start flow)
+	bool CanPlaySoundDescriptors();  // BSAudioManager::GetSoundHandle (Sounds.cpp)
 	bool CanAddTranslations();       // BSScaleformTranslator::AddTranslations
 	bool CanMakePackages();          // TESPackage::CreatePackageByType and its procedure's set-up (ScenePackage.cpp)
 	bool CanReadCollisionBodies();   // bhkNPCollisionObject::Getbhk and GetBody (main.cpp's furniture collision and collision watch)

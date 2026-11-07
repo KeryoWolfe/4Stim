@@ -184,6 +184,8 @@ namespace Compat
 		Have<2195747>();
 		Have<2231227>();
 		Have<2267064>();
+		Have<2267105>();
+		Have<2188686>();
 		Have<2269259>();
 		Have<2295298>();
 		Have<2211661>();
@@ -195,6 +197,8 @@ namespace Compat
 
 	bool CanStopInteractingQuick() { return Have<2231227>(); }
 	bool CanSetSoundPosition() { return Have<2267064>(); }
+	bool CanCheckDialogue() { return Have<2188686>(); }
+	bool CanPlaySoundDescriptors() { return Have<2267105>(); }
 	bool CanAddTranslations() { return Have<2295298>(); }
 	bool CanMakePackages() { return Have<2211661>() && Have<2211735>(); }
 	bool CanReadCollisionBodies() { return Have<2277919>() && Have<2277926>(); }

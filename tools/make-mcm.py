@@ -105,6 +105,7 @@ SETTINGS = {
     'SetUseFades': ('Fade at the start and end', 'bool'),
     'SetUseAutoFades': ('Fade between auto mode scenes', 'bool'),
     'SetUseIntroScenes': ('Start with intro scenes', 'bool'),
+    'addActorsAtStart': ('Add actors at start', 'bool'),
     'NPCSceneDuration': ('NPC scenes last (seconds, 0 = no limit)', 'ms', (0, 1800, 15)),
     'fTransitionLead': ('Transition lead (seconds)', 'float', (-2, 5, 0.05)),
     'SetOnlyGayAnimsInGayScenes': ('Roles for the intended sex only', 'bool'),
@@ -261,7 +262,7 @@ OSTIM_TEXTS = os.path.join(ROOT, 'tools', 'ostim-mcm-english.json')
 
 PAGES = [
     ('page_general', [
-        ('#', 'header_scenes'), 'SetResetPosition', 'SetUseFades', 'SetUseIntroScenes',
+        ('#', 'header_scenes'), 'SetResetPosition', 'SetUseFades', 'SetUseIntroScenes', 'addActorsAtStart',
         'bResumeScenes', 'bEndOnDamage', 'bStayWhenInterrupted', 'fTransitionLead', 'bUsePlaybackSpeed', 'bLockScenes', 'bGuardScenes',
         ('#', 'header_partner'), 'sTargetMode', 'fMaxDistance', 'fCrosshairCone', 'fProximityRadius', 'fActorRadius',
         ('#', 'header_lights'), 'sMaleLight', 'sFemaleLight', 'SetOnlyLightInDark', 'fLightLevelDark',
@@ -351,6 +352,7 @@ OSTIM_KEYS = {
     'SetResetPosition': ('reset_position', None),  # 4Stim doesn't move the player back
     'SetUseFades': ('use_fades', 'tooltip_fades'),
     'SetUseIntroScenes': ('use_intro_scenes', 'tooltip_use_intro_scenes'),
+    'addActorsAtStart': ('add_actors_at_start', 'tooltip_add_actors_at_start'),
     'sMaleLight': ('male_light_mode', 'tooltip_male_light_mode'),
     'sFemaleLight': ('female_light_mode', 'tooltip_female_light_mode'),
     'SetOnlyLightInDark': ('dark_light', 'tooltip_dark_light'),

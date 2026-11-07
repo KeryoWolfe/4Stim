@@ -286,5 +286,7 @@
 	"tooltip_unrestricted_navigation": "If checked all requirement checks for all animations are skipped and you can play any animation with any combination of actors.\\nNote: This can lead to some unexpected results in auto mode.",
 	"tooltip_no_facial_expressions": "Disables all facial expressions during scenes. Warning: This will cause clipping during oral scenes! It is only intended to be used for screen-archery purposes.",
 	"use_auto_mode_vanilla": "Use auto mode in vanilla scenes",
-	"tooltip_use_auto_mode_vanilla": "Always starts scenes with no dominant/submissive roles in automatic mode."
+	"tooltip_use_auto_mode_vanilla": "Always starts scenes with no dominant/submissive roles in automatic mode.",
+	"add_actors_at_start": "Add actors at start",
+	"tooltip_add_actors_at_start": "Show message boxes at scene start to add more actors to the scene. This only works on scenes that don't have a designated starting animation."
 }

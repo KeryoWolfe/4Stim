@@ -6,6 +6,8 @@
 	"$4stim_tooltip_fades": "Fade the screen to black when a scene starts/ends.",
 	"$4stim_use_intro_scenes": "Use designated intro scenes",
 	"$4stim_tooltip_use_intro_scenes": "Use designated intro scenes when no specific scene was given. If disabled, any idle may be chosen.",
+	"$4stim_add_actors_at_start": "Add actors at start",
+	"$4stim_tooltip_add_actors_at_start": "Show message boxes at scene start to add more actors to the scene. This only works on scenes that don't have a designated starting animation.",
 	"$4stim_resume_scenes": "Resume scenes after loading",
 	"$4stim_tooltip_resume_scenes": "0 = scenes running when you save end when that save is loaded, and everyone in them is let go and dressed again (as OStim). 1 = they start again (after the loading screen, one by one), with their speed, auto mode, excitement and what was taken off.",
 	"$4stim_end_on_damage": "End scenes when someone is hurt",

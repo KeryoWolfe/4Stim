@@ -162,6 +162,7 @@ namespace
 		bool          useFades = true;           // SetUseFades: fade to black as scenes with the player start and end
 		bool          useAutoFades = false;      // SetUseAutoFades: and as auto mode jumps to another scene
 		bool          useIntroScenes = true;     // SetUseIntroScenes: scenes with the player start with one tagged "intro"
+		bool          addActorsAtStart = true;   // addActorsAtStart: a script's player scene asks to add actors near (OStim's start flow)
 		float         npcSceneDuration = 300.0F; // NPCSceneDuration (OStim: ms): scenes without the player end after this many seconds (0 = never)
 		// OStim's scene keys, with OStim's defaults (as virtual-key codes):
 		std::uint32_t speedUpKey = 0x6B;       // numpad +
@@ -560,6 +561,8 @@ namespace
 					Scaling::Settings().disabled = std::stoi(value) != 0;
 				} else if (key == "buseintroscenes") {
 					g_settings.useIntroScenes = std::stoi(value) != 0;
+				} else if (key == "addactorsatstart") {
+					g_settings.addActorsAtStart = std::stoi(value) != 0;
 				} else if (key == "buseautofades") {
 					g_settings.useAutoFades = std::stoi(value) != 0;
 				} else if (key == "fnpcsceneduration") {
@@ -1599,6 +1602,11 @@ namespace
 		std::vector<std::uint32_t>            actors;      // sorted: matched against the scene that starts
 		std::vector<std::uint32_t>            roleActors;  // the order asked for (GetActors while starting)
 		std::chrono::steady_clock::time_point since = std::chrono::steady_clock::now();
+		// A player thread in OStim's start flow (waiting for dialogue to end,
+		// asking about furniture, actors and roles): not timed out, as OStim's
+		// waits as long as it takes. Its flow's number (0 = none), so a flow
+		// left over from a thread that's gone stops.
+		std::uint64_t flow = 0;
 		// What a thread builder asked for.
 		float duration = 0.0F;  // seconds; 0 = the usual
 		bool  undressAtStart = false;
@@ -1631,7 +1639,7 @@ namespace
 		const auto now = std::chrono::steady_clock::now();
 		std::erase_if(g_threads, [&](const auto& a_entry) {
 			const auto& r = a_entry.second;
-			if (r.status == ThreadRecord::Status::kStarting && now - r.since > STARTING_TIMEOUT) {
+			if (r.status == ThreadRecord::Status::kStarting && r.flow == 0 && now - r.since > STARTING_TIMEOUT) {
 				REX::WARN("Thread {}: never started (its actors weren't placed within {} s), dropped", r.id, STARTING_TIMEOUT.count());
 				return true;
 			}
@@ -7003,9 +7011,29 @@ namespace
 		kStart,     // start a new scene: who, where, then an idle (see StartStep)
 		kNavigate,  // the focused scene's navigation links, plus "End scene" (used when the HUD isn't available)
 		kSearch,    // every scene with the focused scene's actor count; picking one moves the scene there
-		kFurniture  // furniture near the focused scene; picking one moves the scene onto it (OStim's changeFurniture)
+		kFurniture,  // furniture near the focused scene; picking one moves the scene onto it (OStim's changeFurniture)
+		kAsk         // a question with its answers (OStim's message boxes: the start flow's)
 	};
 	std::atomic<PickerMode>    g_pickerMode = PickerMode::kStart;
+
+	// kAsk: OStim's Game::showMessageBox, in the picker. Its answer (the
+	// index of the one picked, or -1 if the picker was closed) is given on the
+	// main thread; it can ask the next question, which the open picker then
+	// shows, else the picker closes.
+	struct Question
+	{
+		struct Answer
+		{
+			std::string name;
+			std::string detail;
+		};
+		std::string                 title;
+		std::vector<Answer>         answers;
+		std::function<void(int)>    then;
+	};
+	std::mutex              g_questionLock;
+	std::optional<Question> g_question;
+	void                    Ask(Question a_question);
 	// OStim's search menu: what's been typed in the picker's search mode
 	// (UTF-8, main thread) and whether the picker is taking typing now.
 	std::string                g_searchQuery;
@@ -7302,6 +7330,19 @@ namespace
 
 		~PickerMenu() override
 		{
+			// A question left unanswered (the picker closed): -1, as the start
+			// flow's "None" / "No" (OStim's message boxes can't be closed).
+			std::function<void(int)> then;
+			{
+				std::scoped_lock lock(g_questionLock);
+				if (g_question) {
+					then = std::move(g_question->then);
+					g_question.reset();
+				}
+			}
+			if (then) {
+				F4SE::GetTaskInterface()->AddTask([then = std::move(then)]() { then(-1); });
+			}
 			g_searchTyping = false;
 			if (_textEntry) {
 				if (const auto controls = RE::ControlMap::GetSingleton()) {
@@ -7417,7 +7458,7 @@ namespace
 			case 1:
 				if (a_params.argCount > 0 && a_params.args[0].IsString()) {
 					const std::string id = a_params.args[0].GetString();
-					if (!HandleFurniturePick(id) && !HandleStartPick(id)) {
+					if (!HandleAskPick(id) && !HandleFurniturePick(id) && !HandleStartPick(id)) {
 						StartPicked(id);
 					}
 				}
@@ -7455,6 +7496,10 @@ namespace
 			}
 			if (mode == PickerMode::kFurniture) {
 				SendFurnitureChoices();
+				return;
+			}
+			if (mode == PickerMode::kAsk) {
+				SendQuestion();
 				return;
 			}
 			if (mode == PickerMode::kStart && g_startStep != StartStep::kBrowse) {
@@ -7841,6 +7886,74 @@ namespace
 			menuObj.Invoke("SetStrings", nullptr, &table, 1);
 		}
 
+		// kAsk: the question and its answers.
+		void SendQuestion()
+		{
+			Question question;
+			{
+				std::scoped_lock lock(g_questionLock);
+				if (!g_question) {
+					return;  // answered: the next one, or the close, is on its way
+				}
+				question.title = g_question->title;
+				question.answers = g_question->answers;
+			}
+			Scaleform::GFx::Value list;
+			uiMovie->CreateArray(&list);
+			for (std::size_t i = 0; i < question.answers.size(); ++i) {
+				Scaleform::GFx::Value entry, id, name, tags;
+				uiMovie->CreateObject(&entry);
+				const auto key = std::format("@ask:{}", i);
+				id = key.c_str();
+				name = question.answers[i].name.c_str();
+				tags = question.answers[i].detail.c_str();
+				entry.SetMember("id"sv, id);
+				entry.SetMember("name"sv, name);
+				entry.SetMember("tags"sv, tags);
+				list.PushBack(entry);
+			}
+			Scaleform::GFx::Value args[2];
+			args[0] = list;
+			args[1] = question.title.c_str();
+			menuObj.Invoke("SetScenes", nullptr, args, 2);
+		}
+
+		// A pick in kAsk: its answer, on the main thread; the picker closes
+		// unless that asks the next question.
+		static bool HandleAskPick(const std::string& a_id)
+		{
+			if (g_pickerMode != PickerMode::kAsk) {
+				return false;
+			}
+			if (!a_id.starts_with("@ask:")) {
+				return true;
+			}
+			std::function<void(int)> then;
+			{
+				std::scoped_lock lock(g_questionLock);
+				if (!g_question) {
+					return true;  // picked twice
+				}
+				then = std::move(g_question->then);
+				g_question.reset();
+			}
+			const int index = std::stoi(a_id.substr(5));
+			F4SE::GetTaskInterface()->AddTask([then = std::move(then), index]() {
+				if (then) {
+					then(index);
+				}
+				bool asked;
+				{
+					std::scoped_lock lock(g_questionLock);
+					asked = g_question.has_value();
+				}
+				if (!asked) {
+					Close();
+				}
+			});
+			return true;
+		}
+
 		// kFurniture: as OStim's furniture selection, "None" (stay) first,
 		// then the furniture near, nearest first.
 		void SendFurnitureChoices()
@@ -8053,6 +8166,24 @@ namespace
 		g_pickerMode = a_mode;
 		if (const auto queue = RE::UIMessageQueue::GetSingleton()) {
 			queue->AddMessage(PICKER_MENU, RE::UI_MESSAGE_TYPE::kShow);
+		}
+	}
+
+	// Main thread.
+	void Ask(Question a_question)
+	{
+		REX::INFO("Picker: asking \"{}\" ({} answer(s))", a_question.title, a_question.answers.size());
+		{
+			std::scoped_lock lock(g_questionLock);
+			g_question = std::move(a_question);
+		}
+		const auto ui = RE::UI::GetSingleton();
+		const auto menu = ui && ui->GetMenuOpen(PICKER_MENU) ? ui->GetMenu(PICKER_MENU) : Scaleform::Ptr<RE::IMenu>{};
+		if (menu) {
+			g_pickerMode = PickerMode::kAsk;
+			static_cast<PickerMenu*>(menu.get())->Refresh();
+		} else {
+			ShowPicker(PickerMode::kAsk);
 		}
 	}
 
@@ -8861,10 +8992,12 @@ namespace
 	// The scenes a new scene for a_cast can start with on a_furniture ("" =
 	// off furniture), any role order that fits (a thread builder's actors
 	// get OStim's order when it fits, else another).
-	std::vector<std::shared_ptr<const SceneRegistry::Scene>> ScenesForActors(const std::vector<std::uint32_t>& a_cast, const std::string& a_furniture)
+	std::vector<std::shared_ptr<const SceneRegistry::Scene>> ScenesForActors(const std::vector<std::uint32_t>& a_cast, const std::string& a_furniture,
+		std::optional<std::size_t> a_pinned = std::nullopt)
 	{
 		SceneRegistry::ListFilter filter;
 		filter.actors = ConditionsOf(a_cast);
+		filter.pinned = a_pinned;
 		std::vector<std::shared_ptr<const SceneRegistry::Scene>> out;
 		for (const auto& summary : SceneRegistry::List(a_cast.size(), filter)) {
 			const auto scene = SceneRegistry::Find(summary.id);
@@ -8875,12 +9008,19 @@ namespace
 		return out;
 	}
 
-	// Why a_actor can't be in a new scene, or "" if they can (as
-	// FourStimScene.CanUseActor).
-	std::string CantUse(RE::Actor* a_actor)
+	// Why a_actor isn't eligible for scenes at all, or "" if they are:
+	// OStim's isEligible (Core.cpp: not disabled, deleted, a child or dead,
+	// with an actor type, in no thread), which OThreadBuilder.Create checks.
+	std::string NotEligible(RE::Actor* a_actor)
 	{
 		if (!a_actor) {
 			return "no actor";
+		}
+		if (a_actor->IsDisabled()) {
+			return "disabled";
+		}
+		if (a_actor->IsDeleted()) {
+			return "deleted";
 		}
 		if (a_actor->IsChild()) {
 			return "children are never eligible";
@@ -8888,14 +9028,28 @@ namespace
 		if (a_actor->IsDead(false)) {
 			return "dead";
 		}
-		if (a_actor->IsInCombat()) {
-			return "in combat";
+		if (ActorProperties::Type(a_actor).empty()) {
+			return "no actor type (docs/ACTORS.md)";
 		}
 		if (FindActiveScene(a_actor->GetFormID())) {
 			return "already in a scene";
 		}
 		if (InStartingThread(a_actor->GetFormID())) {
 			return "already in a scene that's starting";
+		}
+		return {};
+	}
+
+	// Why a_actor can't be in a new scene now, or "" if they can (as
+	// FourStimScene.CanUseActor): eligible, loaded (OStim's ThreadStarter),
+	// and (4Stim) not in combat.
+	std::string CantUse(RE::Actor* a_actor)
+	{
+		if (auto why = NotEligible(a_actor); !why.empty()) {
+			return why;
+		}
+		if (a_actor->IsInCombat()) {
+			return "in combat";
 		}
 		if (!a_actor->Get3D()) {
 			return "not loaded";  // OStim's ThreadStarter: unloaded actors can't start
@@ -8928,9 +9082,12 @@ namespace
 	{
 		ThreadBuilder builder;
 		for (const auto actor : a_actors) {
-			if (actor) {
-				builder.actors.push_back(actor->GetFormID());
+			// As OStim's Create: -1 for an actor who isn't eligible.
+			if (const auto why = NotEligible(actor); !why.empty()) {
+				REX::WARN("ThreadBuilder.Create: {:08X} isn't eligible ({})", actor ? actor->GetFormID() : 0, why);
+				return -1;
 			}
+			builder.actors.push_back(actor->GetFormID());
 		}
 		if (builder.actors.empty()) {
 			REX::WARN("ThreadBuilder.Create: no actors");
@@ -9004,6 +9161,450 @@ namespace
 	// is optional). A scene without a length gets this.
 	constexpr float STARTING_NO_LENGTH = 10.0F;
 
+	// OStim's ActorUtil::sort, before the player's place: the dominant
+	// actors first, then those with a penis, otherwise as given.
+	void SortLikeOStim(std::vector<std::uint32_t>& a_cast, const std::vector<std::uint32_t>& a_dominant)
+	{
+		std::ranges::stable_sort(a_cast, [&](std::uint32_t a, std::uint32_t b) {
+			const bool domA = std::ranges::find(a_dominant, a) != a_dominant.end();
+			const bool domB = std::ranges::find(a_dominant, b) != a_dominant.end();
+			if (domA != domB) {
+				return domA;
+			}
+			return ActorProperties::Cached(a).penis && !ActorProperties::Cached(b).penis;
+		});
+	}
+
+	// What OStim's start flow decided for a player thread (StartFlow below).
+	struct StartChoice
+	{
+		bool                            placeDecided = false;  // piece is the answer (none = no furniture)
+		std::optional<Furniture::Found> piece;
+		bool                            sorted = false;        // the cast is in role order already
+		std::optional<std::size_t>      pin;                   // this actor keeps their place (the player's)
+	};
+
+	// The rest of a builder's start, on the main thread: the order, the
+	// place, the scene, then Papyrus places the actors.
+	void LaunchThread(const ThreadBuilder& builder, std::int32_t threadID, bool withPlayer, const StartChoice& a_choice)
+	{
+		{
+			// Out of the start flow: the usual time to be placed from here.
+			std::scoped_lock lock(g_threadsLock);
+			if (const auto record = ThreadRecordLocked(threadID)) {
+				record->flow = 0;
+				record->since = std::chrono::steady_clock::now();
+			}
+		}
+		auto cast = builder.actors;
+		auto starting = builder.starting;
+		// As OStim's: with starting scenes the caller's order is the role
+		// order; if the first doesn't fit the actors in that order, a start
+		// scene is picked instead (ThreadStarter.cpp).
+		if (!starting.empty()) {
+			const auto first = SceneRegistry::Find(starting.front().scene);
+			if (!first || !SceneRegistry::Fits(first->actors, ConditionsOf(cast))) {
+				REX::WARN("ThreadBuilder: thread {}: \"{}\" doesn't fit its actors in the order given; picking a start scene instead", threadID, starting.front().scene);
+				starting.clear();
+			}
+		}
+		if (starting.empty() && !a_choice.sorted) {
+			SortLikeOStim(cast, builder.dominant);
+		}
+
+		// Where: the furniture given, else (unless NoFurniture) the nearest
+		// that has a scene for them (with a starting scene: one that takes
+		// it), as OStim's thread starters.
+		std::optional<Furniture::Found> piece;
+		if (builder.furniture) {
+			if (const auto ref = RE::TESForm::GetFormByID<RE::TESObjectREFR>(builder.furniture)) {
+				const auto type = Furniture::Classify(ref);
+				if (type.empty()) {
+					REX::WARN("ThreadBuilder: {:08X} isn't furniture of any type, starting without it", builder.furniture);
+				} else if (FurnitureBlocked(builder.furniture) || std::ranges::any_of(g_activeScenes, [&](const ActiveScene& a) { return a.furnitureRef == builder.furniture; })) {
+					REX::WARN("ThreadBuilder: {:08X} is in use, starting without it", builder.furniture);
+				} else {
+					piece = Furniture::Found{ type, {}, builder.furniture, 0.0F, std::nullopt };
+				}
+			}
+		} else if (a_choice.placeDecided) {
+			piece = a_choice.piece;  // the start flow's choice
+		} else if (!builder.noFurniture && g_settings.useFurniture) {
+			const auto firstActor = RE::TESForm::GetFormByID<RE::Actor>(cast.front());
+			const auto firstScene = starting.empty() ? nullptr : SceneRegistry::Find(starting.front().scene);
+			if (firstActor) {
+				for (const auto& found : FurnitureNear(firstActor->data.location, firstActor)) {
+					if (firstScene ? (!firstScene->furniture.empty() && SceneFitsFurniture(*firstScene, found.type)) : !ScenesForActors(cast, found.type).empty()) {
+						piece = found;
+						break;
+					}
+				}
+			}
+		}
+		const std::string here = piece ? piece->type : std::string{};
+
+		std::shared_ptr<const SceneRegistry::Scene> scene;
+		std::vector<std::int32_t>                   ordered;
+		if (!starting.empty()) {
+			scene = SceneRegistry::Find(starting.front().scene);
+			for (const auto id : cast) {
+				ordered.push_back(static_cast<std::int32_t>(id));
+			}
+		} else {
+			std::string why;
+			scene = PickStartScene(ScenesForActors(cast, here, a_choice.pin), here, withPlayer, why);
+			if (!scene && piece) {
+				piece.reset();  // nothing fits there: right here instead
+				scene = PickStartScene(ScenesForActors(cast, {}, a_choice.pin), {}, withPlayer, why);
+			}
+			if (!scene) {
+				DropStartingThread(threadID, std::format("no scene for {} actor(s){}", cast.size(), here.empty() ? std::string{} : " on " + here));
+				return;
+			}
+			// Who takes which role.
+			const auto order = SceneRegistry::AssignRoles(scene->actors, ConditionsOf(cast), a_choice.pin);
+			if (order.size() != cast.size()) {
+				DropStartingThread(threadID, std::format("its actors don't fit \"{}\"'s roles", scene->id));
+				return;
+			}
+			std::vector<std::uint32_t> roleOrder;
+			for (const auto index : order) {
+				ordered.push_back(static_cast<std::int32_t>(cast[index]));
+				roleOrder.push_back(cast[index]);
+			}
+			cast = std::move(roleOrder);
+		}
+		{
+			std::scoped_lock lock(g_threadsLock);
+			if (const auto record = ThreadRecordLocked(threadID)) {
+				record->roleActors = cast;
+			}
+		}
+
+		if (piece) {
+			PendingFurniture pending{ piece->ref, piece->type, ActorSlots<int>::Key(cast) };
+			pending.offset = scene->furnitureOffset;
+			pending.floorScene = scene->furniture.empty();
+			pending.fixedSpot = piece->spot;
+			SetPendingFurniture(std::move(pending));
+		}
+		// Starting scenes after the first: a sequence, as OStim's starting
+		// nodes. An entry without a time plays for its scene's length;
+		// navigateTo puts in the way there from the entry before. One
+		// starting scene is a plain start, as OStim's (no sequence, no
+		// sequence end).
+		if (starting.size() > 1) {
+			const auto conditions = ConditionsOf(cast);
+			std::vector<SceneRegistry::SequenceEntry> entries;
+			for (std::size_t i = 0; i < starting.size(); ++i) {
+				auto       entry = starting[i];
+				const auto at = SceneRegistry::Find(entry.scene);
+				if (!at || at->actors.size() != cast.size()) {
+					REX::WARN("ThreadBuilder: thread {}: starting scene \"{}\" left out (no such scene for {} actor(s))", threadID, entry.scene, cast.size());
+					continue;
+				}
+				if (i > 0 && i < builder.navigateTo.size() && builder.navigateTo[i] && !entries.empty()) {
+					const auto from = SceneRegistry::Find(entries.back().scene);
+					if (from && from->id != at->id) {
+						auto route = RouteBetween(from, at, conditions, g_autoConfig.maxSteps);
+						if (!route.empty()) {
+							route.pop_back();  // the entry itself, with its own time, below
+							entries.insert(entries.end(), route.begin(), route.end());
+						}
+					}
+				}
+				if (entry.duration <= 0.0F) {
+					entry.duration = at->length > 0.0F ? at->length : STARTING_NO_LENGTH;
+				}
+				entries.push_back(std::move(entry));
+			}
+			if (entries.size() > 1) {
+				auto sequence = std::make_shared<SceneRegistry::Sequence>();
+				sequence->id = std::format("thread {}", threadID);
+				sequence->actorCount = cast.size();
+				sequence->entries = std::move(entries);
+				QueueSequence(std::move(sequence), cast);
+			}
+		}
+		REX::INFO("ThreadBuilder: thread {} starting \"{}\"{}", threadID, scene->id, here.empty() ? std::string{} : " on " + here);
+		if (g_vm) {
+			RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
+			const std::int32_t anchor = withPlayer ? 0 : static_cast<std::int32_t>(cast.front());
+			Compat::DispatchStaticCall(g_vm, "FourStimMenu"sv, "StartPickedCast"sv, callback, scene->id, ordered, anchor);
+		} else {
+			DropStartingThread(threadID, "no script engine");
+		}
+	}
+
+	// OStim's PlayerThreadStarter: a player thread from a script waits until
+	// the player is out of dialogue, then asks (as OStim's message boxes, in
+	// the picker) about furniture, adding actors near and the player's role,
+	// as the settings say, and sorts the actors with PlayerAlways...; then
+	// LaunchThread. Each step on the main thread.
+	struct StartFlow
+	{
+		ThreadBuilder builder;
+		std::int32_t  threadID = 0;
+		std::uint64_t id = 0;
+		StartChoice   choice;
+	};
+	using StartFlowPtr = std::shared_ptr<StartFlow>;
+	std::atomic<std::uint64_t> g_nextStartFlow = 1;
+
+	// Whether a_flow's thread is still waiting for it (not stopped, the game
+	// not loaded since).
+	bool FlowAlive(const StartFlow& a_flow)
+	{
+		std::scoped_lock lock(g_threadsLock);
+		const auto record = ThreadRecordLocked(a_flow.threadID);
+		return record && record->status == ThreadRecord::Status::kStarting && record->flow == a_flow.id;
+	}
+
+	// OStim's position names (PlayerThreadStarter.cpp).
+	std::string PositionName(std::size_t a_index)
+	{
+		constexpr std::array names{ "Dom", "Sub", "Third", "Fourth", "Fifth", "Sixth", "Seventh", "Eighth", "Ninth" };
+		return a_index < names.size() ? std::string(names[a_index]) : std::format("{}", a_index + 1);
+	}
+
+	void FlowLaunch(const StartFlowPtr& a_flow)
+	{
+		if (FlowAlive(*a_flow)) {
+			LaunchThread(a_flow->builder, a_flow->threadID, true, a_flow->choice);
+		}
+	}
+
+	// OStim's sortActors: the order, then the player moved to the position
+	// picked (a_playerIndex), or for two, where PlayerAlways... says.
+	void FlowSort(const StartFlowPtr& a_flow, int a_playerIndex)
+	{
+		auto&      cast = a_flow->builder.actors;
+		const auto player = RE::PlayerCharacter::GetSingleton()->GetFormID();
+		SortLikeOStim(cast, a_flow->builder.dominant);
+		const int want = a_playerIndex >= 0 ? a_playerIndex : PlayerAlwaysIndex(cast);
+		if (const auto at = std::ranges::find(cast, player); at != cast.end() && want >= 0 && static_cast<std::size_t>(want) < cast.size()) {
+			cast.erase(at);
+			cast.insert(cast.begin() + want, player);
+			a_flow->choice.pin = static_cast<std::size_t>(want);
+		}
+		a_flow->choice.sorted = true;
+		FlowLaunch(a_flow);
+	}
+
+	// OStim's handleActorSorting: asks the player's position, by
+	// playerSelectRole... (for two: the same or not by penis, as OStim's).
+	void FlowRole(const StartFlowPtr& a_flow)
+	{
+		if (!FlowAlive(*a_flow)) {
+			return;
+		}
+		const auto& cast = a_flow->builder.actors;
+		if (!a_flow->builder.starting.empty()) {
+			FlowLaunch(a_flow);
+			return;
+		}
+		bool select = false;
+		if (cast.size() >= 3) {
+			select = g_settings.playerSelectRoleThreesome;
+		} else if (cast.size() == 2) {
+			select = ActorProperties::Cached(cast[0]).penis == ActorProperties::Cached(cast[1]).penis ? g_settings.playerSelectRoleGay : g_settings.playerSelectRoleStraight;
+		}
+		if (!select) {
+			FlowSort(a_flow, -1);
+			return;
+		}
+		Question question;
+		question.title = TR("$4stim_message_select_position", "Which position do you want to be in?");
+		for (std::size_t i = 0; i < cast.size(); ++i) {
+			question.answers.push_back({ PositionName(i), {} });
+		}
+		question.then = [a_flow](int a_index) { FlowSort(a_flow, a_index); };
+		Ask(std::move(question));
+	}
+
+	// Whether any scene has a_count actors and plays on a_furniture ("" = off
+	// furniture): OStim's GraphTable::hasNodes.
+	bool HasScenesFor(std::size_t a_count, const std::string& a_furniture)
+	{
+		for (const auto& summary : SceneRegistry::List(a_count)) {
+			const auto scene = SceneRegistry::Find(summary.id);
+			if (scene && !scene->IsTransition() && SceneFitsFurniture(*scene, a_furniture)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	// OStim's handleActorAdding (addActorsAtStart): "Add actor?" with the
+	// eligible actors near the player, again after each one added, while
+	// some scene takes one more on the place chosen.
+	void FlowAddActors(const StartFlowPtr& a_flow)
+	{
+		if (!FlowAlive(*a_flow)) {
+			return;
+		}
+		const auto& cast = a_flow->builder.actors;
+		if (!a_flow->builder.starting.empty()) {
+			FlowLaunch(a_flow);
+			return;
+		}
+		const std::string here = a_flow->choice.piece ? a_flow->choice.piece->type : std::string{};
+		if (!g_settings.addActorsAtStart || !HasScenesFor(cast.size() + 1, here)) {
+			FlowRole(a_flow);
+			return;
+		}
+		std::vector<Candidate> near;
+		for (auto& c : FindCandidates(2000.0F)) {  // OStim's 2000
+			if (std::ranges::find(cast, c.id) == cast.end() && CantUse(RE::TESForm::GetFormByID<RE::Actor>(c.id)).empty()) {
+				near.push_back(std::move(c));
+			}
+		}
+		if (near.empty()) {
+			FlowRole(a_flow);
+			return;
+		}
+		Question question;
+		question.title = TR("$4stim_message_add_actor", "Add actor?");
+		question.answers.push_back({ TR("$4stim_message_none", "None"), {} });
+		for (const auto& c : near) {
+			const char* sex = c.sex == SceneRegistry::Sex::kMale ? " (M)" : c.sex == SceneRegistry::Sex::kFemale ? " (F)" : "";
+			question.answers.push_back({ c.name + sex, TRF("$4stim_meters_away", "{:.0f} m away", c.distance / 70.0F) });
+		}
+		question.then = [a_flow, near](int a_index) {
+			if (a_index < 1 || static_cast<std::size_t>(a_index) > near.size() || !FlowAlive(*a_flow)) {
+				FlowRole(a_flow);
+				return;
+			}
+			const auto id = near[a_index - 1].id;
+			if (!CantUse(RE::TESForm::GetFormByID<RE::Actor>(id)).empty()) {
+				FlowAddActors(a_flow);  // busy since: ask again
+				return;
+			}
+			a_flow->builder.actors.push_back(id);
+			REX::INFO("ThreadBuilder: thread {}: {:08X} added", a_flow->threadID, id);
+			{
+				std::scoped_lock lock(g_threadsLock);
+				if (const auto record = ThreadRecordLocked(a_flow->threadID)) {
+					record->actors = ActorSlots<int>::Key(a_flow->builder.actors);
+					record->roleActors = a_flow->builder.actors;
+				}
+			}
+			FlowAddActors(a_flow);
+		};
+		Ask(std::move(question));
+	}
+
+	// OStim's handleFurniture. With a starting scene, OStim asks about the
+	// nearest bed whatever the scene; 4Stim asks about the nearest furniture
+	// the starting scene plays on (none for a floor scene), as its other
+	// starts pick it.
+	void FlowFurniture(const StartFlowPtr& a_flow)
+	{
+		if (!FlowAlive(*a_flow)) {
+			return;
+		}
+		// As OStim's startThread, before the flow: starting scenes their
+		// actors don't fit in the order given are dropped.
+		if (auto& starting = a_flow->builder.starting; !starting.empty()) {
+			const auto scene = SceneRegistry::Find(starting.front().scene);
+			if (!scene || !SceneRegistry::Fits(scene->actors, ConditionsOf(a_flow->builder.actors))) {
+				REX::WARN("ThreadBuilder: thread {}: \"{}\" doesn't fit its actors in the order given; picking a start scene instead", a_flow->threadID, starting.front().scene);
+				starting.clear();
+				a_flow->builder.navigateTo.clear();
+			}
+		}
+		const auto& b = a_flow->builder;
+		const auto  first = RE::TESForm::GetFormByID<RE::Actor>(b.actors.front());
+		if (b.noFurniture || b.furniture || !g_settings.useFurniture || !first) {
+			FlowAddActors(a_flow);
+			return;
+		}
+		a_flow->choice.placeDecided = true;
+		if (!b.starting.empty()) {
+			const auto                      scene = SceneRegistry::Find(b.starting.front().scene);
+			std::optional<Furniture::Found> piece;
+			if (scene && !scene->furniture.empty()) {
+				for (const auto& found : FurnitureNear(first->data.location, first)) {
+					if (SceneFitsFurniture(*scene, found.type)) {
+						piece = found;
+						break;
+					}
+				}
+			}
+			if (!piece) {
+				FlowAddActors(a_flow);
+				return;
+			}
+			if (!g_settings.selectFurniture) {
+				a_flow->choice.piece = piece;
+				FlowAddActors(a_flow);
+				return;
+			}
+			Question question;
+			question.title = TRF("$4stim_message_use_furniture", "Do you want to use the nearby {}?", piece->name);
+			question.answers.push_back({ TR("$4stim_message_yes", "Yes"), {} });
+			question.answers.push_back({ TR("$4stim_message_no", "No"), {} });
+			question.then = [a_flow, piece](int a_index) {
+				if (a_index == 0) {
+					a_flow->choice.piece = piece;
+					FlowAddActors(a_flow);
+				} else {
+					FlowRole(a_flow);
+				}
+			};
+			Ask(std::move(question));
+			return;
+		}
+		// OStim's selectFurniture: the furniture near that some scene for
+		// these actors plays on; asked (SetSelectFurniture), else the nearest.
+		std::vector<Furniture::Found> found;
+		for (auto& f : FurnitureNear(first->data.location, first)) {
+			if (!ScenesForActors(b.actors, f.type).empty()) {
+				found.push_back(std::move(f));
+			}
+		}
+		if (found.empty()) {
+			FlowAddActors(a_flow);
+			return;
+		}
+		if (!g_settings.selectFurniture) {
+			a_flow->choice.piece = found.front();
+			FlowAddActors(a_flow);
+			return;
+		}
+		Question question;
+		question.title = TR("$4stim_message_select_furniture", "Which furniture do you want to use?");
+		question.answers.push_back({ TR("$4stim_message_none", "None"), {} });
+		for (const auto& f : found) {
+			question.answers.push_back({ f.name, TRF("$4stim_meters_away", "{:.0f} m away", f.distance / 70.0F) });
+		}
+		question.then = [a_flow, found](int a_index) {
+			if (a_index >= 1 && static_cast<std::size_t>(a_index) <= found.size()) {
+				a_flow->choice.piece = found[a_index - 1];
+			}
+			FlowAddActors(a_flow);
+		};
+		Ask(std::move(question));
+	}
+
+	// OStim's startPlayerThread: waits (every 250 ms) while the player is in
+	// dialogue, as scripts start scenes from a topic's end, while it's
+	// still closing.
+	void StartPlayerFlow(StartFlowPtr a_flow)
+	{
+		std::thread([a_flow = std::move(a_flow)]() {
+			bool logged = false;
+			while (Compat::CanCheckDialogue() && RE::IsPlayerInDialogue() && FlowAlive(*a_flow)) {
+				if (!logged) {
+					REX::INFO("ThreadBuilder: thread {} waits for the dialogue to end", a_flow->threadID);
+					logged = true;
+				}
+				std::this_thread::sleep_for(std::chrono::milliseconds(250));
+			}
+			F4SE::GetTaskInterface()->AddTask([a_flow]() { FlowFurniture(a_flow); });
+		}).detach();
+	}
+
 	// Starts a scene from a builder (OStim's Start). Returns the thread ID
 	// (0 for the player's), or -1. As OStim's, the thread exists from here
 	// on (FourThread.IsRunning, metadata, GetActors...), while Papyrus places
@@ -9027,7 +9628,8 @@ namespace
 			}
 			withPlayer = withPlayer || (player && id == player->GetFormID());
 		}
-		std::int32_t threadID = 0;
+		std::int32_t        threadID = 0;
+		const std::uint64_t flowID = g_nextStartFlow++;
 		{
 			std::scoped_lock lock(g_threadsLock);
 			PruneStartingLocked();
@@ -9047,148 +9649,20 @@ namespace
 			record.noUndress = a_builder.noUndress;
 			record.endAfterSequence = a_builder.endAfterSequence;
 			record.metadata = a_builder.metadata;
+			if (withPlayer) {
+				record.flow = flowID;
+			}
 			g_threads.insert_or_assign(threadID, std::move(record));
 		}
-		F4SE::GetTaskInterface()->AddTask([builder = std::move(a_builder), threadID, withPlayer]() {
-			auto cast = builder.actors;
-			auto starting = builder.starting;
-			// As OStim's: with starting scenes the caller's order is the role
-			// order; if the first doesn't fit the actors in that order, a start
-			// scene is picked instead (ThreadStarter.cpp).
-			if (!starting.empty()) {
-				const auto first = SceneRegistry::Find(starting.front().scene);
-				if (!first || !SceneRegistry::Fits(first->actors, ConditionsOf(cast))) {
-					REX::WARN("ThreadBuilder: thread {}: \"{}\" doesn't fit its actors in the order given; picking a start scene instead", threadID, starting.front().scene);
-					starting.clear();
-				}
-			}
-			if (starting.empty()) {
-				// OStim's order: the dominant actors first, then those with a penis.
-				std::ranges::stable_sort(cast, [](std::uint32_t a, std::uint32_t b) { return ActorProperties::Cached(a).penis && !ActorProperties::Cached(b).penis; });
-				std::ranges::stable_partition(cast, [&](std::uint32_t id) { return std::ranges::find(builder.dominant, id) != builder.dominant.end(); });
-			}
-
-			// Where: the furniture given, else (unless NoFurniture) the nearest
-			// that has a scene for them (with a starting scene: one that takes
-			// it), as OStim's thread starters.
-			std::optional<Furniture::Found> piece;
-			if (builder.furniture) {
-				if (const auto ref = RE::TESForm::GetFormByID<RE::TESObjectREFR>(builder.furniture)) {
-					const auto type = Furniture::Classify(ref);
-					if (type.empty()) {
-						REX::WARN("ThreadBuilder: {:08X} isn't furniture of any type, starting without it", builder.furniture);
-					} else if (FurnitureBlocked(builder.furniture) || std::ranges::any_of(g_activeScenes, [&](const ActiveScene& a) { return a.furnitureRef == builder.furniture; })) {
-						REX::WARN("ThreadBuilder: {:08X} is in use, starting without it", builder.furniture);
-					} else {
-						piece = Furniture::Found{ type, {}, builder.furniture, 0.0F, std::nullopt };
-					}
-				}
-			} else if (!builder.noFurniture && g_settings.useFurniture) {
-				const auto firstActor = RE::TESForm::GetFormByID<RE::Actor>(cast.front());
-				const auto firstScene = starting.empty() ? nullptr : SceneRegistry::Find(starting.front().scene);
-				if (firstActor) {
-					for (const auto& found : FurnitureNear(firstActor->data.location, firstActor)) {
-						if (firstScene ? (!firstScene->furniture.empty() && SceneFitsFurniture(*firstScene, found.type)) : !ScenesForActors(cast, found.type).empty()) {
-							piece = found;
-							break;
-						}
-					}
-				}
-			}
-			const std::string here = piece ? piece->type : std::string{};
-
-			std::shared_ptr<const SceneRegistry::Scene> scene;
-			std::vector<std::int32_t>                   ordered;
-			if (!starting.empty()) {
-				scene = SceneRegistry::Find(starting.front().scene);
-				for (const auto id : cast) {
-					ordered.push_back(static_cast<std::int32_t>(id));
-				}
-			} else {
-				std::string why;
-				scene = PickStartScene(ScenesForActors(cast, here), here, withPlayer, why);
-				if (!scene && piece) {
-					piece.reset();  // nothing fits there: right here instead
-					scene = PickStartScene(ScenesForActors(cast, {}), {}, withPlayer, why);
-				}
-				if (!scene) {
-					DropStartingThread(threadID, std::format("no scene for {} actor(s){}", cast.size(), here.empty() ? std::string{} : " on " + here));
-					return;
-				}
-				// Who takes which role.
-				const auto order = SceneRegistry::AssignRoles(scene->actors, ConditionsOf(cast));
-				if (order.size() != cast.size()) {
-					DropStartingThread(threadID, std::format("its actors don't fit \"{}\"'s roles", scene->id));
-					return;
-				}
-				std::vector<std::uint32_t> roleOrder;
-				for (const auto index : order) {
-					ordered.push_back(static_cast<std::int32_t>(cast[index]));
-					roleOrder.push_back(cast[index]);
-				}
-				cast = std::move(roleOrder);
-			}
-			{
-				std::scoped_lock lock(g_threadsLock);
-				if (const auto record = ThreadRecordLocked(threadID)) {
-					record->roleActors = cast;
-				}
-			}
-
-			if (piece) {
-				PendingFurniture pending{ piece->ref, piece->type, ActorSlots<int>::Key(cast) };
-				pending.offset = scene->furnitureOffset;
-				pending.floorScene = scene->furniture.empty();
-				pending.fixedSpot = piece->spot;
-				SetPendingFurniture(std::move(pending));
-			}
-			// Starting scenes after the first: a sequence, as OStim's starting
-			// nodes. An entry without a time plays for its scene's length;
-			// navigateTo puts in the way there from the entry before. One
-			// starting scene is a plain start, as OStim's (no sequence, no
-			// sequence end).
-			if (starting.size() > 1) {
-				const auto conditions = ConditionsOf(cast);
-				std::vector<SceneRegistry::SequenceEntry> entries;
-				for (std::size_t i = 0; i < starting.size(); ++i) {
-					auto       entry = starting[i];
-					const auto at = SceneRegistry::Find(entry.scene);
-					if (!at || at->actors.size() != cast.size()) {
-						REX::WARN("ThreadBuilder: thread {}: starting scene \"{}\" left out (no such scene for {} actor(s))", threadID, entry.scene, cast.size());
-						continue;
-					}
-					if (i > 0 && i < builder.navigateTo.size() && builder.navigateTo[i] && !entries.empty()) {
-						const auto from = SceneRegistry::Find(entries.back().scene);
-						if (from && from->id != at->id) {
-							auto route = RouteBetween(from, at, conditions, g_autoConfig.maxSteps);
-							if (!route.empty()) {
-								route.pop_back();  // the entry itself, with its own time, below
-								entries.insert(entries.end(), route.begin(), route.end());
-							}
-						}
-					}
-					if (entry.duration <= 0.0F) {
-						entry.duration = at->length > 0.0F ? at->length : STARTING_NO_LENGTH;
-					}
-					entries.push_back(std::move(entry));
-				}
-				if (entries.size() > 1) {
-					auto sequence = std::make_shared<SceneRegistry::Sequence>();
-					sequence->id = std::format("thread {}", threadID);
-					sequence->actorCount = cast.size();
-					sequence->entries = std::move(entries);
-					QueueSequence(std::move(sequence), cast);
-				}
-			}
-			REX::INFO("ThreadBuilder: thread {} starting \"{}\"{}", threadID, scene->id, here.empty() ? std::string{} : " on " + here);
-			if (g_vm) {
-				RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
-				const std::int32_t anchor = withPlayer ? 0 : static_cast<std::int32_t>(cast.front());
-				Compat::DispatchStaticCall(g_vm, "FourStimMenu"sv, "StartPickedCast"sv, callback, scene->id, ordered, anchor);
-			} else {
-				DropStartingThread(threadID, "no script engine");
-			}
-		});
+		if (withPlayer) {
+			auto flow = std::make_shared<StartFlow>();
+			flow->builder = std::move(a_builder);
+			flow->threadID = threadID;
+			flow->id = flowID;
+			StartPlayerFlow(std::move(flow));
+			return threadID;
+		}
+		F4SE::GetTaskInterface()->AddTask([builder = std::move(a_builder), threadID]() { LaunchThread(builder, threadID, false, {}); });
 		return threadID;
 	}
 

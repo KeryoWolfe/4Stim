@@ -84,10 +84,10 @@ The short answer to "are we missing anything": yes, and it falls into five patte
 
 **Sound**
 - OStim's old voice-set syntax (used by its own `defaultmale.json`) and single-object entries load as empty sets with nothing logged (4 §3).
-- Sound forms play through Papyrus `Sound.Play`: no volume, can't be stopped, 2-second guess; CommonLibF4 can play them natively (4 §7).
+- **Done in 0.5.0 (not yet built or tested):** sound descriptors play natively as OStim's `GameSound::play`, with volume, stopping and their real length; Papyrus `Sound.Play` only where the address isn't found (OLDGEN.md). Was: Papyrus only, no volume, can't be stopped, 2-second guess (4 §7).
 
 **Start flow and eligibility**
-- Script-started player scenes skip OStim's start flow: waiting for dialogue to close, adding actors, role choice, `PlayerAlways`, furniture choice (1 §12, 6 F18). Builder eligibility is weaker than OStim's `isEligible` (1 §13).
+- **Done in 0.5.0 (not yet built or tested):** player scenes from scripts go through OStim's start flow: they wait for dialogue to end, then ask about furniture, adding actors (`addActorsAtStart`, new) and the player's position, and sort with `PlayerAlways...`, in the picker as OStim's message boxes (API.md). 4Stim's: with a starting scene it asks about the furniture that scene plays on, not always a bed. `FourThreadBuilder.Create` checks OStim's `isEligible` (disabled, deleted, actor type added). Was: none of it (1 §12, 6 F18, 1 §13).
 
 **Settings and menus**
 - **Done in 0.5.0 (built, untested):** the search picker takes typing and filters by name, as OStim's search menu (5 §1). Still open: The scene key does something else in and out of a scene, undocumented, without OStim's hold-for-solo (5 §2).

@@ -30,7 +30,7 @@ Voice sets are in `Data\F4SE\Plugins\4Stim\Voice Sets\`, one per file, in OStim'
 Each entry is one of:
 
 - **4Stim: `"file"`**, a sound file (`.wav` or `.xwm`) or a folder of them under `Data\Sound\`, one picked at random. No plugin is needed. Folders are read from loose files: sounds packed in a `.ba2` have to be listed one by one.
-- **OStim's `"sound"`**, a sound descriptor form (`{ "mod": "MyMod.esp", "formid": "0x000800" }`), played with Papyrus `Sound.Play`.
+- **OStim's `"sound"`**, a sound descriptor form (`{ "mod": "MyMod.esp", "formid": "0x000800" }`), played as OStim plays it (`BSAudioManager::GetSoundHandle`, following the actor): at `moanVolume` / `soundVolume`, stopped by muting, a climax or the scene's end, and its real length times the moans. It plays through the descriptor's own output model and category, with the usage flags `iSoundFlags`. On a game version where 4Stim can't find `GetSoundHandle` (OLDGEN.md), it falls back to Papyrus `Sound.Play`: no volume, can't be stopped, and counted as 2 seconds long.
 
 And can have:
 
