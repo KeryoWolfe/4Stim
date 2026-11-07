@@ -203,6 +203,7 @@ namespace
 		bool          logAnimEvents = false;  // log scene actors' animation events (for authors)
 		bool          timeAnimCues = true;    // bTimeAnimCues: read and time the animation files' annotation cues (AnimCues.h)
 		bool          collisionWatch = false; // bCollisionWatch: log where scene actors' controllers and bodies are against their spots
+		bool          translationLock = true; // bTranslationLock: hold scene actors with a never-ending translation (0: placed once, for finding a shake)
 		bool          furnitureOutOfWay = true; // bFurnitureOutOfTheWay: scene furniture doesn't collide with the scene's actors
 		float         transitionLead = 0.0F;   // seconds before a transition's length to move on (see 4Stim.ini)
 		bool          matchSex = true;         // SetOnlyGayAnimsInGayScenes (OStim's intended sex only): a role's sex must be the actor's
@@ -751,6 +752,8 @@ namespace
 					Physics::Settings().resetAfterScene = std::stoi(value) != 0;
 				} else if (key == "bcollisionwatch") {
 					g_settings.collisionWatch = std::stoi(value) != 0;
+				} else if (key == "btranslationlock") {
+					g_settings.translationLock = std::stoi(value) != 0;
 				} else if (key == "btimeanimcues") {
 					g_settings.timeAnimCues = std::stoi(value) != 0;
 				} else if (key == "bloganimevents") {
@@ -3417,6 +3420,14 @@ namespace
 			}
 			FaceHeading(actor, spot.heading);  // face the right way first; the translation then holds it
 			RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
+			if (!g_settings.translationLock) {
+				// bTranslationLock=0 (finding a shake): put on the spot once, with
+				// no translation holding them there every frame; the scene
+				// guard's watchdog puts them back if they drift.
+				Compat::DispatchStaticCall(g_vm, "FourStimScene"sv, "Unlock"sv, callback, static_cast<std::int32_t>(id));
+				actor->SetPosition(spot.position, true);
+				continue;
+			}
 			Compat::DispatchStaticCall(g_vm, "FourStimScene"sv, "LockInPlace"sv, callback, static_cast<std::int32_t>(id), spot.position.x, spot.position.y,
 				spot.position.z, spot.heading * 180.0F / PI_F);
 		}
@@ -4032,6 +4043,87 @@ namespace
 		}
 	}
 
+	// The shake watch (bCollisionWatch): every frame, where each scene actor
+	// is (the reference) and where they're drawn (their 3D root), against
+	// their spot. Every 2 s (10 times a scene), a line with how far off they
+	// are and how much they move frame to frame, and how often that movement
+	// turns back on itself: a shake is a back-and-forth every frame (the
+	// owner's wall scenes, 6 November, about 2 pixels each frame with the
+	// camera still). A reference that turns back is being moved by
+	// something fighting the lock (the animation's root motion, collision);
+	// only the drawn root turning back is the animation itself.
+	void WatchShaking(float a_seconds)
+	{
+		struct Track
+		{
+			RE::NiPoint3  lastLoc, lastRoot, lastLocStep, lastRootStep;
+			bool          started = false;
+			int           frames = 0, locTurns = 0, rootTurns = 0, lines = 0;
+			float         locStepMax = 0.0F, rootStepMax = 0.0F, locOffMax = 0.0F, rootOffMax = 0.0F, time = 0.0F;
+			std::string   scene;
+		};
+		static std::unordered_map<std::uint32_t, Track> tracks;
+		if (!g_settings.collisionWatch) {
+			tracks.clear();
+			return;
+		}
+		auto turned = [](const RE::NiPoint3& a, const RE::NiPoint3& b) {
+			// Two frame steps pointing opposite ways, both over a hundredth of a unit.
+			const float la = a.Length(), lb = b.Length();
+			return la > 0.01F && lb > 0.01F && (a.x * b.x + a.y * b.y + a.z * b.z) < -0.5F * la * lb;
+		};
+		std::unordered_set<std::uint32_t> seen;
+		for (const auto& active : g_activeScenes) {
+			for (std::size_t role = 0; role < active.actors.size(); ++role) {
+				const auto id = active.actors[role];
+				const auto actor = RE::TESForm::GetFormByID<RE::Actor>(id);
+				const auto root = actor ? actor->Get3D() : nullptr;
+				if (!root) {
+					continue;
+				}
+				seen.insert(id);
+				auto& t = tracks[id];
+				if (t.scene != active.sceneID) {
+					t = Track{};
+					t.scene = active.sceneID;
+				}
+				const auto spot = SpotOf(active, role).position;
+				const auto loc = actor->data.location;
+				const auto drawn = root->world.translate;
+				if (t.started) {
+					const auto locStep = loc - t.lastLoc;
+					const auto rootStep = drawn - t.lastRoot;
+					t.locTurns += turned(locStep, t.lastLocStep) ? 1 : 0;
+					t.rootTurns += turned(rootStep, t.lastRootStep) ? 1 : 0;
+					t.locStepMax = std::max(t.locStepMax, locStep.Length());
+					t.rootStepMax = std::max(t.rootStepMax, rootStep.Length());
+					t.lastLocStep = locStep;
+					t.lastRootStep = rootStep;
+				}
+				t.started = true;
+				t.lastLoc = loc;
+				t.lastRoot = drawn;
+				t.locOffMax = std::max(t.locOffMax, loc.GetDistance(spot));
+				t.rootOffMax = std::max(t.rootOffMax, drawn.GetDistance(spot));
+				++t.frames;
+				t.time += a_seconds;
+				if (t.time >= 2.0F) {
+					if (t.lines < 10) {
+						++t.lines;
+						REX::INFO("Shake watch: {:08X} in \"{}\", {} frames: reference up to {:.2f} off its spot, steps up to {:.2f}, {} turn(s) back; drawn root up to {:.2f} off, steps up to {:.2f}, {} turn(s) back",
+							id, active.sceneID, t.frames, t.locOffMax, t.locStepMax, t.locTurns, t.rootOffMax, t.rootStepMax, t.rootTurns);
+					}
+					const auto scene = t.scene;
+					const int  lines = t.lines;
+					t = Track{};
+					t.scene = scene;
+					t.lines = lines;
+				}
+			}
+		}
+		std::erase_if(tracks, [&](const auto& a_entry) { return !seen.contains(a_entry.first); });
+	}
+
 	void GuardScenes(float a_seconds)
 	{
 		static float clock = 0.0F;
@@ -4625,6 +4717,7 @@ namespace
 			Expressions::Tick(elapsed);
 			UpdateClimaxShake();
 			KeepFadedIn();
+			WatchShaking(elapsed);
 			GuardScenes(elapsed);
 			PruneScenePackage(elapsed);
 			Undress::Tick(elapsed);
