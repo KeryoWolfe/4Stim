@@ -6474,31 +6474,37 @@ namespace
 		SceneEvents::Unregister(a_receiver);
 	}
 
-	// ---- Mod events (FourModEvents, ModEvents.h): SKSE's for Fallout 4 ----
-	bool ME_Register(std::monostate, RE::TESForm* a_receiver, std::string a_eventName, std::string a_callback)
+	namespace Natives::FourModEvents
 	{
-		return ModEvents::Register(a_receiver, a_eventName, a_callback);
-	}
+		// ---- Mod events (FourModEvents, ModEvents.h): SKSE's for Fallout 4 ----
+		bool Register(std::monostate, RE::TESForm* a_receiver, std::string a_eventName, std::string a_callback)
+		{
+			return ModEvents::Register(a_receiver, a_eventName, a_callback);
+		}
 
-	void ME_Unregister(std::monostate, RE::TESForm* a_receiver, std::string a_eventName)
+		void Unregister(std::monostate, RE::TESForm* a_receiver, std::string a_eventName)
+		{
+			ModEvents::Unregister(a_receiver, a_eventName);
+		}
+
+		void UnregisterAll(std::monostate, RE::TESForm* a_receiver)
+		{
+			ModEvents::UnregisterAll(a_receiver);
+		}
+
+		void Send(std::monostate, std::string a_eventName, std::string a_strArg, float a_numArg, RE::TESForm* a_sender)
+		{
+			ModEvents::Send(a_eventName, a_strArg, a_numArg, a_sender);
+		}
+	}  // namespace Natives::FourModEvents
+
+	namespace Natives::FourJSON
 	{
-		ModEvents::Unregister(a_receiver, a_eventName);
-	}
-
-	void ME_UnregisterAll(std::monostate, RE::TESForm* a_receiver)
-	{
-		ModEvents::UnregisterAll(a_receiver);
-	}
-
-	void ME_Send(std::monostate, std::string a_eventName, std::string a_strArg, float a_numArg, RE::TESForm* a_sender)
-	{
-		ModEvents::Send(a_eventName, a_strArg, a_numArg, a_sender);
-	}
-
-	// FourJSON (OStim's OJSON): the end event's JSON.
-	std::vector<RE::Actor*> J_GetActors(std::monostate, std::string a_json) { return ModEvents::JSONActors(a_json); }
-	std::string             J_GetScene(std::monostate, std::string a_json) { return ModEvents::JSONScene(a_json); }
-	std::vector<std::string> J_GetMetadata(std::monostate, std::string a_json) { return ModEvents::JSONMetadata(a_json); }
+		// FourJSON (OStim's OJSON): the end event's JSON.
+		std::vector<RE::Actor*> GetActors(std::monostate, std::string a_json) { return ModEvents::JSONActors(a_json); }
+		std::string             GetScene(std::monostate, std::string a_json) { return ModEvents::JSONScene(a_json); }
+		std::vector<std::string> GetMetadata(std::monostate, std::string a_json) { return ModEvents::JSONMetadata(a_json); }
+	}  // namespace Natives::FourJSON
 
 	// The player's scene is about to end (end key, picker, HUD): nothing plays
 	// on it any more (ActiveScene::ending), from the next frame. Main thread.
@@ -10078,481 +10084,490 @@ namespace
 		return threadID;
 	}
 
-	// FourThreadBuilder (OThreadBuilder)
-	std::int32_t TB_Create(std::monostate, std::vector<RE::Actor*> a_actors) { return BuilderCreate(std::move(a_actors)); }
-	void TB_SetDominantActors(std::monostate, std::int32_t a_id, std::vector<RE::Actor*> a_actors)
+	namespace Natives::FourThreadBuilder
 	{
-		WithBuilder(a_id, [&](ThreadBuilder& b) {
-			b.dominant.clear();
-			for (const auto actor : a_actors) {
-				if (actor) {
-					b.dominant.push_back(actor->GetFormID());
+		// FourThreadBuilder (OThreadBuilder)
+		std::int32_t Create(std::monostate, std::vector<RE::Actor*> a_actors) { return BuilderCreate(std::move(a_actors)); }
+		void SetDominantActors(std::monostate, std::int32_t a_id, std::vector<RE::Actor*> a_actors)
+		{
+			WithBuilder(a_id, [&](ThreadBuilder& b) {
+				b.dominant.clear();
+				for (const auto actor : a_actors) {
+					if (actor) {
+						b.dominant.push_back(actor->GetFormID());
+					}
 				}
+			});
+		}
+		void SetFurniture(std::monostate, std::int32_t a_id, RE::TESObjectREFR* a_ref)
+		{
+			WithBuilder(a_id, [&](ThreadBuilder& b) { b.furniture = a_ref ? a_ref->GetFormID() : 0; });
+		}
+		void SetDuration(std::monostate, std::int32_t a_id, float a_seconds)
+		{
+			WithBuilder(a_id, [&](ThreadBuilder& b) { b.duration = std::max(a_seconds, 0.0F); });
+		}
+		// As OStim's ThreadStartParams: an unknown scene is left out, with a warning.
+		bool KnownStartingScene(const std::string& a_scene, std::string_view a_what)
+		{
+			if (SceneRegistry::Find(a_scene)) {
+				return true;
 			}
-		});
-	}
-	void TB_SetFurniture(std::monostate, std::int32_t a_id, RE::TESObjectREFR* a_ref)
-	{
-		WithBuilder(a_id, [&](ThreadBuilder& b) { b.furniture = a_ref ? a_ref->GetFormID() : 0; });
-	}
-	void TB_SetDuration(std::monostate, std::int32_t a_id, float a_seconds)
-	{
-		WithBuilder(a_id, [&](ThreadBuilder& b) { b.duration = std::max(a_seconds, 0.0F); });
-	}
-	// As OStim's ThreadStartParams: an unknown scene is left out, with a warning.
-	bool KnownStartingScene(const std::string& a_scene, std::string_view a_what)
-	{
-		if (SceneRegistry::Find(a_scene)) {
-			return true;
+			REX::WARN("ThreadBuilder.{}: no scene \"{}\", left out", a_what, a_scene);
+			return false;
 		}
-		REX::WARN("ThreadBuilder.{}: no scene \"{}\", left out", a_what, a_scene);
-		return false;
-	}
-	void TB_SetStartingAnimation(std::monostate, std::int32_t a_id, std::string a_scene)
-	{
-		if (!KnownStartingScene(a_scene, "SetStartingAnimation")) {
-			return;
-		}
-		WithBuilder(a_id, [&](ThreadBuilder& b) {
-			b.starting = { SceneRegistry::SequenceEntry{ a_scene, 0.0F, 0 } };
-			b.navigateTo = { false };
-		});
-	}
-	void TB_AddStartingAnimation(std::monostate, std::int32_t a_id, std::string a_scene, float a_duration, bool a_navigateTo)
-	{
-		if (!KnownStartingScene(a_scene, "AddStartingAnimation")) {
-			return;
-		}
-		WithBuilder(a_id, [&](ThreadBuilder& b) {
-			b.navigateTo.resize(b.starting.size(), false);
-			b.starting.push_back(SceneRegistry::SequenceEntry{ a_scene, a_duration, 0 });
-			b.navigateTo.push_back(a_navigateTo);
-		});
-	}
-	void TB_SetStartingSequence(std::monostate, std::int32_t a_id, std::string a_sequence)
-	{
-		const auto sequence = SceneRegistry::FindSequence(a_sequence);
-		if (!sequence) {
-			REX::WARN("ThreadBuilder.SetStartingSequence: no sequence \"{}\"", a_sequence);
-			return;
-		}
-		WithBuilder(a_id, [&](ThreadBuilder& b) {
-			b.starting = sequence->entries;
-			b.navigateTo.assign(b.starting.size(), false);
-		});
-	}
-	void TB_ConcatStartingSequence(std::monostate, std::int32_t a_id, std::string a_sequence, bool a_navigateTo)
-	{
-		const auto sequence = SceneRegistry::FindSequence(a_sequence);
-		if (!sequence) {
-			REX::WARN("ThreadBuilder.ConcatStartingSequence: no sequence \"{}\"", a_sequence);
-			return;
-		}
-		WithBuilder(a_id, [&](ThreadBuilder& b) {
-			b.navigateTo.resize(b.starting.size(), false);
-			b.starting.insert(b.starting.end(), sequence->entries.begin(), sequence->entries.end());
-			b.navigateTo.push_back(a_navigateTo);  // the way to its first scene
-			b.navigateTo.resize(b.starting.size(), false);
-		});
-	}
-	void TB_EndAfterSequence(std::monostate, std::int32_t a_id) { WithBuilder(a_id, [](ThreadBuilder& b) { b.endAfterSequence = true; }); }
-	void TB_UndressActors(std::monostate, std::int32_t a_id) { WithBuilder(a_id, [](ThreadBuilder& b) { b.undress = true; }); }
-	void TB_NoAutoMode(std::monostate, std::int32_t a_id) { WithBuilder(a_id, [](ThreadBuilder& b) { b.noAutoMode = true; }); }
-	void TB_NoPlayerControl(std::monostate, std::int32_t a_id) { WithBuilder(a_id, [](ThreadBuilder& b) { b.noPlayerControl = true; }); }
-	void TB_NoUndressing(std::monostate, std::int32_t a_id) { WithBuilder(a_id, [](ThreadBuilder& b) { b.noUndress = true; }); }
-	void TB_NoPostDialogue(std::monostate, std::int32_t a_id) { WithBuilder(a_id, [](ThreadBuilder& b) { b.noPostDialogue = true; }); }
-	void TB_NoFurniture(std::monostate, std::int32_t a_id) { WithBuilder(a_id, [](ThreadBuilder& b) { b.noFurniture = true; }); }
-	void TB_SetMetadata(std::monostate, std::int32_t a_id, std::vector<std::string> a_metadata)
-	{
-		WithBuilder(a_id, [&](ThreadBuilder& b) {
-			b.metadata.clear();
-			for (auto& m : a_metadata) {
-				b.metadata.push_back(LowerCopy(m));
+		void SetStartingAnimation(std::monostate, std::int32_t a_id, std::string a_scene)
+		{
+			if (!KnownStartingScene(a_scene, "SetStartingAnimation")) {
+				return;
 			}
-		});
-	}
-	void TB_SetMetadataCSV(std::monostate, std::int32_t a_id, std::string a_csv)
-	{
-		TB_SetMetadata({}, a_id, SplitCSV(a_csv));
-	}
-	std::int32_t TB_Start(std::monostate, std::int32_t a_id)
-	{
-		ThreadBuilder builder;
+			WithBuilder(a_id, [&](ThreadBuilder& b) {
+				b.starting = { SceneRegistry::SequenceEntry{ a_scene, 0.0F, 0 } };
+				b.navigateTo = { false };
+			});
+		}
+		void AddStartingAnimation(std::monostate, std::int32_t a_id, std::string a_scene, float a_duration, bool a_navigateTo)
+		{
+			if (!KnownStartingScene(a_scene, "AddStartingAnimation")) {
+				return;
+			}
+			WithBuilder(a_id, [&](ThreadBuilder& b) {
+				b.navigateTo.resize(b.starting.size(), false);
+				b.starting.push_back(SceneRegistry::SequenceEntry{ a_scene, a_duration, 0 });
+				b.navigateTo.push_back(a_navigateTo);
+			});
+		}
+		void SetStartingSequence(std::monostate, std::int32_t a_id, std::string a_sequence)
+		{
+			const auto sequence = SceneRegistry::FindSequence(a_sequence);
+			if (!sequence) {
+				REX::WARN("ThreadBuilder.SetStartingSequence: no sequence \"{}\"", a_sequence);
+				return;
+			}
+			WithBuilder(a_id, [&](ThreadBuilder& b) {
+				b.starting = sequence->entries;
+				b.navigateTo.assign(b.starting.size(), false);
+			});
+		}
+		void ConcatStartingSequence(std::monostate, std::int32_t a_id, std::string a_sequence, bool a_navigateTo)
+		{
+			const auto sequence = SceneRegistry::FindSequence(a_sequence);
+			if (!sequence) {
+				REX::WARN("ThreadBuilder.ConcatStartingSequence: no sequence \"{}\"", a_sequence);
+				return;
+			}
+			WithBuilder(a_id, [&](ThreadBuilder& b) {
+				b.navigateTo.resize(b.starting.size(), false);
+				b.starting.insert(b.starting.end(), sequence->entries.begin(), sequence->entries.end());
+				b.navigateTo.push_back(a_navigateTo);  // the way to its first scene
+				b.navigateTo.resize(b.starting.size(), false);
+			});
+		}
+		void EndAfterSequence(std::monostate, std::int32_t a_id) { WithBuilder(a_id, [](ThreadBuilder& b) { b.endAfterSequence = true; }); }
+		void UndressActors(std::monostate, std::int32_t a_id) { WithBuilder(a_id, [](ThreadBuilder& b) { b.undress = true; }); }
+		void NoAutoMode(std::monostate, std::int32_t a_id) { WithBuilder(a_id, [](ThreadBuilder& b) { b.noAutoMode = true; }); }
+		void NoPlayerControl(std::monostate, std::int32_t a_id) { WithBuilder(a_id, [](ThreadBuilder& b) { b.noPlayerControl = true; }); }
+		void NoUndressing(std::monostate, std::int32_t a_id) { WithBuilder(a_id, [](ThreadBuilder& b) { b.noUndress = true; }); }
+		void NoPostDialogue(std::monostate, std::int32_t a_id) { WithBuilder(a_id, [](ThreadBuilder& b) { b.noPostDialogue = true; }); }
+		void NoFurniture(std::monostate, std::int32_t a_id) { WithBuilder(a_id, [](ThreadBuilder& b) { b.noFurniture = true; }); }
+		void SetMetadata(std::monostate, std::int32_t a_id, std::vector<std::string> a_metadata)
+		{
+			WithBuilder(a_id, [&](ThreadBuilder& b) {
+				b.metadata.clear();
+				for (auto& m : a_metadata) {
+					b.metadata.push_back(LowerCopy(m));
+				}
+			});
+		}
+		void SetMetadataCSV(std::monostate, std::int32_t a_id, std::string a_csv)
+		{
+			SetMetadata({}, a_id, SplitCSV(a_csv));
+		}
+		std::int32_t Start(std::monostate, std::int32_t a_id)
+		{
+			ThreadBuilder builder;
+			{
+				std::scoped_lock lock(g_buildersLock);
+				const auto it = g_builders.find(a_id);
+				if (it == g_builders.end()) {
+					REX::WARN("ThreadBuilder.Start: no builder {}", a_id);
+					return -1;
+				}
+				builder = std::move(it->second);
+				g_builders.erase(it);
+			}
+			return StartThread(std::move(builder));
+		}
+		void Cancel(std::monostate, std::int32_t a_id)
 		{
 			std::scoped_lock lock(g_buildersLock);
-			const auto it = g_builders.find(a_id);
-			if (it == g_builders.end()) {
-				REX::WARN("ThreadBuilder.Start: no builder {}", a_id);
-				return -1;
-			}
-			builder = std::move(it->second);
-			g_builders.erase(it);
+			g_builders.erase(a_id);
 		}
-		return StartThread(std::move(builder));
-	}
-	void TB_Cancel(std::monostate, std::int32_t a_id)
-	{
-		std::scoped_lock lock(g_buildersLock);
-		g_builders.erase(a_id);
-	}
+	}  // namespace Natives::FourThreadBuilder
 
 	void StartSoloScene()
 	{
 		const auto player = RE::PlayerCharacter::GetSingleton();
 		const auto id = player ? BuilderCreate({ player }) : -1;
-		if (id < 0 || TB_Start({}, id) < 0) {
+		if (id < 0 || Natives::FourThreadBuilder::Start({}, id) < 0) {
 			Notify(TR("$4stim_solo_failed", "4Stim: couldn't start a scene with you alone (see 4Stim.log)"));
 		}
 	}
 
-	// FourThread (OThread)
-	std::int32_t T_QuickStart(std::monostate, std::vector<RE::Actor*> a_actors, std::string a_scene, RE::TESObjectREFR* a_furniture)
+	namespace Natives::FourThread
 	{
-		const auto id = BuilderCreate(std::move(a_actors));
-		if (id < 0) {
-			return -1;
-		}
-		if (!a_scene.empty()) {
-			TB_SetStartingAnimation({}, id, a_scene);
-		}
-		if (a_furniture) {
-			TB_SetFurniture({}, id, a_furniture);
-		}
-		return TB_Start({}, id);
-	}
-	// The thread's record, under its lock, for a_do; false if there's no
-	// such thread (starting, running, or ended with its event not sent).
-	template <class F>
-	bool WithRecord(std::int32_t a_id, F a_do)
-	{
-		std::scoped_lock lock(g_threadsLock);
-		const auto record = ThreadRecordLocked(a_id);
-		if (!record) {
-			return false;
-		}
-		a_do(*record);
-		return true;
-	}
-
-	bool IsLive(const ThreadRecord& a_record) { return a_record.status != ThreadRecord::Status::kEnded; }
-
-	// As OStim's: a thread exists as soon as Start returned it (its actors
-	// are still being placed), until its scene ends.
-	bool T_IsRunning(std::monostate, std::int32_t a_id)
-	{
-		bool live = false;
-		WithRecord(a_id, [&](ThreadRecord& r) { live = IsLive(r); });
-		return live;
-	}
-	// Changes that need the running scene: done on the main thread, or kept
-	// for when it runs if it's still starting (a_whenStarting).
-	template <class F, class G>
-	void ThreadDo(std::int32_t a_id, F a_running, G a_whenStarting)
-	{
-		bool starting = false;
-		WithRecord(a_id, [&](ThreadRecord& r) {
-			if (r.status == ThreadRecord::Status::kStarting) {
-				a_whenStarting(r);
-				starting = true;
+		// FourThread (OThread)
+		std::int32_t QuickStart(std::monostate, std::vector<RE::Actor*> a_actors, std::string a_scene, RE::TESObjectREFR* a_furniture)
+		{
+			const auto id = BuilderCreate(std::move(a_actors));
+			if (id < 0) {
+				return -1;
 			}
-		});
-		if (!starting) {
-			WithThread(a_id, std::move(a_running));
-		}
-	}
-	void T_Stop(std::monostate, std::int32_t a_id)
-	{
-		ThreadDo(
-			a_id, [](ActiveScene& a) { EndActiveScene(a, "asked by another mod (FourThread.Stop)"); },
-			[](ThreadRecord& r) { r.stopWhenStarted = true; });
-	}
-	std::int32_t T_GetThreadCount(std::monostate)
-	{
-		std::scoped_lock lock(g_threadsLock);
-		return static_cast<std::int32_t>(std::ranges::count_if(g_threads, [](const auto& a_entry) { return IsLive(a_entry.second); }));
-	}
-	std::vector<std::int32_t> T_GetAllThreadIDs(std::monostate)
-	{
-		std::vector<std::int32_t> ids;
-		std::scoped_lock lock(g_threadsLock);
-		for (const auto& [id, record] : g_threads) {
-			if (IsLive(record)) {
-				ids.push_back(id);
+			if (!a_scene.empty()) {
+				Natives::FourThreadBuilder::SetStartingAnimation({}, id, a_scene);
 			}
-		}
-		std::ranges::sort(ids);
-		return ids;
-	}
-	std::string T_GetScene(std::monostate, std::int32_t a_id)
-	{
-		const auto a = FindThread(a_id);
-		return a ? a->sceneID : std::string{};
-	}
-	// NavigateTo (OStim: through transitions where it can): a transition
-	// running finishes first; WarpTo goes there at once.
-	void ThreadGoTo(std::int32_t a_id, std::string a_scene, bool a_warp)
-	{
-		ThreadDo(
-			a_id,
-			[a_scene, a_warp](ActiveScene& a) {
-				const auto to = SceneRegistry::Find(a_scene);
-				if (!to || to->actors.size() != a.actors.size()) {
-					REX::WARN("FourThread: thread {} can't go to \"{}\"", a.threadID, a_scene);
-					return;
-				}
-				const auto from = SceneRegistry::Find(a.sceneID);
-				if (!a_warp && from && from->IsTransition()) {
-					a.queuedScene = to->id;
-					return;
-				}
-				if (InterruptSequence(a, "another mod moved the scene")) {
-					return;
-				}
-				// As OStim's navigateTo: along the navigation graph when the
-				// scene is within navigationDistanceMax (auto mode's way), else
-				// straight there.
-				if (!a_warp && from) {
-					const auto reachable = Reachable(a, from, g_autoConfig.maxSteps);
-					const auto it = std::ranges::find_if(reachable, [&](const auto& a_entry) { return a_entry.first->id == to->id; });
-					if (it != reachable.end() && it->second.size() > 1) {
-						AutoGoTo(a, to, it->second);
-						return;
-					}
-				}
-				if (PlayOnActiveScene(a, to->id, -1)) {
-					ArmAutoplay(a);
-				}
-			},
-			[a_scene](ThreadRecord& r) { r.sceneWhenStarted = a_scene; });
-	}
-	void T_NavigateTo(std::monostate, std::int32_t a_id, std::string a_scene) { ThreadGoTo(a_id, std::move(a_scene), false); }
-	void T_WarpTo(std::monostate, std::int32_t a_id, std::string a_scene, bool) { ThreadGoTo(a_id, std::move(a_scene), true); }
-	std::int32_t T_GetSpeed(std::monostate, std::int32_t a_id)
-	{
-		const auto a = FindThread(a_id);
-		return a ? a->speed : -1;
-	}
-	void T_SetSpeed(std::monostate, std::int32_t a_id, std::int32_t a_speed)
-	{
-		ThreadDo(
-			a_id,
-			[a_speed](ActiveScene& a) {
-				const auto scene = SceneRegistry::Find(a.sceneID);
-				if (!scene || scene->speeds.empty()) {
-					return;
-				}
-				const int speed = std::clamp(a_speed, 0, static_cast<int>(scene->speeds.size()) - 1);
-				if (speed != a.speed) {
-					PlayOnActiveScene(a, a.sceneID, speed);
-				}
-			},
-			[a_speed](ThreadRecord& r) { r.speedWhenStarted = a_speed; });
-	}
-	// The actors in role order; while starting, in the order they were given.
-	std::vector<std::uint32_t> ThreadActors(std::int32_t a_id)
-	{
-		if (const auto a = FindThread(a_id)) {
-			return a->actors;
-		}
-		std::vector<std::uint32_t> out;
-		WithRecord(a_id, [&](ThreadRecord& r) {
-			if (IsLive(r)) {
-				out = r.roleActors;
+			if (a_furniture) {
+				Natives::FourThreadBuilder::SetFurniture({}, id, a_furniture);
 			}
-		});
-		return out;
-	}
-	std::vector<RE::Actor*> T_GetActors(std::monostate, std::int32_t a_id)
-	{
-		std::vector<RE::Actor*> out;
-		for (const auto id : ThreadActors(a_id)) {
-			out.push_back(RE::TESForm::GetFormByID<RE::Actor>(id));
+			return Natives::FourThreadBuilder::Start({}, id);
 		}
-		return out;
-	}
-	RE::Actor* T_GetActor(std::monostate, std::int32_t a_id, std::int32_t a_index)
-	{
-		const auto actors = ThreadActors(a_id);
-		return a_index >= 0 && static_cast<std::size_t>(a_index) < actors.size() ? RE::TESForm::GetFormByID<RE::Actor>(actors[a_index]) : nullptr;
-	}
-	std::int32_t T_GetActorPosition(std::monostate, std::int32_t a_id, RE::Actor* a_actor)
-	{
-		if (!a_actor) {
-			return -1;
-		}
-		const auto actors = ThreadActors(a_id);
-		const auto it = std::ranges::find(actors, a_actor->GetFormID());
-		return it != actors.end() ? static_cast<std::int32_t>(it - actors.begin()) : -1;
-	}
-	// OThread's climax stall, as OStim's Thread::stallClimax: the thread's
-	// own flag, apart from each actor's (OActor.StallClimax), so permitting
-	// one doesn't lift the other. PermitClimax(id, true) lifts the actors'
-	// too, as OStim's permitActors.
-	void T_StallClimax(std::monostate, std::int32_t a_id)
-	{
-		ThreadDo(
-			a_id,
-			[](ActiveScene& a) {
-				a.stallClimax = true;
-				for (const auto id : a.actors) {
-					Excitement::SetThreadStalled(id, true);
-				}
-			},
-			[](ThreadRecord& r) { r.stallWhenStarted = true; });
-	}
-	void T_PermitClimax(std::monostate, std::int32_t a_id, bool a_permitActors)
-	{
-		ThreadDo(
-			a_id,
-			[a_permitActors](ActiveScene& a) {
-				a.stallClimax = false;
-				for (const auto id : a.actors) {
-					Excitement::SetThreadStalled(id, false);
-					if (a_permitActors) {
-						Excitement::SetStalled(id, false);
-					}
-				}
-			},
-			[a_permitActors](ThreadRecord& r) { r.stallWhenStarted = false; (void)a_permitActors; });
-	}
-	bool T_IsClimaxStalled(std::monostate, std::int32_t a_id)
-	{
-		bool stalled = false;
-		WithRecord(a_id, [&](ThreadRecord& r) { stalled = r.status == ThreadRecord::Status::kStarting && r.stallWhenStarted.value_or(false); });
-		if (stalled) {
+		// The thread's record, under its lock, for a_do; false if there's no
+		// such thread (starting, running, or ended with its event not sent).
+		template <class F>
+		bool WithRecord(std::int32_t a_id, F a_do)
+		{
+			std::scoped_lock lock(g_threadsLock);
+			const auto record = ThreadRecordLocked(a_id);
+			if (!record) {
+				return false;
+			}
+			a_do(*record);
 			return true;
 		}
-		const auto a = FindThread(a_id);
-		return a && a->stallClimax;  // OStim's: the thread's own flag only
-	}
-	RE::TESObjectREFR* T_GetFurniture(std::monostate, std::int32_t a_id)
-	{
-		const auto a = FindThread(a_id);
-		return a && a->furnitureRef ? RE::TESForm::GetFormByID<RE::TESObjectREFR>(a->furnitureRef) : nullptr;
-	}
-	std::string T_GetFurnitureType(std::monostate, std::int32_t a_id)
-	{
-		const auto a = FindThread(a_id);
-		return a ? a->furnitureType : std::string{};
-	}
-	bool T_IsInAutoMode(std::monostate, std::int32_t a_id)
-	{
-		bool queued = false;
-		WithRecord(a_id, [&](ThreadRecord& r) { queued = r.status == ThreadRecord::Status::kStarting && r.autoWhenStarted.value_or(false); });
-		const auto a = FindThread(a_id);
-		return queued || (a && a->autoMode.on);
-	}
-	void T_StartAutoMode(std::monostate, std::int32_t a_id)
-	{
-		ThreadDo(
-			a_id,
-			[](ActiveScene& a) {
-				if (!a.autoMode.on) {
-					StartAutoMode(a);
+
+		bool IsLive(const ThreadRecord& a_record) { return a_record.status != ThreadRecord::Status::kEnded; }
+
+		// As OStim's: a thread exists as soon as Start returned it (its actors
+		// are still being placed), until its scene ends.
+		bool IsRunning(std::monostate, std::int32_t a_id)
+		{
+			bool live = false;
+			WithRecord(a_id, [&](ThreadRecord& r) { live = IsLive(r); });
+			return live;
+		}
+		// Changes that need the running scene: done on the main thread, or kept
+		// for when it runs if it's still starting (a_whenStarting).
+		template <class F, class G>
+		void ThreadDo(std::int32_t a_id, F a_running, G a_whenStarting)
+		{
+			bool starting = false;
+			WithRecord(a_id, [&](ThreadRecord& r) {
+				if (r.status == ThreadRecord::Status::kStarting) {
+					a_whenStarting(r);
+					starting = true;
 				}
-			},
-			[](ThreadRecord& r) { r.autoWhenStarted = true; });
-	}
-	void T_StopAutoMode(std::monostate, std::int32_t a_id)
-	{
-		ThreadDo(
-			a_id,
-			[](ActiveScene& a) {
-				if (a.autoMode.on) {
-					StopAutoMode(a);
+			});
+			if (!starting) {
+				WithThread(a_id, std::move(a_running));
+			}
+		}
+		void Stop(std::monostate, std::int32_t a_id)
+		{
+			ThreadDo(
+				a_id, [](ActiveScene& a) { EndActiveScene(a, "asked by another mod (FourThread.Stop)"); },
+				[](ThreadRecord& r) { r.stopWhenStarted = true; });
+		}
+		std::int32_t GetThreadCount(std::monostate)
+		{
+			std::scoped_lock lock(g_threadsLock);
+			return static_cast<std::int32_t>(std::ranges::count_if(g_threads, [](const auto& a_entry) { return IsLive(a_entry.second); }));
+		}
+		std::vector<std::int32_t> GetAllThreadIDs(std::monostate)
+		{
+			std::vector<std::int32_t> ids;
+			std::scoped_lock lock(g_threadsLock);
+			for (const auto& [id, record] : g_threads) {
+				if (IsLive(record)) {
+					ids.push_back(id);
 				}
-			},
-			[](ThreadRecord& r) { r.autoWhenStarted = false; });
-	}
-	// Metadata: read and written at once (OStim's are), from the record, so
-	// a starting thread has it too, and an ended one until its end event.
-	bool T_HasMetadata(std::monostate, std::int32_t a_id, std::string a_meta)
-	{
-		bool has = false;
-		WithRecord(a_id, [&, meta = LowerCopy(a_meta)](ThreadRecord& r) { has = std::ranges::find(r.metadata, meta) != r.metadata.end(); });
-		return has;
-	}
-	void T_AddMetadata(std::monostate, std::int32_t a_id, std::string a_meta)
-	{
-		WithRecord(a_id, [meta = LowerCopy(a_meta)](ThreadRecord& r) {
-			if (std::ranges::find(r.metadata, meta) == r.metadata.end()) {
-				r.metadata.push_back(meta);
 			}
-		});
-	}
-	std::vector<std::string> T_GetMetadata(std::monostate, std::int32_t a_id)
-	{
-		std::vector<std::string> out;
-		WithRecord(a_id, [&](ThreadRecord& r) { out = r.metadata; });
-		return out;
-	}
-	bool T_HasMetaFloat(std::monostate, std::int32_t a_id, std::string a_key)
-	{
-		bool has = false;
-		WithRecord(a_id, [&, key = LowerCopy(a_key)](ThreadRecord& r) { has = r.metaFloat.contains(key); });
-		return has;
-	}
-	float T_GetMetaFloat(std::monostate, std::int32_t a_id, std::string a_key)
-	{
-		float value = 0.0F;
-		WithRecord(a_id, [&, key = LowerCopy(a_key)](ThreadRecord& r) {
-			if (const auto it = r.metaFloat.find(key); it != r.metaFloat.end()) {
-				value = it->second;
+			std::ranges::sort(ids);
+			return ids;
+		}
+		std::string GetScene(std::monostate, std::int32_t a_id)
+		{
+			const auto a = FindThread(a_id);
+			return a ? a->sceneID : std::string{};
+		}
+		// NavigateTo (OStim: through transitions where it can): a transition
+		// running finishes first; WarpTo goes there at once.
+		void ThreadGoTo(std::int32_t a_id, std::string a_scene, bool a_warp)
+		{
+			ThreadDo(
+				a_id,
+				[a_scene, a_warp](ActiveScene& a) {
+					const auto to = SceneRegistry::Find(a_scene);
+					if (!to || to->actors.size() != a.actors.size()) {
+						REX::WARN("FourThread: thread {} can't go to \"{}\"", a.threadID, a_scene);
+						return;
+					}
+					const auto from = SceneRegistry::Find(a.sceneID);
+					if (!a_warp && from && from->IsTransition()) {
+						a.queuedScene = to->id;
+						return;
+					}
+					if (InterruptSequence(a, "another mod moved the scene")) {
+						return;
+					}
+					// As OStim's navigateTo: along the navigation graph when the
+					// scene is within navigationDistanceMax (auto mode's way), else
+					// straight there.
+					if (!a_warp && from) {
+						const auto reachable = Reachable(a, from, g_autoConfig.maxSteps);
+						const auto it = std::ranges::find_if(reachable, [&](const auto& a_entry) { return a_entry.first->id == to->id; });
+						if (it != reachable.end() && it->second.size() > 1) {
+							AutoGoTo(a, to, it->second);
+							return;
+						}
+					}
+					if (PlayOnActiveScene(a, to->id, -1)) {
+						ArmAutoplay(a);
+					}
+				},
+				[a_scene](ThreadRecord& r) { r.sceneWhenStarted = a_scene; });
+		}
+		void NavigateTo(std::monostate, std::int32_t a_id, std::string a_scene) { ThreadGoTo(a_id, std::move(a_scene), false); }
+		void WarpTo(std::monostate, std::int32_t a_id, std::string a_scene, bool) { ThreadGoTo(a_id, std::move(a_scene), true); }
+		std::int32_t GetSpeed(std::monostate, std::int32_t a_id)
+		{
+			const auto a = FindThread(a_id);
+			return a ? a->speed : -1;
+		}
+		void SetSpeed(std::monostate, std::int32_t a_id, std::int32_t a_speed)
+		{
+			ThreadDo(
+				a_id,
+				[a_speed](ActiveScene& a) {
+					const auto scene = SceneRegistry::Find(a.sceneID);
+					if (!scene || scene->speeds.empty()) {
+						return;
+					}
+					const int speed = std::clamp(a_speed, 0, static_cast<int>(scene->speeds.size()) - 1);
+					if (speed != a.speed) {
+						PlayOnActiveScene(a, a.sceneID, speed);
+					}
+				},
+				[a_speed](ThreadRecord& r) { r.speedWhenStarted = a_speed; });
+		}
+		// The actors in role order; while starting, in the order they were given.
+		std::vector<std::uint32_t> ThreadActors(std::int32_t a_id)
+		{
+			if (const auto a = FindThread(a_id)) {
+				return a->actors;
 			}
-		});
-		return value;
-	}
-	void T_SetMetaFloat(std::monostate, std::int32_t a_id, std::string a_key, float a_value)
-	{
-		WithRecord(a_id, [key = LowerCopy(a_key), a_value](ThreadRecord& r) { r.metaFloat[key] = a_value; });
-	}
-	bool T_HasMetaString(std::monostate, std::int32_t a_id, std::string a_key)
-	{
-		bool has = false;
-		WithRecord(a_id, [&, key = LowerCopy(a_key)](ThreadRecord& r) { has = r.metaString.contains(key); });
-		return has;
-	}
-	std::string T_GetMetaString(std::monostate, std::int32_t a_id, std::string a_key)
-	{
-		std::string value;
-		WithRecord(a_id, [&, key = LowerCopy(a_key)](ThreadRecord& r) {
-			if (const auto it = r.metaString.find(key); it != r.metaString.end()) {
-				value = it->second;
+			std::vector<std::uint32_t> out;
+			WithRecord(a_id, [&](ThreadRecord& r) {
+				if (IsLive(r)) {
+					out = r.roleActors;
+				}
+			});
+			return out;
+		}
+		std::vector<RE::Actor*> GetActors(std::monostate, std::int32_t a_id)
+		{
+			std::vector<RE::Actor*> out;
+			for (const auto id : ThreadActors(a_id)) {
+				out.push_back(RE::TESForm::GetFormByID<RE::Actor>(id));
 			}
-		});
-		return value;
-	}
-	void T_SetMetaString(std::monostate, std::int32_t a_id, std::string a_key, std::string a_value)
-	{
-		WithRecord(a_id, [key = LowerCopy(a_key), value = std::move(a_value)](ThreadRecord& r) { r.metaString[key] = value; });
-	}
-	bool T_PlaySequence(std::monostate, std::int32_t a_id, std::string a_sequence, bool, bool)
-	{
-		const auto sequence = SceneRegistry::FindSequence(a_sequence);
-		const auto a = FindThread(a_id);
-		if (!sequence || !a) {
-			return false;
+			return out;
 		}
-		F4SE::GetTaskInterface()->AddTask([actor = a->actors.front(), sequence]() { StartSequenceOnScene(actor, sequence); });
-		return true;
-	}
-	// The actor's thread, a starting one too (OStim's threads exist from Start).
-	std::int32_t A_GetThreadID(std::monostate, RE::Actor* a_actor)
+		RE::Actor* GetActor(std::monostate, std::int32_t a_id, std::int32_t a_index)
+		{
+			const auto actors = ThreadActors(a_id);
+			return a_index >= 0 && static_cast<std::size_t>(a_index) < actors.size() ? RE::TESForm::GetFormByID<RE::Actor>(actors[a_index]) : nullptr;
+		}
+		std::int32_t GetActorPosition(std::monostate, std::int32_t a_id, RE::Actor* a_actor)
+		{
+			if (!a_actor) {
+				return -1;
+			}
+			const auto actors = ThreadActors(a_id);
+			const auto it = std::ranges::find(actors, a_actor->GetFormID());
+			return it != actors.end() ? static_cast<std::int32_t>(it - actors.begin()) : -1;
+		}
+		// OThread's climax stall, as OStim's Thread::stallClimax: the thread's
+		// own flag, apart from each actor's (OActor.StallClimax), so permitting
+		// one doesn't lift the other. PermitClimax(id, true) lifts the actors'
+		// too, as OStim's permitActors.
+		void StallClimax(std::monostate, std::int32_t a_id)
+		{
+			ThreadDo(
+				a_id,
+				[](ActiveScene& a) {
+					a.stallClimax = true;
+					for (const auto id : a.actors) {
+						Excitement::SetThreadStalled(id, true);
+					}
+				},
+				[](ThreadRecord& r) { r.stallWhenStarted = true; });
+		}
+		void PermitClimax(std::monostate, std::int32_t a_id, bool a_permitActors)
+		{
+			ThreadDo(
+				a_id,
+				[a_permitActors](ActiveScene& a) {
+					a.stallClimax = false;
+					for (const auto id : a.actors) {
+						Excitement::SetThreadStalled(id, false);
+						if (a_permitActors) {
+							Excitement::SetStalled(id, false);
+						}
+					}
+				},
+				[a_permitActors](ThreadRecord& r) { r.stallWhenStarted = false; (void)a_permitActors; });
+		}
+		bool IsClimaxStalled(std::monostate, std::int32_t a_id)
+		{
+			bool stalled = false;
+			WithRecord(a_id, [&](ThreadRecord& r) { stalled = r.status == ThreadRecord::Status::kStarting && r.stallWhenStarted.value_or(false); });
+			if (stalled) {
+				return true;
+			}
+			const auto a = FindThread(a_id);
+			return a && a->stallClimax;  // OStim's: the thread's own flag only
+		}
+		RE::TESObjectREFR* GetFurniture(std::monostate, std::int32_t a_id)
+		{
+			const auto a = FindThread(a_id);
+			return a && a->furnitureRef ? RE::TESForm::GetFormByID<RE::TESObjectREFR>(a->furnitureRef) : nullptr;
+		}
+		std::string GetFurnitureType(std::monostate, std::int32_t a_id)
+		{
+			const auto a = FindThread(a_id);
+			return a ? a->furnitureType : std::string{};
+		}
+		bool IsInAutoMode(std::monostate, std::int32_t a_id)
+		{
+			bool queued = false;
+			WithRecord(a_id, [&](ThreadRecord& r) { queued = r.status == ThreadRecord::Status::kStarting && r.autoWhenStarted.value_or(false); });
+			const auto a = FindThread(a_id);
+			return queued || (a && a->autoMode.on);
+		}
+		void StartAutoMode(std::monostate, std::int32_t a_id)
+		{
+			ThreadDo(
+				a_id,
+				[](ActiveScene& a) {
+					if (!a.autoMode.on) {
+						::StartAutoMode(a);
+					}
+				},
+				[](ThreadRecord& r) { r.autoWhenStarted = true; });
+		}
+		void StopAutoMode(std::monostate, std::int32_t a_id)
+		{
+			ThreadDo(
+				a_id,
+				[](ActiveScene& a) {
+					if (a.autoMode.on) {
+						::StopAutoMode(a);
+					}
+				},
+				[](ThreadRecord& r) { r.autoWhenStarted = false; });
+		}
+		// Metadata: read and written at once (OStim's are), from the record, so
+		// a starting thread has it too, and an ended one until its end event.
+		bool HasMetadata(std::monostate, std::int32_t a_id, std::string a_meta)
+		{
+			bool has = false;
+			WithRecord(a_id, [&, meta = LowerCopy(a_meta)](ThreadRecord& r) { has = std::ranges::find(r.metadata, meta) != r.metadata.end(); });
+			return has;
+		}
+		void AddMetadata(std::monostate, std::int32_t a_id, std::string a_meta)
+		{
+			WithRecord(a_id, [meta = LowerCopy(a_meta)](ThreadRecord& r) {
+				if (std::ranges::find(r.metadata, meta) == r.metadata.end()) {
+					r.metadata.push_back(meta);
+				}
+			});
+		}
+		std::vector<std::string> GetMetadata(std::monostate, std::int32_t a_id)
+		{
+			std::vector<std::string> out;
+			WithRecord(a_id, [&](ThreadRecord& r) { out = r.metadata; });
+			return out;
+		}
+		bool HasMetaFloat(std::monostate, std::int32_t a_id, std::string a_key)
+		{
+			bool has = false;
+			WithRecord(a_id, [&, key = LowerCopy(a_key)](ThreadRecord& r) { has = r.metaFloat.contains(key); });
+			return has;
+		}
+		float GetMetaFloat(std::monostate, std::int32_t a_id, std::string a_key)
+		{
+			float value = 0.0F;
+			WithRecord(a_id, [&, key = LowerCopy(a_key)](ThreadRecord& r) {
+				if (const auto it = r.metaFloat.find(key); it != r.metaFloat.end()) {
+					value = it->second;
+				}
+			});
+			return value;
+		}
+		void SetMetaFloat(std::monostate, std::int32_t a_id, std::string a_key, float a_value)
+		{
+			WithRecord(a_id, [key = LowerCopy(a_key), a_value](ThreadRecord& r) { r.metaFloat[key] = a_value; });
+		}
+		bool HasMetaString(std::monostate, std::int32_t a_id, std::string a_key)
+		{
+			bool has = false;
+			WithRecord(a_id, [&, key = LowerCopy(a_key)](ThreadRecord& r) { has = r.metaString.contains(key); });
+			return has;
+		}
+		std::string GetMetaString(std::monostate, std::int32_t a_id, std::string a_key)
+		{
+			std::string value;
+			WithRecord(a_id, [&, key = LowerCopy(a_key)](ThreadRecord& r) {
+				if (const auto it = r.metaString.find(key); it != r.metaString.end()) {
+					value = it->second;
+				}
+			});
+			return value;
+		}
+		void SetMetaString(std::monostate, std::int32_t a_id, std::string a_key, std::string a_value)
+		{
+			WithRecord(a_id, [key = LowerCopy(a_key), value = std::move(a_value)](ThreadRecord& r) { r.metaString[key] = value; });
+		}
+		bool PlaySequence(std::monostate, std::int32_t a_id, std::string a_sequence, bool, bool)
+		{
+			const auto sequence = SceneRegistry::FindSequence(a_sequence);
+			const auto a = FindThread(a_id);
+			if (!sequence || !a) {
+				return false;
+			}
+			F4SE::GetTaskInterface()->AddTask([actor = a->actors.front(), sequence]() { StartSequenceOnScene(actor, sequence); });
+			return true;
+		}
+	}  // namespace Natives::FourThread
+	namespace Natives::FourActor
 	{
-		if (!a_actor) {
-			return -1;
-		}
-		if (const auto id = ThreadIDOf(a_actor->GetFormID()); id >= 0) {
-			return id;
-		}
-		std::scoped_lock lock(g_threadsLock);
-		for (const auto& [id, record] : g_threads) {
-			if (record.status == ThreadRecord::Status::kStarting && std::ranges::find(record.actors, a_actor->GetFormID()) != record.actors.end()) {
+		// The actor's thread, a starting one too (OStim's threads exist from Start).
+		std::int32_t GetThreadID(std::monostate, RE::Actor* a_actor)
+		{
+			if (!a_actor) {
+				return -1;
+			}
+			if (const auto id = ThreadIDOf(a_actor->GetFormID()); id >= 0) {
 				return id;
 			}
+			std::scoped_lock lock(g_threadsLock);
+			for (const auto& [id, record] : g_threads) {
+				if (record.status == ThreadRecord::Status::kStarting && std::ranges::find(record.actors, a_actor->GetFormID()) != record.actors.end()) {
+					return id;
+				}
+			}
+			return -1;
 		}
-		return -1;
-	}
+	}  // namespace Natives::FourActor
 
 	// ---- OStim's OLibrary, OMetadata, OActor, OFurniture (docs/API.md) ----
 
@@ -10747,758 +10762,764 @@ namespace
 		return pool[std::uniform_int_distribution<std::size_t>(0, pool.size() - 1)(rng)]->id;
 	}
 
-	// OLibrary's (Any|All)MultiActorTag(s)For(Any|All) and the scene tag
-	// combinations of them. a_actorTags: one list per role ("a,b;c"), each
-	// role needing any (a_allPerRole false) or all of its list; for any role
-	// or all of them (a_forAll). a_sceneMode: 0 no scene tags, 1 any of
-	// a_sceneTags, 2 all of them.
-	std::string L_FindRandomSceneByRoleTags(std::monostate, std::vector<RE::Actor*> a_actors, std::string a_furniture, std::string a_actorTags,
-		bool a_allPerRole, bool a_forAll, std::string a_sceneTags, std::int32_t a_sceneMode)
+	namespace Natives::FourLibrary
 	{
-		const auto matrix = TagMatrix(a_actorTags);
-		const auto sceneTags = TagList(a_sceneTags);
-		return RandomSceneWhere(a_actors, a_furniture, [&](const SceneRegistry::Scene& a_scene) {
-			if (a_sceneMode == 1 && !HasAnyOf(a_scene.tags, sceneTags)) {
-				return false;
-			}
-			if (a_sceneMode == 2 && !HasAllOf(a_scene.tags, sceneTags)) {
-				return false;
-			}
-			const auto test = [&](int i) {
-				return a_allPerRole ? RoleHasAllTags(a_scene, i, matrix[i]) : RoleHasAnyTag(a_scene, i, matrix[i]);
-			};
-			return a_forAll ? ForAllRoles(matrix.size(), test) : ForAnyRole(matrix.size(), test);
-		});
-	}
-
-	// OLibrary's ...Action(s)ForActor / ForTarget / ForActorAndTarget: an
-	// action of a type (any of a_types, or each of them with a_all) done by
-	// role a_actor (when a_byActor) to role a_target (when a_byTarget), as
-	// OStim's Node::findActionForActor and its siblings.
-	std::string L_FindRandomSceneByActionRoles(std::monostate, std::vector<RE::Actor*> a_actors, std::string a_furniture, std::vector<std::string> a_types,
-		bool a_all, bool a_byActor, std::int32_t a_actor, bool a_byTarget, std::int32_t a_target)
-	{
-		for (auto& type : a_types) {
-			type = LowerCopy(type);
-		}
-		return RandomSceneWhere(a_actors, a_furniture, [&](const SceneRegistry::Scene& a_scene) {
-			const auto has = [&](const std::string& a_type) {
-				return std::ranges::any_of(a_scene.actions, [&](const SceneRegistry::SceneAction& a) {
-					return (!a_byActor || RoleIndex(a.actor) == a_actor) && (!a_byTarget || RoleIndex(a.target) == a_target) && ActionIsType(a, a_type);
-				});
-			};
-			return a_all ? std::ranges::all_of(a_types, has) : std::ranges::any_of(a_types, has);
-		});
-	}
-
-	// OStim's superload helpers: an action matching a_type (as a type or one
-	// of its tags) with its roles in the given lists (an empty list allows any).
-	struct ActionRoleLists
-	{
-		std::vector<std::string>      types;
-		std::vector<std::vector<int>> actors, targets, performers, matesAny, matesAll, participantsAny, participantsAll;
-
-		static const std::vector<int>& At(const std::vector<std::vector<int>>& a_matrix, std::size_t a_i)
+		// OLibrary's (Any|All)MultiActorTag(s)For(Any|All) and the scene tag
+		// combinations of them. a_actorTags: one list per role ("a,b;c"), each
+		// role needing any (a_allPerRole false) or all of its list; for any role
+		// or all of them (a_forAll). a_sceneMode: 0 no scene tags, 1 any of
+		// a_sceneTags, 2 all of them.
+		std::string FindRandomSceneByRoleTags(std::monostate, std::vector<RE::Actor*> a_actors, std::string a_furniture, std::string a_actorTags,
+			bool a_allPerRole, bool a_forAll, std::string a_sceneTags, std::int32_t a_sceneMode)
 		{
-			static const std::vector<int> none;
-			return a_i < a_matrix.size() ? a_matrix[a_i] : none;
-		}
-
-		bool Matches(const SceneRegistry::SceneAction& a_action, std::size_t a_i) const
-		{
-			const int  actor = RoleIndex(a_action.actor);
-			const int  target = RoleIndex(a_action.target);
-			const int  performer = RoleIndex(a_action.performer);
-			const auto in = [](const std::vector<int>& a_list, int a_role) { return std::ranges::find(a_list, a_role) != a_list.end(); };
-			const auto anyIn = [&](const std::vector<int>& a_list, std::initializer_list<int> a_roles) {
-				return std::ranges::any_of(a_roles, [&](int r) { return in(a_list, r); });
-			};
-			const auto allIn = [&](const std::vector<int>& a_list, std::initializer_list<int> a_roles) {
-				return std::ranges::all_of(a_roles, [&](int r) { return in(a_list, r); });
-			};
-			const auto& act = At(actors, a_i);
-			const auto& tar = At(targets, a_i);
-			const auto& per = At(performers, a_i);
-			const auto& mAny = At(matesAny, a_i);
-			const auto& mAll = At(matesAll, a_i);
-			const auto& pAny = At(participantsAny, a_i);
-			const auto& pAll = At(participantsAll, a_i);
-			return (ActionIsType(a_action, types[a_i]) || a_action.type->HasTag(types[a_i])) &&
-			       (act.empty() || in(act, actor)) &&
-			       (tar.empty() || in(tar, target)) &&
-			       (per.empty() || in(per, performer)) &&
-			       (mAny.empty() || anyIn(mAny, { actor, target })) &&
-			       (mAll.empty() || allIn(mAll, { actor, target })) &&
-			       (pAny.empty() || anyIn(pAny, { actor, target, performer })) &&
-			       (pAll.empty() || allIn(pAll, { actor, target, performer }));
-		}
-
-		// OStim's hasAction for entry a_i.
-		bool SceneHas(const SceneRegistry::Scene& a_scene, std::size_t a_i) const
-		{
-			return std::ranges::any_of(a_scene.actions, [&](const SceneRegistry::SceneAction& a) { return Matches(a, a_i); });
-		}
-		bool SceneHasAny(const SceneRegistry::Scene& a_scene) const
-		{
-			for (std::size_t i = 0; i < types.size(); ++i) {
-				if (SceneHas(a_scene, i)) {
-					return true;
-				}
-			}
-			return false;
-		}
-		bool SceneHasAll(const SceneRegistry::Scene& a_scene) const
-		{
-			for (std::size_t i = 0; i < types.size(); ++i) {
-				if (!SceneHas(a_scene, i)) {
+			const auto matrix = TagMatrix(a_actorTags);
+			const auto sceneTags = TagList(a_sceneTags);
+			return RandomSceneWhere(a_actors, a_furniture, [&](const SceneRegistry::Scene& a_scene) {
+				if (a_sceneMode == 1 && !HasAnyOf(a_scene.tags, sceneTags)) {
 					return false;
 				}
-			}
-			return true;
+				if (a_sceneMode == 2 && !HasAllOf(a_scene.tags, sceneTags)) {
+					return false;
+				}
+				const auto test = [&](int i) {
+					return a_allPerRole ? RoleHasAllTags(a_scene, i, matrix[i]) : RoleHasAnyTag(a_scene, i, matrix[i]);
+				};
+				return a_forAll ? ForAllRoles(matrix.size(), test) : ForAnyRole(matrix.size(), test);
+			});
 		}
-		// OStim's hasOnlyListedActions.
-		bool SceneHasOnlyListed(const SceneRegistry::Scene& a_scene) const
+
+		// OLibrary's ...Action(s)ForActor / ForTarget / ForActorAndTarget: an
+		// action of a type (any of a_types, or each of them with a_all) done by
+		// role a_actor (when a_byActor) to role a_target (when a_byTarget), as
+		// OStim's Node::findActionForActor and its siblings.
+		std::string FindRandomSceneByActionRoles(std::monostate, std::vector<RE::Actor*> a_actors, std::string a_furniture, std::vector<std::string> a_types,
+			bool a_all, bool a_byActor, std::int32_t a_actor, bool a_byTarget, std::int32_t a_target)
 		{
-			return std::ranges::all_of(a_scene.actions, [&](const SceneRegistry::SceneAction& a) {
+			for (auto& type : a_types) {
+				type = LowerCopy(type);
+			}
+			return RandomSceneWhere(a_actors, a_furniture, [&](const SceneRegistry::Scene& a_scene) {
+				const auto has = [&](const std::string& a_type) {
+					return std::ranges::any_of(a_scene.actions, [&](const SceneRegistry::SceneAction& a) {
+						return (!a_byActor || RoleIndex(a.actor) == a_actor) && (!a_byTarget || RoleIndex(a.target) == a_target) && ActionIsType(a, a_type);
+					});
+				};
+				return a_all ? std::ranges::all_of(a_types, has) : std::ranges::any_of(a_types, has);
+			});
+		}
+
+		// OStim's superload helpers: an action matching a_type (as a type or one
+		// of its tags) with its roles in the given lists (an empty list allows any).
+		struct ActionRoleLists
+		{
+			std::vector<std::string>      types;
+			std::vector<std::vector<int>> actors, targets, performers, matesAny, matesAll, participantsAny, participantsAll;
+
+			static const std::vector<int>& At(const std::vector<std::vector<int>>& a_matrix, std::size_t a_i)
+			{
+				static const std::vector<int> none;
+				return a_i < a_matrix.size() ? a_matrix[a_i] : none;
+			}
+
+			bool Matches(const SceneRegistry::SceneAction& a_action, std::size_t a_i) const
+			{
+				const int  actor = RoleIndex(a_action.actor);
+				const int  target = RoleIndex(a_action.target);
+				const int  performer = RoleIndex(a_action.performer);
+				const auto in = [](const std::vector<int>& a_list, int a_role) { return std::ranges::find(a_list, a_role) != a_list.end(); };
+				const auto anyIn = [&](const std::vector<int>& a_list, std::initializer_list<int> a_roles) {
+					return std::ranges::any_of(a_roles, [&](int r) { return in(a_list, r); });
+				};
+				const auto allIn = [&](const std::vector<int>& a_list, std::initializer_list<int> a_roles) {
+					return std::ranges::all_of(a_roles, [&](int r) { return in(a_list, r); });
+				};
+				const auto& act = At(actors, a_i);
+				const auto& tar = At(targets, a_i);
+				const auto& per = At(performers, a_i);
+				const auto& mAny = At(matesAny, a_i);
+				const auto& mAll = At(matesAll, a_i);
+				const auto& pAny = At(participantsAny, a_i);
+				const auto& pAll = At(participantsAll, a_i);
+				return (ActionIsType(a_action, types[a_i]) || a_action.type->HasTag(types[a_i])) &&
+				       (act.empty() || in(act, actor)) &&
+				       (tar.empty() || in(tar, target)) &&
+				       (per.empty() || in(per, performer)) &&
+				       (mAny.empty() || anyIn(mAny, { actor, target })) &&
+				       (mAll.empty() || allIn(mAll, { actor, target })) &&
+				       (pAny.empty() || anyIn(pAny, { actor, target, performer })) &&
+				       (pAll.empty() || allIn(pAll, { actor, target, performer }));
+			}
+
+			// OStim's hasAction for entry a_i.
+			bool SceneHas(const SceneRegistry::Scene& a_scene, std::size_t a_i) const
+			{
+				return std::ranges::any_of(a_scene.actions, [&](const SceneRegistry::SceneAction& a) { return Matches(a, a_i); });
+			}
+			bool SceneHasAny(const SceneRegistry::Scene& a_scene) const
+			{
 				for (std::size_t i = 0; i < types.size(); ++i) {
-					if (Matches(a, i)) {
+					if (SceneHas(a_scene, i)) {
 						return true;
 					}
 				}
 				return false;
-			});
-		}
-	};
-
-	// args[a_first..a_first+7]: types, actors, targets, performers, mates any,
-	// mates all, participants any, participants all.
-	ActionRoleLists ActionListsFrom(const std::vector<std::string>& a_args, std::size_t a_first)
-	{
-		ActionRoleLists lists;
-		lists.types = TagList(a_args[a_first]);
-		lists.actors = IntMatrix(a_args[a_first + 1]);
-		lists.targets = IntMatrix(a_args[a_first + 2]);
-		lists.performers = IntMatrix(a_args[a_first + 3]);
-		lists.matesAny = IntMatrix(a_args[a_first + 4]);
-		lists.matesAll = IntMatrix(a_args[a_first + 5]);
-		lists.participantsAny = IntMatrix(a_args[a_first + 6]);
-		lists.participantsAll = IntMatrix(a_args[a_first + 7]);
-		return lists;
-	}
-
-	// OLibrary.GetRandomSceneSuperloadCSV: a_args holds its 44 strings after
-	// FurnitureType, in OStim's order (FourLibrary.psc packs them).
-	std::string L_FindRandomSceneSuperload(std::monostate, std::vector<RE::Actor*> a_actors, std::string a_furniture, std::vector<std::string> a_args)
-	{
-		if (a_args.size() < 44) {
-			REX::WARN("FourLibrary.GetRandomSceneSuperloadCSV: {} of its 44 filter strings", a_args.size());
-			a_args.resize(44);
-		}
-		std::vector<std::function<bool(const SceneRegistry::Scene&)>> conditions;
-		const auto& a = a_args;
-		if (!a[0].empty()) {
-			conditions.push_back([tags = TagList(a[0])](const SceneRegistry::Scene& s) { return HasAnyOf(s.tags, tags); });
-		}
-		if (!a[1].empty()) {
-			conditions.push_back([tags = TagList(a[1])](const SceneRegistry::Scene& s) { return HasAllOf(s.tags, tags); });
-		}
-		if (!a[2].empty()) {  // OStim's Node::hasOnlyTags
-			conditions.push_back([tags = TagList(a[2])](const SceneRegistry::Scene& s) { return HasAllOf(tags, s.tags); });
-		}
-		if (!a[3].empty()) {
-			conditions.push_back([tags = TagList(a[3])](const SceneRegistry::Scene& s) { return !HasAnyOf(s.tags, tags); });
-		}
-		// Actor tags: any for any, any for all, all for any, all for all,
-		// whitelist for any / all, blacklist for any / all.
-		const auto roleTags = [&](std::size_t a_index, auto a_test, bool a_forAll) {
-			if (a[a_index].empty()) {
-				return;
 			}
-			conditions.push_back([m = TagMatrix(a[a_index]), a_test, a_forAll](const SceneRegistry::Scene& s) {
-				const auto each = [&](int i) { return a_test(s, i, m[i]); };
-				return a_forAll ? ForAllRoles(m.size(), each) : ForAnyRole(m.size(), each);
-			});
-		};
-		const auto anyTag = [](const SceneRegistry::Scene& s, int i, const std::vector<std::string>& t) { return RoleHasAnyTag(s, i, t); };
-		const auto allTags = [](const SceneRegistry::Scene& s, int i, const std::vector<std::string>& t) { return RoleHasAllTags(s, i, t); };
-		const auto onlyTags = [](const SceneRegistry::Scene& s, int i, const std::vector<std::string>& t) { return RoleHasOnlyTags(s, i, t); };
-		const auto noTag = [](const SceneRegistry::Scene& s, int i, const std::vector<std::string>& t) { return !RoleHasAnyTag(s, i, t); };
-		roleTags(4, anyTag, false);
-		roleTags(5, anyTag, true);
-		roleTags(6, allTags, false);
-		roleTags(7, allTags, true);
-		roleTags(8, onlyTags, false);
-		roleTags(9, onlyTags, true);
-		roleTags(10, noTag, false);
-		roleTags(11, noTag, true);
-		if (!a[12].empty()) {
-			conditions.push_back([l = ActionListsFrom(a, 12)](const SceneRegistry::Scene& s) { return l.SceneHasAny(s); });
-		}
-		if (!a[20].empty()) {
-			conditions.push_back([l = ActionListsFrom(a, 20)](const SceneRegistry::Scene& s) { return l.SceneHasAll(s); });
-		}
-		if (!a[28].empty()) {
-			conditions.push_back([l = ActionListsFrom(a, 28)](const SceneRegistry::Scene& s) { return l.SceneHasOnlyListed(s); });
-		}
-		if (!a[36].empty()) {
-			conditions.push_back([l = ActionListsFrom(a, 36)](const SceneRegistry::Scene& s) { return !l.SceneHasAny(s); });
-		}
-		return RandomSceneWhere(a_actors, a_furniture, [&](const SceneRegistry::Scene& a_scene) {
-			return std::ranges::all_of(conditions, [&](const auto& c) { return c(a_scene); });
-		});
-	}
-
-	// OLibrary.GetScenesInRange (OStim's Node::getNodesInRange): the scenes
-	// reachable from a_id in up to a_distance navigations whose scenes (any
-	// transitions on the way included) fit a_actors, sorted by name. As in
-	// OStim, a_id itself is only in it if a navigation leads back to it.
-	std::vector<std::string> L_GetScenesInRange(std::monostate, std::string a_id, std::vector<RE::Actor*> a_actors, std::int32_t a_distance)
-	{
-		const auto start = SceneRegistry::Find(a_id);
-		const auto cast = IDsOf(a_actors);
-		if (!start || cast.empty()) {
-			return {};
-		}
-		SceneRegistry::ListFilter filter;
-		filter.actors = ConditionsOf(cast);
-		std::unordered_set<std::string> fits;
-		for (const auto& summary : SceneRegistry::List(cast.size(), filter)) {
-			fits.insert(LowerCopy(summary.id));
-		}
-		// Where a navigation to a_to ends (past its transitions), or null
-		// when something on the way doesn't fit the actors.
-		const auto destination = [&](const std::string& a_to) -> std::shared_ptr<const SceneRegistry::Scene> {
-			auto scene = SceneRegistry::Find(a_to);
-			for (int hops = 0; scene && hops < 16; ++hops) {
-				if (!fits.contains(LowerCopy(scene->id))) {
-					return nullptr;
-				}
-				if (!scene->IsTransition()) {
-					return scene;
-				}
-				scene = SceneRegistry::Find(scene->destination);
-			}
-			return nullptr;
-		};
-		std::vector<std::shared_ptr<const SceneRegistry::Scene>> found;
-		std::vector<std::shared_ptr<const SceneRegistry::Scene>> level{ start };
-		for (int i = 0; i < a_distance && !level.empty(); ++i) {
-			std::vector<std::shared_ptr<const SceneRegistry::Scene>> next;
-			for (const auto& scene : level) {
-				for (const auto& nav : scene->navigations) {
-					const auto to = destination(nav.to);
-					if (to && std::ranges::find(found, to) == found.end()) {
-						found.push_back(to);
-						next.push_back(to);
+			bool SceneHasAll(const SceneRegistry::Scene& a_scene) const
+			{
+				for (std::size_t i = 0; i < types.size(); ++i) {
+					if (!SceneHas(a_scene, i)) {
+						return false;
 					}
 				}
+				return true;
 			}
-			level = std::move(next);
-		}
-		std::ranges::sort(found, [](const auto& x, const auto& y) { return LowerCopy(x->name) < LowerCopy(y->name); });
-		std::vector<std::string> ids;
-		for (const auto& scene : found) {
-			ids.push_back(scene->id);
-		}
-		return ids;
-	}
-
-	// FourLibrary: one native the OLibrary-named functions wrap.
-	std::string L_FindRandomScene(std::monostate, std::vector<RE::Actor*> a_actors, std::string a_furniture, std::vector<std::string> a_anyTags,
-		std::vector<std::string> a_allTags, std::vector<std::string> a_anyActions, std::vector<std::string> a_allActions, std::int32_t a_position,
-		std::vector<std::string> a_anyActorTags, std::vector<std::string> a_allActorTags)
-	{
-		return RandomScene(a_actors, a_furniture, a_anyTags, a_allTags, a_anyActions, a_allActions, a_position, a_anyActorTags, a_allActorTags);
-	}
-
-	std::vector<std::string> L_SplitCSV(std::monostate, std::string a_csv) { return SplitCSV(a_csv); }
-
-	std::vector<std::string> L_GetAllScenes(std::monostate)
-	{
-		std::vector<std::string> ids;
-		for (std::size_t count = 1; count <= 16; ++count) {
-			for (const auto& summary : SceneRegistry::List(count)) {
-				ids.push_back(summary.id);
+			// OStim's hasOnlyListedActions.
+			bool SceneHasOnlyListed(const SceneRegistry::Scene& a_scene) const
+			{
+				return std::ranges::all_of(a_scene.actions, [&](const SceneRegistry::SceneAction& a) {
+					for (std::size_t i = 0; i < types.size(); ++i) {
+						if (Matches(a, i)) {
+							return true;
+						}
+					}
+					return false;
+				});
 			}
+		};
+
+		// args[a_first..a_first+7]: types, actors, targets, performers, mates any,
+		// mates all, participants any, participants all.
+		ActionRoleLists ActionListsFrom(const std::vector<std::string>& a_args, std::size_t a_first)
+		{
+			ActionRoleLists lists;
+			lists.types = TagList(a_args[a_first]);
+			lists.actors = IntMatrix(a_args[a_first + 1]);
+			lists.targets = IntMatrix(a_args[a_first + 2]);
+			lists.performers = IntMatrix(a_args[a_first + 3]);
+			lists.matesAny = IntMatrix(a_args[a_first + 4]);
+			lists.matesAll = IntMatrix(a_args[a_first + 5]);
+			lists.participantsAny = IntMatrix(a_args[a_first + 6]);
+			lists.participantsAll = IntMatrix(a_args[a_first + 7]);
+			return lists;
 		}
-		return ids;
-	}
+
+		// OLibrary.GetRandomSceneSuperloadCSV: a_args holds its 44 strings after
+		// FurnitureType, in OStim's order (FourLibrary.psc packs them).
+		std::string FindRandomSceneSuperload(std::monostate, std::vector<RE::Actor*> a_actors, std::string a_furniture, std::vector<std::string> a_args)
+		{
+			if (a_args.size() < 44) {
+				REX::WARN("FourLibrary.GetRandomSceneSuperloadCSV: {} of its 44 filter strings", a_args.size());
+				a_args.resize(44);
+			}
+			std::vector<std::function<bool(const SceneRegistry::Scene&)>> conditions;
+			const auto& a = a_args;
+			if (!a[0].empty()) {
+				conditions.push_back([tags = TagList(a[0])](const SceneRegistry::Scene& s) { return HasAnyOf(s.tags, tags); });
+			}
+			if (!a[1].empty()) {
+				conditions.push_back([tags = TagList(a[1])](const SceneRegistry::Scene& s) { return HasAllOf(s.tags, tags); });
+			}
+			if (!a[2].empty()) {  // OStim's Node::hasOnlyTags
+				conditions.push_back([tags = TagList(a[2])](const SceneRegistry::Scene& s) { return HasAllOf(tags, s.tags); });
+			}
+			if (!a[3].empty()) {
+				conditions.push_back([tags = TagList(a[3])](const SceneRegistry::Scene& s) { return !HasAnyOf(s.tags, tags); });
+			}
+			// Actor tags: any for any, any for all, all for any, all for all,
+			// whitelist for any / all, blacklist for any / all.
+			const auto roleTags = [&](std::size_t a_index, auto a_test, bool a_forAll) {
+				if (a[a_index].empty()) {
+					return;
+				}
+				conditions.push_back([m = TagMatrix(a[a_index]), a_test, a_forAll](const SceneRegistry::Scene& s) {
+					const auto each = [&](int i) { return a_test(s, i, m[i]); };
+					return a_forAll ? ForAllRoles(m.size(), each) : ForAnyRole(m.size(), each);
+				});
+			};
+			const auto anyTag = [](const SceneRegistry::Scene& s, int i, const std::vector<std::string>& t) { return RoleHasAnyTag(s, i, t); };
+			const auto allTags = [](const SceneRegistry::Scene& s, int i, const std::vector<std::string>& t) { return RoleHasAllTags(s, i, t); };
+			const auto onlyTags = [](const SceneRegistry::Scene& s, int i, const std::vector<std::string>& t) { return RoleHasOnlyTags(s, i, t); };
+			const auto noTag = [](const SceneRegistry::Scene& s, int i, const std::vector<std::string>& t) { return !RoleHasAnyTag(s, i, t); };
+			roleTags(4, anyTag, false);
+			roleTags(5, anyTag, true);
+			roleTags(6, allTags, false);
+			roleTags(7, allTags, true);
+			roleTags(8, onlyTags, false);
+			roleTags(9, onlyTags, true);
+			roleTags(10, noTag, false);
+			roleTags(11, noTag, true);
+			if (!a[12].empty()) {
+				conditions.push_back([l = ActionListsFrom(a, 12)](const SceneRegistry::Scene& s) { return l.SceneHasAny(s); });
+			}
+			if (!a[20].empty()) {
+				conditions.push_back([l = ActionListsFrom(a, 20)](const SceneRegistry::Scene& s) { return l.SceneHasAll(s); });
+			}
+			if (!a[28].empty()) {
+				conditions.push_back([l = ActionListsFrom(a, 28)](const SceneRegistry::Scene& s) { return l.SceneHasOnlyListed(s); });
+			}
+			if (!a[36].empty()) {
+				conditions.push_back([l = ActionListsFrom(a, 36)](const SceneRegistry::Scene& s) { return !l.SceneHasAny(s); });
+			}
+			return RandomSceneWhere(a_actors, a_furniture, [&](const SceneRegistry::Scene& a_scene) {
+				return std::ranges::all_of(conditions, [&](const auto& c) { return c(a_scene); });
+			});
+		}
+
+		// OLibrary.GetScenesInRange (OStim's Node::getNodesInRange): the scenes
+		// reachable from a_id in up to a_distance navigations whose scenes (any
+		// transitions on the way included) fit a_actors, sorted by name. As in
+		// OStim, a_id itself is only in it if a navigation leads back to it.
+		std::vector<std::string> GetScenesInRange(std::monostate, std::string a_id, std::vector<RE::Actor*> a_actors, std::int32_t a_distance)
+		{
+			const auto start = SceneRegistry::Find(a_id);
+			const auto cast = IDsOf(a_actors);
+			if (!start || cast.empty()) {
+				return {};
+			}
+			SceneRegistry::ListFilter filter;
+			filter.actors = ConditionsOf(cast);
+			std::unordered_set<std::string> fits;
+			for (const auto& summary : SceneRegistry::List(cast.size(), filter)) {
+				fits.insert(LowerCopy(summary.id));
+			}
+			// Where a navigation to a_to ends (past its transitions), or null
+			// when something on the way doesn't fit the actors.
+			const auto destination = [&](const std::string& a_to) -> std::shared_ptr<const SceneRegistry::Scene> {
+				auto scene = SceneRegistry::Find(a_to);
+				for (int hops = 0; scene && hops < 16; ++hops) {
+					if (!fits.contains(LowerCopy(scene->id))) {
+						return nullptr;
+					}
+					if (!scene->IsTransition()) {
+						return scene;
+					}
+					scene = SceneRegistry::Find(scene->destination);
+				}
+				return nullptr;
+			};
+			std::vector<std::shared_ptr<const SceneRegistry::Scene>> found;
+			std::vector<std::shared_ptr<const SceneRegistry::Scene>> level{ start };
+			for (int i = 0; i < a_distance && !level.empty(); ++i) {
+				std::vector<std::shared_ptr<const SceneRegistry::Scene>> next;
+				for (const auto& scene : level) {
+					for (const auto& nav : scene->navigations) {
+						const auto to = destination(nav.to);
+						if (to && std::ranges::find(found, to) == found.end()) {
+							found.push_back(to);
+							next.push_back(to);
+						}
+					}
+				}
+				level = std::move(next);
+			}
+			std::ranges::sort(found, [](const auto& x, const auto& y) { return LowerCopy(x->name) < LowerCopy(y->name); });
+			std::vector<std::string> ids;
+			for (const auto& scene : found) {
+				ids.push_back(scene->id);
+			}
+			return ids;
+		}
+
+		// FourLibrary: one native the OLibrary-named functions wrap.
+		std::string FindRandomScene(std::monostate, std::vector<RE::Actor*> a_actors, std::string a_furniture, std::vector<std::string> a_anyTags,
+			std::vector<std::string> a_allTags, std::vector<std::string> a_anyActions, std::vector<std::string> a_allActions, std::int32_t a_position,
+			std::vector<std::string> a_anyActorTags, std::vector<std::string> a_allActorTags)
+		{
+			return RandomScene(a_actors, a_furniture, a_anyTags, a_allTags, a_anyActions, a_allActions, a_position, a_anyActorTags, a_allActorTags);
+		}
+
+		std::vector<std::string> SplitCSV(std::monostate, std::string a_csv) { return ::SplitCSV(a_csv); }
+
+		std::vector<std::string> GetAllScenes(std::monostate)
+		{
+			std::vector<std::string> ids;
+			for (std::size_t count = 1; count <= 16; ++count) {
+				for (const auto& summary : SceneRegistry::List(count)) {
+					ids.push_back(summary.id);
+				}
+			}
+			return ids;
+		}
+	}  // namespace Natives::FourLibrary
 
 	// ---- FourMetadata: the rest of OMetadata (OStim's PapyrusMetadata) ----
 	// Natives for what Papyrus can't do cheaply; FourMetadata.psc builds
 	// OMetadata's 282 functions on them under OStim's names.
 
-	std::vector<std::string> M_ScenesToNames(std::monostate, std::vector<std::string> a_ids)
+	namespace Natives::FourMetadata
 	{
-		std::vector<std::string> out;
-		for (const auto& id : a_ids) {
-			const auto scene = SceneRegistry::Find(id);
-			out.push_back(scene ? scene->name : std::string{});
-		}
-		return out;
-	}
-
-	// OStim's GetAnimationId: the "animation" of speed a_index ("" for 4Stim's
-	// "idles" speeds, which have no such name).
-	std::string M_GetAnimationId(std::monostate, std::string a_id, std::int32_t a_index)
-	{
-		const auto scene = SceneRegistry::Find(a_id);
-		if (!scene || a_index < 0 || static_cast<std::size_t>(a_index) >= scene->speedInfo.size()) {
-			return {};
-		}
-		return scene->speedInfo[a_index].animation;
-	}
-
-	// 4Stim's: what the role at a_position needs (its own and its actions'
-	// requirements), as OStim's actor condition reads them.
-	std::vector<std::string> M_GetActorRequirements(std::monostate, std::string a_id, std::int32_t a_position)
-	{
-		const auto scene = SceneRegistry::Find(a_id);
-		if (!scene || a_position < 0 || static_cast<std::size_t>(a_position) >= scene->actors.size()) {
-			return {};
-		}
-		return scene->actors[a_position].requirements;
-	}
-
-	const SceneRegistry::SceneAction* ActionAt(const SceneRegistry::Scene* a_scene, std::int32_t a_index)
-	{
-		return a_scene && a_index >= 0 && static_cast<std::size_t>(a_index) < a_scene->actions.size() ? &a_scene->actions[a_index] : nullptr;
-	}
-
-	std::vector<std::string> M_GetActionTypes(std::monostate, std::string a_id)
-	{
-		std::vector<std::string> out;
-		if (const auto scene = SceneRegistry::Find(a_id)) {
-			for (const auto& action : scene->actions) {
-				out.push_back(action.type->id);
+		std::vector<std::string> ScenesToNames(std::monostate, std::vector<std::string> a_ids)
+		{
+			std::vector<std::string> out;
+			for (const auto& id : a_ids) {
+				const auto scene = SceneRegistry::Find(id);
+				out.push_back(scene ? scene->name : std::string{});
 			}
-		}
-		return out;
-	}
-
-	// a_which: 0 actor, 1 target, 2 performer.
-	std::vector<std::int32_t> ActionRolesOf(const std::string& a_id, int a_which)
-	{
-		std::vector<std::int32_t> out;
-		if (const auto scene = SceneRegistry::Find(a_id)) {
-			for (const auto& action : scene->actions) {
-				out.push_back(RoleIndex(a_which == 0 ? action.actor : a_which == 1 ? action.target : action.performer));
-			}
-		}
-		return out;
-	}
-	std::vector<std::int32_t> M_GetActionActors(std::monostate, std::string a_id) { return ActionRolesOf(a_id, 0); }
-	std::vector<std::int32_t> M_GetActionTargets(std::monostate, std::string a_id) { return ActionRolesOf(a_id, 1); }
-	std::vector<std::int32_t> M_GetActionPerformers(std::monostate, std::string a_id) { return ActionRolesOf(a_id, 2); }
-
-	std::vector<std::string> M_GetActionTags(std::monostate, std::string a_id, std::int32_t a_index)
-	{
-		const auto action = ActionAt(SceneRegistry::Find(a_id).get(), a_index);
-		return action ? action->type->tags : std::vector<std::string>{};
-	}
-
-	// OStim's GetAllActionsTags: every action's tags, once each, sorted.
-	std::vector<std::string> M_GetAllActionsTags(std::monostate, std::string a_id)
-	{
-		std::set<std::string> tags;
-		if (const auto scene = SceneRegistry::Find(a_id)) {
-			for (const auto& action : scene->actions) {
-				tags.insert(action.type->tags.begin(), action.type->tags.end());
-			}
-		}
-		return { tags.begin(), tags.end() };
-	}
-
-	// List helpers for FourMetadata.psc (case-insensitive, as Papyrus strings).
-	bool M_ListHasAny(std::monostate, std::vector<std::string> a_have, std::vector<std::string> a_wanted) { return HasAnyOf(a_have, a_wanted); }
-	bool M_ListHasAll(std::monostate, std::vector<std::string> a_have, std::vector<std::string> a_wanted) { return HasAllOf(a_have, a_wanted); }
-	// What of a_have is in a_wanted, lowercase, once each, sorted (OStim's tag
-	// overlaps return a std::set).
-	std::vector<std::string> M_ListOverlap(std::monostate, std::vector<std::string> a_have, std::vector<std::string> a_wanted)
-	{
-		std::set<std::string> out;
-		for (const auto& h : a_have) {
-			if (HasAnyOf(a_wanted, { h })) {
-				out.insert(LowerCopy(h));
-			}
-		}
-		return { out.begin(), out.end() };
-	}
-
-	// "1,2" -> [1, 2] / [1.0, 2.0] (OStim's VectorUtil::stoiv / stofv: bad items skipped).
-	std::vector<std::int32_t> M_IntsOfCSV(std::monostate, std::string a_csv)
-	{
-		std::vector<std::int32_t> out;
-		for (const auto& item : SplitCSV(a_csv)) {
-			try {
-				out.push_back(std::stoi(item));
-			} catch (...) {
-			}
-		}
-		return out;
-	}
-	std::vector<float> M_FloatsOfCSV(std::monostate, std::string a_csv)
-	{
-		std::vector<float> out;
-		for (const auto& item : SplitCSV(a_csv)) {
-			try {
-				out.push_back(std::stof(item));
-			} catch (...) {
-			}
-		}
-		return out;
-	}
-	// OStim's VectorUtil::getOverlap: the items of a_have also in a_wanted, in a_have's order.
-	std::vector<std::int32_t> M_IntListOverlap(std::monostate, std::vector<std::int32_t> a_have, std::vector<std::int32_t> a_wanted)
-	{
-		std::erase_if(a_have, [&](std::int32_t v) { return std::ranges::find(a_wanted, v) == a_wanted.end(); });
-		return a_have;
-	}
-	std::vector<float> M_FloatListOverlap(std::monostate, std::vector<float> a_have, std::vector<float> a_wanted)
-	{
-		std::erase_if(a_have, [&](float v) { return std::ranges::find(a_wanted, v) == a_wanted.end(); });
-		return a_have;
-	}
-	std::vector<std::string> M_StringListOverlap(std::monostate, std::vector<std::string> a_have, std::vector<std::string> a_wanted)
-	{
-		std::erase_if(a_have, [&](const std::string& v) { return !HasAnyOf(a_wanted, { v }); });
-		return a_have;
-	}
-
-	// OMetadata's FindAction(s)For... families: the indexes of the actions of
-	// any of a_types (all actions when a_types is empty) whose roles fit
-	// a_mode, as OStim's conditions: 0 any roles; 1 actor in a_positions;
-	// 2 target in; 3 performer in; 4 actor in a_positions and target in
-	// a_positions2; 5 actor or target in (mates any); 6 actor and target in
-	// (mates all); 7 actor, target or performer in (participants any); 8 all
-	// three in (participants all).
-	std::vector<std::int32_t> M_FindActionsBy(std::monostate, std::string a_id, std::vector<std::string> a_types, std::int32_t a_mode,
-		std::vector<std::int32_t> a_positions, std::vector<std::int32_t> a_positions2)
-	{
-		std::vector<std::int32_t> out;
-		const auto scene = SceneRegistry::Find(a_id);
-		if (!scene) {
 			return out;
 		}
-		for (auto& type : a_types) {
-			type = LowerCopy(type);
-		}
-		const auto in = [](const std::vector<std::int32_t>& a_list, int a_role) { return std::ranges::find(a_list, a_role) != a_list.end(); };
-		for (std::size_t i = 0; i < scene->actions.size(); ++i) {
-			const auto& a = scene->actions[i];
-			if (!a_types.empty() && std::ranges::none_of(a_types, [&](const std::string& t) { return ActionIsType(a, t); })) {
-				continue;
-			}
-			const int actor = RoleIndex(a.actor);
-			const int target = RoleIndex(a.target);
-			const int performer = RoleIndex(a.performer);
-			bool fits = true;
-			switch (a_mode) {
-			case 1: fits = in(a_positions, actor); break;
-			case 2: fits = in(a_positions, target); break;
-			case 3: fits = in(a_positions, performer); break;
-			case 4: fits = in(a_positions, actor) && in(a_positions2, target); break;
-			case 5: fits = in(a_positions, actor) || in(a_positions, target); break;
-			case 6: fits = in(a_positions, actor) && in(a_positions, target); break;
-			case 7: fits = in(a_positions, actor) || in(a_positions, target) || in(a_positions, performer); break;
-			case 8: fits = in(a_positions, actor) && in(a_positions, target) && in(a_positions, performer); break;
-			default: break;
-			}
-			if (fits) {
-				out.push_back(static_cast<std::int32_t>(i));
-			}
-		}
-		return out;
-	}
 
-	const Actions::Side& SideOf(const SceneRegistry::SceneAction& a_action, int a_role)
-	{
-		return a_role == 0 ? a_action.type->actor : a_role == 1 ? a_action.type->target : a_action.type->performer;
-	}
+		// OStim's GetAnimationId: the "animation" of speed a_index ("" for 4Stim's
+		// "idles" speeds, which have no such name).
+		std::string GetAnimationId(std::monostate, std::string a_id, std::int32_t a_index)
+		{
+			const auto scene = SceneRegistry::Find(a_id);
+			if (!scene || a_index < 0 || static_cast<std::size_t>(a_index) >= scene->speedInfo.size()) {
+				return {};
+			}
+			return scene->speedInfo[a_index].animation;
+		}
 
-	// OMetadata.FindActionsSuperloadCSVv2's search: a_filters holds its 25
-	// strings after Id, in OStim's order (FourMetadata.psc packs them).
-	std::vector<std::int32_t> M_FindActionsSuperload(std::monostate, std::string a_id, std::vector<std::string> a_filters)
-	{
-		std::vector<std::int32_t> out;
-		const auto scene = SceneRegistry::Find(a_id);
-		if (!scene) {
+		// 4Stim's: what the role at a_position needs (its own and its actions'
+		// requirements), as OStim's actor condition reads them.
+		std::vector<std::string> GetActorRequirements(std::monostate, std::string a_id, std::int32_t a_position)
+		{
+			const auto scene = SceneRegistry::Find(a_id);
+			if (!scene || a_position < 0 || static_cast<std::size_t>(a_position) >= scene->actors.size()) {
+				return {};
+			}
+			return scene->actors[a_position].requirements;
+		}
+
+		const SceneRegistry::SceneAction* ActionAt(const SceneRegistry::Scene* a_scene, std::int32_t a_index)
+		{
+			return a_scene && a_index >= 0 && static_cast<std::size_t>(a_index) < a_scene->actions.size() ? &a_scene->actions[a_index] : nullptr;
+		}
+
+		std::vector<std::string> GetActionTypes(std::monostate, std::string a_id)
+		{
+			std::vector<std::string> out;
+			if (const auto scene = SceneRegistry::Find(a_id)) {
+				for (const auto& action : scene->actions) {
+					out.push_back(action.type->id);
+				}
+			}
 			return out;
 		}
-		a_filters.resize(std::max<std::size_t>(a_filters.size(), 25));
-		const auto& f = a_filters;
-		const auto ints = [](const std::string& a_csv) {
-			std::vector<int> list;
+
+		// a_which: 0 actor, 1 target, 2 performer.
+		std::vector<std::int32_t> ActionRolesOf(const std::string& a_id, int a_which)
+		{
+			std::vector<std::int32_t> out;
+			if (const auto scene = SceneRegistry::Find(a_id)) {
+				for (const auto& action : scene->actions) {
+					out.push_back(RoleIndex(a_which == 0 ? action.actor : a_which == 1 ? action.target : action.performer));
+				}
+			}
+			return out;
+		}
+		std::vector<std::int32_t> GetActionActors(std::monostate, std::string a_id) { return ActionRolesOf(a_id, 0); }
+		std::vector<std::int32_t> GetActionTargets(std::monostate, std::string a_id) { return ActionRolesOf(a_id, 1); }
+		std::vector<std::int32_t> GetActionPerformers(std::monostate, std::string a_id) { return ActionRolesOf(a_id, 2); }
+
+		std::vector<std::string> GetActionTags(std::monostate, std::string a_id, std::int32_t a_index)
+		{
+			const auto action = ActionAt(SceneRegistry::Find(a_id).get(), a_index);
+			return action ? action->type->tags : std::vector<std::string>{};
+		}
+
+		// OStim's GetAllActionsTags: every action's tags, once each, sorted.
+		std::vector<std::string> GetAllActionsTags(std::monostate, std::string a_id)
+		{
+			std::set<std::string> tags;
+			if (const auto scene = SceneRegistry::Find(a_id)) {
+				for (const auto& action : scene->actions) {
+					tags.insert(action.type->tags.begin(), action.type->tags.end());
+				}
+			}
+			return { tags.begin(), tags.end() };
+		}
+
+		// List helpers for FourMetadata.psc (case-insensitive, as Papyrus strings).
+		bool ListHasAny(std::monostate, std::vector<std::string> a_have, std::vector<std::string> a_wanted) { return HasAnyOf(a_have, a_wanted); }
+		bool ListHasAll(std::monostate, std::vector<std::string> a_have, std::vector<std::string> a_wanted) { return HasAllOf(a_have, a_wanted); }
+		// What of a_have is in a_wanted, lowercase, once each, sorted (OStim's tag
+		// overlaps return a std::set).
+		std::vector<std::string> ListOverlap(std::monostate, std::vector<std::string> a_have, std::vector<std::string> a_wanted)
+		{
+			std::set<std::string> out;
+			for (const auto& h : a_have) {
+				if (HasAnyOf(a_wanted, { h })) {
+					out.insert(LowerCopy(h));
+				}
+			}
+			return { out.begin(), out.end() };
+		}
+
+		// "1,2" -> [1, 2] / [1.0, 2.0] (OStim's VectorUtil::stoiv / stofv: bad items skipped).
+		std::vector<std::int32_t> IntsOfCSV(std::monostate, std::string a_csv)
+		{
+			std::vector<std::int32_t> out;
 			for (const auto& item : SplitCSV(a_csv)) {
 				try {
-					list.push_back(std::stoi(item));
+					out.push_back(std::stoi(item));
 				} catch (...) {
 				}
 			}
-			return list;
-		};
-		const auto in = [](const std::vector<int>& a_list, int a_role) { return std::ranges::find(a_list, a_role) != a_list.end(); };
-		std::vector<std::function<bool(const SceneRegistry::SceneAction&)>> conditions;
-		// Roles: actor, target, performer, mates any / all, participants any / all.
-		for (int k = 0; k < 7; ++k) {
-			if (f[k].empty()) {
-				continue;
+			return out;
+		}
+		std::vector<float> FloatsOfCSV(std::monostate, std::string a_csv)
+		{
+			std::vector<float> out;
+			for (const auto& item : SplitCSV(a_csv)) {
+				try {
+					out.push_back(std::stof(item));
+				} catch (...) {
+				}
 			}
-			conditions.push_back([k, list = ints(f[k]), in](const SceneRegistry::SceneAction& a) {
+			return out;
+		}
+		// OStim's VectorUtil::getOverlap: the items of a_have also in a_wanted, in a_have's order.
+		std::vector<std::int32_t> IntListOverlap(std::monostate, std::vector<std::int32_t> a_have, std::vector<std::int32_t> a_wanted)
+		{
+			std::erase_if(a_have, [&](std::int32_t v) { return std::ranges::find(a_wanted, v) == a_wanted.end(); });
+			return a_have;
+		}
+		std::vector<float> FloatListOverlap(std::monostate, std::vector<float> a_have, std::vector<float> a_wanted)
+		{
+			std::erase_if(a_have, [&](float v) { return std::ranges::find(a_wanted, v) == a_wanted.end(); });
+			return a_have;
+		}
+		std::vector<std::string> StringListOverlap(std::monostate, std::vector<std::string> a_have, std::vector<std::string> a_wanted)
+		{
+			std::erase_if(a_have, [&](const std::string& v) { return !HasAnyOf(a_wanted, { v }); });
+			return a_have;
+		}
+
+		// OMetadata's FindAction(s)For... families: the indexes of the actions of
+		// any of a_types (all actions when a_types is empty) whose roles fit
+		// a_mode, as OStim's conditions: 0 any roles; 1 actor in a_positions;
+		// 2 target in; 3 performer in; 4 actor in a_positions and target in
+		// a_positions2; 5 actor or target in (mates any); 6 actor and target in
+		// (mates all); 7 actor, target or performer in (participants any); 8 all
+		// three in (participants all).
+		std::vector<std::int32_t> FindActionsBy(std::monostate, std::string a_id, std::vector<std::string> a_types, std::int32_t a_mode,
+			std::vector<std::int32_t> a_positions, std::vector<std::int32_t> a_positions2)
+		{
+			std::vector<std::int32_t> out;
+			const auto scene = SceneRegistry::Find(a_id);
+			if (!scene) {
+				return out;
+			}
+			for (auto& type : a_types) {
+				type = LowerCopy(type);
+			}
+			const auto in = [](const std::vector<std::int32_t>& a_list, int a_role) { return std::ranges::find(a_list, a_role) != a_list.end(); };
+			for (std::size_t i = 0; i < scene->actions.size(); ++i) {
+				const auto& a = scene->actions[i];
+				if (!a_types.empty() && std::ranges::none_of(a_types, [&](const std::string& t) { return ActionIsType(a, t); })) {
+					continue;
+				}
 				const int actor = RoleIndex(a.actor);
 				const int target = RoleIndex(a.target);
 				const int performer = RoleIndex(a.performer);
-				switch (k) {
-				case 0: return in(list, actor);
-				case 1: return in(list, target);
-				case 2: return in(list, performer);
-				case 3: return in(list, actor) || in(list, target);
-				case 4: return in(list, actor) && in(list, target);
-				case 5: return in(list, actor) || in(list, target) || in(list, performer);
-				default: return in(list, actor) && in(list, target) && in(list, performer);
+				bool fits = true;
+				switch (a_mode) {
+				case 1: fits = in(a_positions, actor); break;
+				case 2: fits = in(a_positions, target); break;
+				case 3: fits = in(a_positions, performer); break;
+				case 4: fits = in(a_positions, actor) && in(a_positions2, target); break;
+				case 5: fits = in(a_positions, actor) || in(a_positions, target); break;
+				case 6: fits = in(a_positions, actor) && in(a_positions, target); break;
+				case 7: fits = in(a_positions, actor) || in(a_positions, target) || in(a_positions, performer); break;
+				case 8: fits = in(a_positions, actor) && in(a_positions, target) && in(a_positions, performer); break;
+				default: break;
 				}
-			});
-		}
-		if (!f[7].empty()) {
-			conditions.push_back([types = TagList(f[7])](const SceneRegistry::SceneAction& a) {
-				return std::ranges::any_of(types, [&](const std::string& t) { return ActionIsType(a, t); });
-			});
-		}
-		if (!f[8].empty()) {
-			conditions.push_back([tags = TagList(f[8])](const SceneRegistry::SceneAction& a) { return HasAnyOf(a.type->tags, tags); });
-		}
-		if (!f[9].empty()) {
-			conditions.push_back([tags = TagList(f[9])](const SceneRegistry::SceneAction& a) { return HasAllOf(a.type->tags, tags); });
-		}
-		if (!f[10].empty()) {  // OStim's hasOnlyTags
-			conditions.push_back([tags = TagList(f[10])](const SceneRegistry::SceneAction& a) { return HasAllOf(tags, a.type->tags); });
-		}
-		if (!f[11].empty()) {
-			conditions.push_back([tags = TagList(f[11])](const SceneRegistry::SceneAction& a) { return !HasAnyOf(a.type->tags, tags); });
-		}
-		// Custom records: any / all keys per side ("actor keys;target keys;performer keys"),
-		// for ints, floats, strings, int lists, float lists, string lists.
-		const auto hasKey = [](const Actions::Side& s, int a_kind, const std::string& k) {
-			switch (a_kind) {
-			case 0: return s.ints.contains(k);
-			case 1: return s.floats.contains(k);
-			case 2: return s.strings.contains(k);
-			case 3: return s.intLists.contains(k);
-			case 4: return s.floatLists.contains(k);
-			default: return s.stringLists.contains(k);
+				if (fits) {
+					out.push_back(static_cast<std::int32_t>(i));
+				}
 			}
-		};
-		for (int kind = 0; kind < 6; ++kind) {
-			for (int all = 0; all < 2; ++all) {
-				const auto& text = f[12 + kind * 2 + all];
-				if (text.empty()) {
+			return out;
+		}
+
+		const Actions::Side& SideOf(const SceneRegistry::SceneAction& a_action, int a_role)
+		{
+			return a_role == 0 ? a_action.type->actor : a_role == 1 ? a_action.type->target : a_action.type->performer;
+		}
+
+		// OMetadata.FindActionsSuperloadCSVv2's search: a_filters holds its 25
+		// strings after Id, in OStim's order (FourMetadata.psc packs them).
+		std::vector<std::int32_t> FindActionsSuperload(std::monostate, std::string a_id, std::vector<std::string> a_filters)
+		{
+			std::vector<std::int32_t> out;
+			const auto scene = SceneRegistry::Find(a_id);
+			if (!scene) {
+				return out;
+			}
+			a_filters.resize(std::max<std::size_t>(a_filters.size(), 25));
+			const auto& f = a_filters;
+			const auto ints = [](const std::string& a_csv) {
+				std::vector<int> list;
+				for (const auto& item : SplitCSV(a_csv)) {
+					try {
+						list.push_back(std::stoi(item));
+					} catch (...) {
+					}
+				}
+				return list;
+			};
+			const auto in = [](const std::vector<int>& a_list, int a_role) { return std::ranges::find(a_list, a_role) != a_list.end(); };
+			std::vector<std::function<bool(const SceneRegistry::SceneAction&)>> conditions;
+			// Roles: actor, target, performer, mates any / all, participants any / all.
+			for (int k = 0; k < 7; ++k) {
+				if (f[k].empty()) {
 					continue;
 				}
-				const auto matrix = TagMatrix(text);
-				for (int role = 0; role < 3 && role < static_cast<int>(matrix.size()); ++role) {
-					if (matrix[role].empty()) {
-						continue;
+				conditions.push_back([k, list = ints(f[k]), in](const SceneRegistry::SceneAction& a) {
+					const int actor = RoleIndex(a.actor);
+					const int target = RoleIndex(a.target);
+					const int performer = RoleIndex(a.performer);
+					switch (k) {
+					case 0: return in(list, actor);
+					case 1: return in(list, target);
+					case 2: return in(list, performer);
+					case 3: return in(list, actor) || in(list, target);
+					case 4: return in(list, actor) && in(list, target);
+					case 5: return in(list, actor) || in(list, target) || in(list, performer);
+					default: return in(list, actor) && in(list, target) && in(list, performer);
 					}
-					conditions.push_back([keys = matrix[role], role, kind, all, hasKey](const SceneRegistry::SceneAction& a) {
-						const auto& side = SideOf(a, role);
-						const auto has = [&](const std::string& k) { return hasKey(side, kind, k); };
-						return all ? std::ranges::all_of(keys, has) : std::ranges::any_of(keys, has);
-					});
+				});
+			}
+			if (!f[7].empty()) {
+				conditions.push_back([types = TagList(f[7])](const SceneRegistry::SceneAction& a) {
+					return std::ranges::any_of(types, [&](const std::string& t) { return ActionIsType(a, t); });
+				});
+			}
+			if (!f[8].empty()) {
+				conditions.push_back([tags = TagList(f[8])](const SceneRegistry::SceneAction& a) { return HasAnyOf(a.type->tags, tags); });
+			}
+			if (!f[9].empty()) {
+				conditions.push_back([tags = TagList(f[9])](const SceneRegistry::SceneAction& a) { return HasAllOf(a.type->tags, tags); });
+			}
+			if (!f[10].empty()) {  // OStim's hasOnlyTags
+				conditions.push_back([tags = TagList(f[10])](const SceneRegistry::SceneAction& a) { return HasAllOf(tags, a.type->tags); });
+			}
+			if (!f[11].empty()) {
+				conditions.push_back([tags = TagList(f[11])](const SceneRegistry::SceneAction& a) { return !HasAnyOf(a.type->tags, tags); });
+			}
+			// Custom records: any / all keys per side ("actor keys;target keys;performer keys"),
+			// for ints, floats, strings, int lists, float lists, string lists.
+			const auto hasKey = [](const Actions::Side& s, int a_kind, const std::string& k) {
+				switch (a_kind) {
+				case 0: return s.ints.contains(k);
+				case 1: return s.floats.contains(k);
+				case 2: return s.strings.contains(k);
+				case 3: return s.intLists.contains(k);
+				case 4: return s.floatLists.contains(k);
+				default: return s.stringLists.contains(k);
 				}
-			}
-		}
-		for (std::size_t i = 0; i < scene->actions.size(); ++i) {
-			if (std::ranges::all_of(conditions, [&](const auto& c) { return c(scene->actions[i]); })) {
-				out.push_back(static_cast<std::int32_t>(i));
-			}
-		}
-		return out;
-	}
-
-	// Custom action data (OStim's GetCustomAction{Actor,Target,Performer}...):
-	// a_role 0 actor, 1 target, 2 performer; a_kind 0 int, 1 float, 2 string,
-	// 3 int list, 4 float list, 5 string list.
-	const Actions::Side* CustomSide(const std::string& a_id, std::int32_t a_index, std::int32_t a_role)
-	{
-		const auto action = ActionAt(SceneRegistry::Find(a_id).get(), a_index);
-		return action && a_role >= 0 && a_role <= 2 ? &SideOf(*action, a_role) : nullptr;
-	}
-	bool M_HasCustomAction(std::monostate, std::string a_id, std::int32_t a_index, std::int32_t a_role, std::int32_t a_kind, std::string a_record)
-	{
-		const auto side = CustomSide(a_id, a_index, a_role);
-		const auto k = LowerCopy(a_record);
-		if (!side) {
-			return false;
-		}
-		switch (a_kind) {
-		case 0: return side->ints.contains(k);
-		case 1: return side->floats.contains(k);
-		case 2: return side->strings.contains(k);
-		case 3: return side->intLists.contains(k);
-		case 4: return side->floatLists.contains(k);
-		default: return side->stringLists.contains(k);
-		}
-	}
-	std::int32_t M_GetCustomActionInt(std::monostate, std::string a_id, std::int32_t a_index, std::int32_t a_role, std::string a_record, std::int32_t a_fallback)
-	{
-		const auto side = CustomSide(a_id, a_index, a_role);
-		const auto it = side ? side->ints.find(LowerCopy(a_record)) : decltype(side->ints)::const_iterator{};
-		return side && it != side->ints.end() ? it->second : a_fallback;
-	}
-	float M_GetCustomActionFloat(std::monostate, std::string a_id, std::int32_t a_index, std::int32_t a_role, std::string a_record, float a_fallback)
-	{
-		const auto side = CustomSide(a_id, a_index, a_role);
-		const auto it = side ? side->floats.find(LowerCopy(a_record)) : decltype(side->floats)::const_iterator{};
-		return side && it != side->floats.end() ? it->second : a_fallback;
-	}
-	std::string M_GetCustomActionString(std::monostate, std::string a_id, std::int32_t a_index, std::int32_t a_role, std::string a_record, std::string a_fallback)
-	{
-		const auto side = CustomSide(a_id, a_index, a_role);
-		const auto it = side ? side->strings.find(LowerCopy(a_record)) : decltype(side->strings)::const_iterator{};
-		return side && it != side->strings.end() ? it->second : a_fallback;
-	}
-	std::vector<std::int32_t> M_GetCustomActionIntList(std::monostate, std::string a_id, std::int32_t a_index, std::int32_t a_role, std::string a_record)
-	{
-		const auto side = CustomSide(a_id, a_index, a_role);
-		const auto it = side ? side->intLists.find(LowerCopy(a_record)) : decltype(side->intLists)::const_iterator{};
-		return side && it != side->intLists.end() ? std::vector<std::int32_t>(it->second.begin(), it->second.end()) : std::vector<std::int32_t>{};
-	}
-	std::vector<float> M_GetCustomActionFloatList(std::monostate, std::string a_id, std::int32_t a_index, std::int32_t a_role, std::string a_record)
-	{
-		const auto side = CustomSide(a_id, a_index, a_role);
-		const auto it = side ? side->floatLists.find(LowerCopy(a_record)) : decltype(side->floatLists)::const_iterator{};
-		return side && it != side->floatLists.end() ? it->second : std::vector<float>{};
-	}
-	std::vector<std::string> M_GetCustomActionStringList(std::monostate, std::string a_id, std::int32_t a_index, std::int32_t a_role, std::string a_record)
-	{
-		const auto side = CustomSide(a_id, a_index, a_role);
-		const auto it = side ? side->stringLists.find(LowerCopy(a_record)) : decltype(side->stringLists)::const_iterator{};
-		return side && it != side->stringLists.end() ? it->second : std::vector<std::string>{};
-	}
-
-	// OStim's GetCustomSceneActor{Int,Float}{Min,Max,Sum,Product}: a_record's
-	// values on every side the role at a_position takes in the scene's
-	// actions (actor, target and performer). a_op 0 min, 1 max (a_start is
-	// the fallback when there's none), 2 sum, 3 product (a_start is the
-	// starting value).
-	template <class T>
-	T CustomSceneActorAggregate(const std::string& a_id, std::int32_t a_position, const std::string& a_record, std::int32_t a_op, T a_start)
-	{
-		const auto scene = SceneRegistry::Find(a_id);
-		const auto key = LowerCopy(a_record);
-		std::optional<T> best;
-		T                acc = a_start;
-		if (scene) {
-			for (const auto& action : scene->actions) {
-				const std::size_t roles[3] = { action.actor, action.target, action.performer };
-				for (int side = 0; side < 3; ++side) {
-					if (RoleIndex(roles[side]) != a_position) {
+			};
+			for (int kind = 0; kind < 6; ++kind) {
+				for (int all = 0; all < 2; ++all) {
+					const auto& text = f[12 + kind * 2 + all];
+					if (text.empty()) {
 						continue;
 					}
-					const auto& values = SideOf(action, side);
-					T           value{};
-					if constexpr (std::is_same_v<T, std::int32_t>) {
-						const auto it = values.ints.find(key);
-						if (it == values.ints.end()) {
+					const auto matrix = TagMatrix(text);
+					for (int role = 0; role < 3 && role < static_cast<int>(matrix.size()); ++role) {
+						if (matrix[role].empty()) {
 							continue;
 						}
-						value = it->second;
-					} else {
-						const auto it = values.floats.find(key);
-						if (it == values.floats.end()) {
-							continue;
-						}
-						value = it->second;
-					}
-					switch (a_op) {
-					case 0: best = best ? std::min(*best, value) : value; break;
-					case 1: best = best ? std::max(*best, value) : value; break;
-					case 2: acc += value; break;
-					default: acc *= value; break;
+						conditions.push_back([keys = matrix[role], role, kind, all, hasKey](const SceneRegistry::SceneAction& a) {
+							const auto& side = SideOf(a, role);
+							const auto has = [&](const std::string& k) { return hasKey(side, kind, k); };
+							return all ? std::ranges::all_of(keys, has) : std::ranges::any_of(keys, has);
+						});
 					}
 				}
 			}
+			for (std::size_t i = 0; i < scene->actions.size(); ++i) {
+				if (std::ranges::all_of(conditions, [&](const auto& c) { return c(scene->actions[i]); })) {
+					out.push_back(static_cast<std::int32_t>(i));
+				}
+			}
+			return out;
 		}
-		return a_op <= 1 ? best.value_or(a_start) : acc;
-	}
-	std::int32_t M_GetCustomSceneActorInt(std::monostate, std::string a_id, std::int32_t a_position, std::string a_record, std::int32_t a_op, std::int32_t a_start)
-	{
-		return CustomSceneActorAggregate<std::int32_t>(a_id, a_position, a_record, a_op, a_start);
-	}
-	float M_GetCustomSceneActorFloat(std::monostate, std::string a_id, std::int32_t a_position, std::string a_record, std::int32_t a_op, float a_start)
-	{
-		return CustomSceneActorAggregate<float>(a_id, a_position, a_record, a_op, a_start);
-	}
 
-	// FourMetadata (OMetadata)
-	std::string M_GetName(std::monostate, std::string a_id)
-	{
-		const auto scene = SceneRegistry::Find(a_id);
-		return scene ? scene->name : std::string{};
-	}
-	bool M_IsTransition(std::monostate, std::string a_id)
-	{
-		const auto scene = SceneRegistry::Find(a_id);
-		return scene && scene->IsTransition();
-	}
-	std::string M_GetDestination(std::monostate, std::string a_id)
-	{
-		const auto scene = SceneRegistry::Find(a_id);
-		return scene ? scene->destination : std::string{};
-	}
-	std::vector<std::string> M_GetSceneTags(std::monostate, std::string a_id)
-	{
-		const auto scene = SceneRegistry::Find(a_id);
-		return scene ? scene->tags : std::vector<std::string>{};
-	}
-	std::string M_GetFurnitureType(std::monostate, std::string a_id)
-	{
-		const auto scene = SceneRegistry::Find(a_id);
-		return scene ? scene->furniture : std::string{};
-	}
-	std::int32_t M_GetMaxSpeed(std::monostate, std::string a_id)
-	{
-		const auto scene = SceneRegistry::Find(a_id);
-		return scene ? static_cast<std::int32_t>(scene->speeds.size()) - 1 : 0;  // OStim's 0 for an unknown scene
-	}
-	std::int32_t M_GetDefaultSpeed(std::monostate, std::string a_id)
-	{
-		const auto scene = SceneRegistry::Find(a_id);
-		return scene ? scene->defaultSpeed : 0;  // OStim's 0 for an unknown scene
-	}
-	std::vector<std::string> M_GetNavigations(std::monostate, std::string a_id)
-	{
-		std::vector<std::string> out;
-		if (const auto scene = SceneRegistry::Find(a_id)) {
-			for (const auto& nav : scene->navigations) {
-				out.push_back(nav.to);
+		// Custom action data (OStim's GetCustomAction{Actor,Target,Performer}...):
+		// a_role 0 actor, 1 target, 2 performer; a_kind 0 int, 1 float, 2 string,
+		// 3 int list, 4 float list, 5 string list.
+		const Actions::Side* CustomSide(const std::string& a_id, std::int32_t a_index, std::int32_t a_role)
+		{
+			const auto action = ActionAt(SceneRegistry::Find(a_id).get(), a_index);
+			return action && a_role >= 0 && a_role <= 2 ? &SideOf(*action, a_role) : nullptr;
+		}
+		bool HasCustomAction(std::monostate, std::string a_id, std::int32_t a_index, std::int32_t a_role, std::int32_t a_kind, std::string a_record)
+		{
+			const auto side = CustomSide(a_id, a_index, a_role);
+			const auto k = LowerCopy(a_record);
+			if (!side) {
+				return false;
+			}
+			switch (a_kind) {
+			case 0: return side->ints.contains(k);
+			case 1: return side->floats.contains(k);
+			case 2: return side->strings.contains(k);
+			case 3: return side->intLists.contains(k);
+			case 4: return side->floatLists.contains(k);
+			default: return side->stringLists.contains(k);
 			}
 		}
-		return out;
-	}
-	std::string M_GetAutoTransition(std::monostate, std::string a_id, std::string a_type)
-	{
-		const auto scene = SceneRegistry::Find(a_id);
-		return scene ? scene->AutoTransition(LowerCopy(a_type)) : std::string{};
-	}
-	std::string M_GetAutoTransitionForActor(std::monostate, std::string a_id, std::int32_t a_position, std::string a_type)
-	{
-		const auto scene = SceneRegistry::Find(a_id);
-		if (!scene || a_position < 0 || static_cast<std::size_t>(a_position) >= scene->actors.size()) {
-			return {};
+		std::int32_t GetCustomActionInt(std::monostate, std::string a_id, std::int32_t a_index, std::int32_t a_role, std::string a_record, std::int32_t a_fallback)
+		{
+			const auto side = CustomSide(a_id, a_index, a_role);
+			const auto it = side ? side->ints.find(LowerCopy(a_record)) : decltype(side->ints)::const_iterator{};
+			return side && it != side->ints.end() ? it->second : a_fallback;
 		}
-		return scene->actors[a_position].AutoTransition(LowerCopy(a_type));
-	}
-	bool M_IsNoRandomSelection(std::monostate, std::string a_id)
-	{
-		const auto scene = SceneRegistry::Find(a_id);
-		return scene && scene->noRandomSelection;
-	}
-	std::string M_GetModpack(std::monostate, std::string a_id)
-	{
-		const auto scene = SceneRegistry::Find(a_id);
-		return scene ? scene->modpack : std::string{};
-	}
+		float GetCustomActionFloat(std::monostate, std::string a_id, std::int32_t a_index, std::int32_t a_role, std::string a_record, float a_fallback)
+		{
+			const auto side = CustomSide(a_id, a_index, a_role);
+			const auto it = side ? side->floats.find(LowerCopy(a_record)) : decltype(side->floats)::const_iterator{};
+			return side && it != side->floats.end() ? it->second : a_fallback;
+		}
+		std::string GetCustomActionString(std::monostate, std::string a_id, std::int32_t a_index, std::int32_t a_role, std::string a_record, std::string a_fallback)
+		{
+			const auto side = CustomSide(a_id, a_index, a_role);
+			const auto it = side ? side->strings.find(LowerCopy(a_record)) : decltype(side->strings)::const_iterator{};
+			return side && it != side->strings.end() ? it->second : a_fallback;
+		}
+		std::vector<std::int32_t> GetCustomActionIntList(std::monostate, std::string a_id, std::int32_t a_index, std::int32_t a_role, std::string a_record)
+		{
+			const auto side = CustomSide(a_id, a_index, a_role);
+			const auto it = side ? side->intLists.find(LowerCopy(a_record)) : decltype(side->intLists)::const_iterator{};
+			return side && it != side->intLists.end() ? std::vector<std::int32_t>(it->second.begin(), it->second.end()) : std::vector<std::int32_t>{};
+		}
+		std::vector<float> GetCustomActionFloatList(std::monostate, std::string a_id, std::int32_t a_index, std::int32_t a_role, std::string a_record)
+		{
+			const auto side = CustomSide(a_id, a_index, a_role);
+			const auto it = side ? side->floatLists.find(LowerCopy(a_record)) : decltype(side->floatLists)::const_iterator{};
+			return side && it != side->floatLists.end() ? it->second : std::vector<float>{};
+		}
+		std::vector<std::string> GetCustomActionStringList(std::monostate, std::string a_id, std::int32_t a_index, std::int32_t a_role, std::string a_record)
+		{
+			const auto side = CustomSide(a_id, a_index, a_role);
+			const auto it = side ? side->stringLists.find(LowerCopy(a_record)) : decltype(side->stringLists)::const_iterator{};
+			return side && it != side->stringLists.end() ? it->second : std::vector<std::string>{};
+		}
+
+		// OStim's GetCustomSceneActor{Int,Float}{Min,Max,Sum,Product}: a_record's
+		// values on every side the role at a_position takes in the scene's
+		// actions (actor, target and performer). a_op 0 min, 1 max (a_start is
+		// the fallback when there's none), 2 sum, 3 product (a_start is the
+		// starting value).
+		template <class T>
+		T CustomSceneActorAggregate(const std::string& a_id, std::int32_t a_position, const std::string& a_record, std::int32_t a_op, T a_start)
+		{
+			const auto scene = SceneRegistry::Find(a_id);
+			const auto key = LowerCopy(a_record);
+			std::optional<T> best;
+			T                acc = a_start;
+			if (scene) {
+				for (const auto& action : scene->actions) {
+					const std::size_t roles[3] = { action.actor, action.target, action.performer };
+					for (int side = 0; side < 3; ++side) {
+						if (RoleIndex(roles[side]) != a_position) {
+							continue;
+						}
+						const auto& values = SideOf(action, side);
+						T           value{};
+						if constexpr (std::is_same_v<T, std::int32_t>) {
+							const auto it = values.ints.find(key);
+							if (it == values.ints.end()) {
+								continue;
+							}
+							value = it->second;
+						} else {
+							const auto it = values.floats.find(key);
+							if (it == values.floats.end()) {
+								continue;
+							}
+							value = it->second;
+						}
+						switch (a_op) {
+						case 0: best = best ? std::min(*best, value) : value; break;
+						case 1: best = best ? std::max(*best, value) : value; break;
+						case 2: acc += value; break;
+						default: acc *= value; break;
+						}
+					}
+				}
+			}
+			return a_op <= 1 ? best.value_or(a_start) : acc;
+		}
+		std::int32_t GetCustomSceneActorInt(std::monostate, std::string a_id, std::int32_t a_position, std::string a_record, std::int32_t a_op, std::int32_t a_start)
+		{
+			return CustomSceneActorAggregate<std::int32_t>(a_id, a_position, a_record, a_op, a_start);
+		}
+		float GetCustomSceneActorFloat(std::monostate, std::string a_id, std::int32_t a_position, std::string a_record, std::int32_t a_op, float a_start)
+		{
+			return CustomSceneActorAggregate<float>(a_id, a_position, a_record, a_op, a_start);
+		}
+
+		// FourMetadata (OMetadata)
+		std::string GetName(std::monostate, std::string a_id)
+		{
+			const auto scene = SceneRegistry::Find(a_id);
+			return scene ? scene->name : std::string{};
+		}
+		bool IsTransition(std::monostate, std::string a_id)
+		{
+			const auto scene = SceneRegistry::Find(a_id);
+			return scene && scene->IsTransition();
+		}
+		std::string GetDestination(std::monostate, std::string a_id)
+		{
+			const auto scene = SceneRegistry::Find(a_id);
+			return scene ? scene->destination : std::string{};
+		}
+		std::vector<std::string> GetSceneTags(std::monostate, std::string a_id)
+		{
+			const auto scene = SceneRegistry::Find(a_id);
+			return scene ? scene->tags : std::vector<std::string>{};
+		}
+		std::string GetFurnitureType(std::monostate, std::string a_id)
+		{
+			const auto scene = SceneRegistry::Find(a_id);
+			return scene ? scene->furniture : std::string{};
+		}
+		std::int32_t GetMaxSpeed(std::monostate, std::string a_id)
+		{
+			const auto scene = SceneRegistry::Find(a_id);
+			return scene ? static_cast<std::int32_t>(scene->speeds.size()) - 1 : 0;  // OStim's 0 for an unknown scene
+		}
+		std::int32_t GetDefaultSpeed(std::monostate, std::string a_id)
+		{
+			const auto scene = SceneRegistry::Find(a_id);
+			return scene ? scene->defaultSpeed : 0;  // OStim's 0 for an unknown scene
+		}
+		std::vector<std::string> GetNavigations(std::monostate, std::string a_id)
+		{
+			std::vector<std::string> out;
+			if (const auto scene = SceneRegistry::Find(a_id)) {
+				for (const auto& nav : scene->navigations) {
+					out.push_back(nav.to);
+				}
+			}
+			return out;
+		}
+		std::string GetAutoTransition(std::monostate, std::string a_id, std::string a_type)
+		{
+			const auto scene = SceneRegistry::Find(a_id);
+			return scene ? scene->AutoTransition(LowerCopy(a_type)) : std::string{};
+		}
+		std::string GetAutoTransitionForActor(std::monostate, std::string a_id, std::int32_t a_position, std::string a_type)
+		{
+			const auto scene = SceneRegistry::Find(a_id);
+			if (!scene || a_position < 0 || static_cast<std::size_t>(a_position) >= scene->actors.size()) {
+				return {};
+			}
+			return scene->actors[a_position].AutoTransition(LowerCopy(a_type));
+		}
+		bool IsNoRandomSelection(std::monostate, std::string a_id)
+		{
+			const auto scene = SceneRegistry::Find(a_id);
+			return scene && scene->noRandomSelection;
+		}
+		std::string GetModpack(std::monostate, std::string a_id)
+		{
+			const auto scene = SceneRegistry::Find(a_id);
+			return scene ? scene->modpack : std::string{};
+		}
+	}  // namespace Natives::FourMetadata
 
 	// FourActor (OActor): per-actor metadata, kept while they're in a scene.
 	std::mutex                                                g_actorMetaLock;
@@ -11518,112 +11539,115 @@ namespace
 		}
 	}
 
-	bool AM_HasMetadata(std::monostate, RE::Actor* a_actor, std::string a_meta)
+	namespace Natives::FourActor
 	{
-		std::scoped_lock lock(g_actorMetaLock);
-		const auto it = a_actor ? g_actorMeta.find(a_actor->GetFormID()) : g_actorMeta.end();
-		return it != g_actorMeta.end() && std::ranges::find(it->second.tags, LowerCopy(a_meta)) != it->second.tags.end();
-	}
-	void AM_AddMetadata(std::monostate, RE::Actor* a_actor, std::string a_meta)
-	{
-		if (!a_actor || !FindActiveScene(a_actor->GetFormID())) {
-			return;
+		bool HasMetadata(std::monostate, RE::Actor* a_actor, std::string a_meta)
+		{
+			std::scoped_lock lock(g_actorMetaLock);
+			const auto it = a_actor ? g_actorMeta.find(a_actor->GetFormID()) : g_actorMeta.end();
+			return it != g_actorMeta.end() && std::ranges::find(it->second.tags, LowerCopy(a_meta)) != it->second.tags.end();
 		}
-		std::scoped_lock lock(g_actorMetaLock);
-		auto&      tags = g_actorMeta[a_actor->GetFormID()].tags;
-		const auto meta = LowerCopy(a_meta);
-		if (std::ranges::find(tags, meta) == tags.end()) {
-			tags.push_back(meta);
+		void AddMetadata(std::monostate, RE::Actor* a_actor, std::string a_meta)
+		{
+			if (!a_actor || !FindActiveScene(a_actor->GetFormID())) {
+				return;
+			}
+			std::scoped_lock lock(g_actorMetaLock);
+			auto&      tags = g_actorMeta[a_actor->GetFormID()].tags;
+			const auto meta = LowerCopy(a_meta);
+			if (std::ranges::find(tags, meta) == tags.end()) {
+				tags.push_back(meta);
+			}
 		}
-	}
-	std::vector<std::string> AM_GetMetadata(std::monostate, RE::Actor* a_actor)
-	{
-		std::scoped_lock lock(g_actorMetaLock);
-		const auto it = a_actor ? g_actorMeta.find(a_actor->GetFormID()) : g_actorMeta.end();
-		return it != g_actorMeta.end() ? it->second.tags : std::vector<std::string>{};
-	}
-	bool AM_HasMetaFloat(std::monostate, RE::Actor* a_actor, std::string a_key)
-	{
-		std::scoped_lock lock(g_actorMetaLock);
-		const auto it = a_actor ? g_actorMeta.find(a_actor->GetFormID()) : g_actorMeta.end();
-		return it != g_actorMeta.end() && it->second.floats.contains(LowerCopy(a_key));
-	}
-	float AM_GetMetaFloat(std::monostate, RE::Actor* a_actor, std::string a_key)
-	{
-		std::scoped_lock lock(g_actorMetaLock);
-		const auto it = a_actor ? g_actorMeta.find(a_actor->GetFormID()) : g_actorMeta.end();
-		if (it == g_actorMeta.end()) {
-			return 0.0F;
+		std::vector<std::string> GetMetadata(std::monostate, RE::Actor* a_actor)
+		{
+			std::scoped_lock lock(g_actorMetaLock);
+			const auto it = a_actor ? g_actorMeta.find(a_actor->GetFormID()) : g_actorMeta.end();
+			return it != g_actorMeta.end() ? it->second.tags : std::vector<std::string>{};
 		}
-		const auto f = it->second.floats.find(LowerCopy(a_key));
-		return f != it->second.floats.end() ? f->second : 0.0F;
-	}
-	void AM_SetMetaFloat(std::monostate, RE::Actor* a_actor, std::string a_key, float a_value)
-	{
-		if (!a_actor || !FindActiveScene(a_actor->GetFormID())) {
-			return;
+		bool HasMetaFloat(std::monostate, RE::Actor* a_actor, std::string a_key)
+		{
+			std::scoped_lock lock(g_actorMetaLock);
+			const auto it = a_actor ? g_actorMeta.find(a_actor->GetFormID()) : g_actorMeta.end();
+			return it != g_actorMeta.end() && it->second.floats.contains(LowerCopy(a_key));
 		}
-		std::scoped_lock lock(g_actorMetaLock);
-		g_actorMeta[a_actor->GetFormID()].floats[LowerCopy(a_key)] = a_value;
-	}
-	bool AM_HasMetaString(std::monostate, RE::Actor* a_actor, std::string a_key)
-	{
-		std::scoped_lock lock(g_actorMetaLock);
-		const auto it = a_actor ? g_actorMeta.find(a_actor->GetFormID()) : g_actorMeta.end();
-		return it != g_actorMeta.end() && it->second.strings.contains(LowerCopy(a_key));
-	}
-	std::string AM_GetMetaString(std::monostate, RE::Actor* a_actor, std::string a_key)
-	{
-		std::scoped_lock lock(g_actorMetaLock);
-		const auto it = a_actor ? g_actorMeta.find(a_actor->GetFormID()) : g_actorMeta.end();
-		if (it == g_actorMeta.end()) {
-			return {};
+		float GetMetaFloat(std::monostate, RE::Actor* a_actor, std::string a_key)
+		{
+			std::scoped_lock lock(g_actorMetaLock);
+			const auto it = a_actor ? g_actorMeta.find(a_actor->GetFormID()) : g_actorMeta.end();
+			if (it == g_actorMeta.end()) {
+				return 0.0F;
+			}
+			const auto f = it->second.floats.find(LowerCopy(a_key));
+			return f != it->second.floats.end() ? f->second : 0.0F;
 		}
-		const auto f = it->second.strings.find(LowerCopy(a_key));
-		return f != it->second.strings.end() ? f->second : std::string{};
-	}
-	void AM_SetMetaString(std::monostate, RE::Actor* a_actor, std::string a_key, std::string a_value)
-	{
-		if (!a_actor || !FindActiveScene(a_actor->GetFormID())) {
-			return;
+		void SetMetaFloat(std::monostate, RE::Actor* a_actor, std::string a_key, float a_value)
+		{
+			if (!a_actor || !FindActiveScene(a_actor->GetFormID())) {
+				return;
+			}
+			std::scoped_lock lock(g_actorMetaLock);
+			g_actorMeta[a_actor->GetFormID()].floats[LowerCopy(a_key)] = a_value;
 		}
-		std::scoped_lock lock(g_actorMetaLock);
-		g_actorMeta[a_actor->GetFormID()].strings[LowerCopy(a_key)] = std::move(a_value);
-	}
-	// OActor.PlayExpression: the expression's duration in seconds (-1 if
-	// the event has none), as OStim's (it returned a bool before 0.5.0).
-	float AM_PlayExpression(std::monostate, RE::Actor* a_actor, std::string a_expression)
-	{
-		return a_actor ? Expressions::PlayEvent(a_actor->GetFormID(), LowerCopy(a_expression), true) : -1.0F;
-	}
-	void AM_SetExpressionsEnabled(std::monostate, RE::Actor* a_actor, bool a_enabled, bool a_allowOverride)
-	{
-		if (a_actor) {
-			Expressions::SetEnabled(a_actor->GetFormID(), a_enabled, a_allowOverride);
+		bool HasMetaString(std::monostate, RE::Actor* a_actor, std::string a_key)
+		{
+			std::scoped_lock lock(g_actorMetaLock);
+			const auto it = a_actor ? g_actorMeta.find(a_actor->GetFormID()) : g_actorMeta.end();
+			return it != g_actorMeta.end() && it->second.strings.contains(LowerCopy(a_key));
 		}
-	}
-	bool AM_HasExpressionOverride(std::monostate, RE::Actor* a_actor)
-	{
-		return a_actor && Expressions::HasOverride(a_actor->GetFormID());
-	}
-	void AM_UndressPartial(std::monostate, RE::Actor* a_actor, std::int32_t a_mask)
-	{
-		if (a_actor && FindActiveScene(a_actor->GetFormID())) {
-			Undress::StripMask(a_actor->GetFormID(), static_cast<std::uint32_t>(a_mask));
+		std::string GetMetaString(std::monostate, RE::Actor* a_actor, std::string a_key)
+		{
+			std::scoped_lock lock(g_actorMetaLock);
+			const auto it = a_actor ? g_actorMeta.find(a_actor->GetFormID()) : g_actorMeta.end();
+			if (it == g_actorMeta.end()) {
+				return {};
+			}
+			const auto f = it->second.strings.find(LowerCopy(a_key));
+			return f != it->second.strings.end() ? f->second : std::string{};
 		}
-	}
-	void AM_RedressPartial(std::monostate, RE::Actor* a_actor, std::int32_t a_mask)
-	{
-		if (a_actor && FindActiveScene(a_actor->GetFormID())) {
-			Undress::RedressMask(a_actor->GetFormID(), static_cast<std::uint32_t>(a_mask));
+		void SetMetaString(std::monostate, RE::Actor* a_actor, std::string a_key, std::string a_value)
+		{
+			if (!a_actor || !FindActiveScene(a_actor->GetFormID())) {
+				return;
+			}
+			std::scoped_lock lock(g_actorMetaLock);
+			g_actorMeta[a_actor->GetFormID()].strings[LowerCopy(a_key)] = std::move(a_value);
 		}
-	}
-	void AM_ClearExpression(std::monostate, RE::Actor* a_actor)
-	{
-		if (a_actor) {
-			Expressions::ClearEvent(a_actor->GetFormID());
+		// OActor.PlayExpression: the expression's duration in seconds (-1 if
+		// the event has none), as OStim's (it returned a bool before 0.5.0).
+		float PlayExpression(std::monostate, RE::Actor* a_actor, std::string a_expression)
+		{
+			return a_actor ? Expressions::PlayEvent(a_actor->GetFormID(), LowerCopy(a_expression), true) : -1.0F;
 		}
-	}
+		void SetExpressionsEnabled(std::monostate, RE::Actor* a_actor, bool a_enabled, bool a_allowOverride)
+		{
+			if (a_actor) {
+				Expressions::SetEnabled(a_actor->GetFormID(), a_enabled, a_allowOverride);
+			}
+		}
+		bool HasExpressionOverride(std::monostate, RE::Actor* a_actor)
+		{
+			return a_actor && Expressions::HasOverride(a_actor->GetFormID());
+		}
+		void UndressPartial(std::monostate, RE::Actor* a_actor, std::int32_t a_mask)
+		{
+			if (a_actor && FindActiveScene(a_actor->GetFormID())) {
+				Undress::StripMask(a_actor->GetFormID(), static_cast<std::uint32_t>(a_mask));
+			}
+		}
+		void RedressPartial(std::monostate, RE::Actor* a_actor, std::int32_t a_mask)
+		{
+			if (a_actor && FindActiveScene(a_actor->GetFormID())) {
+				Undress::RedressMask(a_actor->GetFormID(), static_cast<std::uint32_t>(a_mask));
+			}
+		}
+		void ClearExpression(std::monostate, RE::Actor* a_actor)
+		{
+			if (a_actor) {
+				Expressions::ClearEvent(a_actor->GetFormID());
+			}
+		}
+	}  // namespace Natives::FourActor
 
 	// FourFurniture (OFurniture): furniture near a_center (OStim's
 	// FindFurniture: the pieces a scene for a_actorCount could go on, nearest
@@ -11676,153 +11700,159 @@ namespace
 		found = std::move(answer->found);
 		return found;
 	}
-	std::vector<RE::TESObjectREFR*> F_FindFurniture(std::monostate, std::int32_t a_actorCount, RE::TESObjectREFR* a_center, float a_radius, float a_sameFloor)
+	namespace Natives::FourFurniture
 	{
-		std::vector<RE::TESObjectREFR*> out;
-		for (const auto& f : FurnitureAround(a_center, a_radius, a_sameFloor)) {
-			if (!f.ref) {
-				continue;  // walls are spots, not objects
+		std::vector<RE::TESObjectREFR*> FindFurniture(std::monostate, std::int32_t a_actorCount, RE::TESObjectREFR* a_center, float a_radius, float a_sameFloor)
+		{
+			std::vector<RE::TESObjectREFR*> out;
+			for (const auto& f : FurnitureAround(a_center, a_radius, a_sameFloor)) {
+				if (!f.ref) {
+					continue;  // walls are spots, not objects
+				}
+				const bool any = a_actorCount <= 0 || std::ranges::any_of(SceneRegistry::List(static_cast<std::size_t>(a_actorCount)),
+					[&](const SceneRegistry::SceneSummary& s) { return !s.furniture.empty() && FurnitureFits(s.furniture, f.type); });
+				if (any) {
+					out.push_back(RE::TESForm::GetFormByID<RE::TESObjectREFR>(f.ref));
+				}
 			}
-			const bool any = a_actorCount <= 0 || std::ranges::any_of(SceneRegistry::List(static_cast<std::size_t>(a_actorCount)),
-				[&](const SceneRegistry::SceneSummary& s) { return !s.furniture.empty() && FurnitureFits(s.furniture, f.type); });
-			if (any) {
-				out.push_back(RE::TESForm::GetFormByID<RE::TESObjectREFR>(f.ref));
-			}
-		}
-		return out;
-	}
-	RE::TESObjectREFR* F_FindFurnitureOfType(std::monostate, std::string a_type, RE::TESObjectREFR* a_center, float a_radius, float a_sameFloor)
-	{
-		const auto type = LowerCopy(a_type);
-		for (const auto& f : FurnitureAround(a_center, a_radius, a_sameFloor)) {
-			if (f.ref && Furniture::IsA(f.type, type)) {
-				return RE::TESForm::GetFormByID<RE::TESObjectREFR>(f.ref);
-			}
-		}
-		return nullptr;
-	}
-	// OFurniture.GetOffset: where a scene goes on the piece, in its own
-	// frame, as OStim's [x, y, z, rotation, scale] (its marker offset plus
-	// the type's offsets; here 4Stim's spot for the type: markers, else its
-	// bounds, plus the type's offset). Rotation in radians, as OStim's.
-	// Empty for something that isn't furniture a scene type knows.
-	std::vector<float> F_GetOffset(std::monostate, RE::TESObjectREFR* a_ref)
-	{
-		if (!a_ref) {
-			return {};
-		}
-		const auto type = Furniture::Classify(a_ref);
-		if (type.empty()) {
-			return {};
-		}
-		const auto spot = Furniture::SpotFor(a_ref, type, a_ref->data.location);
-		const auto d = spot.position - a_ref->data.location;
-		const float yaw = a_ref->data.angle.z;
-		// Into the piece's frame (the game's heading turns clockwise from north).
-		const float x = d.x * std::cos(yaw) - d.y * std::sin(yaw);
-		const float y = d.x * std::sin(yaw) + d.y * std::cos(yaw);
-		return { x, y, d.z, spot.heading - yaw, Furniture::MultiplyScale(type) };
-	}
-	// ---- FourActorUtil (OStim's OActorUtil, docs/API.md) ----
-	bool AU_FulfillsCondition(std::monostate, RE::Actor* a_actor, RE::BGSPerk* a_condition)
-	{
-		return a_actor && a_condition && a_condition->perkConditions.IsTrue(a_actor, a_actor);
-	}
-	bool AU_FulfillsAnyCondition(std::monostate, RE::Actor* a_actor, std::vector<RE::BGSPerk*> a_conditions)
-	{
-		return a_actor && std::ranges::any_of(a_conditions, [&](RE::BGSPerk* a_perk) { return a_perk && a_perk->perkConditions.IsTrue(a_actor, a_actor); });
-	}
-	bool AU_FulfillsAllConditions(std::monostate, RE::Actor* a_actor, std::vector<RE::BGSPerk*> a_conditions)
-	{
-		return a_actor && std::ranges::all_of(a_conditions, [&](RE::BGSPerk* a_perk) { return !a_perk || a_perk->perkConditions.IsTrue(a_actor, a_actor); });
-	}
-	std::vector<RE::Actor*> AU_EmptyArray(std::monostate) { return {}; }
-	std::vector<RE::Actor*> AU_CreateArray(std::monostate, std::int32_t a_size, RE::Actor* a_filler)
-	{
-		return a_size > 0 ? std::vector<RE::Actor*>(static_cast<std::size_t>(std::min(a_size, 128)), a_filler) : std::vector<RE::Actor*>{};
-	}
-	std::vector<RE::Actor*> AU_ToArray(std::monostate, RE::Actor* a1, RE::Actor* a2, RE::Actor* a3, RE::Actor* a4, RE::Actor* a5, RE::Actor* a6, RE::Actor* a7,
-		RE::Actor* a8, RE::Actor* a9, RE::Actor* a10)
-	{
-		std::vector<RE::Actor*> out;
-		for (const auto a : { a1, a2, a3, a4, a5, a6, a7, a8, a9, a10 }) {
-			if (a) {
-				out.push_back(a);
-			}
-		}
-		return out;
-	}
-	// OActorUtil.Sort (OStim's ActorUtil::sort): the dominant actors first,
-	// then those with a penis (otherwise in the order given); then the player
-	// moved to a_playerIndex, or for two without one, where the
-	// PlayerAlways... settings put them.
-	std::vector<RE::Actor*> AU_Sort(std::monostate, std::vector<RE::Actor*> a_actors, std::vector<RE::Actor*> a_dominant, std::int32_t a_playerIndex)
-	{
-		std::erase(a_actors, nullptr);
-		const auto dominant = [&](RE::Actor* a) { return std::ranges::find(a_dominant, a) != a_dominant.end(); };
-		std::ranges::stable_sort(a_actors, [&](RE::Actor* a, RE::Actor* b) {
-			if (dominant(a) != dominant(b)) {
-				return dominant(a);
-			}
-			return ActorProperties::HasPenis(a) && !ActorProperties::HasPenis(b);
-		});
-		const auto player = RE::PlayerCharacter::GetSingleton();
-		const auto at = std::ranges::find(a_actors, player);
-		if (at == a_actors.end()) {
-			return a_actors;
-		}
-		int want = a_playerIndex;
-		if (want < 0 || static_cast<std::size_t>(want) >= a_actors.size()) {
-			std::vector<std::uint32_t> ids;
-			for (const auto a : a_actors) {
-				ids.push_back(a->GetFormID());
-			}
-			want = PlayerAlwaysIndex(ids);
-		}
-		if (want >= 0 && static_cast<std::size_t>(want) < a_actors.size()) {
-			a_actors.erase(at);
-			a_actors.insert(a_actors.begin() + want, player);
-		}
-		return a_actors;
-	}
-	// OActorUtil.GetActorsInRangeV2: actors around a_center, nearest first;
-	// not disabled or ghosts; a_condition: only those who fulfill the perk's
-	// conditions; a_onlyKnown: only actors with an actor type (OStim's
-	// OStimActorsOnly).
-	std::vector<RE::Actor*> AU_GetActorsInRangeV2(std::monostate, RE::TESObjectREFR* a_center, float a_range, bool a_includeCenter, bool a_includePlayer,
-		bool a_onlyKnown, RE::BGSPerk* a_condition)
-	{
-		std::vector<RE::Actor*> out;
-		if (!a_center) {
 			return out;
 		}
-		const auto center = a_center->data.location;
-		Compat::ForEachReferenceInRange(center, a_range, [&](RE::TESObjectREFR* a_ref) {
-			const auto actor = a_ref ? a_ref->As<RE::Actor>() : nullptr;
-			if (!actor || (!a_includeCenter && a_ref == a_center) || (!a_includePlayer && IsPlayer(actor)) || actor->IsDisabled()) {
-				return RE::BSContainer::ForEachResult::kContinue;
+		RE::TESObjectREFR* FindFurnitureOfType(std::monostate, std::string a_type, RE::TESObjectREFR* a_center, float a_radius, float a_sameFloor)
+		{
+			const auto type = LowerCopy(a_type);
+			for (const auto& f : FurnitureAround(a_center, a_radius, a_sameFloor)) {
+				if (f.ref && Furniture::IsA(f.type, type)) {
+					return RE::TESForm::GetFormByID<RE::TESObjectREFR>(f.ref);
+				}
 			}
-			if (a_condition && !a_condition->perkConditions.IsTrue(actor, actor)) {
-				return RE::BSContainer::ForEachResult::kContinue;
-			}
-			if (a_onlyKnown && ActorProperties::Type(actor).empty()) {
-				return RE::BSContainer::ForEachResult::kContinue;
-			}
-			out.push_back(actor);
-			return RE::BSContainer::ForEachResult::kContinue;
-		});
-		std::ranges::sort(out, {}, [&](RE::Actor* a) { return a->data.location.GetSquaredDistance(center); });
-		return out;
-	}
-	std::vector<std::string> AU_ActorsToNames(std::monostate, std::vector<RE::Actor*> a_actors)
-	{
-		std::vector<std::string> out;
-		for (const auto a : a_actors) {
-			const char* name = a ? a->GetDisplayFullName() : nullptr;
-			out.emplace_back(name ? name : "");
+			return nullptr;
 		}
-		return out;
-	}
+		// OFurniture.GetOffset: where a scene goes on the piece, in its own
+		// frame, as OStim's [x, y, z, rotation, scale] (its marker offset plus
+		// the type's offsets; here 4Stim's spot for the type: markers, else its
+		// bounds, plus the type's offset). Rotation in radians, as OStim's.
+		// Empty for something that isn't furniture a scene type knows.
+		std::vector<float> GetOffset(std::monostate, RE::TESObjectREFR* a_ref)
+		{
+			if (!a_ref) {
+				return {};
+			}
+			const auto type = Furniture::Classify(a_ref);
+			if (type.empty()) {
+				return {};
+			}
+			const auto spot = Furniture::SpotFor(a_ref, type, a_ref->data.location);
+			const auto d = spot.position - a_ref->data.location;
+			const float yaw = a_ref->data.angle.z;
+			// Into the piece's frame (the game's heading turns clockwise from north).
+			const float x = d.x * std::cos(yaw) - d.y * std::sin(yaw);
+			const float y = d.x * std::sin(yaw) + d.y * std::cos(yaw);
+			return { x, y, d.z, spot.heading - yaw, Furniture::MultiplyScale(type) };
+		}
+	}  // namespace Natives::FourFurniture
+	namespace Natives::FourActorUtil
+	{
+		// ---- FourActorUtil (OStim's OActorUtil, docs/API.md) ----
+		bool FulfillsCondition(std::monostate, RE::Actor* a_actor, RE::BGSPerk* a_condition)
+		{
+			return a_actor && a_condition && a_condition->perkConditions.IsTrue(a_actor, a_actor);
+		}
+		bool FulfillsAnyCondition(std::monostate, RE::Actor* a_actor, std::vector<RE::BGSPerk*> a_conditions)
+		{
+			return a_actor && std::ranges::any_of(a_conditions, [&](RE::BGSPerk* a_perk) { return a_perk && a_perk->perkConditions.IsTrue(a_actor, a_actor); });
+		}
+		bool FulfillsAllConditions(std::monostate, RE::Actor* a_actor, std::vector<RE::BGSPerk*> a_conditions)
+		{
+			return a_actor && std::ranges::all_of(a_conditions, [&](RE::BGSPerk* a_perk) { return !a_perk || a_perk->perkConditions.IsTrue(a_actor, a_actor); });
+		}
+		std::vector<RE::Actor*> EmptyArray(std::monostate) { return {}; }
+		std::vector<RE::Actor*> CreateArray(std::monostate, std::int32_t a_size, RE::Actor* a_filler)
+		{
+			return a_size > 0 ? std::vector<RE::Actor*>(static_cast<std::size_t>(std::min(a_size, 128)), a_filler) : std::vector<RE::Actor*>{};
+		}
+		std::vector<RE::Actor*> ToArray(std::monostate, RE::Actor* a1, RE::Actor* a2, RE::Actor* a3, RE::Actor* a4, RE::Actor* a5, RE::Actor* a6, RE::Actor* a7,
+			RE::Actor* a8, RE::Actor* a9, RE::Actor* a10)
+		{
+			std::vector<RE::Actor*> out;
+			for (const auto a : { a1, a2, a3, a4, a5, a6, a7, a8, a9, a10 }) {
+				if (a) {
+					out.push_back(a);
+				}
+			}
+			return out;
+		}
+		// OActorUtil.Sort (OStim's ActorUtil::sort): the dominant actors first,
+		// then those with a penis (otherwise in the order given); then the player
+		// moved to a_playerIndex, or for two without one, where the
+		// PlayerAlways... settings put them.
+		std::vector<RE::Actor*> Sort(std::monostate, std::vector<RE::Actor*> a_actors, std::vector<RE::Actor*> a_dominant, std::int32_t a_playerIndex)
+		{
+			std::erase(a_actors, nullptr);
+			const auto dominant = [&](RE::Actor* a) { return std::ranges::find(a_dominant, a) != a_dominant.end(); };
+			std::ranges::stable_sort(a_actors, [&](RE::Actor* a, RE::Actor* b) {
+				if (dominant(a) != dominant(b)) {
+					return dominant(a);
+				}
+				return ActorProperties::HasPenis(a) && !ActorProperties::HasPenis(b);
+			});
+			const auto player = RE::PlayerCharacter::GetSingleton();
+			const auto at = std::ranges::find(a_actors, player);
+			if (at == a_actors.end()) {
+				return a_actors;
+			}
+			int want = a_playerIndex;
+			if (want < 0 || static_cast<std::size_t>(want) >= a_actors.size()) {
+				std::vector<std::uint32_t> ids;
+				for (const auto a : a_actors) {
+					ids.push_back(a->GetFormID());
+				}
+				want = PlayerAlwaysIndex(ids);
+			}
+			if (want >= 0 && static_cast<std::size_t>(want) < a_actors.size()) {
+				a_actors.erase(at);
+				a_actors.insert(a_actors.begin() + want, player);
+			}
+			return a_actors;
+		}
+		// OActorUtil.GetActorsInRangeV2: actors around a_center, nearest first;
+		// not disabled or ghosts; a_condition: only those who fulfill the perk's
+		// conditions; a_onlyKnown: only actors with an actor type (OStim's
+		// OStimActorsOnly).
+		std::vector<RE::Actor*> GetActorsInRangeV2(std::monostate, RE::TESObjectREFR* a_center, float a_range, bool a_includeCenter, bool a_includePlayer,
+			bool a_onlyKnown, RE::BGSPerk* a_condition)
+		{
+			std::vector<RE::Actor*> out;
+			if (!a_center) {
+				return out;
+			}
+			const auto center = a_center->data.location;
+			Compat::ForEachReferenceInRange(center, a_range, [&](RE::TESObjectREFR* a_ref) {
+				const auto actor = a_ref ? a_ref->As<RE::Actor>() : nullptr;
+				if (!actor || (!a_includeCenter && a_ref == a_center) || (!a_includePlayer && IsPlayer(actor)) || actor->IsDisabled()) {
+					return RE::BSContainer::ForEachResult::kContinue;
+				}
+				if (a_condition && !a_condition->perkConditions.IsTrue(actor, actor)) {
+					return RE::BSContainer::ForEachResult::kContinue;
+				}
+				if (a_onlyKnown && ActorProperties::Type(actor).empty()) {
+					return RE::BSContainer::ForEachResult::kContinue;
+				}
+				out.push_back(actor);
+				return RE::BSContainer::ForEachResult::kContinue;
+			});
+			std::ranges::sort(out, {}, [&](RE::Actor* a) { return a->data.location.GetSquaredDistance(center); });
+			return out;
+		}
+		std::vector<std::string> ActorsToNames(std::monostate, std::vector<RE::Actor*> a_actors)
+		{
+			std::vector<std::string> out;
+			for (const auto a : a_actors) {
+				const char* name = a ? a->GetDisplayFullName() : nullptr;
+				out.emplace_back(name ? name : "");
+			}
+			return out;
+		}
+	}  // namespace Natives::FourActorUtil
 
 	// ---- FourSequence (OStim's OSequence) ----
 	// OStim's GraphTable::getRandomSequence: a random sequence for these
@@ -11870,19 +11900,22 @@ namespace
 		return picks[std::uniform_int_distribution<std::size_t>(0, picks.size() - 1)(rng)];
 	}
 
-	// OFurniture.GetSceneID: the thread using the piece, -1 if none.
-	std::int32_t F_GetSceneID(std::monostate, RE::TESObjectREFR* a_ref)
+	namespace Natives::FourFurniture
 	{
-		if (!a_ref) {
+		// OFurniture.GetSceneID: the thread using the piece, -1 if none.
+		std::int32_t GetSceneID(std::monostate, RE::TESObjectREFR* a_ref)
+		{
+			if (!a_ref) {
+				return -1;
+			}
+			for (const auto& active : g_activeScenes) {
+				if (active.furnitureRef == a_ref->GetFormID()) {
+					return active.threadID;
+				}
+			}
 			return -1;
 		}
-		for (const auto& active : g_activeScenes) {
-			if (active.furnitureRef == a_ref->GetFormID()) {
-				return active.threadID;
-			}
-		}
-		return -1;
-	}
+	}  // namespace Natives::FourFurniture
 
 	// ---- C++ plugin interface (include/4Stim/PluginInterface.h, docs/API.md) ----
 	// OStim's PluginInterfaceImplementation: an interface map other F4SE
@@ -11983,9 +12016,9 @@ namespace
 			std::int32_t getSpeed() override { return speed; }
 			const char*  getFurnitureType() override { return furnitureType.c_str(); }
 			void*        getFurnitureObject() override { return furniture ? RE::TESForm::GetFormByID<RE::TESObjectREFR>(furniture) : nullptr; }
-			void         navigateTo(const char* a_sceneID) override { ThreadGoTo(id, a_sceneID ? a_sceneID : "", false); }
-			void         warpTo(const char* a_sceneID) override { ThreadGoTo(id, a_sceneID ? a_sceneID : "", true); }
-			void         setSpeed(std::int32_t a_speed) override { T_SetSpeed({}, id, a_speed); }
+			void         navigateTo(const char* a_sceneID) override { Natives::FourThread::ThreadGoTo(id, a_sceneID ? a_sceneID : "", false); }
+			void         warpTo(const char* a_sceneID) override { Natives::FourThread::ThreadGoTo(id, a_sceneID ? a_sceneID : "", true); }
+			void         setSpeed(std::int32_t a_speed) override { Natives::FourThread::SetSpeed({}, id, a_speed); }
 			void         stop() override
 			{
 				WithThread(id, [](ActiveScene& a) { EndActiveScene(a, "asked by another plugin (Thread::stop)"); });
@@ -12037,35 +12070,35 @@ namespace
 				return out;
 			}
 
-			void setDominantActors(std::uint32_t a_count, void** a_actors) override { TB_SetDominantActors({}, id, Actors(a_count, a_actors)); }
-			void setFurniture(void* a_furniture) override { TB_SetFurniture({}, id, static_cast<RE::TESObjectREFR*>(a_furniture)); }
-			void setDuration(float a_seconds) override { TB_SetDuration({}, id, a_seconds); }
-			void setStartingScene(const char* a_scene) override { TB_SetStartingAnimation({}, id, a_scene ? a_scene : ""); }
+			void setDominantActors(std::uint32_t a_count, void** a_actors) override { Natives::FourThreadBuilder::SetDominantActors({}, id, Actors(a_count, a_actors)); }
+			void setFurniture(void* a_furniture) override { Natives::FourThreadBuilder::SetFurniture({}, id, static_cast<RE::TESObjectREFR*>(a_furniture)); }
+			void setDuration(float a_seconds) override { Natives::FourThreadBuilder::SetDuration({}, id, a_seconds); }
+			void setStartingScene(const char* a_scene) override { Natives::FourThreadBuilder::SetStartingAnimation({}, id, a_scene ? a_scene : ""); }
 			void addStartingScene(const char* a_scene, float a_duration, bool a_navigateTo) override
 			{
-				TB_AddStartingAnimation({}, id, a_scene ? a_scene : "", a_duration, a_navigateTo);
+				Natives::FourThreadBuilder::AddStartingAnimation({}, id, a_scene ? a_scene : "", a_duration, a_navigateTo);
 			}
-			void setStartingSequence(const char* a_sequence) override { TB_SetStartingSequence({}, id, a_sequence ? a_sequence : ""); }
+			void setStartingSequence(const char* a_sequence) override { Natives::FourThreadBuilder::SetStartingSequence({}, id, a_sequence ? a_sequence : ""); }
 			void concatStartingSequence(const char* a_sequence, bool a_navigateTo) override
 			{
-				TB_ConcatStartingSequence({}, id, a_sequence ? a_sequence : "", a_navigateTo);
+				Natives::FourThreadBuilder::ConcatStartingSequence({}, id, a_sequence ? a_sequence : "", a_navigateTo);
 			}
-			void endAfterSequence() override { TB_EndAfterSequence({}, id); }
-			void undressActors() override { TB_UndressActors({}, id); }
-			void noAutoMode() override { TB_NoAutoMode({}, id); }
-			void noPlayerControl() override { TB_NoPlayerControl({}, id); }
-			void noUndressing() override { TB_NoUndressing({}, id); }
-			void noFurniture() override { TB_NoFurniture({}, id); }
-			void setMetadataCSV(const char* a_metadata) override { TB_SetMetadataCSV({}, id, a_metadata ? a_metadata : ""); }
+			void endAfterSequence() override { Natives::FourThreadBuilder::EndAfterSequence({}, id); }
+			void undressActors() override { Natives::FourThreadBuilder::UndressActors({}, id); }
+			void noAutoMode() override { Natives::FourThreadBuilder::NoAutoMode({}, id); }
+			void noPlayerControl() override { Natives::FourThreadBuilder::NoPlayerControl({}, id); }
+			void noUndressing() override { Natives::FourThreadBuilder::NoUndressing({}, id); }
+			void noFurniture() override { Natives::FourThreadBuilder::NoFurniture({}, id); }
+			void setMetadataCSV(const char* a_metadata) override { Natives::FourThreadBuilder::SetMetadataCSV({}, id, a_metadata ? a_metadata : ""); }
 			std::int32_t start() override
 			{
-				const auto thread = TB_Start({}, id);
+				const auto thread = Natives::FourThreadBuilder::Start({}, id);
 				delete this;
 				return thread;
 			}
 			void cancel() override
 			{
-				TB_Cancel({}, id);
+				Natives::FourThreadBuilder::Cancel({}, id);
 				delete this;
 			}
 
@@ -12348,12 +12381,12 @@ namespace
 				return NG::Scene::APIResult::Failed;
 			}
 			if (a_furniture) {
-				TB_SetFurniture({}, builder, a_furniture);
+				Natives::FourThreadBuilder::SetFurniture({}, builder, a_furniture);
 			}
 			if (a_scene && SceneRegistry::Find(a_scene)) {
-				TB_SetStartingAnimation({}, builder, a_scene);
+				Natives::FourThreadBuilder::SetStartingAnimation({}, builder, a_scene);
 			}
-			const auto id = TB_Start({}, builder);
+			const auto id = Natives::FourThreadBuilder::Start({}, builder);
 			if (id < 0) {
 				return NG::Scene::APIResult::Failed;
 			}
@@ -12404,7 +12437,7 @@ namespace
 				if (!FindThread(id)) {
 					return R::Invalid;
 				}
-				a_on ? T_StartAutoMode({}, id) : T_StopAutoMode({}, id);
+				a_on ? Natives::FourThread::StartAutoMode({}, id) : Natives::FourThread::StopAutoMode({}, id);
 				return R::OK;
 			}
 			R TryGetAutoMode(const char*, std::uint32_t a_threadID, bool* a_on) noexcept override
@@ -12413,7 +12446,7 @@ namespace
 				if (!FindThread(id) || !a_on) {
 					return R::Invalid;
 				}
-				*a_on = T_IsInAutoMode({}, id);
+				*a_on = Natives::FourThread::IsInAutoMode({}, id);
 				return R::OK;
 			}
 		};
@@ -12559,7 +12592,7 @@ namespace
 				if (!FindThread(static_cast<std::int32_t>(a_id))) {
 					return R::Invalid;
 				}
-				ThreadGoTo(static_cast<std::int32_t>(a_id), a_scene, false);
+				Natives::FourThread::ThreadGoTo(static_cast<std::int32_t>(a_id), a_scene, false);
 				return R::OK;
 			}
 			bool IsTransition(std::uint32_t a_id) noexcept override
@@ -12573,7 +12606,7 @@ namespace
 				const auto active = FindThread(static_cast<std::int32_t>(a_id));
 				return active && active->sequence;
 			}
-			bool IsAutoMode(std::uint32_t a_id) noexcept override { return T_IsInAutoMode({}, static_cast<std::int32_t>(a_id)); }
+			bool IsAutoMode(std::uint32_t a_id) noexcept override { return Natives::FourThread::IsInAutoMode({}, static_cast<std::int32_t>(a_id)); }
 			bool IsPlayerControlDisabled(std::uint32_t a_id) noexcept override
 			{
 				const auto active = FindThread(static_cast<std::int32_t>(a_id));
@@ -12648,7 +12681,7 @@ namespace
 				if (a_speed < 0 || a_speed >= static_cast<std::int32_t>(scene->speeds.size())) {
 					return R::Failed;
 				}
-				T_SetSpeed({}, static_cast<std::int32_t>(a_id), a_speed);
+				Natives::FourThread::SetSpeed({}, static_cast<std::int32_t>(a_id), a_speed);
 				return R::OK;
 			}
 
@@ -12718,7 +12751,7 @@ namespace
 				if (!SceneRegistry::Find(a_scene)) {
 					return R::Failed;
 				}
-				ThreadGoTo(static_cast<std::int32_t>(a_id), a_scene, true);  // OStim's ChangeNode: straight there
+				Natives::FourThread::ThreadGoTo(static_cast<std::int32_t>(a_id), a_scene, true);  // OStim's ChangeNode: straight there
 				return R::OK;
 			}
 
@@ -12907,18 +12940,18 @@ namespace
 								return;
 							}
 							if (const auto ref = furniture ? RE::TESForm::GetFormByID<RE::TESObjectREFR>(furniture) : nullptr) {
-								TB_SetFurniture({}, builder, ref);
+								Natives::FourThreadBuilder::SetFurniture({}, builder, ref);
 							}
 							if (!autoMode) {
-								TB_NoAutoMode({}, builder);
+								Natives::FourThreadBuilder::NoAutoMode({}, builder);
 							}
-							const auto id = TB_Start({}, builder);
+							const auto id = Natives::FourThreadBuilder::Start({}, builder);
 							if (id >= 0) {
 								for (const auto& [actor, value] : excitement) {
 									Excitement::Set(actor, value);
 								}
 								if (autoMode) {
-									T_StartAutoMode({}, id);
+									Natives::FourThread::StartAutoMode({}, id);
 								}
 							}
 							REX::INFO("Thread API: MigrateThread: new thread {}", id);
@@ -13173,148 +13206,148 @@ namespace
 		a_vm->BindNativeMethod(SCRIPT_NAME, "UnregisterForSceneEvents"sv, UnregisterForSceneEvents);
 		// OStim's API scripts (docs/API.md).
 		constexpr auto THREAD = "FourThread"sv;
-		a_vm->BindNativeMethod(THREAD, "QuickStart"sv, T_QuickStart);
-		a_vm->BindNativeMethod(THREAD, "IsRunning"sv, T_IsRunning);
-		a_vm->BindNativeMethod(THREAD, "Stop"sv, T_Stop);
-		a_vm->BindNativeMethod(THREAD, "GetThreadCount"sv, T_GetThreadCount);
-		a_vm->BindNativeMethod(THREAD, "GetAllThreadIDs"sv, T_GetAllThreadIDs);
-		a_vm->BindNativeMethod(THREAD, "GetScene"sv, T_GetScene);
-		a_vm->BindNativeMethod(THREAD, "NavigateTo"sv, T_NavigateTo);
-		a_vm->BindNativeMethod(THREAD, "WarpTo"sv, T_WarpTo);
-		a_vm->BindNativeMethod(THREAD, "GetSpeed"sv, T_GetSpeed);
-		a_vm->BindNativeMethod(THREAD, "SetSpeed"sv, T_SetSpeed);
-		a_vm->BindNativeMethod(THREAD, "GetActors"sv, T_GetActors);
-		a_vm->BindNativeMethod(THREAD, "GetActor"sv, T_GetActor);
-		a_vm->BindNativeMethod(THREAD, "GetActorPosition"sv, T_GetActorPosition);
-		a_vm->BindNativeMethod(THREAD, "StallClimax"sv, T_StallClimax);
-		a_vm->BindNativeMethod(THREAD, "PermitClimax"sv, T_PermitClimax);
-		a_vm->BindNativeMethod(THREAD, "IsClimaxStalled"sv, T_IsClimaxStalled);
-		a_vm->BindNativeMethod(THREAD, "GetFurniture"sv, T_GetFurniture);
-		a_vm->BindNativeMethod(THREAD, "GetFurnitureType"sv, T_GetFurnitureType);
-		a_vm->BindNativeMethod(THREAD, "IsInAutoMode"sv, T_IsInAutoMode);
-		a_vm->BindNativeMethod(THREAD, "StartAutoMode"sv, T_StartAutoMode);
-		a_vm->BindNativeMethod(THREAD, "StopAutoMode"sv, T_StopAutoMode);
-		a_vm->BindNativeMethod(THREAD, "HasMetadata"sv, T_HasMetadata);
-		a_vm->BindNativeMethod(THREAD, "AddMetadata"sv, T_AddMetadata);
-		a_vm->BindNativeMethod(THREAD, "GetMetadata"sv, T_GetMetadata);
-		a_vm->BindNativeMethod(THREAD, "HasMetaFloat"sv, T_HasMetaFloat);
-		a_vm->BindNativeMethod(THREAD, "GetMetaFloat"sv, T_GetMetaFloat);
-		a_vm->BindNativeMethod(THREAD, "SetMetaFloat"sv, T_SetMetaFloat);
-		a_vm->BindNativeMethod(THREAD, "HasMetaString"sv, T_HasMetaString);
-		a_vm->BindNativeMethod(THREAD, "GetMetaString"sv, T_GetMetaString);
-		a_vm->BindNativeMethod(THREAD, "SetMetaString"sv, T_SetMetaString);
-		a_vm->BindNativeMethod(THREAD, "PlaySequence"sv, T_PlaySequence);
+		a_vm->BindNativeMethod(THREAD, "QuickStart"sv, Natives::FourThread::QuickStart);
+		a_vm->BindNativeMethod(THREAD, "IsRunning"sv, Natives::FourThread::IsRunning);
+		a_vm->BindNativeMethod(THREAD, "Stop"sv, Natives::FourThread::Stop);
+		a_vm->BindNativeMethod(THREAD, "GetThreadCount"sv, Natives::FourThread::GetThreadCount);
+		a_vm->BindNativeMethod(THREAD, "GetAllThreadIDs"sv, Natives::FourThread::GetAllThreadIDs);
+		a_vm->BindNativeMethod(THREAD, "GetScene"sv, Natives::FourThread::GetScene);
+		a_vm->BindNativeMethod(THREAD, "NavigateTo"sv, Natives::FourThread::NavigateTo);
+		a_vm->BindNativeMethod(THREAD, "WarpTo"sv, Natives::FourThread::WarpTo);
+		a_vm->BindNativeMethod(THREAD, "GetSpeed"sv, Natives::FourThread::GetSpeed);
+		a_vm->BindNativeMethod(THREAD, "SetSpeed"sv, Natives::FourThread::SetSpeed);
+		a_vm->BindNativeMethod(THREAD, "GetActors"sv, Natives::FourThread::GetActors);
+		a_vm->BindNativeMethod(THREAD, "GetActor"sv, Natives::FourThread::GetActor);
+		a_vm->BindNativeMethod(THREAD, "GetActorPosition"sv, Natives::FourThread::GetActorPosition);
+		a_vm->BindNativeMethod(THREAD, "StallClimax"sv, Natives::FourThread::StallClimax);
+		a_vm->BindNativeMethod(THREAD, "PermitClimax"sv, Natives::FourThread::PermitClimax);
+		a_vm->BindNativeMethod(THREAD, "IsClimaxStalled"sv, Natives::FourThread::IsClimaxStalled);
+		a_vm->BindNativeMethod(THREAD, "GetFurniture"sv, Natives::FourThread::GetFurniture);
+		a_vm->BindNativeMethod(THREAD, "GetFurnitureType"sv, Natives::FourThread::GetFurnitureType);
+		a_vm->BindNativeMethod(THREAD, "IsInAutoMode"sv, Natives::FourThread::IsInAutoMode);
+		a_vm->BindNativeMethod(THREAD, "StartAutoMode"sv, Natives::FourThread::StartAutoMode);
+		a_vm->BindNativeMethod(THREAD, "StopAutoMode"sv, Natives::FourThread::StopAutoMode);
+		a_vm->BindNativeMethod(THREAD, "HasMetadata"sv, Natives::FourThread::HasMetadata);
+		a_vm->BindNativeMethod(THREAD, "AddMetadata"sv, Natives::FourThread::AddMetadata);
+		a_vm->BindNativeMethod(THREAD, "GetMetadata"sv, Natives::FourThread::GetMetadata);
+		a_vm->BindNativeMethod(THREAD, "HasMetaFloat"sv, Natives::FourThread::HasMetaFloat);
+		a_vm->BindNativeMethod(THREAD, "GetMetaFloat"sv, Natives::FourThread::GetMetaFloat);
+		a_vm->BindNativeMethod(THREAD, "SetMetaFloat"sv, Natives::FourThread::SetMetaFloat);
+		a_vm->BindNativeMethod(THREAD, "HasMetaString"sv, Natives::FourThread::HasMetaString);
+		a_vm->BindNativeMethod(THREAD, "GetMetaString"sv, Natives::FourThread::GetMetaString);
+		a_vm->BindNativeMethod(THREAD, "SetMetaString"sv, Natives::FourThread::SetMetaString);
+		a_vm->BindNativeMethod(THREAD, "PlaySequence"sv, Natives::FourThread::PlaySequence);
 		constexpr auto BUILDER = "FourThreadBuilder"sv;
-		a_vm->BindNativeMethod(BUILDER, "Create"sv, TB_Create);
-		a_vm->BindNativeMethod(BUILDER, "SetDominantActors"sv, TB_SetDominantActors);
-		a_vm->BindNativeMethod(BUILDER, "SetFurniture"sv, TB_SetFurniture);
-		a_vm->BindNativeMethod(BUILDER, "SetDuration"sv, TB_SetDuration);
-		a_vm->BindNativeMethod(BUILDER, "SetStartingAnimation"sv, TB_SetStartingAnimation);
-		a_vm->BindNativeMethod(BUILDER, "AddStartingAnimation"sv, TB_AddStartingAnimation);
-		a_vm->BindNativeMethod(BUILDER, "SetStartingSequence"sv, TB_SetStartingSequence);
-		a_vm->BindNativeMethod(BUILDER, "ConcatStartingSequence"sv, TB_ConcatStartingSequence);
-		a_vm->BindNativeMethod(BUILDER, "EndAfterSequence"sv, TB_EndAfterSequence);
-		a_vm->BindNativeMethod(BUILDER, "UndressActors"sv, TB_UndressActors);
-		a_vm->BindNativeMethod(BUILDER, "NoAutoMode"sv, TB_NoAutoMode);
-		a_vm->BindNativeMethod(BUILDER, "NoPlayerControl"sv, TB_NoPlayerControl);
-		a_vm->BindNativeMethod(BUILDER, "NoUndressing"sv, TB_NoUndressing);
-		a_vm->BindNativeMethod(BUILDER, "NoPostDialogue"sv, TB_NoPostDialogue);
-		a_vm->BindNativeMethod(BUILDER, "NoFurniture"sv, TB_NoFurniture);
-		a_vm->BindNativeMethod(BUILDER, "SetMetadata"sv, TB_SetMetadata);
-		a_vm->BindNativeMethod(BUILDER, "SetMetadataCSV"sv, TB_SetMetadataCSV);
-		a_vm->BindNativeMethod(BUILDER, "Start"sv, TB_Start);
-		a_vm->BindNativeMethod(BUILDER, "Cancel"sv, TB_Cancel);
+		a_vm->BindNativeMethod(BUILDER, "Create"sv, Natives::FourThreadBuilder::Create);
+		a_vm->BindNativeMethod(BUILDER, "SetDominantActors"sv, Natives::FourThreadBuilder::SetDominantActors);
+		a_vm->BindNativeMethod(BUILDER, "SetFurniture"sv, Natives::FourThreadBuilder::SetFurniture);
+		a_vm->BindNativeMethod(BUILDER, "SetDuration"sv, Natives::FourThreadBuilder::SetDuration);
+		a_vm->BindNativeMethod(BUILDER, "SetStartingAnimation"sv, Natives::FourThreadBuilder::SetStartingAnimation);
+		a_vm->BindNativeMethod(BUILDER, "AddStartingAnimation"sv, Natives::FourThreadBuilder::AddStartingAnimation);
+		a_vm->BindNativeMethod(BUILDER, "SetStartingSequence"sv, Natives::FourThreadBuilder::SetStartingSequence);
+		a_vm->BindNativeMethod(BUILDER, "ConcatStartingSequence"sv, Natives::FourThreadBuilder::ConcatStartingSequence);
+		a_vm->BindNativeMethod(BUILDER, "EndAfterSequence"sv, Natives::FourThreadBuilder::EndAfterSequence);
+		a_vm->BindNativeMethod(BUILDER, "UndressActors"sv, Natives::FourThreadBuilder::UndressActors);
+		a_vm->BindNativeMethod(BUILDER, "NoAutoMode"sv, Natives::FourThreadBuilder::NoAutoMode);
+		a_vm->BindNativeMethod(BUILDER, "NoPlayerControl"sv, Natives::FourThreadBuilder::NoPlayerControl);
+		a_vm->BindNativeMethod(BUILDER, "NoUndressing"sv, Natives::FourThreadBuilder::NoUndressing);
+		a_vm->BindNativeMethod(BUILDER, "NoPostDialogue"sv, Natives::FourThreadBuilder::NoPostDialogue);
+		a_vm->BindNativeMethod(BUILDER, "NoFurniture"sv, Natives::FourThreadBuilder::NoFurniture);
+		a_vm->BindNativeMethod(BUILDER, "SetMetadata"sv, Natives::FourThreadBuilder::SetMetadata);
+		a_vm->BindNativeMethod(BUILDER, "SetMetadataCSV"sv, Natives::FourThreadBuilder::SetMetadataCSV);
+		a_vm->BindNativeMethod(BUILDER, "Start"sv, Natives::FourThreadBuilder::Start);
+		a_vm->BindNativeMethod(BUILDER, "Cancel"sv, Natives::FourThreadBuilder::Cancel);
 		constexpr auto LIBRARY = "FourLibrary"sv;
-		a_vm->BindNativeMethod(LIBRARY, "FindRandomScene"sv, L_FindRandomScene);
-		a_vm->BindNativeMethod(LIBRARY, "FindRandomSceneByRoleTags"sv, L_FindRandomSceneByRoleTags);
-		a_vm->BindNativeMethod(LIBRARY, "FindRandomSceneByActionRoles"sv, L_FindRandomSceneByActionRoles);
-		a_vm->BindNativeMethod(LIBRARY, "FindRandomSceneSuperload"sv, L_FindRandomSceneSuperload);
-		a_vm->BindNativeMethod(LIBRARY, "GetScenesInRange"sv, L_GetScenesInRange);
-		a_vm->BindNativeMethod(LIBRARY, "SplitCSV"sv, L_SplitCSV);
-		a_vm->BindNativeMethod(LIBRARY, "GetAllScenes"sv, L_GetAllScenes);
+		a_vm->BindNativeMethod(LIBRARY, "FindRandomScene"sv, Natives::FourLibrary::FindRandomScene);
+		a_vm->BindNativeMethod(LIBRARY, "FindRandomSceneByRoleTags"sv, Natives::FourLibrary::FindRandomSceneByRoleTags);
+		a_vm->BindNativeMethod(LIBRARY, "FindRandomSceneByActionRoles"sv, Natives::FourLibrary::FindRandomSceneByActionRoles);
+		a_vm->BindNativeMethod(LIBRARY, "FindRandomSceneSuperload"sv, Natives::FourLibrary::FindRandomSceneSuperload);
+		a_vm->BindNativeMethod(LIBRARY, "GetScenesInRange"sv, Natives::FourLibrary::GetScenesInRange);
+		a_vm->BindNativeMethod(LIBRARY, "SplitCSV"sv, Natives::FourLibrary::SplitCSV);
+		a_vm->BindNativeMethod(LIBRARY, "GetAllScenes"sv, Natives::FourLibrary::GetAllScenes);
 		constexpr auto METADATA = "FourMetadata"sv;
-		a_vm->BindNativeMethod(METADATA, "GetName"sv, M_GetName);
-		a_vm->BindNativeMethod(METADATA, "IsTransition"sv, M_IsTransition);
-		a_vm->BindNativeMethod(METADATA, "GetDestination"sv, M_GetDestination);
-		a_vm->BindNativeMethod(METADATA, "GetSceneTags"sv, M_GetSceneTags);
-		a_vm->BindNativeMethod(METADATA, "GetFurnitureType"sv, M_GetFurnitureType);
-		a_vm->BindNativeMethod(METADATA, "GetMaxSpeed"sv, M_GetMaxSpeed);
-		a_vm->BindNativeMethod(METADATA, "GetDefaultSpeed"sv, M_GetDefaultSpeed);
-		a_vm->BindNativeMethod(METADATA, "GetNavigations"sv, M_GetNavigations);
-		a_vm->BindNativeMethod(METADATA, "GetAutoTransition"sv, M_GetAutoTransition);
-		a_vm->BindNativeMethod(METADATA, "GetAutoTransitionForActor"sv, M_GetAutoTransitionForActor);
-		a_vm->BindNativeMethod(METADATA, "IsNoRandomSelection"sv, M_IsNoRandomSelection);
-		a_vm->BindNativeMethod(METADATA, "GetModpack"sv, M_GetModpack);
-		a_vm->BindNativeMethod(METADATA, "ScenesToNames"sv, M_ScenesToNames);
-		a_vm->BindNativeMethod(METADATA, "IntsOfCSV"sv, M_IntsOfCSV);
-		a_vm->BindNativeMethod(METADATA, "FloatsOfCSV"sv, M_FloatsOfCSV);
-		a_vm->BindNativeMethod(METADATA, "IntListOverlap"sv, M_IntListOverlap);
-		a_vm->BindNativeMethod(METADATA, "FloatListOverlap"sv, M_FloatListOverlap);
-		a_vm->BindNativeMethod(METADATA, "StringListOverlap"sv, M_StringListOverlap);
-		a_vm->BindNativeMethod(METADATA, "GetAnimationId"sv, M_GetAnimationId);
-		a_vm->BindNativeMethod(METADATA, "GetActorRequirements"sv, M_GetActorRequirements);
-		a_vm->BindNativeMethod(METADATA, "GetActionTypes"sv, M_GetActionTypes);
-		a_vm->BindNativeMethod(METADATA, "GetActionActors"sv, M_GetActionActors);
-		a_vm->BindNativeMethod(METADATA, "GetActionTargets"sv, M_GetActionTargets);
-		a_vm->BindNativeMethod(METADATA, "GetActionPerformers"sv, M_GetActionPerformers);
-		a_vm->BindNativeMethod(METADATA, "GetActionTags"sv, M_GetActionTags);
-		a_vm->BindNativeMethod(METADATA, "GetAllActionsTags"sv, M_GetAllActionsTags);
-		a_vm->BindNativeMethod(METADATA, "ListHasAny"sv, M_ListHasAny);
-		a_vm->BindNativeMethod(METADATA, "ListHasAll"sv, M_ListHasAll);
-		a_vm->BindNativeMethod(METADATA, "ListOverlap"sv, M_ListOverlap);
-		a_vm->BindNativeMethod(METADATA, "FindActionsBy"sv, M_FindActionsBy);
-		a_vm->BindNativeMethod(METADATA, "FindActionsSuperload"sv, M_FindActionsSuperload);
-		a_vm->BindNativeMethod(METADATA, "HasCustomAction"sv, M_HasCustomAction);
-		a_vm->BindNativeMethod(METADATA, "GetCustomActionInt"sv, M_GetCustomActionInt);
-		a_vm->BindNativeMethod(METADATA, "GetCustomActionFloat"sv, M_GetCustomActionFloat);
-		a_vm->BindNativeMethod(METADATA, "GetCustomActionString"sv, M_GetCustomActionString);
-		a_vm->BindNativeMethod(METADATA, "GetCustomActionIntList"sv, M_GetCustomActionIntList);
-		a_vm->BindNativeMethod(METADATA, "GetCustomActionFloatList"sv, M_GetCustomActionFloatList);
-		a_vm->BindNativeMethod(METADATA, "GetCustomActionStringList"sv, M_GetCustomActionStringList);
-		a_vm->BindNativeMethod(METADATA, "GetCustomSceneActorInt"sv, M_GetCustomSceneActorInt);
-		a_vm->BindNativeMethod(METADATA, "GetCustomSceneActorFloat"sv, M_GetCustomSceneActorFloat);
+		a_vm->BindNativeMethod(METADATA, "GetName"sv, Natives::FourMetadata::GetName);
+		a_vm->BindNativeMethod(METADATA, "IsTransition"sv, Natives::FourMetadata::IsTransition);
+		a_vm->BindNativeMethod(METADATA, "GetDestination"sv, Natives::FourMetadata::GetDestination);
+		a_vm->BindNativeMethod(METADATA, "GetSceneTags"sv, Natives::FourMetadata::GetSceneTags);
+		a_vm->BindNativeMethod(METADATA, "GetFurnitureType"sv, Natives::FourMetadata::GetFurnitureType);
+		a_vm->BindNativeMethod(METADATA, "GetMaxSpeed"sv, Natives::FourMetadata::GetMaxSpeed);
+		a_vm->BindNativeMethod(METADATA, "GetDefaultSpeed"sv, Natives::FourMetadata::GetDefaultSpeed);
+		a_vm->BindNativeMethod(METADATA, "GetNavigations"sv, Natives::FourMetadata::GetNavigations);
+		a_vm->BindNativeMethod(METADATA, "GetAutoTransition"sv, Natives::FourMetadata::GetAutoTransition);
+		a_vm->BindNativeMethod(METADATA, "GetAutoTransitionForActor"sv, Natives::FourMetadata::GetAutoTransitionForActor);
+		a_vm->BindNativeMethod(METADATA, "IsNoRandomSelection"sv, Natives::FourMetadata::IsNoRandomSelection);
+		a_vm->BindNativeMethod(METADATA, "GetModpack"sv, Natives::FourMetadata::GetModpack);
+		a_vm->BindNativeMethod(METADATA, "ScenesToNames"sv, Natives::FourMetadata::ScenesToNames);
+		a_vm->BindNativeMethod(METADATA, "IntsOfCSV"sv, Natives::FourMetadata::IntsOfCSV);
+		a_vm->BindNativeMethod(METADATA, "FloatsOfCSV"sv, Natives::FourMetadata::FloatsOfCSV);
+		a_vm->BindNativeMethod(METADATA, "IntListOverlap"sv, Natives::FourMetadata::IntListOverlap);
+		a_vm->BindNativeMethod(METADATA, "FloatListOverlap"sv, Natives::FourMetadata::FloatListOverlap);
+		a_vm->BindNativeMethod(METADATA, "StringListOverlap"sv, Natives::FourMetadata::StringListOverlap);
+		a_vm->BindNativeMethod(METADATA, "GetAnimationId"sv, Natives::FourMetadata::GetAnimationId);
+		a_vm->BindNativeMethod(METADATA, "GetActorRequirements"sv, Natives::FourMetadata::GetActorRequirements);
+		a_vm->BindNativeMethod(METADATA, "GetActionTypes"sv, Natives::FourMetadata::GetActionTypes);
+		a_vm->BindNativeMethod(METADATA, "GetActionActors"sv, Natives::FourMetadata::GetActionActors);
+		a_vm->BindNativeMethod(METADATA, "GetActionTargets"sv, Natives::FourMetadata::GetActionTargets);
+		a_vm->BindNativeMethod(METADATA, "GetActionPerformers"sv, Natives::FourMetadata::GetActionPerformers);
+		a_vm->BindNativeMethod(METADATA, "GetActionTags"sv, Natives::FourMetadata::GetActionTags);
+		a_vm->BindNativeMethod(METADATA, "GetAllActionsTags"sv, Natives::FourMetadata::GetAllActionsTags);
+		a_vm->BindNativeMethod(METADATA, "ListHasAny"sv, Natives::FourMetadata::ListHasAny);
+		a_vm->BindNativeMethod(METADATA, "ListHasAll"sv, Natives::FourMetadata::ListHasAll);
+		a_vm->BindNativeMethod(METADATA, "ListOverlap"sv, Natives::FourMetadata::ListOverlap);
+		a_vm->BindNativeMethod(METADATA, "FindActionsBy"sv, Natives::FourMetadata::FindActionsBy);
+		a_vm->BindNativeMethod(METADATA, "FindActionsSuperload"sv, Natives::FourMetadata::FindActionsSuperload);
+		a_vm->BindNativeMethod(METADATA, "HasCustomAction"sv, Natives::FourMetadata::HasCustomAction);
+		a_vm->BindNativeMethod(METADATA, "GetCustomActionInt"sv, Natives::FourMetadata::GetCustomActionInt);
+		a_vm->BindNativeMethod(METADATA, "GetCustomActionFloat"sv, Natives::FourMetadata::GetCustomActionFloat);
+		a_vm->BindNativeMethod(METADATA, "GetCustomActionString"sv, Natives::FourMetadata::GetCustomActionString);
+		a_vm->BindNativeMethod(METADATA, "GetCustomActionIntList"sv, Natives::FourMetadata::GetCustomActionIntList);
+		a_vm->BindNativeMethod(METADATA, "GetCustomActionFloatList"sv, Natives::FourMetadata::GetCustomActionFloatList);
+		a_vm->BindNativeMethod(METADATA, "GetCustomActionStringList"sv, Natives::FourMetadata::GetCustomActionStringList);
+		a_vm->BindNativeMethod(METADATA, "GetCustomSceneActorInt"sv, Natives::FourMetadata::GetCustomSceneActorInt);
+		a_vm->BindNativeMethod(METADATA, "GetCustomSceneActorFloat"sv, Natives::FourMetadata::GetCustomSceneActorFloat);
 		constexpr auto ACTOR = "FourActor"sv;
-		a_vm->BindNativeMethod(ACTOR, "GetThreadID"sv, A_GetThreadID);
-		a_vm->BindNativeMethod(ACTOR, "HasMetadata"sv, AM_HasMetadata);
-		a_vm->BindNativeMethod(ACTOR, "AddMetadata"sv, AM_AddMetadata);
-		a_vm->BindNativeMethod(ACTOR, "GetMetadata"sv, AM_GetMetadata);
-		a_vm->BindNativeMethod(ACTOR, "HasMetaFloat"sv, AM_HasMetaFloat);
-		a_vm->BindNativeMethod(ACTOR, "GetMetaFloat"sv, AM_GetMetaFloat);
-		a_vm->BindNativeMethod(ACTOR, "SetMetaFloat"sv, AM_SetMetaFloat);
-		a_vm->BindNativeMethod(ACTOR, "HasMetaString"sv, AM_HasMetaString);
-		a_vm->BindNativeMethod(ACTOR, "GetMetaString"sv, AM_GetMetaString);
-		a_vm->BindNativeMethod(ACTOR, "SetMetaString"sv, AM_SetMetaString);
-		a_vm->BindNativeMethod(ACTOR, "PlayExpression"sv, AM_PlayExpression);
-		a_vm->BindNativeMethod(ACTOR, "ClearExpression"sv, AM_ClearExpression);
-		a_vm->BindNativeMethod(ACTOR, "SetExpressionsEnabled"sv, AM_SetExpressionsEnabled);
-		a_vm->BindNativeMethod(ACTOR, "HasExpressionOverride"sv, AM_HasExpressionOverride);
-		a_vm->BindNativeMethod(ACTOR, "UndressPartial"sv, AM_UndressPartial);
-		a_vm->BindNativeMethod(ACTOR, "RedressPartial"sv, AM_RedressPartial);
+		a_vm->BindNativeMethod(ACTOR, "GetThreadID"sv, Natives::FourActor::GetThreadID);
+		a_vm->BindNativeMethod(ACTOR, "HasMetadata"sv, Natives::FourActor::HasMetadata);
+		a_vm->BindNativeMethod(ACTOR, "AddMetadata"sv, Natives::FourActor::AddMetadata);
+		a_vm->BindNativeMethod(ACTOR, "GetMetadata"sv, Natives::FourActor::GetMetadata);
+		a_vm->BindNativeMethod(ACTOR, "HasMetaFloat"sv, Natives::FourActor::HasMetaFloat);
+		a_vm->BindNativeMethod(ACTOR, "GetMetaFloat"sv, Natives::FourActor::GetMetaFloat);
+		a_vm->BindNativeMethod(ACTOR, "SetMetaFloat"sv, Natives::FourActor::SetMetaFloat);
+		a_vm->BindNativeMethod(ACTOR, "HasMetaString"sv, Natives::FourActor::HasMetaString);
+		a_vm->BindNativeMethod(ACTOR, "GetMetaString"sv, Natives::FourActor::GetMetaString);
+		a_vm->BindNativeMethod(ACTOR, "SetMetaString"sv, Natives::FourActor::SetMetaString);
+		a_vm->BindNativeMethod(ACTOR, "PlayExpression"sv, Natives::FourActor::PlayExpression);
+		a_vm->BindNativeMethod(ACTOR, "ClearExpression"sv, Natives::FourActor::ClearExpression);
+		a_vm->BindNativeMethod(ACTOR, "SetExpressionsEnabled"sv, Natives::FourActor::SetExpressionsEnabled);
+		a_vm->BindNativeMethod(ACTOR, "HasExpressionOverride"sv, Natives::FourActor::HasExpressionOverride);
+		a_vm->BindNativeMethod(ACTOR, "UndressPartial"sv, Natives::FourActor::UndressPartial);
+		a_vm->BindNativeMethod(ACTOR, "RedressPartial"sv, Natives::FourActor::RedressPartial);
 		constexpr auto FURNITURE = "FourFurniture"sv;
-		a_vm->BindNativeMethod(FURNITURE, "FindFurniture"sv, F_FindFurniture);
-		a_vm->BindNativeMethod(FURNITURE, "FindFurnitureOfType"sv, F_FindFurnitureOfType);
-		a_vm->BindNativeMethod(FURNITURE, "GetOffset"sv, F_GetOffset);
-		a_vm->BindNativeMethod(FURNITURE, "GetSceneID"sv, F_GetSceneID);
+		a_vm->BindNativeMethod(FURNITURE, "FindFurniture"sv, Natives::FourFurniture::FindFurniture);
+		a_vm->BindNativeMethod(FURNITURE, "FindFurnitureOfType"sv, Natives::FourFurniture::FindFurnitureOfType);
+		a_vm->BindNativeMethod(FURNITURE, "GetOffset"sv, Natives::FourFurniture::GetOffset);
+		a_vm->BindNativeMethod(FURNITURE, "GetSceneID"sv, Natives::FourFurniture::GetSceneID);
 		constexpr auto ACTORUTIL = "FourActorUtil"sv;
-		a_vm->BindNativeMethod(ACTORUTIL, "FulfillsCondition"sv, AU_FulfillsCondition);
-		a_vm->BindNativeMethod(ACTORUTIL, "FulfillsAnyCondition"sv, AU_FulfillsAnyCondition);
-		a_vm->BindNativeMethod(ACTORUTIL, "FulfillsAllConditions"sv, AU_FulfillsAllConditions);
-		a_vm->BindNativeMethod(ACTORUTIL, "EmptyArray"sv, AU_EmptyArray);
-		a_vm->BindNativeMethod(ACTORUTIL, "CreateArray"sv, AU_CreateArray);
-		a_vm->BindNativeMethod(ACTORUTIL, "ToArray"sv, AU_ToArray);
-		a_vm->BindNativeMethod(ACTORUTIL, "Sort"sv, AU_Sort);
-		a_vm->BindNativeMethod(ACTORUTIL, "GetActorsInRangeV2"sv, AU_GetActorsInRangeV2);
-		a_vm->BindNativeMethod(ACTORUTIL, "ActorsToNames"sv, AU_ActorsToNames);
+		a_vm->BindNativeMethod(ACTORUTIL, "FulfillsCondition"sv, Natives::FourActorUtil::FulfillsCondition);
+		a_vm->BindNativeMethod(ACTORUTIL, "FulfillsAnyCondition"sv, Natives::FourActorUtil::FulfillsAnyCondition);
+		a_vm->BindNativeMethod(ACTORUTIL, "FulfillsAllConditions"sv, Natives::FourActorUtil::FulfillsAllConditions);
+		a_vm->BindNativeMethod(ACTORUTIL, "EmptyArray"sv, Natives::FourActorUtil::EmptyArray);
+		a_vm->BindNativeMethod(ACTORUTIL, "CreateArray"sv, Natives::FourActorUtil::CreateArray);
+		a_vm->BindNativeMethod(ACTORUTIL, "ToArray"sv, Natives::FourActorUtil::ToArray);
+		a_vm->BindNativeMethod(ACTORUTIL, "Sort"sv, Natives::FourActorUtil::Sort);
+		a_vm->BindNativeMethod(ACTORUTIL, "GetActorsInRangeV2"sv, Natives::FourActorUtil::GetActorsInRangeV2);
+		a_vm->BindNativeMethod(ACTORUTIL, "ActorsToNames"sv, Natives::FourActorUtil::ActorsToNames);
 		a_vm->BindNativeMethod("FourSequence"sv, "RandomSequence"sv, SQ_Random);
 		constexpr auto MOD_EVENTS = "FourModEvents"sv;
-		a_vm->BindNativeMethod(MOD_EVENTS, "RegisterForModEvent"sv, ME_Register);
-		a_vm->BindNativeMethod(MOD_EVENTS, "UnregisterForModEvent"sv, ME_Unregister);
-		a_vm->BindNativeMethod(MOD_EVENTS, "UnregisterForAllModEvents"sv, ME_UnregisterAll);
-		a_vm->BindNativeMethod(MOD_EVENTS, "SendModEvent"sv, ME_Send);
+		a_vm->BindNativeMethod(MOD_EVENTS, "RegisterForModEvent"sv, Natives::FourModEvents::Register);
+		a_vm->BindNativeMethod(MOD_EVENTS, "UnregisterForModEvent"sv, Natives::FourModEvents::Unregister);
+		a_vm->BindNativeMethod(MOD_EVENTS, "UnregisterForAllModEvents"sv, Natives::FourModEvents::UnregisterAll);
+		a_vm->BindNativeMethod(MOD_EVENTS, "SendModEvent"sv, Natives::FourModEvents::Send);
 		constexpr auto JSON = "FourJSON"sv;
-		a_vm->BindNativeMethod(JSON, "GetActors"sv, J_GetActors);
-		a_vm->BindNativeMethod(JSON, "GetScene"sv, J_GetScene);
-		a_vm->BindNativeMethod(JSON, "GetMetadata"sv, J_GetMetadata);
+		a_vm->BindNativeMethod(JSON, "GetActors"sv, Natives::FourJSON::GetActors);
+		a_vm->BindNativeMethod(JSON, "GetScene"sv, Natives::FourJSON::GetScene);
+		a_vm->BindNativeMethod(JSON, "GetMetadata"sv, Natives::FourJSON::GetMetadata);
 		REX::INFO("Papyrus functions bound");
 		return true;
 	}

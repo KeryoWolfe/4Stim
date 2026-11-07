@@ -38,12 +38,12 @@ Claude writes the fix; the owner builds and tests; the result goes into TEST_RES
 | 2.1 | Actor missing from a scene (camera fade, worst in wall scenes) | Done (owner, 7 November 2026) | None. |
 | 2.2 | Actor barely following a scene / turned 90° in a chair (weapon drawn) | Built, untested | Owner: draw a weapon, start a scene; look for `Weapons: ... puts their weapon away`. |
 | 2.3 | Actors shaking in chair scenes | Done (owner, 7 November 2026) | None. |
-| 2.4 | A-Body erect physics not swapping on the player | Working in the owner's 7 November log: at each scene start the player's A-Body physics goes `MaleBody.xml` -> `MaleBodyHard.xml` (`now uses ...MaleBodyHard.xml`), and back at the end | Owner: confirm in game that the penis holds its erect shape in scenes and goes soft after. |
+| 2.4 | A-Body erect physics not swapping on the player | Done (owner, 7 November 2026: swaps to `MaleBodyHard.xml` at each scene start and back at the end) | None. |
 | 2.5 | Penis left at an odd angle after scenes | Bend OK (owner, 7 November 2026); the log puts it back to its own angle at the end. Misaligned in places mid-scene, expected until the animations carry the penis aim (converter, another agent) | Recheck once the aimed animations are in. |
 | 2.6 | Alignment: kisses missing, tongue on the top lip, hands clipping | Kisses and hands: animation-level, another agent (owner, 7 November 2026). Tongue: moved 1.5 up and 1.5 back into the mouth (7 November, untested) | Owner: tongue in a kneeling or licking scene. |
 | 2.7 | Penis clipping through bodies and faces | Open: animation-level. Checked 1 November against the reconverted test pack (AnimBridge, 946 files): animations carry all 128 ZeX tracks; the male role animates `Penis_00` (the base) and nothing further along: `Penis_01`–`05` and the balls hold one pose. | The converter: carry the source's segment motion over to `Penis_01`–`05`, if the OStim originals have it; until then, the per-scene bend and alignment. |
 | 2.8 | NPCs talk during scenes | Done (checked off by the owner, 7 November 2026) | None. |
-| 2.9 | Scene events pass `Actor[]` from native code (may arrive broken) | Open | Claude: test with a listening script; pass form IDs if broken. |
+| 2.9 | Scene events pass `Actor[]` from native code (may arrive broken) | Check built (7 November): the first scene of a session logs the type the actor list reaches Papyrus as. Likely fine: the physics swap's type mismatch came before `RE::Actor` got its own type ID (xmake.lua fix 1) | Owner: send the `Scene events: actors reach Papyrus as` line. |
 | 2.10 | Short hitch when a transition starts | Open | Claude: measure from the log; preload transition clips. |
 | 2.11 | First-person / True First Person body hidden | Open; needs first person allowed in scenes to test | Owner decides whether 0.4 tests first person. |
 | 2.12 | 1.10.163 (OG) tester: NPC stayed in a chair, player didn't follow, dialogue opened | Needs the current build and logs from the tester | Owner: send the tester the new build. |
@@ -58,7 +58,7 @@ From a seasoned modder's review (7 November 2026). Details and order in docs/TOD
 
 | # | Task | Status | Done when |
 |---|---|---|---|
-| 2b.1 | Papyrus natives out of main.cpp into `src/Natives/`, namespaces instead of the `T_` / `M_` / `L_` / `F_` / `J_` / `A_` prefixes | Open | Builds; every native still binds (no "does not match" or missing-native lines in the Papyrus log). |
+| 2b.1 | Papyrus natives out of main.cpp into `src/Natives/`, namespaces instead of the `T_` / `M_` / `L_` / `F_` / `J_` / `A_` prefixes | Namespaces done (7 November, renames only, not yet built); the move to `src/Natives/` comes with 2b.3, which gives main.cpp's shared state a header | Builds; every native still binds (no "does not match" or missing-native lines in the Papyrus log). |
 | 2b.2 | Settings into `Settings.cpp`, read through glaze reflection instead of the `if (key == ...)` chain | Open | Builds; 4Stim.ini, OStim's names and the MCM all still apply in game. |
 | 2b.3 | Rest of main.cpp (14,342 lines) split by area: alignment, camera, scene running, a thin main.cpp | Open | Builds; a scene plays as before. |
 | 2b.4 | JSON loaders from nlohmann to glaze, scenes last | Open | Every scene, action and voice set that loaded before still loads (same counts in 4Stim.log). |

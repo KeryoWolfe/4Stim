@@ -106,8 +106,39 @@ namespace SceneEvents
 		g_receivers.clear();
 	}
 
+	namespace
+	{
+		// Once a session, at the first scene: what type the scene events'
+		// actor list reaches Papyrus as, packed exactly as Send packs it. The
+		// physics swap once got a "type mismatch" passing an Actor from here
+		// (before RE::Actor had its own TYPE_ID, xmake.lua fix 1, so actors
+		// were packed as ObjectReference); "Actor[]" means the events'
+		// Actor[] arguments are fine (docs/PORTING_ROADMAP.md 2.9).
+		void CheckActorArrayType(const std::vector<std::uint32_t>& a_actors)
+		{
+			static bool checked = false;
+			if (checked || !FourStim::GetVM()) {
+				return;
+			}
+			checked = true;
+			const auto actors = FourStim::ResolveActors(a_actors);
+			auto       packed = RE::BSScript::detail::PackVariables(actors);
+			const auto type = packed[0].GetType();
+			const auto info = type.GetObjectTypeInfo();
+			const auto name = info ? std::string(info->GetName()) : std::string("raw type ") + std::to_string(static_cast<std::uint32_t>(type.GetRawType()));
+			const bool good = type.IsArray() && info && _stricmp(info->GetName(), "Actor") == 0;
+			if (good) {
+				REX::INFO("Scene events: actors reach Papyrus as {}[] ({} actor(s)): fine", name, actors.size());
+			} else {
+				REX::WARN("Scene events: actors reach Papyrus as {}{} ({} actor(s)), not Actor[]: scripts listening for scene events would get a type mismatch",
+					name, type.IsArray() ? "[]" : "", actors.size());
+			}
+		}
+	}
+
 	void SceneStarted(const std::vector<std::uint32_t>& a_actors, const std::string& a_sceneID, std::int32_t a_threadID, int a_speed)
 	{
+		CheckActorArrayType(a_actors);
 		Physics::SceneStarted(a_actors, a_sceneID);
 		Native(Kind::kStart, a_actors);
 		Send("FourStim_OnSceneStart"sv, FourStim::ResolveActors(a_actors), a_sceneID);

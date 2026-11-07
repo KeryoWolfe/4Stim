@@ -2,6 +2,11 @@
 
 ## 0.5.0 alpha (in progress)
 
+### Code: natives in namespaces; scene events checked
+- **Papyrus natives grouped by script** (roadmap 2b.1, a modder's review): the `T_` / `TB_` / `L_` / `M_` / `A_` / `AM_` / `AU_` / `F_` / `J_` / `ME_` prefixes became namespaces named after the Papyrus scripts (`Natives::FourThread::IsRunning`, `Natives::FourMetadata::GetName`...). Renames only: the code is otherwise unchanged (checked line by line). They're still in main.cpp; moving them into their own files comes with the main.cpp split (2b.3).
+- **Scene events' actor arrays checked** (roadmap 2.9): at the first scene of a session, `4Stim.log` says what type the scene events' actor list reaches Papyrus as (`Scene events: actors reach Papyrus as Actor[] ...: fine`, or a warning if it isn't `Actor[]`).
+- **Tongues moved** 1.5 up and 1.5 further back, into the mouth (they came out of nothing at the lower lip, clipping the teeth).
+
 ### Eye directions: looking for the bones
 - **OStim's eye directions** find the eye bones among the bones the head and eye meshes are skinned to when they aren't in the actor's 3D by name (the owner's log, 7 November: neither the player nor a ghoul had them by name, so no eyes moved), and the "no bones" log line now lists what the eye meshes are skinned to.
 
