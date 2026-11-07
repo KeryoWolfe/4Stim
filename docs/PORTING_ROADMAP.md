@@ -52,6 +52,20 @@ Claude writes the fix; the owner builds and tests; the result goes into TEST_RES
 | 2.15 | No erections on non-SMP bodies (BodyTalk, Atomic Muscle); SMP bodies rigid all scene | Built, untested (0.4.1, docs/ERECTION.md) | Owner / testers: a scene with each body; look for `Erection: ... body:`; bend -10 on the Align tab. |
 | 2.16 | Clothes not coming off (1.10.163 tester) | The log shows every strip done, OStim's way (what each position needs) | Tester: say which clothes stayed on in which position, or try Undress at the start. |
 
+## Phase 2b: code restructure (before beta)
+
+From a seasoned modder's review (7 November 2026). Details and order in docs/TODO.md, "Before Beta Release". Behaviour stays the same through 2b.1-2b.6; each is its own commit, built by the owner before the next.
+
+| # | Task | Status | Done when |
+|---|---|---|---|
+| 2b.1 | Papyrus natives out of main.cpp into `src/Natives/`, namespaces instead of the `T_` / `M_` / `L_` / `F_` / `J_` / `A_` prefixes | Open | Builds; every native still binds (no "does not match" or missing-native lines in the Papyrus log). |
+| 2b.2 | Settings into `Settings.cpp`, read through glaze reflection instead of the `if (key == ...)` chain | Open | Builds; 4Stim.ini, OStim's names and the MCM all still apply in game. |
+| 2b.3 | Rest of main.cpp (14,342 lines) split by area: alignment, camera, scene running, a thin main.cpp | Open | Builds; a scene plays as before. |
+| 2b.4 | JSON loaders from nlohmann to glaze, scenes last | Open | Every scene, action and voice set that loaded before still loads (same counts in 4Stim.log). |
+| 2b.5 | One scheduler thread instead of 25 detached sleep-then-queue threads | Open | Builds; timings in the log unchanged (scene end, transitions, resumed scenes, toys). |
+| 2b.6 | Vanilla natives (EvaluatePackage, EnableAI, SetScale, SetPosition...) called directly, not through the Papyrus VM | Open | Each switched call checked for latency and thread rules; NPCs resume AI at scene end without a delay. |
+| 2b.7 | Penis from the body: skinned geometry weighted to `Penis_*` bones, where actor properties leave it open (OStim's `useSoSSex` / `useTNGSex` stand-in) | Open | A woman with a penis body gets male roles and climax rules without a property file; a strap-on doesn't count; `4Stim.log` says which the body check found. |
+
 ## Phase 3: beta (0.4.0)
 
 | # | Task | Done when |
