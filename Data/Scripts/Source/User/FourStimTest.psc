@@ -30,6 +30,10 @@ Scriptname FourStimTest extends Quest
 ; The C++ APIs other F4SE plugins use (start a scene with you in it first):
 ;   cgf "FourStimTest.PluginAPI"
 ;
+; A scene with you started as a mod would (FourThread.QuickStart), through
+; OStim's start flow (furniture, add actors, your position):
+;   cgf "FourStimTest.ScriptStart"             with the NPC selected in the console
+;
 ; Low-level pieces (console-selected actor):
 ;   Lock, Unlock, Suppress, Restore, Move, StopPose
 
@@ -45,6 +49,18 @@ Actor Function SelectedActor() Global
 		Debug.Notification("4Stim: click an NPC in the console first")
 	endif
 	return akActor
+EndFunction
+
+Function ScriptStart() Global
+	Actor akTarget = SelectedActor()
+	if akTarget
+		Actor[] akActors = new Actor[2]
+		akActors[0] = Game.GetPlayer()
+		akActors[1] = akTarget
+		if FourThread.QuickStart(akActors) < 0
+			Debug.Notification("4Stim: scene couldn't start (see 4Stim.log)")
+		endif
+	endif
 EndFunction
 
 Function Begin() Global
