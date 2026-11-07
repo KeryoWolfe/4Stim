@@ -3,6 +3,7 @@
 	"types": [
 		{
 			"id": "bed",
+			"listIndividually": true,
 			"name": "Bed",
 			"lyingShift": 30,
 			"lyingRaise": 10,
@@ -152,6 +153,7 @@
 		},
 		{
 			"id": "bench",
+			"listIndividually": true,
 			"name": "Bench",
 			"supertype": "chair",
 			"priority": 5,

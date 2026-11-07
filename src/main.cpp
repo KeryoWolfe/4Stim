@@ -1328,6 +1328,20 @@ namespace
 
 	bool PlaceActorAt(RE::Actor* a_actor, const Furniture::Spot& a_spot);
 
+	bool IsPlayer(const RE::Actor* a_actor);
+
+	// As OStim's ThreadActor positionBefore for the player: where they stood
+	// before a scene first moved them onto furniture, so the end can put them
+	// back (SetResetPosition). Kept until then; a later move doesn't replace
+	// it. Main thread.
+	void NotePlayerSpotBefore(RE::Actor* a_actor)
+	{
+		if (a_actor && IsPlayer(a_actor) && !g_positionBefore.contains(a_actor->GetFormID())) {
+			g_positionBefore[a_actor->GetFormID()] = { a_actor->data.location, a_actor->data.angle.z, std::chrono::steady_clock::now() };
+			REX::INFO("Furniture: the player's spot before the scene noted, to put them back at its end");
+		}
+	}
+
 	// Moves a_actors onto the pending furniture's spot, if the next scene for
 	// them has one. False if it doesn't.
 	bool PlaceOnPendingFurniture(const std::vector<RE::Actor*>& a_actors)
@@ -1368,6 +1382,7 @@ namespace
 		// The clutter there, before anyone is moved onto it (tasks run in order).
 		F4SE::GetTaskInterface()->AddTask([ids, at = spot.position]() { NoteClutterFor(ids, at); });
 		for (const auto actor : a_actors) {
+			NotePlayerSpotBefore(actor);
 			PlaceActorAt(actor, spot);
 		}
 		return true;
@@ -3494,6 +3509,7 @@ namespace
 		for (std::size_t role = 0; role < a_active.actors.size(); ++role) {
 			if (const auto actor = RE::TESForm::GetFormByID<RE::Actor>(a_active.actors[role])) {
 				const auto at = SpotOf(a_active, role);
+				NotePlayerSpotBefore(actor);
 				actor->SetPosition(at.position, true);
 				FaceHeading(actor, at.heading);
 			}
@@ -3587,8 +3603,9 @@ namespace
 	// A scene ended. As OStim does with "Reset position" (on by default):
 	// each NPC goes back to where they stood before the scene, facing the way
 	// they faced (FourStimScene.ResetPosition: a translation there at a huge
-	// speed, OStim's setPosition). The player isn't moved, as the scene was
-	// built on the player's own spot. That also takes them out of each other
+	// speed, OStim's setPosition). The player goes back only if the scene
+	// moved them onto furniture (NotePlayerSpotBefore; natively, as they were
+	// placed); otherwise the scene was built on their own spot. That also takes them out of each other
 	// before their collision with each other comes back (RestoreCollision
 	// waits for this). NPCs with nowhere recorded (a scene started again
 	// from a save) step 70 units off the spot instead, in the first clear
@@ -3602,7 +3619,17 @@ namespace
 		for (const auto id : a_ended.actors) {
 			const auto actor = RE::TESForm::GetFormByID<RE::Actor>(id);
 			const auto before = g_positionBefore.find(id);
-			if (!actor || IsPlayer(actor)) {
+			if (actor && IsPlayer(actor)) {
+				if (before != g_positionBefore.end()) {
+					if (g_resetPosition && !(a_ended.interrupted && g_stayWhenInterrupted)) {
+						REX::INFO("Scene end: the player back to where they stood before the furniture scene");
+						PlaceActorAt(actor, Furniture::Spot{ before->second.position, before->second.heading });
+					}
+					g_positionBefore.erase(before);
+				}
+				continue;
+			}
+			if (!actor) {
 				continue;
 			}
 			if (before != g_positionBefore.end()) {
@@ -12768,6 +12795,7 @@ namespace
 		EquipObjects::ClearChosen();  // before a save's are read, or a new game
 		Sounds::ClearVoiceChoices();
 		StimOverrides::Clear();
+		g_positionBefore.clear();  // spots from the game being left (a furniture scene's player spot among them)
 		std::scoped_lock lock(g_savedLock);
 		g_loadedScenes.clear();
 	}

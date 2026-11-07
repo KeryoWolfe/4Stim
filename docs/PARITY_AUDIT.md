@@ -78,9 +78,9 @@ The short answer to "are we missing anything": yes, and it falls into five patte
 - **Done in 0.5.0 (not yet built or tested):** climax comments (`climaxCommentSelf` / `climaxCommentOther`), their sound part. Still open: dialogue / `talk` (4 §5, documented), so their dialogue part too.
 
 **Furniture**
-- OStim's furniture `rotation` is radians; 4Stim reads degrees, so 180° becomes about 3° (3 §10).
-- `listIndividually` means something else, and furniture isn't grouped by list type (3 §9). Conditions are partly skipped, multiple `anykeyword` are ORed (3 §11). Occupied furniture isn't excluded (3 §14); the `NoStim` keyword is, since 0.5.0.
-- The player isn't put back after a furniture scene, though ALIGNMENT.md says the player is never moved (1 §11).
+- **Done in 0.5.0 (not yet built or tested):** OStim-layout furniture types' `rotation` in radians (3 §10); OStim's list types (one picker row per list type, `bed` and `bench` listed individually as OStim's data) (3 §9); all six condition kinds, ANDed (3 §11); furniture in use skipped (3 §14).
+- Still open: OStim's `offset*Global` (3 §14); picker rows for list types with no scenes for this many actors aren't dropped at the search, only later. Keywords are checked on the base object, not the reference.
+- **Done in 0.5.0 (not yet built or tested):** the player is put back after a furniture scene with `SetResetPosition`, as OStim's (1 §11).
 
 **Sound**
 - OStim's old voice-set syntax (used by its own `defaultmale.json`) and single-object entries load as empty sets with nothing logged (4 §3).

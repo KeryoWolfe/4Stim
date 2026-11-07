@@ -9,9 +9,11 @@
 #include <filesystem>
 #include <format>
 #include <fstream>
+#include <limits>
 #include <map>
 #include <mutex>
 #include <optional>
+#include <unordered_set>
 
 #include <nlohmann/json.hpp>
 
@@ -27,6 +29,30 @@ namespace Furniture
 		constexpr auto OSTIM_TYPE_FOLDER = "Data/F4SE/Plugins/4Stim/Furniture Types";
 		constexpr float DEG = 3.14159265F / 180.0F;
 
+		// One of OStim's furniture type conditions (FurnitureTable.cpp): all
+		// of a type's must hold, as OStim's.
+		struct Condition
+		{
+			enum class Kind
+			{
+				kAnyKeyword,        // any of keywords, on the base object
+				kKeywordBlacklist,  // none of keywords
+				kFormList,          // the base object is in the form list
+				kFormBlacklist,     // it isn't
+				kMarkerCount,       // furniture markers of a kind (sit / sleep), between minZ and maxZ, equal to or more than value
+				kCellName,          // the cell's editor ID has this in it
+			};
+			Kind                     kind = Kind::kAnyKeyword;
+			std::vector<std::string> keywords;  // editor IDs
+			std::uint32_t            formList = 0;
+			std::string              cellName;  // lowercase
+			bool                     sleep = false;  // markercount: sleep markers, else sit
+			bool                     greater = false;  // markercount: more than value, else exactly
+			int                      value = 0;
+			float                    minZ = std::numeric_limits<float>::quiet_NaN();
+			float                    maxZ = std::numeric_limits<float>::quiet_NaN();
+		};
+
 		struct Type
 		{
 			std::string                    id;
@@ -39,6 +65,7 @@ namespace Furniture
 			std::vector<std::string>       excludeModels;    // none of these
 			std::vector<std::string>       keywords;         // any of these on the base object (editor IDs)
 			std::vector<std::string>       excludeKeywords;  // none of these
+			std::vector<Condition>         conditions;       // OStim's, all must hold
 			int                            minMarkers = -1;  // furniture markers, -1 = any
 			int                            maxMarkers = -1;
 			bool                           useMarker = true;  // place at a furniture marker
@@ -70,7 +97,7 @@ namespace Furniture
 			bool                           ignoreMarker[3] = { false, false, false };
 			RE::NiPoint3                   offset;            // in the furniture's own frame
 			float                          rotation = 0.0F;   // radians
-			bool                           listIndividually = false;  // OStim's: list every piece of it, not just the nearest
+			bool                           listIndividually = false;  // OStim's: a picker row of its own (else its supertype's row)
 			float                          multiplyScale = 1.0F;      // OStim's: actors on it are scaled by this
 		};
 
@@ -152,7 +179,9 @@ namespace Furniture
 		// One type from its JSON object, with 4Stim's field names and OStim's
 		// (offsetX / offsetY / offsetZ, ignoreMarkerOffsetX..., conditions
 		// "anykeyword" / "keywordblacklist", listIndividually, multiplyScale).
-		Type ParseType(const nlohmann::json& entry, const std::string& id, const std::string& file)
+		// a_ostimLayout: a file in OStim's layout (Furniture Types\), whose
+		// "rotation" is in radians, as OStim's README; 4Stim's are in degrees.
+		Type ParseType(const nlohmann::json& entry, const std::string& id, const std::string& file, bool a_ostimLayout)
 		{
 			Type type;
 			type.id = id;
@@ -180,18 +209,62 @@ namespace Furniture
 			}
 			type.excludeKeywords = Strings(entry, "excludeKeywords", false);
 			if (const auto conditions = entry.find("conditions"); conditions != entry.end() && conditions->is_array()) {
-				for (const auto& condition : *conditions) {
-					const auto kind = condition.is_object() ? Lower(condition.value("type", std::string{})) : std::string{};
-					const auto keywords = condition.is_object() ? condition.find("keywords") : condition.end();
-					if ((kind == "anykeyword" || kind == "keywordblacklist") && keywords != condition.end() && keywords->is_array()) {
-						for (const auto& keyword : *keywords) {
-							if (auto editorID = KeywordEditorID(keyword); !editorID.empty()) {
-								(kind == "anykeyword" ? type.keywords : type.excludeKeywords).push_back(std::move(editorID));
+				for (const auto& json : *conditions) {
+					if (!json.is_object()) {
+						continue;
+					}
+					const auto kind = Lower(json.value("type", std::string{}));
+					Condition  c;
+					if (kind == "anykeyword" || kind == "keywordblacklist") {
+						c.kind = kind == "anykeyword" ? Condition::Kind::kAnyKeyword : Condition::Kind::kKeywordBlacklist;
+						if (const auto keywords = json.find("keywords"); keywords != json.end() && keywords->is_array()) {
+							for (const auto& keyword : *keywords) {
+								if (auto editorID = KeywordEditorID(keyword); !editorID.empty()) {
+									c.keywords.push_back(std::move(editorID));
+								}
 							}
 						}
+						if (c.keywords.empty()) {
+							REX::WARN("Furniture: {}: type \"{}\": condition \"{}\" has no keyword that loads, ignored", file, type.id, kind);
+							continue;
+						}
+					} else if (kind == "formlist" || kind == "formblacklist") {
+						c.kind = kind == "formlist" ? Condition::Kind::kFormList : Condition::Kind::kFormBlacklist;
+						const auto list = json.find("formlist");
+						const auto forms = list != json.end() ? Actions::ReadForms(*list) : std::vector<std::uint32_t>{};
+						if (forms.empty()) {
+							REX::WARN("Furniture: {}: type \"{}\": condition \"{}\": its \"formlist\" doesn't load, ignored", file, type.id, kind);
+							continue;
+						}
+						c.formList = forms.front();
+					} else if (kind == "markercount") {
+						c.kind = Condition::Kind::kMarkerCount;
+						const auto markerType = Lower(json.value("markertype", std::string{}));
+						const auto test = Lower(json.value("condition", std::string{}));
+						c.value = json.value("value", -1);
+						if ((markerType != "sit" && markerType != "sleep") || (test != "equals" && test != "greater") || c.value < 0) {
+							REX::WARN("Furniture: {}: type \"{}\": markercount needs markertype sit / sleep, condition equals / greater and a value, ignored", file, type.id);
+							continue;
+						}
+						c.sleep = markerType == "sleep";
+						c.greater = test == "greater";
+						if (const auto v = json.find("minZ"); v != json.end() && v->is_number()) {
+							c.minZ = v->get<float>();
+						}
+						if (const auto v = json.find("maxZ"); v != json.end() && v->is_number()) {
+							c.maxZ = v->get<float>();
+						}
+					} else if (kind == "cellname") {
+						c.kind = Condition::Kind::kCellName;
+						c.cellName = Lower(json.value("cellname", std::string{}));
+						if (c.cellName.empty()) {
+							continue;
+						}
 					} else {
-						REX::WARN("Furniture: {}: type \"{}\": condition \"{}\" isn't supported in Fallout 4 (only anykeyword and keywordblacklist), ignored", file, type.id, kind);
+						REX::WARN("Furniture: {}: type \"{}\": unknown condition \"{}\", ignored", file, type.id, kind);
+						continue;
 					}
+					type.conditions.push_back(std::move(c));
 				}
 			}
 			type.minMarkers = entry.value("minMarkers", -1);
@@ -236,10 +309,10 @@ namespace Furniture
 			type.offset.x = entry.value("offsetX", type.offset.x);
 			type.offset.y = entry.value("offsetY", type.offset.y);
 			type.offset.z = entry.value("offsetZ", type.offset.z);
-			type.rotation = entry.value("rotation", 0.0F) * DEG;
+			type.rotation = entry.value("rotation", 0.0F) * (a_ostimLayout ? 1.0F : DEG);
 			type.listIndividually = entry.value("listIndividually", false);
 			type.multiplyScale = entry.value("multiplyScale", 1.0F);
-			if (type.models.empty() && type.keywords.empty() && !type.wall) {
+			if (type.models.empty() && type.keywords.empty() && type.conditions.empty() && !type.wall) {
 				REX::INFO("Furniture: {}: type \"{}\" has no \"models\" or \"keywords\": only a supertype for others", file, type.id);
 			}
 			return type;
@@ -285,7 +358,7 @@ namespace Furniture
 						REX::WARN("Furniture: {}: a type without an \"id\", skipped", file);
 						continue;
 					}
-					g_types[Lower(id)] = ParseType(entry, id, file);
+					g_types[Lower(id)] = ParseType(entry, id, file, false);
 				}
 			}
 			// OStim's layout: Furniture Types\**\<id>.json, after 4Stim's (so
@@ -300,7 +373,7 @@ namespace Furniture
 			for (const auto& path : ostimFiles) {
 				if (const auto root = ReadJSON(path); root && root->is_object()) {
 					const auto id = Lower(path.stem().string());
-					g_types[id] = ParseType(*root, id, path.filename().string());
+					g_types[id] = ParseType(*root, id, path.filename().string(), true);
 				}
 			}
 			REX::INFO("Furniture: {} type(s) from {} file(s)", g_types.size(), files.size() + ostimFiles.size());
@@ -336,16 +409,56 @@ namespace Furniture
 			return std::ranges::any_of(a_keywords, [&](const std::string& kw) { return form->HasKeywordString(kw); });
 		}
 
-		bool Matches(const Type& a_type, RE::TESBoundObject* a_base, const std::string& a_model)
+		// OStim's markercount: a_ref's furniture markers (its model's) of
+		// that kind and height. Fallout 4's marker animation bits: 1 sit, 2
+		// lie (OStim's "sleep").
+		int CountMarkers(RE::TESObjectREFR* a_ref, bool a_sleep, float a_minZ, float a_maxZ);
+
+		bool ConditionHolds(const Condition& a_c, RE::TESObjectREFR* a_ref, RE::TESBoundObject* a_base)
 		{
-			if (a_type.models.empty() && a_type.keywords.empty()) {
+			switch (a_c.kind) {
+			case Condition::Kind::kAnyKeyword:
+				return HasAnyKeyword(a_base, a_c.keywords);
+			case Condition::Kind::kKeywordBlacklist:
+				return !HasAnyKeyword(a_base, a_c.keywords);
+			case Condition::Kind::kFormList:
+			case Condition::Kind::kFormBlacklist:
+				{
+					const auto list = RE::TESForm::GetFormByID<RE::BGSListForm>(a_c.formList);
+					const bool in = list && list->ContainsItem(a_base);
+					return a_c.kind == Condition::Kind::kFormList ? in : !in;
+				}
+			case Condition::Kind::kMarkerCount:
+				{
+					const int n = CountMarkers(a_ref, a_c.sleep, a_c.minZ, a_c.maxZ);
+					return a_c.greater ? n > a_c.value : n == a_c.value;
+				}
+			case Condition::Kind::kCellName:
+				{
+					const auto cell = a_ref ? a_ref->GetParentCell() : nullptr;
+					const char* editorID = cell ? cell->GetFormEditorID() : nullptr;
+					return editorID && Lower(editorID).find(a_c.cellName) != std::string::npos;
+				}
+			}
+			return false;
+		}
+
+		bool Matches(const Type& a_type, RE::TESObjectREFR* a_ref, RE::TESBoundObject* a_base, const std::string& a_model)
+		{
+			if (a_type.models.empty() && a_type.keywords.empty() && a_type.conditions.empty()) {
 				return false;  // nothing to recognize it by
 			}
 			if (std::ranges::find(a_type.forms, a_base->GetFormType()) == a_type.forms.end()) {
 				return false;
 			}
-			const bool modelHit = std::ranges::any_of(a_type.models, [&](const std::string& m) { return a_model.find(m) != std::string::npos; });
-			if (!modelHit && !HasAnyKeyword(a_base, a_type.keywords)) {
+			// 4Stim's models / keywords: one of them; OStim's conditions: all.
+			if (!a_type.models.empty() || !a_type.keywords.empty()) {
+				const bool modelHit = std::ranges::any_of(a_type.models, [&](const std::string& m) { return a_model.find(m) != std::string::npos; });
+				if (!modelHit && !HasAnyKeyword(a_base, a_type.keywords)) {
+					return false;
+				}
+			}
+			if (!std::ranges::all_of(a_type.conditions, [&](const Condition& c) { return ConditionHolds(c, a_ref, a_base); })) {
 				return false;
 			}
 			if (std::ranges::any_of(a_type.excludeModels, [&](const std::string& m) { return a_model.find(m) != std::string::npos; })) {
@@ -478,6 +591,23 @@ namespace Furniture
 				out.push_back(marker);
 			}
 			return out;
+		}
+
+		int CountMarkers(RE::TESObjectREFR* a_ref, bool a_sleep, float a_minZ, float a_maxZ)
+		{
+			const auto root = a_ref ? a_ref->Get3D() : nullptr;
+			const auto node = root ? FindMarkerNode(root, 6) : nullptr;
+			if (!node) {
+				return 0;
+			}
+			int count = 0;
+			for (const auto& marker : node->markers) {
+				const bool kind = a_sleep ? (marker.allowedAnimations & 2) != 0 : (marker.allowedAnimations & 1) != 0;
+				if (kind && (std::isnan(a_minZ) || marker.position.z >= a_minZ) && (std::isnan(a_maxZ) || marker.position.z <= a_maxZ)) {
+					++count;
+				}
+			}
+			return count;
 		}
 
 		// A line-of-sight ray from a_from to a_to in a_cell: how far along it
@@ -686,11 +816,55 @@ namespace Furniture
 			const auto  model = Lower(ModelOf(base));
 			const Type* best = nullptr;
 			for (const auto& [key, type] : g_types) {
-				if (Matches(type, base, model) && (!best || type.priority > best->priority)) {
+				if (Matches(type, a_ref, base, model) && (!best || type.priority > best->priority)) {
 					best = &type;
 				}
 			}
 			return best ? best->id : std::string{};
+		}
+
+		// OStim's FurnitureType::getListTypeInternal: the type itself if it's
+		// listIndividually, else its supertype's list type; a type with no
+		// (known) supertype is its own. g_lock held.
+		const Type* ListTypeLocked(const std::string& a_type)
+		{
+			auto it = g_types.find(Lower(a_type));
+			for (int hop = 0; hop < 8 && it != g_types.end(); ++hop) {
+				if (it->second.listIndividually || it->second.supertype.empty()) {
+					return &it->second;
+				}
+				const auto up = g_types.find(it->second.supertype);
+				if (up == g_types.end()) {
+					return &it->second;  // its supertype is OStim's "none" (no type of its own here)
+				}
+				it = up;
+			}
+			return it != g_types.end() ? &it->second : nullptr;
+		}
+
+		// Furniture an actor is in now (sitting, sleeping, at a workbench):
+		// OStim's isInUse, which its picker skips. Read-only, any thread.
+		std::unordered_set<std::uint32_t> FurnitureInUse()
+		{
+			std::unordered_set<std::uint32_t> out;
+			const auto lists = RE::ProcessLists::GetSingleton();
+			if (!lists) {
+				return out;
+			}
+			for (const auto& handle : lists->highActorHandles) {
+				const auto actor = handle.get();
+				const auto data = actor && actor->currentProcess ? actor->currentProcess->middleHigh : nullptr;
+				if (!data) {
+					continue;
+				}
+				if (const auto ref = data->occupiedFurniture.get()) {
+					out.insert(ref->GetFormID());
+				}
+				if (const auto ref = data->currentFurniture.get()) {
+					out.insert(ref->GetFormID());
+				}
+			}
+			return out;
 		}
 
 		bool IsALocked(std::string_view a_type, std::string_view a_wanted)
@@ -773,9 +947,11 @@ namespace Furniture
 
 	std::vector<Found> FindNear(const RE::NiPoint3& a_center, float a_radius, float a_maxHeight, bool a_log, RE::TESObjectREFR* a_from)
 	{
+		const auto       inUse = FurnitureInUse();
 		std::scoped_lock lock(g_lock);
 		EnsureLoaded();
 		std::vector<Found> found;
+		std::vector<std::string> listTypes;  // found[i]'s list type
 		// Furniture near enough to stand in front of a wall: no wall spot there.
 		std::vector<RE::TESObjectREFR*> obstacles;
 		Compat::ForEachReferenceInRange(a_center, a_radius, [&](RE::TESObjectREFR* a_ref) {
@@ -810,15 +986,28 @@ namespace Furniture
 			if (type.empty()) {
 				return RE::BSContainer::ForEachResult::kContinue;
 			}
-			// One entry per type (the nearest piece), or every piece of a type
-			// OStim lists individually.
-			const bool individually = g_types[Lower(type)].listIndividually;
-			const auto it = individually ? found.end() : std::ranges::find_if(found, [&](const Found& f) { return f.type == type; });
-			if (it == found.end()) {
-				found.push_back({ type, g_types[Lower(type)].name, a_ref->GetFormID(), distance });
-			} else if (distance < it->distance) {
-				it->ref = a_ref->GetFormID();
-				it->distance = distance;
+			// As OStim's findFurniture: not furniture someone's using...
+			if (inUse.contains(a_ref->GetFormID())) {
+				if (a_log) {
+					REX::INFO("Furniture: {:08X} ({}) is in use, skipped", a_ref->GetFormID(), type);
+				}
+				return RE::BSContainer::ForEachResult::kContinue;
+			}
+			// ...and one row per list type (single and double beds are one
+			// "Bed" row), its nearest piece; the piece keeps its own type.
+			const auto listType = ListTypeLocked(type);
+			const auto listID = listType ? listType->id : type;
+			const auto it = std::ranges::find(listTypes, listID);
+			if (it == listTypes.end()) {
+				found.push_back({ type, listType ? listType->name : g_types[Lower(type)].name, a_ref->GetFormID(), distance });
+				listTypes.push_back(listID);
+			} else {
+				auto& f = found[static_cast<std::size_t>(it - listTypes.begin())];
+				if (distance < f.distance) {
+					f.type = type;
+					f.ref = a_ref->GetFormID();
+					f.distance = distance;
+				}
 			}
 			return RE::BSContainer::ForEachResult::kContinue;
 		});

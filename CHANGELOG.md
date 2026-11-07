@@ -2,6 +2,13 @@
 
 ## 0.5.0 alpha (in progress)
 
+### Furniture, as OStim's (parity audit Tier 3)
+- **One picker row per furniture list type**, the nearest piece: single and double beds are one "Bed" row, the bench keeps its own (OStim's `listIndividually`; docs/FURNITURE.md). Before, each type had a row, and a `listIndividually` type listed every piece.
+- **Furniture someone is using is left out of the picker**, as OStim's: a chair an NPC sits in, a bed someone sleeps in.
+- **OStim's furniture type conditions all work and must all hold**: `anykeyword`, `keywordblacklist`, `formlist`, `formblacklist`, `markercount` (sit / sleep markers), `cellname`. Before, only the keyword ones, and two `anykeyword` lists were ORed.
+- **OStim-layout furniture types' `rotation` is radians**, as OStim's (a `3.14159` turned scenes by 3 degrees instead of 180).
+- **The player goes back to where they stood after a furniture scene**, with `SetResetPosition`, as OStim's (docs/ALIGNMENT.md).
+
 ### Fixed
 - **The bounce at transitions in converted packs** (the Lovemaking Compendium's table and bed transitions): their Idles loop (`dyn_ActivationLoop`, all 708 in its plugin), which makes the game blend back from the clip's start. 4Stim now sets every transition's Idles to play once (`dyn_Activation`) when it loads the scenes, for any pack, as the test pack's plugin already had by hand (docs/SCENES.md).
 
