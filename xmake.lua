@@ -67,6 +67,8 @@ rule("4stim.plugin", function()
                 local text = io.readfile(file)
                 -- (Actor.h fixed by an earlier 4Stim build has TYPE_ID on a line of its own)
                 local done = text:find(fix[3], 1, true) or (fix[1]:find("Actor.h", 1, true) and text:find("TYPE_ID{ BSScript::kActor }", 1, true))
+                    -- (KeryoWolfe/CommonLibF4's 4stim/combined has all three fixes, worded its own way)
+                    or (fix[1]:find("BSScriptUtil.h", 1, true) and text:find("a None array (a Papyrus array never given a value) is an empty one", 1, true))
                 if not done then
                     local s, e = text:find(fix[2], 1, true)
                     if not s then

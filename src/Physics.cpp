@@ -23,9 +23,8 @@
 #include "RE/N/NiStringExtraData.h"
 #include "RE/B/BSScript_ObjectTypeInfo.h"
 
-// CommonLibF4 declares this but doesn't define it; needed to derive a
-// callback (the game never calls it on its own functors through us).
-RE::BSScript::IStackCallbackFunctor::~IStackCallbackFunctor() = default;
+// (KeryoWolfe/CommonLibF4's 4stim/combined defines IStackCallbackFunctor's
+// destructor inline, Frakkin64's change, so 4Stim no longer defines it here.)
 
 namespace Physics
 {
