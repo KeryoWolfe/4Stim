@@ -31,6 +31,7 @@
 #include "Bridge.h"
 #include "HUD.h"
 #include "SceneEvents.h"
+#include "Scheduler.h"
 #include "ModEvents.h"
 #include "Actor3D.h"
 #include "Furniture.h"
@@ -2691,10 +2692,7 @@ namespace
 			}
 		}
 		g_endedThreads.push_back(std::move(done));
-		std::thread([actors = ended.actors]() {
-			std::this_thread::sleep_for(RELEASE_WAIT);
-			F4SE::GetTaskInterface()->AddTask([actors]() { SendEndedFor(actors, true); });
-		}).detach();
+		Scheduler::AfterOnMain(RELEASE_WAIT, [actors = ended.actors]() { SendEndedFor(actors, true); });
 	}
 
 	// As OStim's clearNodeQueue: a sequence interrupted (navigation, another
@@ -3027,19 +3025,17 @@ namespace
 		REX::INFO("Auto mode: fading to \"{}\"", a_target->id);
 		RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
 		Compat::DispatchStaticCall(g_vm, "FourStimMenu"sv, "FadeToBlack"sv, callback);
-		std::thread([role0 = a_active.actors[0], target = a_target, route = a_route]() {
-			std::this_thread::sleep_for(std::chrono::milliseconds(700));
-			F4SE::GetTaskInterface()->AddTask([role0, target, route]() {
-				if (const auto active = FindActiveScene(role0)) {
-					AutoGoToNow(*active, target, route);
-				}
-			});
-			std::this_thread::sleep_for(std::chrono::milliseconds(550));
+		Scheduler::AfterOnMain(std::chrono::milliseconds(700), [role0 = a_active.actors[0], target = a_target, route = a_route]() {
+			if (const auto active = FindActiveScene(role0)) {
+				AutoGoToNow(*active, target, route);
+			}
+		});
+		Scheduler::After(std::chrono::milliseconds(700 + 550), []() {
 			if (g_vm) {
 				RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> after;
 				Compat::DispatchStaticCall(g_vm, "FourStimMenu"sv, "FadeFromBlack"sv, after, 0.0F);
 			}
-		}).detach();
+		});
 		return 1.25F;
 	}
 
@@ -4459,14 +4455,11 @@ namespace
 		timer->SetGlobalTimeMultiplier(0.3F, true);
 		g_slowMo = true;
 		const auto generation = ++g_slowMoGeneration;
-		std::thread([generation]() {
-			std::this_thread::sleep_for(std::chrono::milliseconds(2500));
-			F4SE::GetTaskInterface()->AddTask([generation]() {
-				if (g_slowMoGeneration == generation) {
-					EndSlowMotion();
-				}
-			});
-		}).detach();
+		Scheduler::AfterOnMain(std::chrono::milliseconds(2500), [generation]() {
+			if (g_slowMoGeneration == generation) {
+				EndSlowMotion();
+			}
+		});
 	}
 
 	// The player's climax effects: shake, blur, glow, rumble, slow motion
@@ -4954,14 +4947,13 @@ namespace
 			return;
 		}
 		g_autoplayLast = std::chrono::steady_clock::now();
-		std::thread([]() {
-			while (g_autoplayTicking) {
-				std::this_thread::sleep_for(std::chrono::milliseconds(10));
-				if (g_autoplayTicking && !g_autoplayTickQueued.exchange(true)) {
-					F4SE::GetTaskInterface()->AddTask(AutoplayTick);
-				}
+		// Every 10 ms while scenes run (the scheduler's thread, no thread of its own).
+		Scheduler::Every(std::chrono::milliseconds(10), []() {
+			if (g_autoplayTicking && !g_autoplayTickQueued.exchange(true)) {
+				F4SE::GetTaskInterface()->AddTask(AutoplayTick);
 			}
-		}).detach();
+			return g_autoplayTicking.load();
+		});
 	}
 
 	// Plays a_sequence from its first entry on the running scene a_actorID
@@ -5093,21 +5085,18 @@ namespace
 		DropStartingThreadOf(a_ids, a_why);
 		g_failedStartAt = NowMs();
 		g_focusNextScene = false;
-		std::thread([ids = std::move(a_ids)]() {
-			std::this_thread::sleep_for(std::chrono::milliseconds(1500));  // Papyrus's start returns first
-			F4SE::GetTaskInterface()->AddTask([ids]() {
-				// Started after all (another try): leave it to the scene's own end.
-				if (std::ranges::any_of(ids, [](std::uint32_t a_id) { return FindActiveScene(a_id) != nullptr; }) || !g_vm) {
-					return;
-				}
-				std::vector<std::int32_t> args;
-				for (const auto id : ids) {
-					args.push_back(static_cast<std::int32_t>(id));
-				}
-				RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
-				Compat::DispatchStaticCall(g_vm, "FourStimMenu"sv, "ReleaseFailedStart"sv, callback, args);
-			});
-		}).detach();
+		Scheduler::AfterOnMain(std::chrono::milliseconds(1500), [ids = std::move(a_ids)]() {  // Papyrus's start returns first
+			// Started after all (another try): leave it to the scene's own end.
+			if (std::ranges::any_of(ids, [](std::uint32_t a_id) { return FindActiveScene(a_id) != nullptr; }) || !g_vm) {
+				return;
+			}
+			std::vector<std::int32_t> args;
+			for (const auto id : ids) {
+				args.push_back(static_cast<std::int32_t>(id));
+			}
+			RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
+			Compat::DispatchStaticCall(g_vm, "FourStimMenu"sv, "ReleaseFailedStart"sv, callback, args);
+		});
 	}
 
 	void StartScene(std::monostate, RE::Actor* a_actor, RE::Actor*, std::string a_sceneID)
@@ -5429,10 +5418,7 @@ namespace
 
 		// After the actors have stepped apart (MoveApart): collision back
 		// while they're still inside each other leaves them stuck together.
-		std::thread([a_actor]() {
-			std::this_thread::sleep_for(std::chrono::milliseconds(700));
-			F4SE::GetTaskInterface()->AddTask([a_actor]() { RestoreCollisionNow(a_actor); });
-		}).detach();
+		Scheduler::AfterOnMain(std::chrono::milliseconds(700), [a_actor]() { RestoreCollisionNow(a_actor); });
 	}
 
 	void RestoreCollisionNow(RE::Actor* a_actor)
@@ -6343,14 +6329,11 @@ namespace
 	void ReloadSettings(std::monostate)
 	{
 		// A moment later, so the MCM has written its file first.
-		std::thread([]() {
-			std::this_thread::sleep_for(std::chrono::milliseconds(250));
-			F4SE::GetTaskInterface()->AddTask([]() {
-				LoadSettings();
-				HUD::LoadConfig();  // the theme and control scheme
-				REX::INFO("Settings: read again (the MCM changed one)");
-			});
-		}).detach();
+		Scheduler::AfterOnMain(std::chrono::milliseconds(250), []() {
+			LoadSettings();
+			HUD::LoadConfig();  // the theme and control scheme
+			REX::INFO("Settings: read again (the MCM changed one)");
+		});
 	}
 
 	// The MCM's buttons: export to / import from Documents\My Games\Fallout4\4Stim\mcmsettings.json
@@ -6533,20 +6516,17 @@ namespace
 		}
 		REX::INFO("Scene end: \"{}\" played {} ms before its end: IdleStop again in a moment", active->sceneID,
 			std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - active->lastPlayed).count());
-		std::thread([a_ids, a_idle]() {
-			std::this_thread::sleep_for(std::chrono::milliseconds(400));
-			F4SE::GetTaskInterface()->AddTask([a_ids, a_idle]() {
-				for (const auto id : a_ids) {
-					if (FindActiveScene(id)) {
-						continue;  // in a new scene by now
-					}
-					const auto actor = RE::TESForm::GetFormByID<RE::Actor>(id);
-					const auto process = actor ? actor->currentProcess : nullptr;
-					const bool ok = process && process->PlayIdle(*actor, a_idle, nullptr);
-					REX::INFO("Scene end: {:08X} IdleStop again returned {}", id, ok);
+		Scheduler::AfterOnMain(std::chrono::milliseconds(400), [a_ids, a_idle]() {
+			for (const auto id : a_ids) {
+				if (FindActiveScene(id)) {
+					continue;  // in a new scene by now
 				}
-			});
-		}).detach();
+				const auto actor = RE::TESForm::GetFormByID<RE::Actor>(id);
+				const auto process = actor ? actor->currentProcess : nullptr;
+				const bool ok = process && process->PlayIdle(*actor, a_idle, nullptr);
+				REX::INFO("Scene end: {:08X} IdleStop again returned {}", id, ok);
+			}
+		});
 	}
 
 	// Clears both actors' poses in the same task (same frame), mirroring
@@ -6976,14 +6956,9 @@ namespace
 			return;
 		}
 		REX::INFO("Scene camera: waiting for a loading screen / fade to clear");
-		std::thread([task = std::move(a_task)]() mutable {
-			for (int i = 0; i < 400 && LoadingOrFading(); ++i) {
-				std::this_thread::sleep_for(std::chrono::milliseconds(50));
-			}
-			// A little longer: the game finishes settling after the menu closes.
-			std::this_thread::sleep_for(std::chrono::milliseconds(250));
-			F4SE::GetTaskInterface()->AddTask(std::move(task));
-		}).detach();
+		// Checked every 50 ms (20 s at most), then a little longer: the game
+		// finishes settling after the menu closes.
+		Scheduler::WhileThenOnMain(std::chrono::milliseconds(50), 400, []() { return LoadingOrFading(); }, std::chrono::milliseconds(250), std::move(a_task));
 	}
 
 	void BeginSceneCamera(std::monostate)
@@ -7245,20 +7220,18 @@ namespace
 			REX::INFO("NavigateScene: fading to \"{}\" (fadeOnEntry)", to->id);
 			RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
 			Compat::DispatchStaticCall(g_vm, "FourStimMenu"sv, "FadeToBlack"sv, callback);
-			std::thread([to, speed, role0 = current.role0]() {
-				std::this_thread::sleep_for(std::chrono::milliseconds(700));
-				F4SE::GetTaskInterface()->AddTask([to, speed, role0]() {
-					const auto now = GetPlayerScene();
-					if (now.role0 == role0 && FindActiveScene(role0)) {
-						PlayPlayerScene(*to, speed, now);
-					}
-				});
-				std::this_thread::sleep_for(std::chrono::milliseconds(550));
+			Scheduler::AfterOnMain(std::chrono::milliseconds(700), [to, speed, role0 = current.role0]() {
+				const auto now = GetPlayerScene();
+				if (now.role0 == role0 && FindActiveScene(role0)) {
+					PlayPlayerScene(*to, speed, now);
+				}
+			});
+			Scheduler::After(std::chrono::milliseconds(700 + 550), []() {
 				if (g_vm) {
 					RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> after;
 					Compat::DispatchStaticCall(g_vm, "FourStimMenu"sv, "FadeFromBlack"sv, after, 0.0F);
 				}
-			}).detach();
+			});
 			return true;
 		}
 		PlayPlayerScene(*to, speed, current);
@@ -10009,17 +9982,18 @@ namespace
 	// still closing.
 	void StartPlayerFlow(StartFlowPtr a_flow)
 	{
-		std::thread([a_flow = std::move(a_flow)]() {
-			bool logged = false;
-			while (Compat::CanCheckDialogue() && RE::IsPlayerInDialogue() && FlowAlive(*a_flow)) {
-				if (!logged) {
+		// Every 250 ms while the player is in dialogue (no limit, as before).
+		Scheduler::WhileThenOnMain(
+			std::chrono::milliseconds(250), std::numeric_limits<int>::max(),
+			[a_flow, logged = false]() mutable {
+				const bool waiting = Compat::CanCheckDialogue() && RE::IsPlayerInDialogue() && FlowAlive(*a_flow);
+				if (waiting && !logged) {
 					REX::INFO("ThreadBuilder: thread {} waits for the dialogue to end", a_flow->threadID);
 					logged = true;
 				}
-				std::this_thread::sleep_for(std::chrono::milliseconds(250));
-			}
-			F4SE::GetTaskInterface()->AddTask([a_flow]() { FlowFurniture(a_flow); });
-		}).detach();
+				return waiting;
+			},
+			std::chrono::milliseconds(0), [a_flow]() { FlowFurniture(a_flow); });
 	}
 
 	// Starts a scene from a builder (OStim's Start). Returns the thread ID
@@ -13882,17 +13856,15 @@ namespace
 		if (scenes.empty()) {
 			return;
 		}
-		std::thread([scenes = std::move(scenes)]() {
-			std::this_thread::sleep_for(std::chrono::seconds(1));
-			for (int i = 0; i < 600 && LoadingOrFading(); ++i) {
-				std::this_thread::sleep_for(std::chrono::milliseconds(100));
-			}
-			std::this_thread::sleep_for(std::chrono::milliseconds(1500));
-			for (const auto& saved : scenes) {
-				F4SE::GetTaskInterface()->AddTask([saved]() { ResumeSavedScene(saved); });
-				std::this_thread::sleep_for(std::chrono::seconds(4));
-			}
-		}).detach();
+		// A second, then until the loading screen and fades are gone (checked
+		// every 100 ms, a minute at most), 1.5 s more, then one scene every 4 s.
+		Scheduler::After(std::chrono::seconds(1), [scenes = std::move(scenes)]() {
+			Scheduler::WhileThenOnMain(std::chrono::milliseconds(100), 600, []() { return LoadingOrFading(); }, std::chrono::milliseconds(1500), [scenes]() {
+				for (std::size_t i = 0; i < scenes.size(); ++i) {
+					Scheduler::AfterOnMain(std::chrono::seconds(4) * static_cast<int>(i), [saved = scenes[i]]() { ResumeSavedScene(saved); });
+				}
+			});
+		});
 	}
 
 	void OnMessage(F4SE::MessagingInterface::Message* a_msg)

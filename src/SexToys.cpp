@@ -19,7 +19,10 @@ namespace SexToys
 	namespace
 	{
 		// A registered toy (OStim's ToyWrapper): its calls run on detached
-		// threads, so a slow device never holds up the game.
+		// threads, so a slow device never holds up the game. Left as threads
+		// (not the scheduler's worker, roadmap 2b.5): a toy plugin may block
+		// in a call for as long as it runs (a peak's duration), and one queue
+		// would hold every later call behind it; OStim's wrapper does the same.
 		struct Toy
 		{
 			FourStimAPI::SexToy* toy = nullptr;

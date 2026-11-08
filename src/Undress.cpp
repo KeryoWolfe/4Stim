@@ -1,4 +1,5 @@
 #include "Undress.h"
+#include "Scheduler.h"
 #include "compat/ScrapFunction.h"
 #include "compat/Fallbacks.h"
 
@@ -224,57 +225,54 @@ namespace Undress
 		// Actor.QueueUpdate does. Any thread.
 		void CheckStrip(std::uint32_t a_id, std::vector<std::uint32_t> a_items, std::vector<RE::NiAVObject*> a_before)
 		{
-			std::thread([a_id, items = std::move(a_items), before = std::move(a_before)]() {
-				std::this_thread::sleep_for(std::chrono::seconds(2));
-				F4SE::GetTaskInterface()->AddTask([a_id, items, before]() {
-					const auto actor = RE::TESForm::GetFormByID<RE::Actor>(a_id);
-					if (!actor || !actor->Get3D(false)) {
-						return;
-					}
-					std::size_t on = 0;
-					for (const auto worn : WornIn(actor, 0xFFFFFFFF)) {
-						on += std::ranges::count(items, worn);
-					}
-					const auto after = GeometryOf(a_id);
-					const bool same = after == before;
-					REX::INFO("Undress check: {:08X}: {} of {} item(s) still on; drawn {} -> {} shape(s){}", a_id, on, items.size(), before.size(), after.size(),
-						same ? ", unchanged" : "");
-					// Only for clothes on the body (slot 33) and the head (30-32,
-					// 46-49: hats, helmets, masks): redrawing the player for
-					// gloves or a ring was a visible stutter in the next scene
-					// (the owner's "Turn around" after a standing hold took off
-					// his gloves, 5 November), but a helmet left drawn is plain
-					// to see (the owner's, 7 November: "Rider Helmet Silver
-					// Shroud" off by the game, the same 212 shapes drawn, still
-					// on his head through a kiss). The tester's stuck clothes
-					// were body clothes.
-					std::uint32_t slots = 0;
-					for (const auto item : items) {
-						if (const auto form = RE::TESForm::GetFormByID(item)) {
-							if (const auto armor = form->As<RE::TESObjectARMO>()) {
-								slots |= armor->GetFilledSlots();
-							}
+			Scheduler::AfterOnMain(std::chrono::seconds(2), [a_id, items = std::move(a_items), before = std::move(a_before)]() {
+				const auto actor = RE::TESForm::GetFormByID<RE::Actor>(a_id);
+				if (!actor || !actor->Get3D(false)) {
+					return;
+				}
+				std::size_t on = 0;
+				for (const auto worn : WornIn(actor, 0xFFFFFFFF)) {
+					on += std::ranges::count(items, worn);
+				}
+				const auto after = GeometryOf(a_id);
+				const bool same = after == before;
+				REX::INFO("Undress check: {:08X}: {} of {} item(s) still on; drawn {} -> {} shape(s){}", a_id, on, items.size(), before.size(), after.size(),
+					same ? ", unchanged" : "");
+				// Only for clothes on the body (slot 33) and the head (30-32,
+				// 46-49: hats, helmets, masks): redrawing the player for
+				// gloves or a ring was a visible stutter in the next scene
+				// (the owner's "Turn around" after a standing hold took off
+				// his gloves, 5 November), but a helmet left drawn is plain
+				// to see (the owner's, 7 November: "Rider Helmet Silver
+				// Shroud" off by the game, the same 212 shapes drawn, still
+				// on his head through a kiss). The tester's stuck clothes
+				// were body clothes.
+				std::uint32_t slots = 0;
+				for (const auto item : items) {
+					if (const auto form = RE::TESForm::GetFormByID(item)) {
+						if (const auto armor = form->As<RE::TESObjectARMO>()) {
+							slots |= armor->GetFilledSlots();
 						}
 					}
-					constexpr std::uint32_t SEEN = (1u << (33 - 30)) | (1u << 0) | (1u << 1) | (1u << 2) | (1u << (46 - 30)) | (1u << (47 - 30)) | (1u << (48 - 30)) |
-					                               (1u << (49 - 30));
-					const bool body = (slots & SEEN) != 0;
-					if (on == 0 && same && IsPlayer(a_id) && !body) {
-						REX::INFO("Undress check: nothing on the body or head came off (slots {:08X}): the shapes drawn staying the same is expected, no redraw", slots);
-					} else if (on == 0 && same && IsPlayer(a_id)) {
-						if (Compat::CanReset3D()) {
-							REX::WARN("Undress check: the player's clothes are off but still drawn: redrawing them");
-							actor->Reset3D(true, 0, true, 0xC);
-							// The rebuild takes FSMP back to the mesh's own physics
-							// file (the owner's A-Body swap went rigid for a moment,
-							// then flaccid again, 1 November): Actor3D notices the
-							// new 3D and puts the swap back, as for any rebuild.
-						} else {
-							REX::WARN("Undress check: the player's clothes are off but still drawn (no Actor::Reset3D on this game version to redraw them)");
-						}
+				}
+				constexpr std::uint32_t SEEN = (1u << (33 - 30)) | (1u << 0) | (1u << 1) | (1u << 2) | (1u << (46 - 30)) | (1u << (47 - 30)) | (1u << (48 - 30)) |
+				                               (1u << (49 - 30));
+				const bool body = (slots & SEEN) != 0;
+				if (on == 0 && same && IsPlayer(a_id) && !body) {
+					REX::INFO("Undress check: nothing on the body or head came off (slots {:08X}): the shapes drawn staying the same is expected, no redraw", slots);
+				} else if (on == 0 && same && IsPlayer(a_id)) {
+					if (Compat::CanReset3D()) {
+						REX::WARN("Undress check: the player's clothes are off but still drawn: redrawing them");
+						actor->Reset3D(true, 0, true, 0xC);
+						// The rebuild takes FSMP back to the mesh's own physics
+						// file (the owner's A-Body swap went rigid for a moment,
+						// then flaccid again, 1 November): Actor3D notices the
+						// new 3D and puts the swap back, as for any rebuild.
+					} else {
+						REX::WARN("Undress check: the player's clothes are off but still drawn (no Actor::Reset3D on this game version to redraw them)");
 					}
-				});
-			}).detach();
+				}
+			});
 		}
 
 		// Takes off what's in a_slots (those not taken off yet): finds the

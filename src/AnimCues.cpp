@@ -1,4 +1,5 @@
 #include "AnimCues.h"
+#include "Scheduler.h"
 
 #include <algorithm>
 #include <atomic>
@@ -198,7 +199,7 @@ namespace AnimCues
 					return;
 				}
 			}
-			std::thread([a_file, a_key]() {
+			Scheduler::Work([a_file, a_key]() {  // the worker thread: file reads may block
 				std::vector<char> bytes;
 				bool              opened = false;
 				if (std::ifstream in("Data\\Meshes\\" + a_file, std::ios::binary); in) {
@@ -231,7 +232,7 @@ namespace AnimCues
 				std::scoped_lock lock(g_lock);
 				g_clips.emplace(a_key, std::move(clip));
 				g_reading.erase(a_key);
-			}).detach();
+			});
 		}
 	}
 

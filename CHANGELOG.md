@@ -2,6 +2,9 @@
 
 ## 0.5.0 alpha (in progress)
 
+### Code: one scheduler instead of a thread per delay
+- **A scheduler thread** (roadmap 2b.5, `src/Scheduler.h`): every "a moment later" (a scene's end and release, auto mode and HUD fades, slow motion's end, collision back after stepping apart, IdleStop again, settings read again, undress checks, the penis bones' rest pose, waiting for a loading screen or dialogue, resuming saved scenes) waits in one queue on one thread instead of starting a thread each, and the autoplay clock runs on it too: 17 thread starts gone, several of them every scene. Same delays as before. Animation cue files are read on one worker thread. Still threads of their own: sex toy calls (a toy plugin may block for as long as a peak lasts, as in OStim), Intiface's connection, the scene preload, and a thread move by another plugin (rare, and it waits on the game).
+
 ### Code: natives in namespaces; scene events checked
 - **Papyrus natives grouped by script** (roadmap 2b.1, a modder's review): the `T_` / `TB_` / `L_` / `M_` / `A_` / `AM_` / `AU_` / `F_` / `J_` / `ME_` prefixes became namespaces named after the Papyrus scripts (`Natives::FourThread::IsRunning`, `Natives::FourMetadata::GetName`...). Renames only: the code is otherwise unchanged (checked line by line). They're still in main.cpp; moving them into their own files comes with the main.cpp split (2b.3).
 - **Scene events' actor arrays checked** (roadmap 2.9): at the first scene of a session, `4Stim.log` says what type the scene events' actor list reaches Papyrus as (`Scene events: actors reach Papyrus as Actor[] ...: fine`, or a warning if it isn't `Actor[]`).

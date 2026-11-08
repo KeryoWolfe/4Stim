@@ -62,7 +62,7 @@ From a seasoned modder's review (7 November 2026). Details and order in docs/TOD
 | 2b.2 | Settings into `Settings.cpp`, read through glaze reflection instead of the `if (key == ...)` chain | Open | Builds; 4Stim.ini, OStim's names and the MCM all still apply in game. |
 | 2b.3 | Rest of main.cpp (14,342 lines) split by area: alignment, camera, scene running, a thin main.cpp | Open | Builds; a scene plays as before. |
 | 2b.4 | JSON loaders from nlohmann to glaze, scenes last | Open | Every scene, action and voice set that loaded before still loads (same counts in 4Stim.log). |
-| 2b.5 | One scheduler thread instead of 25 detached sleep-then-queue threads | Open | Builds; timings in the log unchanged (scene end, transitions, resumed scenes, toys). |
+| 2b.5 | One scheduler thread instead of detached sleep-then-queue threads | Done (7 November, not yet built): `src/Scheduler.h`, 17 thread starts moved onto it plus the autoplay clock; animation cue reads on one worker. Sex toy calls, Intiface, the preload and MigrateThread keep their own threads (they block) | Builds; timings in the log unchanged (scene end, transitions, resumed scenes, toys). |
 | 2b.6 | Vanilla natives (EvaluatePackage, EnableAI, SetScale, SetPosition...) called directly, not through the Papyrus VM | Open | Each switched call checked for latency and thread rules; NPCs resume AI at scene end without a delay. |
 | 2b.7 | Penis from the body: skinned geometry weighted to `Penis_*` bones, where actor properties leave it open (OStim's `useSoSSex` / `useTNGSex` stand-in) | Open | A woman with a penis body gets male roles and climax rules without a property file; a strap-on doesn't count; `4Stim.log` says which the body check found. |
 

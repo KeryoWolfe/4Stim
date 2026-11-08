@@ -24,6 +24,7 @@
 #include "Bridge.h"
 #include "HUD.h"
 #include "Options.h"
+#include "Scheduler.h"
 #include "Translations.h"
 #include "SceneRegistry.h"
 
@@ -336,10 +337,7 @@ namespace HUD
 				Options::Pick(a_id, scene.ActorIDs());
 				RefreshUtility();
 				// Again once the option's script has done its part (Papyrus runs later).
-				std::thread([]() {
-					std::this_thread::sleep_for(std::chrono::milliseconds(400));
-					RefreshUtility();
-				}).detach();
+				Scheduler::After(std::chrono::milliseconds(400), []() { RefreshUtility(); });
 				return;
 			}
 			// Built in: other furniture (OStim's furniture selection mid-scene).

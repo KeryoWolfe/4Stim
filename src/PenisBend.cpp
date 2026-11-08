@@ -1,4 +1,5 @@
 #include "PenisBend.h"
+#include "Scheduler.h"
 
 #include "Erection.h"
 
@@ -264,16 +265,14 @@ namespace PenisBend
 		for (const auto& [id, bones] : todo) {
 			REX::INFO("Genital bones: {:08X} back to their rest pose ({} bone(s))", id, RestoreBones(id, bones));
 		}
-		std::thread([todo]() {
-			for (const auto wait : { 500, 1000 }) {
-				std::this_thread::sleep_for(std::chrono::milliseconds(wait));
-				F4SE::GetTaskInterface()->AddTask([todo]() {
-					for (const auto& [id, bones] : todo) {
-						RestoreBones(id, bones);
-					}
-				});
-			}
-		}).detach();
+		// Again 0.5 s and 1.5 s later (the old thread's 500 ms, then 1000 more).
+		for (const auto at : { 500, 1500 }) {
+			Scheduler::AfterOnMain(std::chrono::milliseconds(at), [todo]() {
+				for (const auto& [id, bones] : todo) {
+					RestoreBones(id, bones);
+				}
+			});
+		}
 	}
 
 	void Leave(const std::vector<std::uint32_t>& a_ids)
