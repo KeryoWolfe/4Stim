@@ -412,7 +412,9 @@ def main():
                 body = code[rb:]
                 h = re.sub(r'^(\s*)static\s+', r'\1', head)
                 proto = re.sub(r'\s+', ' ', strip_comments(h)).strip()
-                if not it.get('local'):
+                # a member defined outside its class (X::F) is declared in the class already
+                qualified = re.search(r'\w\s*::\s*~?\w+\s*\(', proto) and not re.search(r'\(.*\w\s*::\s*~?\w+\s*\(', proto)
+                if not it.get('local') and not qualified:
                     header.append('\n' + '\t' * indent + proto + ';')
                 definition = drop_defaults(h)
                 path = area_for(it['line'])

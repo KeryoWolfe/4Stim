@@ -2380,7 +2380,6 @@ namespace Core
 		NGThreadInterface* NGThreads();
 		NGSceneInterface* NGScenes();
 		void NotifyNG(FourStimNG_API::Thread::ThreadEvent a_event, std::uint32_t a_threadID);
-		std::int32_t NGThreadInterface::MigrateThread(std::uint32_t a_id, const std::uint32_t* a_actors, std::uint32_t a_count, void (*a_onComplete)(std::int32_t, void*), void* a_context, int a_delayMs) noexcept;
 		std::string SelfTest();
 		void NotifyNGControl(FourStimNG_API::Thread::Controls a_control);
 	}
