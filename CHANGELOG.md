@@ -2,6 +2,9 @@
 
 ## 0.5.0 alpha (in progress)
 
+### Code: main.cpp split by area
+- **main.cpp split** (roadmap 2b.1 and 2b.3, a modder's review): its 14,000 lines are now `src/Core/` (one file per area: settings, scenes, threads, collision, auto mode, scene lock, camera, picker, hotkey, save data...; `Core.h` holds what they share) and `src/Natives/` (one file per Papyrus script, plus `Register.cpp`); main.cpp keeps the entry points. Code moved, not changed (`tools/refactor/split_main.py` did it). Map: docs/SOURCE_LAYOUT.md.
+
 ### Code: combined CommonLibF4
 - CommonLibF4 is now KeryoWolfe/CommonLibF4's `4stim/combined` (Dear Modding plus the other forks' fixes; see its COMBINED.md). Physics.cpp no longer defines `IStackCallbackFunctor`'s destructor, which the library now does.
 
