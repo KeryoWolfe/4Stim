@@ -8647,6 +8647,11 @@ namespace
 
 	bool g_shiftDown = false;  // main thread (the input hook)
 
+	void RegisterPickerMenu(RE::UI* a_ui)
+	{
+		a_ui->RegisterMenu(PICKER_MENU, PickerMenu::Create);
+	}
+
 	// The picker while typing a search, or nullptr.
 	PickerMenu* TypingPicker()
 	{
@@ -8686,6 +8691,16 @@ namespace
 	// keyboard then): Backspace deletes, the arrows and Enter as usual.
 	// Esc closes it (HandleButton's escape hatch). Keyboard codes are Windows
 	// virtual-key codes.
+	void HandleTypingKey(PickerMenu* a_picker, std::uint32_t a_code);
+
+	// A key while the picker's open: to its search, if it's being typed.
+	void TypeIntoPicker(std::uint32_t a_code)
+	{
+		if (const auto picker = TypingPicker()) {
+			HandleTypingKey(picker, a_code);
+		}
+	}
+
 	void HandleTypingKey(PickerMenu* a_picker, std::uint32_t a_code)
 	{
 		switch (a_code) {
@@ -8835,9 +8850,7 @@ namespace
 			const auto code = static_cast<std::uint32_t>(a_event->idCode);
 			const auto device = a_event->device.get();
 			if (device == RE::INPUT_DEVICE::kKeyboard) {
-				if (const auto picker = TypingPicker()) {
-					HandleTypingKey(picker, code);
-				}
+				TypeIntoPicker(code);
 			}
 			if ((device == RE::INPUT_DEVICE::kKeyboard && code == 0x1B) || (device == RE::INPUT_DEVICE::kGamepad && code == 0x2000)) {
 				if (const auto queue = RE::UIMessageQueue::GetSingleton()) {
@@ -9319,6 +9332,11 @@ namespace
 			REX::INFO("Animation event log hook installed");
 		}
 	};
+
+	void InstallAnimEventHook()
+	{
+		AnimEventHook::Install();
+	}
 
 	void HandleTimedCue(const AnimCues::Due& a_due)
 	{
@@ -13977,11 +13995,11 @@ namespace
 							std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start).count());
 					}).detach();
 				}
-				AnimEventHook::Install();
+				InstallAnimEventHook();
 				static bool menuRegistered = false;
 				if (!menuRegistered) {
 					if (const auto ui = RE::UI::GetSingleton()) {
-						ui->RegisterMenu(PICKER_MENU, PickerMenu::Create);
+						RegisterPickerMenu(ui);
 						HUD::RegisterMenu();
 						menuRegistered = true;
 						REX::INFO("Picker menu registered");
