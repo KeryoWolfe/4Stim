@@ -413,7 +413,7 @@ namespace Core
 				continue;
 			}
 			if (a_saved.baseScale[i] > 0.0F) {
-				CallActorMethod(actor, "ObjectReference"sv, "SetScale"sv, a_saved.baseScale[i]);  // undo the alignment's size
+				SetActorScale(actor, a_saved.baseScale[i]);  // undo the alignment's size
 			}
 			EquipObjects::TakeBack(id, a_saved.given[i]);  // before dressing again
 			if (!a_saved.stripped[i].empty()) {
@@ -472,7 +472,7 @@ namespace Core
 			// Their own size back first: the scene measures it again when it starts.
 			const auto actor = RE::TESForm::GetFormByID<RE::Actor>(a_saved.actors[i]);
 			if (actor && a_saved.baseScale[i] > 0.0F) {
-				CallActorMethod(actor, "ObjectReference"sv, "SetScale"sv, a_saved.baseScale[i]);
+				SetActorScale(actor, a_saved.baseScale[i]);
 			}
 		}
 		{

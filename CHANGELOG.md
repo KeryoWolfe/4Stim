@@ -3,6 +3,8 @@
 ## 0.5.0 alpha (in progress)
 
 ### Code: main.cpp split by area
+- **Scale set directly** (roadmap 2b.6): an actor's scale for a scene, back after it and when a saved scene is let go or resumed is set at once (`TESObjectREFR::SetScale`), not through Papyrus a frame or more later. That also fixes a resumed aligned scene that could measure the actor before their own size was back. `bDirectNatives=0` in 4Stim.ini goes back to Papyrus.
+- **JSON loaders stay on nlohmann** (roadmap 2b.4, deferred): loading takes 795 ms for 724 scenes on its own thread at startup, not worth risking files that load today.
 - **Settings as a table** (roadmap 2b.2): `LoadSettings`' 189-branch `if (key == ...)` chain (split in seven for MSVC's limit on else-ifs) is now `SETTINGS` in `Core/Settings.cpp`, one line per setting with its clamp. Same reading as before, key by key; a new setting is one line there.
 - **main.cpp split** (roadmap 2b.1 and 2b.3, a modder's review): its 14,000 lines are now `src/Core/` (one file per area: settings, scenes, threads, collision, auto mode, scene lock, camera, picker, hotkey, save data...; `Core.h` holds what they share) and `src/Natives/` (one file per Papyrus script, plus `Register.cpp`); main.cpp keeps the entry points. Code moved, not changed (`tools/refactor/split_main.py` did it). Map: docs/SOURCE_LAYOUT.md.
 

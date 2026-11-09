@@ -160,7 +160,7 @@ namespace Core
 				}
 				const float current = a_active.appliedScale[role] > 0.0F ? a_active.appliedScale[role] : a_active.baseScale[role];
 				if (std::fabs(wanted - current) > 0.001F) {
-					CallActorMethod(actor, "ObjectReference"sv, "SetScale"sv, wanted);
+					SetActorScale(actor, wanted);
 					a_active.appliedScale[role] = wanted;
 					// With what the height is made of, to check NPC height in game
 					// (parity audit 2 §21: OStim scales by the base's height;
@@ -192,6 +192,19 @@ namespace Core
 		}
 	}
 
+	// ObjectReference.SetScale. Called directly (roadmap 2b.6: at once, where
+	// the Papyrus call ran a frame or more later, after whatever came next
+	// had already read the old scale), or through Papyrus as before with
+	// bDirectNatives=0. Main thread.
+	void SetActorScale(RE::Actor* a_actor, float a_scale)
+	{
+		if (g_settings.directNatives) {
+			a_actor->SetScale(a_scale);
+		} else {
+			CallActorMethod(a_actor, "ObjectReference"sv, "SetScale"sv, a_scale);
+		}
+	}
+
 	// Actors leaving a scene: their own scale back (and their heels).
 	void RestoreScales(const ActiveScene& a_active)
 	{
@@ -212,7 +225,7 @@ namespace Core
 		for (std::size_t role = 0; role < a_active.actors.size() && role < a_active.appliedScale.size(); ++role) {
 			if (a_active.appliedScale[role] > 0.0F) {
 				if (const auto actor = RE::TESForm::GetFormByID<RE::Actor>(a_active.actors[role])) {
-					CallActorMethod(actor, "ObjectReference"sv, "SetScale"sv, a_active.baseScale[role]);
+					SetActorScale(actor, a_active.baseScale[role]);
 				}
 			}
 		}

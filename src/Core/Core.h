@@ -176,6 +176,7 @@ namespace Core
 		bool          timeAnimCues = true;    // bTimeAnimCues: read and time the animation files' annotation cues (AnimCues.h)
 		bool          collisionWatch = false; // bCollisionWatch: log where scene actors' controllers and bodies are against their spots
 		bool          translationLock = true; // bTranslationLock: hold scene actors with a never-ending translation (0: placed once, for finding a shake)
+		bool          directNatives = true;   // bDirectNatives: game functions called directly, not through Papyrus (roadmap 2b.6)
 		bool          playerAIDriven = true;  // bPlayerAIDriven: the player is AI driven in scenes, as OStim's lock (SetAIDriven)
 		bool          furnitureOutOfWay = true; // bFurnitureOutOfTheWay: scene furniture doesn't collide with the scene's actors
 		bool          passThroughWalls = true;  // bPassThroughWalls: a scene actor touching a wall (no reference) collides with nothing for the scene
@@ -851,6 +852,7 @@ namespace Core
 	// The Alignment menu's offsets will be added to each actor's spot here.
 	template <class... Args>
 	bool CallActorMethod(RE::Actor* a_actor, std::string_view a_scriptName, std::string_view a_funcName, Args... a_args);
+	void SetActorScale(RE::Actor* a_actor, float a_scale);
 
 	// Where role a_role of a_active is held: the scene's spot plus that
 	// role's alignment for the scene (for a transition, the scene it goes

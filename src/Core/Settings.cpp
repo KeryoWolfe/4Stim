@@ -298,6 +298,7 @@ namespace Core
 		{ "bcollisionwatch", [](const std::string& value) { g_settings.collisionWatch = std::stoi(value) != 0; } },
 		{ "bplayeraidriven", [](const std::string& value) { g_settings.playerAIDriven = std::stoi(value) != 0; } },
 		{ "btranslationlock", [](const std::string& value) { g_settings.translationLock = std::stoi(value) != 0; } },
+		{ "bdirectnatives", [](const std::string& value) { g_settings.directNatives = std::stoi(value) != 0; } },
 		{ "btimeanimcues", [](const std::string& value) { g_settings.timeAnimCues = std::stoi(value) != 0; } },
 		{ "bloganimevents", [](const std::string& value) { g_settings.logAnimEvents = std::stoi(value) != 0; } },
 		{ "benableexcitement", [](const std::string& value) { Excitement::Settings().enabled = std::stoi(value) != 0; } },
