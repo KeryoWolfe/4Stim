@@ -22,7 +22,7 @@ What used to be main.cpp's anonymous namespace, now `namespace Core`.
 
 | File | What |
 |---|---|
-| `Settings.cpp` | 4Stim.ini and OStim's setting names (`LoadSettings`) |
+| `Settings.cpp` | 4Stim.ini and OStim's setting names: `SETTINGS` (one line per setting: what it sets and its clamp), `OSTIM_SETTING_NAMES`, `LoadSettings` |
 | `Scenes.cpp` | The focused scene, roles, furniture for a scene, running scenes, no gravity, scene start / stop / change tracking |
 | `Threads.cpp` | Thread records, and starting threads (OStim's thread API: builders, flows, `StartThread`) |
 | `Collision.cpp` | Scene furniture out of the way, the physics world's lock, the collision watch |

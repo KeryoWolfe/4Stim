@@ -106,8 +106,6 @@ namespace Core
 		{ "alignmentgroupbyheels", { "balignbyheels", OStimUnit::kSame } },
 	};
 
-	// 4Stim.ini, then the MCM's file over it (docs/MCM.md). Again whenever
-	// the MCM changes a setting (FourStim.ReloadSettings).
 	// A controller button by its name in 4Stim.ini's [Controller] (the MCM's
 	// choices): the game's gamepad code, 0 for none. The HUD keeps the d-pad,
 	// A and B.
@@ -127,6 +125,281 @@ namespace Core
 		return 0;
 	}
 
+	// sPenisBendNode / sPenisBendUp / sPenisBendDown / sPenisFlaccid: comma
+	// lists, nodes base first and their shares of a bend up / down.
+	void ReadPenisBendList(std::string_view key, const std::string& value)
+	{
+		std::vector<std::string> parts;
+		for (std::size_t from = 0; from <= value.size();) {
+			const auto to = std::min(value.find(',', from), value.size());
+			std::string part = value.substr(from, to - from);
+			std::erase_if(part, [](unsigned char c) { return std::isspace(c); });
+			if (!part.empty()) {
+				parts.push_back(std::move(part));
+			}
+			from = to + 1;
+		}
+		auto& pb = PenisBend::Settings();
+		if (key == "spenisbendnode") {
+			if (!parts.empty()) {
+				pb.nodes = parts;
+			}
+		} else {
+			std::vector<float> shares;
+			for (const auto& part : parts) {
+				try {
+					shares.push_back(std::stof(part));
+				} catch (...) {
+					shares.push_back(0.0F);
+				}
+			}
+			(key == "spenisbendup" ? pb.shareUp : key == "spenisbenddown" ? pb.shareDown : pb.flaccid) = std::move(shares);
+		}
+	}
+
+	// Every setting 4Stim.ini (and the MCM, through MCM::ToIni) can set, by
+	// its lowercase name: what it sets, and how it's read and clamped. A new
+	// setting is a line here and a member where it's kept. OStim's names are
+	// turned into these first (OSTIM_SETTING_NAMES). Keys with a number in
+	// them (bUndressSlot30...61) and the sex toys' (SexToys::ReadSetting,
+	// Intiface::ReadSetting) are read in LoadSettings.
+	using Setter = void (*)(const std::string& value);
+	const std::unordered_map<std::string_view, Setter> SETTINGS{
+		{ "ihotkey", [](const std::string& value) { g_settings.hotkey = static_cast<std::uint32_t>(std::stoul(value, nullptr, 0)); } },
+		{ "inpcscenekey", [](const std::string& value) { g_settings.npcSceneKey = static_cast<std::uint32_t>(std::stoul(value, nullptr, 0)); } },
+		{ "bresumescenes", [](const std::string& value) { g_settings.resumeScenes = std::stoi(value) != 0; } },
+		{ "stargetmode", [](const std::string& value) {
+			auto v = value;
+			std::ranges::transform(v, v.begin(), [](unsigned char ch) { return static_cast<char>(std::tolower(ch)); });
+			g_settings.targetMode = (v == "proximity") ? 1 : 0;
+		} },
+		{ "fmaxdistance", [](const std::string& value) { g_settings.maxDistance = std::stof(value); } },
+		{ "fcrosshaircone", [](const std::string& value) { g_settings.crosshairCone = std::stof(value); } },
+		{ "fproximityradius", [](const std::string& value) { g_settings.proximityRadius = std::stof(value); } },
+		{ "ffreecameraspeed", [](const std::string& value) { g_settings.freeCamSpeedMult = std::max(std::stof(value), 0.01F); } },  // older 4Stim setting: a multiplier
+		{ "fcameraspeed", [](const std::string& value) {
+			g_settings.freeCamSpeed = std::max(std::stof(value), 0.01F);
+			g_settings.freeCamSpeedMult = -1.0F;
+		} },
+		{ "busefreecam", [](const std::string& value) { g_settings.useFreeCam = std::stoi(value) != 0; } },
+		{ "ffreecamfov", [](const std::string& value) { g_settings.freeCamFOV = std::clamp(std::stof(value), 0.0F, 150.0F); } },
+		{ "bforcefirstperson", [](const std::string& value) { g_settings.forceFirstPerson = std::stoi(value) != 0; } },
+		{ "busefades", [](const std::string& value) { g_settings.useFades = std::stoi(value) != 0; } },
+		{ "bnofacialexpressions", [](const std::string& value) { Expressions::Settings().disabled = std::stoi(value) != 0; } },
+		{ "fexpressiondurationmin", [](const std::string& value) { Expressions::Settings().durationMin = std::max(std::stof(value), 0.1F); } },
+		{ "fexpressiondurationmax", [](const std::string& value) { Expressions::Settings().durationMax = std::max(std::stof(value), 0.1F); } },
+		{ "fmoanintervalmin", [](const std::string& value) { Sounds::Settings().moanIntervalMin = std::max(std::stof(value), 0.2F); } },
+		{ "fmoanintervalmax", [](const std::string& value) { Sounds::Settings().moanIntervalMax = std::max(std::stof(value), 0.2F); } },
+		{ "fmoanvolume", [](const std::string& value) { Sounds::Settings().moanVolume = std::clamp(std::stof(value), 0.0F, 1.0F); } },
+		{ "bsounds", [](const std::string& value) { Sounds::Settings().disabled = std::stoi(value) == 0; } },
+		{ "fsoundvolume", [](const std::string& value) { Sounds::Settings().soundVolume = std::clamp(std::stof(value), 0.0F, 1.0F); } },
+		{ "bonlylightindark", [](const std::string& value) { Lights::Settings().onlyInDark = std::stoi(value) != 0; } },
+		{ "flightleveldark", [](const std::string& value) { Lights::Settings().darkLevel = std::stof(value); } },
+		{ "smalelight", [](const std::string& value) { Lights::Settings().maleLight = value; } },
+		{ "sfemalelight", [](const std::string& value) { Lights::Settings().femaleLight = value; } },
+		{ "splayerlight", [](const std::string& value) { Lights::Settings().playerLight = value; } },
+		{ "isoundflags", [](const std::string& value) { Sounds::Settings().flags = static_cast<std::uint32_t>(std::stoul(value, nullptr, 0)); } },
+		{ "isoundpriority", [](const std::string& value) { Sounds::Settings().priority = static_cast<std::uint8_t>(std::clamp(std::stoi(value, nullptr, 0), 0, 255)); } },
+		{ "bdisablescaling", [](const std::string& value) { Scaling::Settings().disabled = std::stoi(value) != 0; } },
+		{ "buseintroscenes", [](const std::string& value) { g_settings.useIntroScenes = std::stoi(value) != 0; } },
+		{ "setcustomtimescale", [](const std::string& value) { g_settings.customTimescale = std::max(std::stof(value), 0.0F); } },
+		{ "setusescreenshake", [](const std::string& value) { Excitement::Settings().useScreenShake = std::stoi(value) != 0; } },
+		{ "addactorsatstart", [](const std::string& value) { g_settings.addActorsAtStart = std::stoi(value) != 0; } },
+		{ "buseautofades", [](const std::string& value) { g_settings.useAutoFades = std::stoi(value) != 0; } },
+		{ "fnpcsceneduration", [](const std::string& value) { g_settings.npcSceneDuration = std::max(std::stof(value), 0.0F); } },
+		{ "ipulloutkey", [](const std::string& value) { g_settings.pullOutKey = static_cast<std::uint32_t>(std::stoul(value, nullptr, 0)); } },
+		{ "iendkey", [](const std::string& value) { g_settings.endKey = static_cast<std::uint32_t>(std::stoul(value, nullptr, 0)); } },
+		{ "isearchkey", [](const std::string& value) { g_settings.searchKey = static_cast<std::uint32_t>(std::stoul(value, nullptr, 0)); } },
+		{ "ialignmentkey", [](const std::string& value) { g_settings.alignmentKey = static_cast<std::uint32_t>(std::stoul(value, nullptr, 0)); } },
+		{ "ifreecamkey", [](const std::string& value) { g_settings.freeCamKey = static_cast<std::uint32_t>(std::stoul(value, nullptr, 0)); } },
+		{ "ihideuikey", [](const std::string& value) { g_settings.hideUIKey = static_cast<std::uint32_t>(std::stoul(value, nullptr, 0)); } },
+		{ "ispeedupkey", [](const std::string& value) { g_settings.speedUpKey = static_cast<std::uint32_t>(std::stoul(value, nullptr, 0)); } },
+		{ "ispeeddownkey", [](const std::string& value) { g_settings.speedDownKey = static_cast<std::uint32_t>(std::stoul(value, nullptr, 0)); } },
+		{ "stheme", [](const std::string& value) { g_settings.hudTheme = value; } },
+		{ "spadscheme", [](const std::string& value) {
+			auto v = value;
+			std::ranges::transform(v, v.begin(), [](unsigned char ch) { return static_cast<char>(std::tolower(ch)); });
+			g_settings.padClassic = v == "classic";
+		} },
+		{ "fhudfadetime", [](const std::string& value) { g_settings.hudFadeTime = std::clamp(std::stof(value), 0.0F, 600.0F); } },
+		{ "spadhotkey", [](const std::string& value) { g_settings.padHotkey = PadButton(value); } },
+		{ "spadnpcscene", [](const std::string& value) { g_settings.padNpcScene = PadButton(value); } },
+		{ "spadspeedup", [](const std::string& value) { g_settings.padSpeedUp = PadButton(value); } },
+		{ "spadspeeddown", [](const std::string& value) { g_settings.padSpeedDown = PadButton(value); } },
+		{ "spadautomode", [](const std::string& value) { g_settings.padAutoMode = PadButton(value); } },
+		{ "spadpullout", [](const std::string& value) { g_settings.padPullOut = PadButton(value); } },
+		{ "spadend", [](const std::string& value) { g_settings.padEnd = PadButton(value); } },
+		{ "spadsearch", [](const std::string& value) { g_settings.padSearch = PadButton(value); } },
+		{ "spadalign", [](const std::string& value) { g_settings.padAlign = PadButton(value); } },
+		{ "spadfreecam", [](const std::string& value) { g_settings.padFreeCam = PadButton(value); } },
+		{ "spadhideui", [](const std::string& value) { g_settings.padHideUI = PadButton(value); } },
+		{ "benableplayerbar", [](const std::string& value) { g_settings.playerBar = std::stoi(value) != 0; } },
+		{ "benablenpcbar", [](const std::string& value) { g_settings.npcBar = std::stoi(value) != 0; } },
+		{ "bautohidebars", [](const std::string& value) { g_settings.autoHideBars = std::stoi(value) != 0; } },
+		{ "bmatchcolortogender", [](const std::string& value) { g_settings.matchBarColor = std::stoi(value) != 0; } },
+		{ "inavupkey", [](const std::string& value) { g_settings.navUpKey = static_cast<std::uint32_t>(std::stoul(value, nullptr, 0)); } },
+		{ "inavdownkey", [](const std::string& value) { g_settings.navDownKey = static_cast<std::uint32_t>(std::stoul(value, nullptr, 0)); } },
+		{ "inavleftkey", [](const std::string& value) { g_settings.navLeftKey = static_cast<std::uint32_t>(std::stoul(value, nullptr, 0)); } },
+		{ "inavrightkey", [](const std::string& value) { g_settings.navRightKey = static_cast<std::uint32_t>(std::stoul(value, nullptr, 0)); } },
+		{ "inavyeskey", [](const std::string& value) { g_settings.navYesKey = static_cast<std::uint32_t>(std::stoul(value, nullptr, 0)); } },
+		{ "inavtogglekey", [](const std::string& value) { g_settings.navToggleKey = static_cast<std::uint32_t>(std::stoul(value, nullptr, 0)); } },
+		{ "shudcontrols", [](const std::string& value) {
+			auto v = value;
+			std::ranges::transform(v, v.begin(), [](unsigned char ch) { return static_cast<char>(std::tolower(ch)); });
+			g_settings.hudColumns = v == "columns";
+		} },
+		{ "benablehud", [](const std::string& value) { g_settings.hudEnabled = std::stoi(value) != 0; } },
+		{ "factorradius", [](const std::string& value) { g_settings.actorRadius = std::stof(value); } },
+		{ "ffurnitureradius", [](const std::string& value) { g_settings.furnitureRadius = std::stof(value); } },
+		{ "ffurnitureheight", [](const std::string& value) { g_settings.furnitureHeight = std::stof(value); } },
+		{ "blogfurniture", [](const std::string& value) { g_settings.logFurniture = std::stoi(value) != 0; } },
+		{ "setenablefurniture", [](const std::string& value) { g_settings.useFurniture = std::stoi(value) != 0; } },
+		{ "setbedrealignment", [](const std::string& value) { Furniture::Settings().bedRealignment = std::stof(value); } },
+		{ "bedoffset", [](const std::string& value) { Furniture::Settings().bedOffset = std::stof(value); } },
+		{ "setselectfurniture", [](const std::string& value) { g_settings.selectFurniture = std::stoi(value) != 0; } },
+		{ "setresetclutter", [](const std::string& value) { g_settings.resetClutter = std::stoi(value) != 0; } },
+		{ "setresetclutterradius", [](const std::string& value) { g_settings.resetClutterRadius = std::stof(value) * 100.0F; } },  // OStim's steps of 100 units
+		{ "bmatchsex", [](const std::string& value) { g_settings.matchSex = std::stoi(value) != 0; } },
+		{ "playeralwaysdomstraight", [](const std::string& value) { g_settings.playerAlwaysDomStraight = std::stoi(value) != 0; } },
+		{ "playeralwayssubstraight", [](const std::string& value) { g_settings.playerAlwaysSubStraight = std::stoi(value) != 0; } },
+		{ "playeralwaysdomgay", [](const std::string& value) { g_settings.playerAlwaysDomGay = std::stoi(value) != 0; } },
+		{ "playeralwayssubgay", [](const std::string& value) { g_settings.playerAlwaysSubGay = std::stoi(value) != 0; } },
+		{ "playerselectrolestraight", [](const std::string& value) { g_settings.playerSelectRoleStraight = std::stoi(value) != 0; } },
+		{ "playerselectrolegay", [](const std::string& value) { g_settings.playerSelectRoleGay = std::stoi(value) != 0; } },
+		{ "playerselectrolethreesome", [](const std::string& value) { g_settings.playerSelectRoleThreesome = std::stoi(value) != 0; } },
+		{ "unrestrictednavigation", [](const std::string& value) { SceneRegistry::Rules().unrestricted = std::stoi(value) != 0; } },
+		{ "futausemalerole", [](const std::string& value) { ActorProperties::Settings().futaUseMaleRole = std::stoi(value) != 0; } },
+		{ "futausemaleexcitement", [](const std::string& value) { ActorProperties::Settings().futaUseMaleExcitement = std::stoi(value) != 0; } },
+		{ "futausemaleclimax", [](const std::string& value) { ActorProperties::Settings().futaUseMaleClimax = std::stoi(value) != 0; } },
+		{ "bdisablepenisbend", [](const std::string& value) { PenisBend::Settings().disabled = std::stoi(value) != 0; } },
+		{ "fpenisbendstep", [](const std::string& value) { PenisBend::Settings().stepDegrees = std::clamp(std::stof(value), -45.0F, 45.0F); } },
+		{ "spenisbendnode", [](const std::string& value) { ReadPenisBendList("spenisbendnode", value); } },
+		{ "spenisbendup", [](const std::string& value) { ReadPenisBendList("spenisbendup", value); } },
+		{ "spenisbenddown", [](const std::string& value) { ReadPenisBendList("spenisbenddown", value); } },
+		{ "spenisflaccid", [](const std::string& value) { ReadPenisBendList("spenisflaccid", value); } },
+		{ "ipenisbendaxis", [](const std::string& value) { PenisBend::Settings().axis = std::clamp(std::stoi(value), 0, 2); } },
+		{ "berections", [](const std::string& value) { Erection::Settings().enabled = std::stoi(value) != 0; } },
+		{ "unequipstraponifnotneeded", [](const std::string& value) { EquipObjects::Settings().unequipStrapOnIfNotNeeded = std::stoi(value) != 0; } },
+		{ "sdefaultstrapon", [](const std::string& value) { EquipObjects::Settings().defaults[EquipObjects::FEMALE]["strapon"] = value; } },  // OStim's Default Strap-On (0x1)
+		{ "splayerstrapon", [](const std::string& value) { EquipObjects::Settings().defaults[EquipObjects::PLAYER]["strapon"] = value; } },
+		{ "sdefaulttonguemale", [](const std::string& value) { EquipObjects::Settings().defaults[EquipObjects::MALE]["tongue"] = value; } },
+		{ "sdefaulttonguefemale", [](const std::string& value) { EquipObjects::Settings().defaults[EquipObjects::FEMALE]["tongue"] = value; } },
+		{ "splayertongue", [](const std::string& value) { EquipObjects::Settings().defaults[EquipObjects::PLAYER]["tongue"] = value; } },
+		{ "maledialoguecountdownmin", [](const std::string& value) { Sounds::Settings().maleDialogueCountdownMin = std::max(std::stoi(value), 0); } },
+		{ "maledialoguecountdownmax", [](const std::string& value) { Sounds::Settings().maleDialogueCountdownMax = std::max(std::stoi(value), 0); } },
+		{ "femaledialoguecountdownmin", [](const std::string& value) { Sounds::Settings().femaleDialogueCountdownMin = std::max(std::stoi(value), 0); } },
+		{ "femaledialoguecountdownmax", [](const std::string& value) { Sounds::Settings().femaleDialogueCountdownMax = std::max(std::stoi(value), 0); } },
+		{ "playerdialogue", [](const std::string& value) { Sounds::Settings().playerDialogue = std::stoi(value) != 0; } },
+		{ "preventsamevoicecrosstalk", [](const std::string& value) { Sounds::Settings().preventSameVoiceCrossTalk = std::stoi(value) != 0; } },
+		{ "splayervoice", [](const std::string& value) { Sounds::Settings().playerVoice = value; } },
+		{ "bfurnitureoutoftheway", [](const std::string& value) { g_settings.furnitureOutOfWay = std::stoi(value) != 0; } },
+		{ "bresetphysicsafterscene", [](const std::string& value) { Physics::Settings().resetAfterScene = std::stoi(value) != 0; } },
+		{ "bpassthroughwalls", [](const std::string& value) { g_settings.passThroughWalls = std::stoi(value) != 0; } },
+		{ "bcollisionwatch", [](const std::string& value) { g_settings.collisionWatch = std::stoi(value) != 0; } },
+		{ "bplayeraidriven", [](const std::string& value) { g_settings.playerAIDriven = std::stoi(value) != 0; } },
+		{ "btranslationlock", [](const std::string& value) { g_settings.translationLock = std::stoi(value) != 0; } },
+		{ "btimeanimcues", [](const std::string& value) { g_settings.timeAnimCues = std::stoi(value) != 0; } },
+		{ "bloganimevents", [](const std::string& value) { g_settings.logAnimEvents = std::stoi(value) != 0; } },
+		{ "benableexcitement", [](const std::string& value) { Excitement::Settings().enabled = std::stoi(value) != 0; } },
+		{ "fmaleexcitementmult", [](const std::string& value) { Excitement::Settings().maleMult = std::max(std::stof(value), 0.0F); } },
+		{ "ffemaleexcitementmult", [](const std::string& value) { Excitement::Settings().femaleMult = std::max(std::stof(value), 0.0F); } },
+		{ "fexcitementdecayrate", [](const std::string& value) { Excitement::Settings().decayRate = std::max(std::stof(value), 0.0F); } },
+		{ "fexcitementdecaygrace", [](const std::string& value) { Excitement::Settings().decayGrace = std::max(std::stof(value), 0.0F); } },
+		{ "fpostclimaxexcitement", [](const std::string& value) { Excitement::Settings().postClimax = std::clamp(std::stof(value), 0.0F, 99.0F); } },
+		{ "fpostclimaxexcitementmax", [](const std::string& value) { Excitement::Settings().postClimaxMax = std::clamp(std::stof(value), 0.0F, 99.0F); } },
+		{ "bclimaxscenes", [](const std::string& value) { Excitement::Settings().climaxScenes = std::stoi(value) != 0; } },
+		{ "bendonplayerclimax", [](const std::string& value) { Excitement::Settings().endOnPlayer = std::stoi(value) != 0; } },
+		{ "bendonmaleclimax", [](const std::string& value) { Excitement::Settings().endOnMale = std::stoi(value) != 0; } },
+		{ "bendonfemaleclimax", [](const std::string& value) { Excitement::Settings().endOnFemale = std::stoi(value) != 0; } },
+		{ "bendonallclimax", [](const std::string& value) { Excitement::Settings().endOnAll = std::stoi(value) != 0; } },
+		{ "bendnpcscenesonclimax", [](const std::string& value) { Excitement::Settings().endNPCScenes = std::stoi(value) != 0; } },
+		{ "fclimaxenddelay", [](const std::string& value) { Excitement::Settings().endDelay = std::clamp(std::stof(value), 0.0F, 60.0F); } },
+		{ "fclimaxshake", [](const std::string& value) { Excitement::Settings().shake = std::clamp(std::stof(value), 0.0F, 5.0F); } },
+		{ "fclimaxblur", [](const std::string& value) { Excitement::Settings().blur = std::clamp(std::stof(value), 0.0F, 1.0F); } },
+		{ "fclimaxflash", [](const std::string& value) { Excitement::Settings().flash = std::clamp(std::stof(value), 0.0F, 1.0F); } },
+		{ "fclimaxglowsize", [](const std::string& value) { Excitement::Settings().glowSize = std::clamp(std::stof(value), 0.01F, 0.5F); } },
+		{ "bblurorgasms", [](const std::string& value) { Excitement::Settings().blurOn = std::stoi(value) != 0; } },
+		{ "bslowmoorgasms", [](const std::string& value) { Excitement::Settings().slowMo = std::stoi(value) != 0; } },
+		{ "bclimaxrumble", [](const std::string& value) { Excitement::Settings().rumble = std::stoi(value) != 0; } },
+		{ "balignbysex", [](const std::string& value) { Alignment::Settings().groupBySex = std::stoi(value) != 0; } },
+		{ "balignbyheight", [](const std::string& value) { Alignment::Settings().groupByHeight = std::stoi(value) != 0; } },
+		{ "balignbyheels", [](const std::string& value) { Alignment::Settings().groupByHeels = std::stoi(value) != 0; } },
+		{ "bresetposition", [](const std::string& value) { g_resetPosition = std::stoi(value) != 0; } },
+		{ "bendondamage", [](const std::string& value) { g_endOnDamage = std::stoi(value) != 0; } },
+		{ "bstaywheninterrupted", [](const std::string& value) { g_stayWhenInterrupted = std::stoi(value) != 0; } },
+		{ "blockscenes", [](const std::string& value) { g_lockScenes = std::stoi(value) != 0; } },
+		{ "bguardscenes", [](const std::string& value) { g_guardScenes = std::stoi(value) != 0; } },
+		{ "bundress", [](const std::string& value) { Undress::Settings().enabled = std::stoi(value) != 0; } },
+		{ "bundressatstart", [](const std::string& value) { Undress::Settings().atStart = std::stoi(value) != 0; } },
+		{ "bpartialundress", [](const std::string& value) { Undress::Settings().partial = std::stoi(value) != 0; } },
+		{ "bfullundressmidscene", [](const std::string& value) { Undress::Settings().fullMidScene = std::stoi(value) != 0; } },
+		{ "bundressplayer", [](const std::string& value) { Undress::Settings().player = std::stoi(value) != 0; } },
+		{ "bredress", [](const std::string& value) { Undress::Settings().redress = std::stoi(value) != 0; } },
+		{ "fundressitemdelay", [](const std::string& value) { Undress::Settings().itemDelay = std::clamp(std::stof(value), 0.0F, 5.0F); } },
+		{ "banimateredress", [](const std::string& value) { Undress::Settings().animateRedress = std::stoi(value) != 0; } },
+		{ "setremoveweaponsatstart", [](const std::string& value) { Undress::Settings().removeWeaponsAtStart = std::stoi(value) != 0; } },
+		{ "setremoveweaponswithslot", [](const std::string& value) { Undress::Settings().removeWeaponsWithSlot = std::stoi(value); } },
+		{ "setundressingslotmask", [](const std::string& value) {
+			// OStim's name: a mask, bit 0 = slot 30.
+			const auto       mask = static_cast<std::uint32_t>(std::stoll(value, nullptr, 0));
+			std::vector<int> slots;
+			for (int slot = 30; slot <= 61; ++slot) {
+				if (mask & (1u << (slot - 30))) {
+					slots.push_back(slot);
+				}
+			}
+			Undress::Settings().slots = std::move(slots);
+		} },
+		{ "sundressslots", [](const std::string& value) {
+			std::vector<int> slots;
+			std::string      token;
+			for (const char ch : value + ",") {
+				if (ch == ',' || ch == ' ') {
+					if (!token.empty()) {
+						const int slot = std::stoi(token);
+						if (slot >= 30 && slot <= 61) {
+							slots.push_back(slot);
+						}
+						token.clear();
+					}
+				} else {
+					token += ch;
+				}
+			}
+			Undress::Settings().slots = std::move(slots);
+		} },
+		{ "bautomodeplayer", [](const std::string& value) { g_autoConfig.player = std::stoi(value) != 0; } },
+		{ "bautomodesolo", [](const std::string& value) { g_autoConfig.playerSolo = std::stoi(value) != 0; } },
+		{ "bautomodepartner", [](const std::string& value) { g_autoConfig.playerPartner = std::stoi(value) != 0; } },
+		{ "bautomodenpc", [](const std::string& value) { g_autoConfig.npc = std::stoi(value) != 0; } },
+		{ "fautomodescenemin", [](const std::string& value) { g_autoConfig.sceneMin = std::max(std::stof(value), 2.0F); } },
+		{ "fautomodescenemax", [](const std::string& value) { g_autoConfig.sceneMax = std::max(std::stof(value), 2.0F); } },
+		{ "iforeplaychance", [](const std::string& value) { g_autoConfig.foreplayChance = std::clamp(std::stoi(value), 0, 100); } },
+		{ "fforeplayendmin", [](const std::string& value) { g_autoConfig.foreplayMin = std::clamp(std::stof(value), 0.0F, 100.0F); } },
+		{ "fforeplayendmax", [](const std::string& value) { g_autoConfig.foreplayMax = std::clamp(std::stof(value), 0.0F, 100.0F); } },
+		{ "ipulloutchance", [](const std::string& value) { g_autoConfig.pulloutChance = std::clamp(std::stoi(value), 0, 100); } },
+		{ "fpulloutmin", [](const std::string& value) { g_autoConfig.pulloutMin = std::clamp(std::stof(value), 0.0F, 100.0F); } },
+		{ "fpulloutmax", [](const std::string& value) { g_autoConfig.pulloutMax = std::clamp(std::stof(value), 0.0F, 100.0F); } },
+		{ "iautomodemaxsteps", [](const std::string& value) { g_autoConfig.maxSteps = std::clamp(std::stoi(value), 1, 50); } },
+		{ "bautomodelimittonavigation", [](const std::string& value) { g_autoConfig.limitToNavigation = std::stoi(value) != 0; } },
+		{ "bautomodestandingonfloor", [](const std::string& value) { g_autoConfig.standingOnFloor = std::stoi(value) != 0; } },
+		{ "bautospeed", [](const std::string& value) { g_autoConfig.autoSpeed = std::stoi(value) != 0; } },
+		{ "fautospeedintervalmin", [](const std::string& value) { g_autoConfig.speedIntervalMin = std::max(std::stof(value), 0.5F); } },
+		{ "fautospeedintervalmax", [](const std::string& value) { g_autoConfig.speedIntervalMax = std::max(std::stof(value), 0.5F); } },
+		{ "fautospeedexcitementmin", [](const std::string& value) { g_autoConfig.speedExcitementMin = std::clamp(std::stof(value), 0.0F, 100.0F); } },
+		{ "fautospeedexcitementmax", [](const std::string& value) { g_autoConfig.speedExcitementMax = std::clamp(std::stof(value), 0.0F, 100.0F); } },
+		{ "ftransitionlead", [](const std::string& value) { g_settings.transitionLead = std::clamp(std::stof(value), -2.0F, 5.0F); } },
+		{ "buseplaybackspeed", [](const std::string& value) { g_settings.usePlaybackSpeed = std::stoi(value) != 0; } },
+		{ "bdisableeyelook", [](const std::string& value) { EyeLook::Settings().disabled = std::stoi(value) != 0; } },
+		{ "flookmaxside", [](const std::string& value) { EyeLook::Settings().maxSide = std::clamp(std::stof(value), 0.0F, 60.0F); } },
+		{ "flookmaxup", [](const std::string& value) { EyeLook::Settings().maxUp = std::clamp(std::stof(value), 0.0F, 60.0F); } },
+		{ "slefteyenode", [](const std::string& value) { EyeLook::Settings().leftEye = value; } },
+		{ "srighteyenode", [](const std::string& value) { EyeLook::Settings().rightEye = value; } },
+		{ "iautomodekey", [](const std::string& value) { g_autoConfig.key = static_cast<std::uint32_t>(std::stoul(value, nullptr, 0)); } },
+	};
+
+	// 4Stim.ini, then the MCM's file over it (docs/MCM.md). Again whenever
+	// the MCM changes a setting (FourStim.ReloadSettings).
 	void LoadSettings()
 	{
 		std::ifstream base("Data/F4SE/Plugins/4Stim.ini");
@@ -180,376 +453,8 @@ namespace Core
 						value = std::to_string((std::stof(value) + 1.0F) * 100.0F);
 					}
 				}
-				if (key == "ihotkey") {
-					g_settings.hotkey = static_cast<std::uint32_t>(std::stoul(value, nullptr, 0));
-				} else if (key == "inpcscenekey") {
-					g_settings.npcSceneKey = static_cast<std::uint32_t>(std::stoul(value, nullptr, 0));
-				} else if (key == "bresumescenes") {
-					g_settings.resumeScenes = std::stoi(value) != 0;
-				} else if (key == "stargetmode") {
-					auto v = value;
-					std::ranges::transform(v, v.begin(), [](unsigned char ch) { return static_cast<char>(std::tolower(ch)); });
-					g_settings.targetMode = (v == "proximity") ? 1 : 0;
-				} else if (key == "fmaxdistance") {
-					g_settings.maxDistance = std::stof(value);
-				} else if (key == "fcrosshaircone") {
-					g_settings.crosshairCone = std::stof(value);
-				} else if (key == "fproximityradius") {
-					g_settings.proximityRadius = std::stof(value);
-				} else if (key == "ffreecameraspeed") {
-					g_settings.freeCamSpeedMult = std::max(std::stof(value), 0.01F);  // older 4Stim setting: a multiplier
-				} else if (key == "fcameraspeed") {
-					g_settings.freeCamSpeed = std::max(std::stof(value), 0.01F);
-					g_settings.freeCamSpeedMult = -1.0F;
-				} else if (key == "busefreecam") {
-					g_settings.useFreeCam = std::stoi(value) != 0;
-				} else if (key == "ffreecamfov") {
-					g_settings.freeCamFOV = std::clamp(std::stof(value), 0.0F, 150.0F);
-				} else if (key == "bforcefirstperson") {
-					g_settings.forceFirstPerson = std::stoi(value) != 0;
-				} else if (key == "busefades") {
-					g_settings.useFades = std::stoi(value) != 0;
-				} else if (key == "bnofacialexpressions") {
-					Expressions::Settings().disabled = std::stoi(value) != 0;
-				} else if (key == "fexpressiondurationmin") {
-					Expressions::Settings().durationMin = std::max(std::stof(value), 0.1F);
-				} else if (key == "fexpressiondurationmax") {
-					Expressions::Settings().durationMax = std::max(std::stof(value), 0.1F);
-				} else if (key == "fmoanintervalmin") {
-					Sounds::Settings().moanIntervalMin = std::max(std::stof(value), 0.2F);
-				} else if (key == "fmoanintervalmax") {
-					Sounds::Settings().moanIntervalMax = std::max(std::stof(value), 0.2F);
-				} else if (key == "fmoanvolume") {
-					Sounds::Settings().moanVolume = std::clamp(std::stof(value), 0.0F, 1.0F);
-				} else if (key == "bsounds") {
-					Sounds::Settings().disabled = std::stoi(value) == 0;
-				} else if (key == "fsoundvolume") {
-					Sounds::Settings().soundVolume = std::clamp(std::stof(value), 0.0F, 1.0F);
-				} else if (key == "bonlylightindark") {
-					Lights::Settings().onlyInDark = std::stoi(value) != 0;
-				} else if (key == "flightleveldark") {
-					Lights::Settings().darkLevel = std::stof(value);
-				} else if (key == "smalelight") {
-					Lights::Settings().maleLight = value;
-				} else if (key == "sfemalelight") {
-					Lights::Settings().femaleLight = value;
-				} else if (key == "splayerlight") {
-					Lights::Settings().playerLight = value;
-				} else if (key == "isoundflags") {
-					Sounds::Settings().flags = static_cast<std::uint32_t>(std::stoul(value, nullptr, 0));
-				} else if (key == "isoundpriority") {
-					Sounds::Settings().priority = static_cast<std::uint8_t>(std::clamp(std::stoi(value, nullptr, 0), 0, 255));
-				} else if (key == "bdisablescaling") {
-					Scaling::Settings().disabled = std::stoi(value) != 0;
-				} else if (key == "buseintroscenes") {
-					g_settings.useIntroScenes = std::stoi(value) != 0;
-				} else if (key == "setcustomtimescale") {
-					g_settings.customTimescale = std::max(std::stof(value), 0.0F);
-				} else if (key == "setusescreenshake") {
-					Excitement::Settings().useScreenShake = std::stoi(value) != 0;
-				} else if (key == "addactorsatstart") {
-					g_settings.addActorsAtStart = std::stoi(value) != 0;
-				} else if (key == "buseautofades") {
-					g_settings.useAutoFades = std::stoi(value) != 0;
-				} else if (key == "fnpcsceneduration") {
-					g_settings.npcSceneDuration = std::max(std::stof(value), 0.0F);
-				} else if (key == "ipulloutkey") {
-					g_settings.pullOutKey = static_cast<std::uint32_t>(std::stoul(value, nullptr, 0));
-				} else if (key == "iendkey") {
-					g_settings.endKey = static_cast<std::uint32_t>(std::stoul(value, nullptr, 0));
-				} else if (key == "isearchkey") {
-					g_settings.searchKey = static_cast<std::uint32_t>(std::stoul(value, nullptr, 0));
-				} else if (key == "ialignmentkey") {
-					g_settings.alignmentKey = static_cast<std::uint32_t>(std::stoul(value, nullptr, 0));
-				} else if (key == "ifreecamkey") {
-					g_settings.freeCamKey = static_cast<std::uint32_t>(std::stoul(value, nullptr, 0));
-				} else if (key == "ihideuikey") {
-					g_settings.hideUIKey = static_cast<std::uint32_t>(std::stoul(value, nullptr, 0));
-				} else if (key == "ispeedupkey") {
-					g_settings.speedUpKey = static_cast<std::uint32_t>(std::stoul(value, nullptr, 0));
-				} else if (key == "ispeeddownkey") {
-					g_settings.speedDownKey = static_cast<std::uint32_t>(std::stoul(value, nullptr, 0));
-				} else if (key == "stheme") {
-					g_settings.hudTheme = value;
-				}
-				// Controller buttons (a chain of their own, C1061).
-				if (key == "spadscheme" || key == "fhudfadetime") {
-					if (key == "spadscheme") {
-						auto v = value;
-						std::ranges::transform(v, v.begin(), [](unsigned char ch) { return static_cast<char>(std::tolower(ch)); });
-						g_settings.padClassic = v == "classic";
-					} else {
-						g_settings.hudFadeTime = std::clamp(std::stof(value), 0.0F, 600.0F);
-					}
-				} else if (key.starts_with("spad")) {
-					const auto button = PadButton(value);
-					if (key == "spadhotkey") {
-						g_settings.padHotkey = button;
-					} else if (key == "spadnpcscene") {
-						g_settings.padNpcScene = button;
-					} else if (key == "spadspeedup") {
-						g_settings.padSpeedUp = button;
-					} else if (key == "spadspeeddown") {
-						g_settings.padSpeedDown = button;
-					} else if (key == "spadautomode") {
-						g_settings.padAutoMode = button;
-					} else if (key == "spadpullout") {
-						g_settings.padPullOut = button;
-					} else if (key == "spadend") {
-						g_settings.padEnd = button;
-					} else if (key == "spadsearch") {
-						g_settings.padSearch = button;
-					} else if (key == "spadalign") {
-						g_settings.padAlign = button;
-					} else if (key == "spadfreecam") {
-						g_settings.padFreeCam = button;
-					} else if (key == "spadhideui") {
-						g_settings.padHideUI = button;
-					}
-				}
-				// OStim's bar settings (a chain of their own, C1061).
-				if (key == "benableplayerbar") {
-					g_settings.playerBar = std::stoi(value) != 0;
-				} else if (key == "benablenpcbar") {
-					g_settings.npcBar = std::stoi(value) != 0;
-				} else if (key == "bautohidebars") {
-					g_settings.autoHideBars = std::stoi(value) != 0;
-				} else if (key == "bmatchcolortogender") {
-					g_settings.matchBarColor = std::stoi(value) != 0;
-				}
-				// OStim's navigation keys (a chain of their own, C1061).
-				if (key == "inavupkey") {
-					g_settings.navUpKey = static_cast<std::uint32_t>(std::stoul(value, nullptr, 0));
-				} else if (key == "inavdownkey") {
-					g_settings.navDownKey = static_cast<std::uint32_t>(std::stoul(value, nullptr, 0));
-				} else if (key == "inavleftkey") {
-					g_settings.navLeftKey = static_cast<std::uint32_t>(std::stoul(value, nullptr, 0));
-				} else if (key == "inavrightkey") {
-					g_settings.navRightKey = static_cast<std::uint32_t>(std::stoul(value, nullptr, 0));
-				} else if (key == "inavyeskey") {
-					g_settings.navYesKey = static_cast<std::uint32_t>(std::stoul(value, nullptr, 0));
-				} else if (key == "inavtogglekey") {
-					g_settings.navToggleKey = static_cast<std::uint32_t>(std::stoul(value, nullptr, 0));
-				}
-				// (A new chain: MSVC allows only so many else-ifs in one, C1061.)
-				if (key == "shudcontrols") {
-					auto v = value;
-					std::ranges::transform(v, v.begin(), [](unsigned char ch) { return static_cast<char>(std::tolower(ch)); });
-					g_settings.hudColumns = v == "columns";
-				} else if (key == "benablehud") {
-					g_settings.hudEnabled = std::stoi(value) != 0;
-				} else if (key == "factorradius") {
-					g_settings.actorRadius = std::stof(value);
-				} else if (key == "ffurnitureradius") {
-					g_settings.furnitureRadius = std::stof(value);
-				} else if (key == "ffurnitureheight") {
-					g_settings.furnitureHeight = std::stof(value);
-				} else if (key == "blogfurniture") {
-					g_settings.logFurniture = std::stoi(value) != 0;
-				} else if (key == "setenablefurniture") {
-					g_settings.useFurniture = std::stoi(value) != 0;
-				} else if (key == "setbedrealignment") {
-					Furniture::Settings().bedRealignment = std::stof(value);
-				} else if (key == "bedoffset") {
-					Furniture::Settings().bedOffset = std::stof(value);
-				} else if (key == "setselectfurniture") {
-					g_settings.selectFurniture = std::stoi(value) != 0;
-				} else if (key == "setresetclutter") {
-					g_settings.resetClutter = std::stoi(value) != 0;
-				} else if (key == "setresetclutterradius") {
-					g_settings.resetClutterRadius = std::stof(value) * 100.0F;  // OStim's steps of 100 units
-				} else if (key == "bmatchsex") {
-					g_settings.matchSex = std::stoi(value) != 0;
-				} else if (key == "playeralwaysdomstraight") {
-					g_settings.playerAlwaysDomStraight = std::stoi(value) != 0;
-				} else if (key == "playeralwayssubstraight") {
-					g_settings.playerAlwaysSubStraight = std::stoi(value) != 0;
-				} else if (key == "playeralwaysdomgay") {
-					g_settings.playerAlwaysDomGay = std::stoi(value) != 0;
-				} else if (key == "playeralwayssubgay") {
-					g_settings.playerAlwaysSubGay = std::stoi(value) != 0;
-				} else if (key == "playerselectrolestraight") {
-					g_settings.playerSelectRoleStraight = std::stoi(value) != 0;
-				} else if (key == "playerselectrolegay") {
-					g_settings.playerSelectRoleGay = std::stoi(value) != 0;
-				} else if (key == "playerselectrolethreesome") {
-					g_settings.playerSelectRoleThreesome = std::stoi(value) != 0;
-				} else if (key == "unrestrictednavigation") {
-					SceneRegistry::Rules().unrestricted = std::stoi(value) != 0;
-				} else if (key == "futausemalerole") {
-					ActorProperties::Settings().futaUseMaleRole = std::stoi(value) != 0;
-				} else if (key == "futausemaleexcitement") {
-					ActorProperties::Settings().futaUseMaleExcitement = std::stoi(value) != 0;
-				} else if (key == "futausemaleclimax") {
-					ActorProperties::Settings().futaUseMaleClimax = std::stoi(value) != 0;
-				} else if (key == "bdisablepenisbend") {
-					PenisBend::Settings().disabled = std::stoi(value) != 0;
-				} else if (key == "fpenisbendstep") {
-					PenisBend::Settings().stepDegrees = std::clamp(std::stof(value), -45.0F, 45.0F);
-				} else if (key == "spenisbendnode" || key == "spenisbendup" || key == "spenisbenddown" || key == "spenisflaccid") {
-					// Comma lists: nodes, base first; their shares of a bend up / down.
-					std::vector<std::string> parts;
-					for (std::size_t from = 0; from <= value.size();) {
-						const auto to = std::min(value.find(',', from), value.size());
-						std::string part = value.substr(from, to - from);
-						std::erase_if(part, [](unsigned char c) { return std::isspace(c); });
-						if (!part.empty()) {
-							parts.push_back(std::move(part));
-						}
-						from = to + 1;
-					}
-					auto& pb = PenisBend::Settings();
-					if (key == "spenisbendnode") {
-						if (!parts.empty()) {
-							pb.nodes = parts;
-						}
-					} else {
-						std::vector<float> shares;
-						for (const auto& part : parts) {
-							try {
-								shares.push_back(std::stof(part));
-							} catch (...) {
-								shares.push_back(0.0F);
-							}
-						}
-						(key == "spenisbendup" ? pb.shareUp : key == "spenisbenddown" ? pb.shareDown : pb.flaccid) = std::move(shares);
-					}
-				} else if (key == "ipenisbendaxis") {
-					PenisBend::Settings().axis = std::clamp(std::stoi(value), 0, 2);
-				} else if (key == "berections") {
-					Erection::Settings().enabled = std::stoi(value) != 0;
-				} else if (key == "unequipstraponifnotneeded") {
-					EquipObjects::Settings().unequipStrapOnIfNotNeeded = std::stoi(value) != 0;
-				} else if (key == "sdefaultstrapon") {
-					EquipObjects::Settings().defaults[EquipObjects::FEMALE]["strapon"] = value;  // OStim's Default Strap-On (0x1)
-				} else if (key == "splayerstrapon") {
-					EquipObjects::Settings().defaults[EquipObjects::PLAYER]["strapon"] = value;
-				} else if (key == "sdefaulttonguemale") {
-					EquipObjects::Settings().defaults[EquipObjects::MALE]["tongue"] = value;
-				} else if (key == "sdefaulttonguefemale") {
-					EquipObjects::Settings().defaults[EquipObjects::FEMALE]["tongue"] = value;
-				} else if (key == "splayertongue") {
-					EquipObjects::Settings().defaults[EquipObjects::PLAYER]["tongue"] = value;
-				} else if (key == "maledialoguecountdownmin") {
-					Sounds::Settings().maleDialogueCountdownMin = std::max(std::stoi(value), 0);
-				} else if (key == "maledialoguecountdownmax") {
-					Sounds::Settings().maleDialogueCountdownMax = std::max(std::stoi(value), 0);
-				} else if (key == "femaledialoguecountdownmin") {
-					Sounds::Settings().femaleDialogueCountdownMin = std::max(std::stoi(value), 0);
-				} else if (key == "femaledialoguecountdownmax") {
-					Sounds::Settings().femaleDialogueCountdownMax = std::max(std::stoi(value), 0);
-				} else if (key == "playerdialogue") {
-					Sounds::Settings().playerDialogue = std::stoi(value) != 0;
-				} else if (key == "preventsamevoicecrosstalk") {
-					Sounds::Settings().preventSameVoiceCrossTalk = std::stoi(value) != 0;
-				} else if (key == "splayervoice") {
-					Sounds::Settings().playerVoice = value;
-				} else if (key == "bfurnitureoutoftheway") {
-					g_settings.furnitureOutOfWay = std::stoi(value) != 0;
-				} else if (key == "bresetphysicsafterscene") {
-					Physics::Settings().resetAfterScene = std::stoi(value) != 0;
-				} else if (key == "bpassthroughwalls") {
-					g_settings.passThroughWalls = std::stoi(value) != 0;
-				} else if (key == "bcollisionwatch") {
-					g_settings.collisionWatch = std::stoi(value) != 0;
-				} else if (key == "bplayeraidriven") {
-					g_settings.playerAIDriven = std::stoi(value) != 0;
-				} else if (key == "btranslationlock") {
-					g_settings.translationLock = std::stoi(value) != 0;
-				} else if (key == "btimeanimcues") {
-					g_settings.timeAnimCues = std::stoi(value) != 0;
-				} else if (key == "bloganimevents") {
-					g_settings.logAnimEvents = std::stoi(value) != 0;
-				} else if (key == "benableexcitement") {
-					Excitement::Settings().enabled = std::stoi(value) != 0;
-				} else if (key == "fmaleexcitementmult") {
-					Excitement::Settings().maleMult = std::max(std::stof(value), 0.0F);
-				} else if (key == "ffemaleexcitementmult") {
-					Excitement::Settings().femaleMult = std::max(std::stof(value), 0.0F);
-				} else if (key == "fexcitementdecayrate") {
-					Excitement::Settings().decayRate = std::max(std::stof(value), 0.0F);
-				} else if (key == "fexcitementdecaygrace") {
-					Excitement::Settings().decayGrace = std::max(std::stof(value), 0.0F);
-				} else if (key == "fpostclimaxexcitement") {
-					Excitement::Settings().postClimax = std::clamp(std::stof(value), 0.0F, 99.0F);
-				} else if (key == "fpostclimaxexcitementmax") {
-					Excitement::Settings().postClimaxMax = std::clamp(std::stof(value), 0.0F, 99.0F);
-				} else if (key == "bclimaxscenes") {
-					Excitement::Settings().climaxScenes = std::stoi(value) != 0;
-				} else if (key == "bendonplayerclimax") {
-					Excitement::Settings().endOnPlayer = std::stoi(value) != 0;
-				} else if (key == "bendonmaleclimax") {
-					Excitement::Settings().endOnMale = std::stoi(value) != 0;
-				} else if (key == "bendonfemaleclimax") {
-					Excitement::Settings().endOnFemale = std::stoi(value) != 0;
-				} else if (key == "bendonallclimax") {
-					Excitement::Settings().endOnAll = std::stoi(value) != 0;
-				}
-				// (A new chain: MSVC allows only so many else-ifs in one, C1061.)
-				if (key == "bendnpcscenesonclimax") {
-					Excitement::Settings().endNPCScenes = std::stoi(value) != 0;
-				} else if (key == "fclimaxenddelay") {
-					Excitement::Settings().endDelay = std::clamp(std::stof(value), 0.0F, 60.0F);
-				} else if (key == "fclimaxshake") {
-					Excitement::Settings().shake = std::clamp(std::stof(value), 0.0F, 5.0F);
-				} else if (key == "fclimaxblur") {
-					Excitement::Settings().blur = std::clamp(std::stof(value), 0.0F, 1.0F);
-				} else if (key == "fclimaxflash") {
-					Excitement::Settings().flash = std::clamp(std::stof(value), 0.0F, 1.0F);
-				} else if (key == "fclimaxglowsize") {
-					Excitement::Settings().glowSize = std::clamp(std::stof(value), 0.01F, 0.5F);
-				} else if (key == "bblurorgasms") {
-					Excitement::Settings().blurOn = std::stoi(value) != 0;
-				} else if (key == "bslowmoorgasms") {
-					Excitement::Settings().slowMo = std::stoi(value) != 0;
-				} else if (key == "bclimaxrumble") {
-					Excitement::Settings().rumble = std::stoi(value) != 0;
-				} else if (key == "balignbysex") {
-					Alignment::Settings().groupBySex = std::stoi(value) != 0;
-				} else if (key == "balignbyheight") {
-					Alignment::Settings().groupByHeight = std::stoi(value) != 0;
-				} else if (key == "balignbyheels") {
-					Alignment::Settings().groupByHeels = std::stoi(value) != 0;
-				} else if (key == "bresetposition") {
-					g_resetPosition = std::stoi(value) != 0;
-				} else if (key == "bendondamage") {
-					g_endOnDamage = std::stoi(value) != 0;
-				} else if (key == "bstaywheninterrupted") {
-					g_stayWhenInterrupted = std::stoi(value) != 0;
-				} else if (key == "blockscenes") {
-					g_lockScenes = std::stoi(value) != 0;
-				} else if (key == "bguardscenes") {
-					g_guardScenes = std::stoi(value) != 0;
-				} else if (key == "bundress") {
-					Undress::Settings().enabled = std::stoi(value) != 0;
-				} else if (key == "bundressatstart") {
-					Undress::Settings().atStart = std::stoi(value) != 0;
-				} else if (key == "bpartialundress") {
-					Undress::Settings().partial = std::stoi(value) != 0;
-				} else if (key == "bfullundressmidscene") {
-					Undress::Settings().fullMidScene = std::stoi(value) != 0;
-				} else if (key == "bundressplayer") {
-					Undress::Settings().player = std::stoi(value) != 0;
-				} else if (key == "bredress") {
-					Undress::Settings().redress = std::stoi(value) != 0;
-				} else if (key == "fundressitemdelay") {
-					Undress::Settings().itemDelay = std::clamp(std::stof(value), 0.0F, 5.0F);
-				} else if (key == "banimateredress") {
-					Undress::Settings().animateRedress = std::stoi(value) != 0;
-				} else if (key == "setremoveweaponsatstart") {
-					Undress::Settings().removeWeaponsAtStart = std::stoi(value) != 0;
-				} else if (key == "setremoveweaponswithslot") {
-					Undress::Settings().removeWeaponsWithSlot = std::stoi(value);
-				} else if (key == "setundressingslotmask") {
-					// OStim's name: a mask, bit 0 = slot 30.
-					const auto       mask = static_cast<std::uint32_t>(std::stoll(value, nullptr, 0));
-					std::vector<int> slots;
-					for (int slot = 30; slot <= 61; ++slot) {
-						if (mask & (1u << (slot - 30))) {
-							slots.push_back(slot);
-						}
-					}
-					Undress::Settings().slots = std::move(slots);
+				if (const auto setting = SETTINGS.find(key); setting != SETTINGS.end()) {
+					setting->second(value);
 				} else if (key.starts_with("bundressslot") && key.size() == 14) {
 					// One slot each (the MCM's Undressing slots page).
 					const int slot = std::stoi(key.substr(12));
@@ -562,88 +467,8 @@ namespace Core
 							std::ranges::sort(slots);
 						}
 					}
-				} else if (key == "sundressslots") {
-					std::vector<int> slots;
-					std::string      token;
-					for (const char ch : value + ",") {
-						if (ch == ',' || ch == ' ') {
-							if (!token.empty()) {
-								const int slot = std::stoi(token);
-								if (slot >= 30 && slot <= 61) {
-									slots.push_back(slot);
-								}
-								token.clear();
-							}
-						} else {
-							token += ch;
-						}
-					}
-					Undress::Settings().slots = std::move(slots);
-				}
-				// (A new chain, C1061 again.)
-				if (key == "bautomodeplayer") {
-					g_autoConfig.player = std::stoi(value) != 0;
-				} else if (key == "bautomodesolo") {
-					g_autoConfig.playerSolo = std::stoi(value) != 0;
-				} else if (key == "bautomodepartner") {
-					g_autoConfig.playerPartner = std::stoi(value) != 0;
-				} else if (key == "bautomodenpc") {
-					g_autoConfig.npc = std::stoi(value) != 0;
-				} else if (key == "iautomodekey") {
-					g_autoConfig.key = static_cast<std::uint32_t>(std::stoul(value, nullptr, 0));
-				} else if (key == "fautomodescenemin") {
-					g_autoConfig.sceneMin = std::max(std::stof(value), 2.0F);
-				} else if (key == "fautomodescenemax") {
-					g_autoConfig.sceneMax = std::max(std::stof(value), 2.0F);
-				} else if (key == "iforeplaychance") {
-					g_autoConfig.foreplayChance = std::clamp(std::stoi(value), 0, 100);
-				} else if (key == "fforeplayendmin") {
-					g_autoConfig.foreplayMin = std::clamp(std::stof(value), 0.0F, 100.0F);
-				} else if (key == "fforeplayendmax") {
-					g_autoConfig.foreplayMax = std::clamp(std::stof(value), 0.0F, 100.0F);
-				} else if (key == "ipulloutchance") {
-					g_autoConfig.pulloutChance = std::clamp(std::stoi(value), 0, 100);
-				} else if (key == "fpulloutmin") {
-					g_autoConfig.pulloutMin = std::clamp(std::stof(value), 0.0F, 100.0F);
-				} else if (key == "fpulloutmax") {
-					g_autoConfig.pulloutMax = std::clamp(std::stof(value), 0.0F, 100.0F);
-				} else if (key == "iautomodemaxsteps") {
-					g_autoConfig.maxSteps = std::clamp(std::stoi(value), 1, 50);
-				} else if (key == "bautomodelimittonavigation") {
-					g_autoConfig.limitToNavigation = std::stoi(value) != 0;
-				} else if (key == "bautomodestandingonfloor") {
-					g_autoConfig.standingOnFloor = std::stoi(value) != 0;
-				} else if (key == "bautospeed") {
-					g_autoConfig.autoSpeed = std::stoi(value) != 0;
-				} else if (key == "fautospeedintervalmin") {
-					g_autoConfig.speedIntervalMin = std::max(std::stof(value), 0.5F);
-				} else if (key == "fautospeedintervalmax") {
-					g_autoConfig.speedIntervalMax = std::max(std::stof(value), 0.5F);
-				}
-				// (A new chain: MSVC allows only so many else-ifs in one, C1061.)
-				if (key == "fautospeedexcitementmin") {
-					g_autoConfig.speedExcitementMin = std::clamp(std::stof(value), 0.0F, 100.0F);
-				} else if (key == "fautospeedexcitementmax") {
-					g_autoConfig.speedExcitementMax = std::clamp(std::stof(value), 0.0F, 100.0F);
-				} else if (key == "ftransitionlead") {
-					g_settings.transitionLead = std::clamp(std::stof(value), -2.0F, 5.0F);
-				}
-				// Sex toys (SexToys.h) and playbackSpeed.
-				if (SexToys::ReadSetting(key, value) || Intiface::ReadSetting(key, value)) {
-				} else if (key == "buseplaybackspeed") {
-					g_settings.usePlaybackSpeed = std::stoi(value) != 0;
-				}
-				// OStim's look directions (EyeLook.h).
-				if (key == "bdisableeyelook") {
-					EyeLook::Settings().disabled = std::stoi(value) != 0;
-				} else if (key == "flookmaxside") {
-					EyeLook::Settings().maxSide = std::clamp(std::stof(value), 0.0F, 60.0F);
-				} else if (key == "flookmaxup") {
-					EyeLook::Settings().maxUp = std::clamp(std::stof(value), 0.0F, 60.0F);
-				} else if (key == "slefteyenode") {
-					EyeLook::Settings().leftEye = value;
-				} else if (key == "srighteyenode") {
-					EyeLook::Settings().rightEye = value;
+				} else if (!SexToys::ReadSetting(key, value)) {
+					Intiface::ReadSetting(key, value);
 				}
 			} catch (...) {
 				REX::WARN("Settings: couldn't read \"{}\" for {}", value, key);

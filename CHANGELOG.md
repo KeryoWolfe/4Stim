@@ -3,6 +3,7 @@
 ## 0.5.0 alpha (in progress)
 
 ### Code: main.cpp split by area
+- **Settings as a table** (roadmap 2b.2): `LoadSettings`' 189-branch `if (key == ...)` chain (split in seven for MSVC's limit on else-ifs) is now `SETTINGS` in `Core/Settings.cpp`, one line per setting with its clamp. Same reading as before, key by key; a new setting is one line there.
 - **main.cpp split** (roadmap 2b.1 and 2b.3, a modder's review): its 14,000 lines are now `src/Core/` (one file per area: settings, scenes, threads, collision, auto mode, scene lock, camera, picker, hotkey, save data...; `Core.h` holds what they share) and `src/Natives/` (one file per Papyrus script, plus `Register.cpp`); main.cpp keeps the entry points. Code moved, not changed (`tools/refactor/split_main.py` did it). Map: docs/SOURCE_LAYOUT.md.
 
 ### Code: combined CommonLibF4
