@@ -2,6 +2,10 @@
 
 ## 0.5.0 alpha (in progress)
 
+### Who has a penis, from the body
+- **Penis from the body** (roadmap 2b.7; OStim's `useSoSSex` / `useTNGSex`): when no actor property says, anything an actor wears, their naked body included, with a mesh skinned to ZeX's `Penis_*` bones gives them a penis, so a wearable penis makes futa without an actor property. 4Stim's equip objects (the strap-on) never count. `Penis from body:` lines in `4Stim.log` name the mesh; `bPenisFromBody=0` goes back to the base sex.
+- **`iEvaluatePackage` test switch** (roadmap 2b.6): 1 or 2 calls `EvaluatePackage` directly with false or true first, logging which package NPCs run before, right after and half a second later, to tell which means "now". 0 (the default) keeps Papyrus.
+
 ### Code: main.cpp split by area
 - **Scale set directly** (roadmap 2b.6): an actor's scale for a scene, back after it and when a saved scene is let go or resumed is set at once (`TESObjectREFR::SetScale`), not through Papyrus a frame or more later. That also fixes a resumed aligned scene that could measure the actor before their own size was back. `bDirectNatives=0` in 4Stim.ini goes back to Papyrus.
 - **JSON loaders stay on nlohmann** (roadmap 2b.4, deferred): loading takes 795 ms for 724 scenes on its own thread at startup, not worth risking files that load today.

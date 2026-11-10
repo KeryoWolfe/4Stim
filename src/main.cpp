@@ -58,6 +58,7 @@ namespace Core
 			}
 			SceneEvents::Clear();
 			ModEvents::Clear();  // as SKSE's: scripts register again after a load
+			PenisMesh::Clear();  // form IDs of the last game's created actors can come back as others
 			SetPlayerScene({});
 			HUD::Reset();
 			// Running scenes and their timers end with the old game.
@@ -130,6 +131,7 @@ namespace Core
 			{
 				REX::INFO("kGameLoaded");
 				g_mainThread = std::this_thread::get_id();
+				PenisMesh::SetMainThread(g_mainThread);
 				// The scene files and the rest the first picker and the first
 				// scene read (with a big pack: hundreds of scene files, their
 				// translations, every plugin's Idle editor IDs), read now on a

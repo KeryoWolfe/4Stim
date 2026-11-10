@@ -40,7 +40,7 @@ OStim's actor properties borrow a perk's conditions from OStim.esp. 4Stim has no
 | `wornKeywords` / `notWornKeywords` | Something they wear has (none has) one of these keywords. |
 | `player` | `true`: the player; `false`: anyone else. |
 | `child` | `false`: not a child. |
-| `penis` | They have a penis or not (by the `sex` property above, else their body). |
+| `penis` | They have a penis or not (by the `sex` property above, else their body: Futa, below). |
 
 A form is OStim's `{ "mod": "Fallout4.esm", "formid": "0x13746" }`, or for keywords and races, an editor ID (`"ActorTypeNPC"`, `"HumanRace"`).
 
@@ -60,7 +60,9 @@ As OStim's `OStimNPC`, everyone "has" a penis: a woman can take a role that need
 
 ### Futa
 
-In Fallout 4, futa comes from an equippable penis, not from the body. Give those who wear one a penis with an actor property:
+In Fallout 4, futa usually comes from an equippable penis. With `bPenisFromBody=1` (the default; `[Roles]` in `4Stim.ini`, OStim's `useSoSSex` / `useTNGSex`) 4Stim sees it by itself: when no actor property says, anything the actor wears, their naked body included, that has a mesh skinned to ZeX's `Penis_*` bones gives them a penis (`Penis from body:` in `4Stim.log` says which mesh). 4Stim's own equip objects don't count, so a strap-on never does. OStim reads Schlongs of Skyrim's or TNG's factions for the same thing; Fallout 4 has neither, so 4Stim reads the meshes. Without the 3D loaded, or with `bPenisFromBody=0`, it's the base sex.
+
+An actor property still decides first, as in OStim: to give a penis to those wearing something without penis bones, or to override the body:
 
 ```json
 {
@@ -70,7 +72,7 @@ In Fallout 4, futa comes from an equippable penis, not from the body. Give those
 }
 ```
 
-A property's `"sex"` is `"male"` (a penis), `"female"` (none) or, as OStim's, anything else (`"agender"`): that one still wins over lower priorities, but whether they have a penis goes by the body.
+A property's `"sex"` is `"male"` (a penis), `"female"` (none) or, as OStim's, anything else (`"agender"`): that one still wins over lower priorities, but whether they have a penis goes by the body (above).
 
 They then go first, wear no strap-on, and, with OStim's settings (`4Stim.ini`, `[Roles]`): take men's roles too (`futaUseMaleRole`, default on), gain excitement at the male rate (`futaUseMaleExcitement`, off), and climax as men (`futaUseMaleClimax`, on: for `SetEndOnOrgasm`).
 

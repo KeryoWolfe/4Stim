@@ -34,6 +34,7 @@
 #include "StimOverrides.h"
 #include "Events.h"
 #include "Peaks.h"
+#include "PenisMesh.h"
 #include "Lights.h"
 #include "Bridge.h"
 #include "HUD.h"
@@ -177,6 +178,7 @@ namespace Core
 		bool          collisionWatch = false; // bCollisionWatch: log where scene actors' controllers and bodies are against their spots
 		bool          translationLock = true; // bTranslationLock: hold scene actors with a never-ending translation (0: placed once, for finding a shake)
 		bool          directNatives = true;   // bDirectNatives: game functions called directly, not through Papyrus (roadmap 2b.6)
+		int           evaluatePackage = 0;    // iEvaluatePackage: 0 through Papyrus; 1 / 2 directly with a first argument of false / true (the test in roadmap 2b.6)
 		bool          playerAIDriven = true;  // bPlayerAIDriven: the player is AI driven in scenes, as OStim's lock (SetAIDriven)
 		bool          furnitureOutOfWay = true; // bFurnitureOutOfTheWay: scene furniture doesn't collide with the scene's actors
 		bool          passThroughWalls = true;  // bPassThroughWalls: a scene actor touching a wall (no reference) collides with nothing for the scene
@@ -853,6 +855,7 @@ namespace Core
 	template <class... Args>
 	bool CallActorMethod(RE::Actor* a_actor, std::string_view a_scriptName, std::string_view a_funcName, Args... a_args);
 	void SetActorScale(RE::Actor* a_actor, float a_scale);
+	void EvaluateActorPackage(RE::Actor* a_actor, const char* a_why);
 
 	// Where role a_role of a_active is held: the scene's spot plus that
 	// role's alignment for the scene (for a transition, the scene it goes

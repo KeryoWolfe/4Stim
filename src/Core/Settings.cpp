@@ -104,6 +104,9 @@ namespace Core
 		{ "alignmentgroupbysex", { "balignbysex", OStimUnit::kSame } },
 		{ "alignmentgroupbyheight", { "balignbyheight", OStimUnit::kSame } },
 		{ "alignmentgroupbyheels", { "balignbyheels", OStimUnit::kSame } },
+		// Who has a penis by SoS's or TNG's factions: Fallout 4 has neither, 4Stim looks at the body (PenisMesh.h).
+		{ "usesossex", { "bpenisfrombody", OStimUnit::kSame } },
+		{ "usetngsex", { "bpenisfrombody", OStimUnit::kSame } },
 	};
 
 	// A controller button by its name in 4Stim.ini's [Controller] (the MCM's
@@ -269,6 +272,7 @@ namespace Core
 		{ "playerselectrolethreesome", [](const std::string& value) { g_settings.playerSelectRoleThreesome = std::stoi(value) != 0; } },
 		{ "unrestrictednavigation", [](const std::string& value) { SceneRegistry::Rules().unrestricted = std::stoi(value) != 0; } },
 		{ "futausemalerole", [](const std::string& value) { ActorProperties::Settings().futaUseMaleRole = std::stoi(value) != 0; } },
+		{ "bpenisfrombody", [](const std::string& value) { ActorProperties::Settings().penisFromBody = std::stoi(value) != 0; } },
 		{ "futausemaleexcitement", [](const std::string& value) { ActorProperties::Settings().futaUseMaleExcitement = std::stoi(value) != 0; } },
 		{ "futausemaleclimax", [](const std::string& value) { ActorProperties::Settings().futaUseMaleClimax = std::stoi(value) != 0; } },
 		{ "bdisablepenisbend", [](const std::string& value) { PenisBend::Settings().disabled = std::stoi(value) != 0; } },
@@ -299,6 +303,7 @@ namespace Core
 		{ "bplayeraidriven", [](const std::string& value) { g_settings.playerAIDriven = std::stoi(value) != 0; } },
 		{ "btranslationlock", [](const std::string& value) { g_settings.translationLock = std::stoi(value) != 0; } },
 		{ "bdirectnatives", [](const std::string& value) { g_settings.directNatives = std::stoi(value) != 0; } },
+		{ "ievaluatepackage", [](const std::string& value) { g_settings.evaluatePackage = std::clamp(std::stoi(value), 0, 2); } },
 		{ "btimeanimcues", [](const std::string& value) { g_settings.timeAnimCues = std::stoi(value) != 0; } },
 		{ "bloganimevents", [](const std::string& value) { g_settings.logAnimEvents = std::stoi(value) != 0; } },
 		{ "benableexcitement", [](const std::string& value) { Excitement::Settings().enabled = std::stoi(value) != 0; } },
@@ -508,10 +513,10 @@ namespace Core
 		REX::INFO("Settings: eye directions {}, {} degree(s) sideways, {} up / down, bones {} / {}", eyes.disabled ? "off" : "on", eyes.maxSide, eyes.maxUp,
 			eyes.leftEye, eyes.rightEye);
 		const auto& fu = ActorProperties::Settings();
-		REX::INFO("Settings: roles: player dom/sub straight {}/{}, gay {}/{}, choose straight {} gay {} threesome {}, unrestricted {}; futa male role {} excitement {} climax {}; strap-on off when not needed {}",
+		REX::INFO("Settings: roles: player dom/sub straight {}/{}, gay {}/{}, choose straight {} gay {} threesome {}, unrestricted {}; futa male role {} excitement {} climax {}; penis from the body {}; strap-on off when not needed {}",
 			g_settings.playerAlwaysDomStraight, g_settings.playerAlwaysSubStraight, g_settings.playerAlwaysDomGay, g_settings.playerAlwaysSubGay,
 			g_settings.playerSelectRoleStraight, g_settings.playerSelectRoleGay, g_settings.playerSelectRoleThreesome, SceneRegistry::Rules().unrestricted,
-			fu.futaUseMaleRole, fu.futaUseMaleExcitement, fu.futaUseMaleClimax, EquipObjects::Settings().unequipStrapOnIfNotNeeded);
+			fu.futaUseMaleRole, fu.futaUseMaleExcitement, fu.futaUseMaleClimax, fu.penisFromBody, EquipObjects::Settings().unequipStrapOnIfNotNeeded);
 		REX::INFO("Settings: furniture {} within {} (height {}), {}, clutter reset {} ({}), log {}", g_settings.useFurniture ? "on" : "off",
 			g_settings.furnitureRadius, g_settings.furnitureHeight, g_settings.selectFurniture ? "asked" : "the nearest", g_settings.resetClutter ? "on" : "off",
 			g_settings.resetClutterRadius, g_settings.logFurniture ? "on" : "off");

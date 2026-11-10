@@ -450,7 +450,7 @@ namespace Core
 			// work spot can't pull them out of it. EvaluatePackage, as
 			// OStim's Thread::AddActor, for them to switch to it now.
 			ScenePackage::Add(id);
-			CallActorMethod(actor, "Actor"sv, "EvaluatePackage"sv, false);
+			EvaluateActorPackage(actor, "scene package on");
 		});
 	}
 

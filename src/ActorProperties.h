@@ -27,6 +27,7 @@ namespace ActorProperties
 		bool futaUseMaleRole = true;         // OStim's futaUseMaleRole: they can take men's roles too
 		bool futaUseMaleExcitement = false;  // OStim's futaUseMaleExcitement: the male excitement rate
 		bool futaUseMaleClimax = true;       // OStim's futaUseMaleClimax: their climax counts as a man's (ending scenes)
+		bool penisFromBody = true;           // bPenisFromBody (OStim's useSoSSex / useTNGSex): no property deciding, a mesh on Penis_* bones counts (PenisMesh.h)
 	};
 	Config& Settings();
 

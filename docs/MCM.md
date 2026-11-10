@@ -12,7 +12,7 @@ Where 4Stim's setting works differently from OStim's, its help says what 4Stim d
 
 OStim's millisecond settings (expressions, moans, NPC scene length, excitement grace period, auto mode's scene lengths and speed changes) are in seconds here, as in OStim's MCM; `4Stim.ini` keeps milliseconds, as OStim. Each setting's name in `4Stim.ini` is in SETTINGS.md.
 
-Only in `4Stim.ini` (the MCM has no control for them): bone names (`sPenisBendNode`, `sLeftEyeNode`, `sRightEyeNode`), the penis bend's shape (`sPenisBendUp`, `sPenisBendDown`, `sPenisFlaccid`), sound flags (`iSoundFlags`), Intiface Central's address (`sIntifaceAddress`), `bFurnitureOutOfTheWay`, `bPassThroughWalls`, the diagnostic `bCollisionWatch`, `bDirectNatives`, `bResetPhysicsAfterScene` (PHYSICS.md), and the keys' Windows key codes (the Controls page shows the keys themselves).
+Only in `4Stim.ini` (the MCM has no control for them): bone names (`sPenisBendNode`, `sLeftEyeNode`, `sRightEyeNode`), the penis bend's shape (`sPenisBendUp`, `sPenisBendDown`, `sPenisFlaccid`), sound flags (`iSoundFlags`), Intiface Central's address (`sIntifaceAddress`), `bFurnitureOutOfTheWay`, `bPassThroughWalls`, the diagnostic `bCollisionWatch`, `bDirectNatives`, `iEvaluatePackage`, `bPenisFromBody`, `bResetPhysicsAfterScene` (PHYSICS.md), and the keys' Windows key codes (the Controls page shows the keys themselves).
 
 ## Where the settings go
 

@@ -1,4 +1,5 @@
 #include "ActorProperties.h"
+#include "PenisMesh.h"
 #include "compat/Fallbacks.h"
 
 #include <algorithm>
@@ -207,6 +208,18 @@ namespace ActorProperties
 
 		bool HasPenisLocked(RE::Actor* a_actor);
 
+		// No actor property decides: the body (as OStim's useSoSSex /
+		// useTNGSex, PenisMesh.h), else the base sex.
+		bool ByBody(RE::Actor* a_actor)
+		{
+			if (g_config.penisFromBody) {
+				if (const auto body = PenisMesh::FromBody(a_actor)) {
+					return *body;
+				}
+			}
+			return Compat::GetSex(a_actor) == RE::SEX::kMale;
+		}
+
 		bool Holds(const Rule& a_c, RE::Actor* a_actor)
 		{
 			if (a_c.perk) {
@@ -244,7 +257,7 @@ namespace ActorProperties
 			}
 			if (a_c.penis) {
 				// Inside a "sex" property's own condition, by the body.
-				const bool penis = t_inPenis ? Compat::GetSex(a_actor) == RE::SEX::kMale : HasPenisLocked(a_actor);
+				const bool penis = t_inPenis ? ByBody(a_actor) : HasPenisLocked(a_actor);
 				if (penis != *a_c.penis) {
 					return false;
 				}
@@ -375,7 +388,7 @@ namespace ActorProperties
 			if (outer) {
 				t_inPenis = false;
 			}
-			return sex && *sex ? **sex : Compat::GetSex(a_actor) == RE::SEX::kMale;
+			return sex && *sex ? **sex : ByBody(a_actor);
 		}
 
 		SceneRegistry::ActorCondition ConditionLocked(RE::Actor* a_actor)
