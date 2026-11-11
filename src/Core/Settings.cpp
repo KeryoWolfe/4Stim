@@ -273,6 +273,21 @@ namespace Core
 		{ "unrestrictednavigation", [](const std::string& value) { SceneRegistry::Rules().unrestricted = std::stoi(value) != 0; } },
 		{ "futausemalerole", [](const std::string& value) { ActorProperties::Settings().futaUseMaleRole = std::stoi(value) != 0; } },
 		{ "bpenisfrombody", [](const std::string& value) { ActorProperties::Settings().penisFromBody = std::stoi(value) != 0; } },
+		{ "spenismeshnames", [](const std::string& value) {
+			std::vector<std::string> names;
+			std::string              name;
+			for (const char c : value + ",") {
+				if (c == ',') {
+					if (!name.empty()) {
+						names.push_back(name);
+					}
+					name.clear();
+				} else if (!std::isspace(static_cast<unsigned char>(c))) {
+					name += static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+				}
+			}
+			PenisMesh::SetMeshNames(std::move(names));
+		} },
 		{ "futausemaleexcitement", [](const std::string& value) { ActorProperties::Settings().futaUseMaleExcitement = std::stoi(value) != 0; } },
 		{ "futausemaleclimax", [](const std::string& value) { ActorProperties::Settings().futaUseMaleClimax = std::stoi(value) != 0; } },
 		{ "bdisablepenisbend", [](const std::string& value) { PenisBend::Settings().disabled = std::stoi(value) != 0; } },

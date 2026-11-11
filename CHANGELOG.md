@@ -3,6 +3,7 @@
 ## 0.5.0 alpha (in progress)
 
 ### Who has a penis, from the body
+- **Wearable penises from before ZeX's bones** (Bag of Dicks, Futanari FEV): their meshes are skinned to the pelvis, so the bone check missed them, and Undress took them off as clothing. A mesh named like a penis now counts too (`sPenisMeshNames=penis,schlong`), the log names the item that gives it, and Undress leaves that item on.
 - **Scene check: talking no longer warns.** 4Stim's own moans count as talking, so every scene change warned ("Scene check: ... talking") with no chatter heard; talking is now only noted. A scene's idle not playing still warns.
 - **Fixed: the picker froze the game** (this build's first try): the body check didn't recognise the main thread and queued itself as a task, which queued itself again, for ever. The queued look now runs directly, and the main thread is taken from inside an F4SE task (`kGameLoaded` comes on another thread), which also makes `FindFurniture`'s and `MigrateThread`'s main-thread checks right: before, they always answered no.
 - **Penis from the body** (roadmap 2b.7; OStim's `useSoSSex` / `useTNGSex`): when no actor property says, anything an actor wears, their naked body included, with a mesh skinned to ZeX's `Penis_*` bones gives them a penis, so a wearable penis makes futa without an actor property. 4Stim's equip objects (the strap-on) never count. `Penis from body:` lines in `4Stim.log` name the mesh; `bPenisFromBody=0` goes back to the base sex.

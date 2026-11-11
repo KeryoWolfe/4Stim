@@ -13,14 +13,22 @@ namespace PenisMesh
 	{
 		struct Known
 		{
-			std::size_t         fingerprint = 0;
-			std::optional<bool> penis;
+			std::size_t                fingerprint = 0;
+			std::optional<bool>        penis;
+			std::vector<std::uint32_t> items;  // worn items that give it (kept on by Undress)
+		};
+
+		struct Found
+		{
+			std::string                why;    // the mesh, for the log
+			std::vector<std::uint32_t> items;  // worn items it's on (none: the body itself)
 		};
 
 		std::mutex                               g_lock;
 		std::unordered_map<std::uint32_t, Known> g_known;
-		std::unordered_set<std::uint32_t>        g_queued;  // looks waiting for the main thread
+		std::unordered_set<std::uint32_t>        g_queued;      // looks waiting for the main thread
 		std::atomic<std::thread::id>             g_mainThread;  // set from a task, read anywhere
+		std::vector<std::string>                 g_names{ "penis", "schlong" };  // not "genital": some female bodies have a "Genitals" mesh
 
 		// What the body is made of right now: the 3D's root and each worn
 		// piece's clone in it. Equipping, unequipping or reloading the 3D
@@ -36,10 +44,11 @@ namespace PenisMesh
 			return hash;
 		}
 
-		bool IsPenisBone(const RE::NiAVObject* a_bone)
+		bool ContainsNoCase(std::string_view a_text, std::string_view a_part)
 		{
-			const char* name = a_bone ? a_bone->name.c_str() : nullptr;
-			return name && _strnicmp(name, "Penis_", 6) == 0;
+			return !a_part.empty() && std::ranges::search(a_text, a_part, [](char a, char b) {
+				return std::tolower(static_cast<unsigned char>(a)) == std::tolower(static_cast<unsigned char>(b));
+			}).begin() != a_text.end();
 		}
 
 		// Every geometry under a_object, skipping a_skip's subtrees.
@@ -59,48 +68,81 @@ namespace PenisMesh
 			}
 		}
 
-		// Main thread: does anything the actor wears (but 4Stim's equip
-		// objects) have a mesh skinned to Penis_* bones?
-		std::optional<bool> Look(RE::Actor* a_actor)
+		// A penis mesh: skinned to ZeX's Penis_* bones, or (older mods, from
+		// before ZeX's bones, skinned to the pelvis: Bag of Dicks' and
+		// Futanari FEV's "Schlong") named like one (sPenisMeshNames). Why, or "".
+		std::string PenisIn(RE::NiAVObject* a_root, const std::unordered_set<const RE::NiAVObject*>& a_skip, const std::vector<std::string>& a_names)
+		{
+			std::string why;
+			ForEachGeometry(a_root, 64, a_skip, [&](RE::BSGeometry* a_geometry) {
+				if (!why.empty()) {
+					return;
+				}
+				const std::string_view name = a_geometry->name.c_str() ? a_geometry->name.c_str() : "";
+				if (const auto skin = a_geometry->skinInstance.get()) {
+					for (const auto bone : skin->bones) {
+						const char* bn = bone ? bone->name.c_str() : nullptr;
+						if (bn && _strnicmp(bn, "Penis_", 6) == 0) {
+							why = std::format("\"{}\" (skinned to {})", name, bn);
+							return;
+						}
+					}
+				}
+				for (const auto& part : a_names) {
+					if (ContainsNoCase(name, part)) {
+						why = std::format("\"{}\" (named like one: \"{}\")", name, part);
+						return;
+					}
+				}
+			});
+			return why;
+		}
+
+		// Main thread: what the actor wears, piece by piece (so it's known
+		// which item gives it), then the rest of the 3D (the body where the
+		// game puts it outside the biped). 4Stim's equip objects skipped.
+		std::optional<Found> Look(RE::Actor* a_actor)
 		{
 			const auto root = a_actor->Get3D(false);
 			if (!root) {
 				return std::nullopt;
 			}
+			const auto names = [] {
+				std::scoped_lock lock(g_lock);
+				return g_names;
+			}();
 			std::unordered_set<const RE::NiAVObject*> skip;
+			std::unordered_set<const RE::NiAVObject*> seen;  // a clone in several slots: looked at once
+			Found found;
 			if (const auto biped = a_actor->biped.get()) {
 				for (const auto& object : biped->object) {
 					const auto form = object.parent.object;
-					if (form && object.partClone && EquipObjects::IsObjectItem(form->GetFormID())) {
-						skip.insert(object.partClone.get());
+					const auto clone = object.partClone.get();
+					if (!clone) {
+						continue;
+					}
+					skip.insert(clone);  // the walk of the whole 3D below doesn't do these again
+					if ((form && EquipObjects::IsObjectItem(form->GetFormID())) || !seen.insert(clone).second) {
+						continue;
+					}
+					if (auto why = PenisIn(clone, {}, names); !why.empty()) {
+						if (found.why.empty()) {
+							const char* item = form ? form->GetFormEditorID() : nullptr;
+							found.why = std::format("{} on {:08X}{}", why, form ? form->GetFormID() : 0, item && *item ? std::format(" ({})", item) : "");
+						}
+						if (form) {
+							found.items.push_back(form->GetFormID());
+						}
 					}
 				}
 			}
-			std::string found;
-			ForEachGeometry(root, 64, skip, [&](RE::BSGeometry* a_geometry) {
-				const auto skin = found.empty() ? a_geometry->skinInstance.get() : nullptr;
-				if (!skin) {
-					return;
-				}
-				for (const auto bone : skin->bones) {
-					if (IsPenisBone(bone)) {
-						found = std::format("\"{}\" (skinned to {})", a_geometry->name.c_str() ? a_geometry->name.c_str() : "?", bone->name.c_str());
-						return;
-					}
-				}
-			});
-			REX::INFO("Penis from body: {:08X} {}{}", a_actor->GetFormID(), found.empty() ? "has none" : "has one: ", found);
-			return !found.empty();
+			if (found.why.empty()) {
+				found.why = PenisIn(root, skip, names);
+			}
+			REX::INFO("Penis from body: {:08X} {}{}", a_actor->GetFormID(), found.why.empty() ? "has none" : "has one: ", found.why);
+			return found;
 		}
-	}
 
-	void SetMainThread(std::thread::id a_id)
-	{
-		g_mainThread.store(a_id);
-	}
-
-	namespace
-	{
 		// On the main thread: the cached answer while nothing worn or the 3D
 		// changed, else a new look.
 		std::optional<bool> OnMain(RE::Actor* a_actor)
@@ -113,14 +155,27 @@ namespace PenisMesh
 					return it->second.penis;
 				}
 			}
-			const auto penis = Look(a_actor);
-			if (!penis) {
+			auto found = Look(a_actor);
+			if (!found) {
 				return std::nullopt;  // no 3D yet: looked at again next time
 			}
+			const bool penis = !found->why.empty();
 			std::scoped_lock lock(g_lock);
-			g_known[id] = { fingerprint, penis };
+			g_known[id] = { fingerprint, penis, std::move(found->items) };
 			return penis;
 		}
+	}
+
+	void SetMainThread(std::thread::id a_id)
+	{
+		g_mainThread.store(a_id);
+	}
+
+	void SetMeshNames(std::vector<std::string> a_names)
+	{
+		std::scoped_lock lock(g_lock);
+		g_names = std::move(a_names);
+		g_known.clear();
 	}
 
 	std::optional<bool> FromBody(RE::Actor* a_actor)
@@ -151,6 +206,19 @@ namespace PenisMesh
 			});
 		}
 		return std::nullopt;
+	}
+
+	bool GivesPenis(RE::Actor* a_actor, std::uint32_t a_item)
+	{
+		if (!a_actor) {
+			return false;
+		}
+		if (std::this_thread::get_id() == g_mainThread.load()) {
+			OnMain(a_actor);  // up to date with what's worn now
+		}
+		std::scoped_lock lock(g_lock);
+		const auto it = g_known.find(a_actor->GetFormID());
+		return it != g_known.end() && std::ranges::find(it->second.items, a_item) != it->second.items.end();
 	}
 
 	void Clear()

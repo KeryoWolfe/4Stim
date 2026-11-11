@@ -60,7 +60,7 @@ As OStim's `OStimNPC`, everyone "has" a penis: a woman can take a role that need
 
 ### Futa
 
-In Fallout 4, futa usually comes from an equippable penis. With `bPenisFromBody=1` (the default; `[Roles]` in `4Stim.ini`, OStim's `useSoSSex` / `useTNGSex`) 4Stim sees it by itself: when no actor property says, anything the actor wears, their naked body included, that has a mesh skinned to ZeX's `Penis_*` bones gives them a penis (`Penis from body:` in `4Stim.log` says which mesh). 4Stim's own equip objects don't count, so a strap-on never does. OStim reads Schlongs of Skyrim's or TNG's factions for the same thing; Fallout 4 has neither, so 4Stim reads the meshes. Without the 3D loaded, or with `bPenisFromBody=0`, it's the base sex.
+In Fallout 4, futa usually comes from an equippable penis. With `bPenisFromBody=1` (the default; `[Roles]` in `4Stim.ini`, OStim's `useSoSSex` / `useTNGSex`) 4Stim sees it by itself: when no actor property says, anything the actor wears, their naked body included, that has a mesh skinned to ZeX's `Penis_*` bones, or named like a penis (`sPenisMeshNames`, `penis,schlong`: older penis mods such as Bag of Dicks and Futanari FEV skin theirs to the pelvis, from before ZeX's bones), gives them a penis (`Penis from body:` in `4Stim.log` says which mesh and which item). Undress leaves that item on, as it would a body. 4Stim's own equip objects don't count, so a strap-on never does. OStim reads Schlongs of Skyrim's or TNG's factions for the same thing; Fallout 4 has neither, so 4Stim reads the meshes. Without the 3D loaded, or with `bPenisFromBody=0`, it's the base sex.
 
 An actor property still decides first, as in OStim: to give a penis to those wearing something without penis bones, or to override the body:
 

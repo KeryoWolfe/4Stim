@@ -1,4 +1,5 @@
 #include "Undress.h"
+#include "PenisMesh.h"
 #include "Scheduler.h"
 #include "compat/ScrapFunction.h"
 #include "compat/Fallbacks.h"
@@ -178,7 +179,7 @@ namespace Undress
 				state.leftoversLogged = true;
 			}
 			for (const auto id : WornIn(a_actor, 0xFFFFFFFF)) {
-				if (std::ranges::find(a_takingOff, id) != a_takingOff.end() || EquipObjects::IsObjectItem(id) || Erection::IsErectionItem(id)) {
+				if (std::ranges::find(a_takingOff, id) != a_takingOff.end() || EquipObjects::IsObjectItem(id) || Erection::IsErectionItem(id) || PenisMesh::GivesPenis(a_actor, id)) {
 					continue;
 				}
 				const auto item = RE::TESForm::GetFormByID(id);
@@ -345,9 +346,13 @@ namespace Undress
 					return;
 				}
 				auto items = WornIn(actor, mask);
-				std::erase_if(items, [allowed](std::uint32_t a_item) {
+				std::erase_if(items, [actor, allowed](std::uint32_t a_item) {
 					if (EquipObjects::IsObjectItem(a_item) || Erection::IsErectionItem(a_item)) {
 						return true;  // 4Stim's own strap-ons, erect bodysuits and such stay on
+					}
+					if (PenisMesh::GivesPenis(actor, a_item)) {
+						REX::INFO("Undress: {:08X} keeps {:08X} on (it gives them a penis)", actor->GetFormID(), a_item);
+						return true;  // a wearable penis (futa) stays on, as a body would
 					}
 					const auto armor = RE::TESForm::GetFormByID<RE::TESObjectARMO>(a_item);
 					// Not on any undress slot: it stays (OStim's canUndress).
