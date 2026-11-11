@@ -532,8 +532,32 @@ namespace ActorProperties
 			return;
 		}
 		auto condition = Condition(a_actor);
+		// Which property file (or the body) decided, when that answer is new:
+		// the log then says why someone got the scenes they got.
+		std::string why;
+		{
+			std::scoped_lock lock(g_lock);
+			const bool outer = !t_inPenis;
+			t_inPenis = true;
+			for (const auto& p : g_sexes.entries) {
+				if (Holds(*p.condition, a_actor)) {
+					why = p.value ? std::format("\"sex\" from {}", p.condition->file) : std::format("by the body ({} leaves it open)", p.condition->file);
+					break;
+				}
+			}
+			if (outer) {
+				t_inPenis = false;
+			}
+			if (why.empty()) {
+				why = g_config.penisFromBody ? "by the body (no \"sex\" property holds)" : "by the base sex (no \"sex\" property holds)";
+			}
+		}
 		std::scoped_lock lock(g_cacheLock);
-		g_cache[a_actor->GetFormID()] = std::move(condition);
+		const auto       id = a_actor->GetFormID();
+		if (const auto it = g_cache.find(id); it == g_cache.end() || it->second.penis != condition.penis) {
+			REX::INFO("Actor properties: {:08X} {} a penis, {}", id, condition.penis ? "has" : "has no", why);
+		}
+		g_cache[id] = std::move(condition);
 	}
 
 	SceneRegistry::ActorCondition Cached(std::uint32_t a_id)

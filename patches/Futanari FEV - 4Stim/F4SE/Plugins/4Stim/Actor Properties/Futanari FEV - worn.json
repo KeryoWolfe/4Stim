@@ -1,0 +1,13 @@
+{
+	// Wearing Futanari FEV's penis (flaccid or erect) means a penis too, for
+	// when the keyword alone doesn't show: the game's own runtime keyword list
+	// isn't always what 4Stim reads (docs/ACTORS.md, Futa).
+	"condition": {
+		"worn": [
+			{ "mod": "FutaFEV.esp", "formid": "0x800" },
+			{ "mod": "FutaFEV.esp", "formid": "0x822" }
+		]
+	},
+	"priority": 30,
+	"sex": "male"
+}

@@ -88,9 +88,24 @@ namespace PenisMesh
 						}
 					}
 				}
+				// The game names a worn piece's geometry after its armor
+				// ("<addon> (id)[n]/<armor> (id)"), not the NIF's shape, so
+				// its shader is looked at too: Fallout 4 keeps the material
+				// file (.bgsm) as the shader property's name
+				// ("Materials\Futa\penis.bgsm", "materials\Schlong\Schlong.BGSM").
+				std::string_view material;
+				for (const auto& property : a_geometry->properties) {
+					if (const auto shader = netimmerse_cast<RE::BSShaderProperty*>(property.get()); shader && shader->name.c_str()) {
+						material = shader->name.c_str();
+					}
+				}
 				for (const auto& part : a_names) {
 					if (ContainsNoCase(name, part)) {
 						why = std::format("\"{}\" (named like one: \"{}\")", name, part);
+						return;
+					}
+					if (ContainsNoCase(material, part)) {
+						why = std::format("\"{}\" (its material is like one: \"{}\", \"{}\")", name, material, part);
 						return;
 					}
 				}
