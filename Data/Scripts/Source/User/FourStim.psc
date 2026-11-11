@@ -480,8 +480,8 @@ int Function GetPlayerSceneActorCount() Global Native
 ; akActors is in role order; aiLevel is 0 for the slowest speed. In
 ; FourStim_OnEvent, akTarget / akPerformer are None when the event has none.
 ; Registrations are NOT saved: register again on every game load.
-bool Function RegisterForSceneEvents(Form akReceiver) Global Native
-Function UnregisterForSceneEvents(Form akReceiver) Global Native
+bool Function RegisterForSceneEvents(ScriptObject akReceiver) Global Native  ; a form's script, a quest alias's or an active magic effect's
+Function UnregisterForSceneEvents(ScriptObject akReceiver) Global Native
 
 ; ---- Debug / testing ----
 

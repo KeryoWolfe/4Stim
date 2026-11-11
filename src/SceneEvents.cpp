@@ -14,17 +14,6 @@ namespace SceneEvents
 		std::mutex                 g_lock;
 		std::vector<std::uint64_t> g_receivers;  // VM object handles
 
-		std::uint64_t HandleFor(RE::TESForm* a_form)
-		{
-			const auto vm = FourStim::GetVM();
-			if (!vm || !a_form) {
-				return 0;
-			}
-			auto&      policy = vm->GetObjectHandlePolicy();
-			const auto handle = policy.GetHandleForObject(static_cast<std::uint32_t>(a_form->GetFormType()), a_form);
-			return handle == policy.EmptyHandle() ? 0 : static_cast<std::uint64_t>(handle);
-		}
-
 		// Calls a_function on every script attached to every registered form.
 		// SendEvent, unlike DispatchMethodCall, doesn't need the receiving
 		// script's name: it runs the function on whichever attached scripts
@@ -60,24 +49,24 @@ namespace SceneEvents
 		}
 	}
 
-	bool Register(RE::TESForm* a_receiver)
+	bool Register(std::uint64_t a_receiver)
 	{
-		const auto handle = HandleFor(a_receiver);
+		const auto handle = a_receiver;
 		if (!handle) {
-			REX::WARN("RegisterForSceneEvents: no script handle for {:08X}", a_receiver ? a_receiver->GetFormID() : 0);
+			REX::WARN("RegisterForSceneEvents: no script");
 			return false;
 		}
 		std::scoped_lock lock(g_lock);
 		if (std::ranges::find(g_receivers, handle) == g_receivers.end()) {
 			g_receivers.push_back(handle);
-			REX::INFO("Scene events: {:08X} registered", a_receiver->GetFormID());
+			REX::INFO("Scene events: script {:016X} registered", handle);
 		}
 		return true;
 	}
 
-	void Unregister(RE::TESForm* a_receiver)
+	void Unregister(std::uint64_t a_receiver)
 	{
-		if (const auto handle = HandleFor(a_receiver)) {
+		if (const auto handle = a_receiver) {
 			std::scoped_lock lock(g_lock);
 			std::erase(g_receivers, handle);
 		}

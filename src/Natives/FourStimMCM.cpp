@@ -124,13 +124,14 @@ namespace Core
 		return active ? active->furnitureType : std::string{};
 	}
 
-	bool RegisterForSceneEvents(std::monostate, RE::TESForm* a_receiver)
+	// Any script object: a form, a quest alias, an active magic effect.
+	bool RegisterForSceneEvents(std::monostate, RE::BSTSmartPointer<RE::BSScript::Object> a_receiver)
 	{
-		return SceneEvents::Register(a_receiver);
+		return SceneEvents::Register(a_receiver ? static_cast<std::uint64_t>(a_receiver->GetHandle()) : 0);
 	}
 
-	void UnregisterForSceneEvents(std::monostate, RE::TESForm* a_receiver)
+	void UnregisterForSceneEvents(std::monostate, RE::BSTSmartPointer<RE::BSScript::Object> a_receiver)
 	{
-		SceneEvents::Unregister(a_receiver);
+		SceneEvents::Unregister(a_receiver ? static_cast<std::uint64_t>(a_receiver->GetHandle()) : 0);
 	}
 }

@@ -120,7 +120,7 @@ The differences from OStim's, all forced by Fallout 4:
 - The callback is a `Function`, not an `Event`: Fallout 4 only allows the game's own events as `Event`s. It takes the same arguments.
 - The sender of thread events is None where OStim's is its main quest: 4Stim has no plugin file.
 
-As with SKSE's, registrations last until a game is loaded; register again after each load (for example from the player's `OnPlayerLoadGame`, through `RegisterForRemoteEvent`). Every script on the registered form that has the callback gets it. `UnregisterForModEvent(self, name)`, `UnregisterForAllModEvents(self)`, and `SendModEvent(name, strArg, numArg, sender)` for add-ons to send their own.
+As with SKSE's, any script can register (one on a form, a quest alias or an active magic effect), and registrations last until a game is loaded; register again after each load (for example from the player's `OnPlayerLoadGame`, through `RegisterForRemoteEvent`). Every script on the registered form that has the callback gets it. `UnregisterForModEvent(self, name)`, `UnregisterForAllModEvents(self)`, and `SendModEvent(name, strArg, numArg, sender)` for add-ons to send their own.
 
 | Event | strArg | numArg | sender | OStim's |
 |---|---|---|---|---|
@@ -156,7 +156,7 @@ EndFunction
 
 ### Scene events (4Stim's older way)
 
-Before mod events, 4Stim called fixed functions on registered scripts, and still does. A script on a quest or reference registers with `FourStim.RegisterForSceneEvents(self)` (again on every game load), and 4Stim calls these functions on its scripts if they have them:
+Before mod events, 4Stim called fixed functions on registered scripts, and still does. A script on a quest, a reference, a quest alias or an active magic effect registers with `FourStim.RegisterForSceneEvents(self)` (again on every game load), and 4Stim calls these functions on its scripts if they have them:
 
 ```papyrus
 Function FourStim_OnSceneStart(Actor[] akActors, String asSceneID)

@@ -18,15 +18,16 @@ arguments: 4stim_thread_start, 4stim_thread_scenechanged, 4stim_thread_end...}
 ; Every script attached to Receiver that has the function gets the call. As
 ; SKSE's, registrations last until a game is loaded: register again after each
 ; load (for example from the player's OnPlayerLoadGame, through
-; RegisterForRemoteEvent). Receiver is a Quest, an ObjectReference or another
-; form with scripts on it (usually Self).
-bool Function RegisterForModEvent(Form Receiver, string EventName, string Callback) Global Native
+; RegisterForRemoteEvent). Receiver is any script (usually Self): one on a
+; Quest, an ObjectReference or another form, or, as SKSE's, on a quest alias
+; or an active magic effect.
+bool Function RegisterForModEvent(ScriptObject Receiver, string EventName, string Callback) Global Native
 
 ; Receiver stops getting EventName.
-Function UnregisterForModEvent(Form Receiver, string EventName) Global Native
+Function UnregisterForModEvent(ScriptObject Receiver, string EventName) Global Native
 
 ; Receiver stops getting every mod event.
-Function UnregisterForAllModEvents(Form Receiver) Global Native
+Function UnregisterForAllModEvents(ScriptObject Receiver) Global Native
 
 ; Sends EventName to everyone registered for it, as SKSE's SendModEvent: for
 ; 4Stim's add-ons to tell each other things. Sender may be None.

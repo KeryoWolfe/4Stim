@@ -39,8 +39,10 @@ namespace SceneEvents
 	using NativeListener = void (*)(Kind a_kind, const std::vector<std::uint32_t>& a_actors, std::uint32_t a_actor);
 	void SetNativeListener(NativeListener a_listener);
 
-	bool Register(RE::TESForm* a_receiver);
-	void Unregister(RE::TESForm* a_receiver);
+	// a_receiver: the VM handle of the registering script object (a form's,
+	// a quest alias's or an active magic effect's).
+	bool Register(std::uint64_t a_receiver);
+	void Unregister(std::uint64_t a_receiver);
 	void Clear();
 
 	// Each also sends the scene's mod events (ModEvents.h), with its thread

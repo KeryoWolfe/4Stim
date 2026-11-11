@@ -3,6 +3,8 @@
 ## 0.5.0 alpha (in progress)
 
 ### Who has a penis, from the body
+- **Aliases and magic effects can register for events**: `FourModEvents.RegisterForModEvent` and `FourStim.RegisterForSceneEvents` take any script (`ScriptObject`), as SKSE's does, not only a form's. Scripts compiled against the old `Form` versions keep working. Needed a fix in CommonLibF4 (a `ScriptObject` parameter couldn't be bound).
+- **Futanari FEV patch** (`patches/Futanari FEV - 4Stim`): its AAF watcher replaced by one listening to 4Stim's scene events: the penis goes erect at a scene's start and flaccid at its end, without AAF.
 - **Wearable penises from before ZeX's bones** (Bag of Dicks, Futanari FEV): their meshes are skinned to the pelvis, so the bone check missed them, and Undress took them off as clothing. A mesh named like a penis now counts too (`sPenisMeshNames=penis,schlong`), the log names the item that gives it, and Undress leaves that item on.
 - **Scene check: talking no longer warns.** 4Stim's own moans count as talking, so every scene change warned ("Scene check: ... talking") with no chatter heard; talking is now only noted. A scene's idle not playing still warns.
 - **Fixed: the picker froze the game** (this build's first try): the body check didn't recognise the main thread and queued itself as a task, which queued itself again, for ever. The queued look now runs directly, and the main thread is taken from inside an F4SE task (`kGameLoaded` comes on another thread), which also makes `FindFurniture`'s and `MigrateThread`'s main-thread checks right: before, they always answered no.

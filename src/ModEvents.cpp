@@ -33,17 +33,6 @@ namespace ModEvents
 			return out;
 		}
 
-		std::uint64_t HandleFor(RE::TESForm* a_form)
-		{
-			const auto vm = FourStim::GetVM();
-			if (!vm || !a_form) {
-				return 0;
-			}
-			auto&      policy = vm->GetObjectHandlePolicy();
-			const auto handle = policy.GetHandleForObject(static_cast<std::uint32_t>(a_form->GetFormType()), a_form);
-			return handle == policy.EmptyHandle() ? 0 : static_cast<std::uint64_t>(handle);
-		}
-
 		// The live registrations for a_eventName (forms that are gone are
 		// dropped on the way).
 		std::vector<Registration> Receivers(std::string_view a_eventName)
@@ -90,11 +79,11 @@ namespace ModEvents
 		std::string Name(std::string_view a_rest) { return std::string(PREFIX) + std::string(a_rest); }
 	}
 
-	bool Register(RE::TESForm* a_receiver, std::string_view a_eventName, std::string_view a_callback)
+	bool Register(std::uint64_t a_receiver, std::string_view a_eventName, std::string_view a_callback)
 	{
-		const auto handle = HandleFor(a_receiver);
+		const auto handle = a_receiver;
 		if (!handle || a_eventName.empty() || a_callback.empty()) {
-			REX::WARN("Mod events: can't register {:08X} for \"{}\" (no script, or no event or callback name)", a_receiver ? a_receiver->GetFormID() : 0, a_eventName);
+			REX::WARN("Mod events: can't register {:016X} for \"{}\" (no script, or no event or callback name)", handle, a_eventName);
 			return false;
 		}
 		std::scoped_lock lock(g_lock);
@@ -105,13 +94,13 @@ namespace ModEvents
 		} else {
 			list.push_back({ handle, RE::BSFixedString(a_callback) });
 		}
-		REX::INFO("Mod events: {:08X} registered for \"{}\" ({})", a_receiver->GetFormID(), a_eventName, a_callback);
+		REX::INFO("Mod events: script {:016X} registered for \"{}\" ({})", handle, a_eventName, a_callback);
 		return true;
 	}
 
-	void Unregister(RE::TESForm* a_receiver, std::string_view a_eventName)
+	void Unregister(std::uint64_t a_receiver, std::string_view a_eventName)
 	{
-		const auto handle = HandleFor(a_receiver);
+		const auto handle = a_receiver;
 		if (!handle) {
 			return;
 		}
@@ -121,9 +110,9 @@ namespace ModEvents
 		}
 	}
 
-	void UnregisterAll(RE::TESForm* a_receiver)
+	void UnregisterAll(std::uint64_t a_receiver)
 	{
-		const auto handle = HandleFor(a_receiver);
+		const auto handle = a_receiver;
 		if (!handle) {
 			return;
 		}

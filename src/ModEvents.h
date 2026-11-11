@@ -26,9 +26,11 @@ namespace ModEvents
 {
 	// a_receiver's scripts get a_callback for a_eventName (case-insensitive).
 	// Registering the same event again replaces the callback.
-	bool Register(RE::TESForm* a_receiver, std::string_view a_eventName, std::string_view a_callback);
-	void Unregister(RE::TESForm* a_receiver, std::string_view a_eventName);
-	void UnregisterAll(RE::TESForm* a_receiver);
+	// a_receiver is the VM handle of the script object that registered: a
+	// form's, or (as SKSE's) a quest alias's or an active magic effect's.
+	bool Register(std::uint64_t a_receiver, std::string_view a_eventName, std::string_view a_callback);
+	void Unregister(std::uint64_t a_receiver, std::string_view a_eventName);
+	void UnregisterAll(std::uint64_t a_receiver);
 	void Clear();
 
 	// Sends a_eventName to its registered callbacks with OStim's four

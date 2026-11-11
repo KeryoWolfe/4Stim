@@ -1090,14 +1090,14 @@ namespace Core
 	std::string LocalizeText(std::monostate, std::string a_text);
 	RE::TESObjectREFR* GetSceneFurniture(std::monostate, RE::Actor* a_actor);
 	std::string GetSceneFurnitureType(std::monostate, RE::Actor* a_actor);
-	bool RegisterForSceneEvents(std::monostate, RE::TESForm* a_receiver);
-	void UnregisterForSceneEvents(std::monostate, RE::TESForm* a_receiver);
+	bool RegisterForSceneEvents(std::monostate, RE::BSTSmartPointer<RE::BSScript::Object> a_receiver);
+	void UnregisterForSceneEvents(std::monostate, RE::BSTSmartPointer<RE::BSScript::Object> a_receiver);
 
 	namespace Natives::FourModEvents
 	{
-		bool Register(std::monostate, RE::TESForm* a_receiver, std::string a_eventName, std::string a_callback);
-		void Unregister(std::monostate, RE::TESForm* a_receiver, std::string a_eventName);
-		void UnregisterAll(std::monostate, RE::TESForm* a_receiver);
+		bool Register(std::monostate, RE::BSTSmartPointer<RE::BSScript::Object> a_receiver, std::string a_eventName, std::string a_callback);
+		void Unregister(std::monostate, RE::BSTSmartPointer<RE::BSScript::Object> a_receiver, std::string a_eventName);
+		void UnregisterAll(std::monostate, RE::BSTSmartPointer<RE::BSScript::Object> a_receiver);
 		void Send(std::monostate, std::string a_eventName, std::string a_strArg, float a_numArg, RE::TESForm* a_sender);
 	}
 
