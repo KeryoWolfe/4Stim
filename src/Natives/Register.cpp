@@ -137,6 +137,7 @@ namespace Core
 		a_vm->BindNativeMethod(SCRIPT_NAME, "GetEquipObjectTypes"sv, GetEquipObjectTypes);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "HasPenis"sv, HasPenis);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "HeelsChanged"sv, HeelsChanged);
+		a_vm->BindNativeMethod(SCRIPT_NAME, "EvaluatePackageOf"sv, EvaluatePackageOf);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "GetActorType"sv, GetActorType);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "NoteFurnitureBlocked"sv, NoteFurnitureBlocked);
 		a_vm->BindNativeMethod(SCRIPT_NAME, "ApplyFurnitureChange"sv, ApplyFurnitureChangeNative);

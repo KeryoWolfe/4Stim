@@ -168,6 +168,11 @@ int Function TakeSceneWeaponID(Actor akActor) Global Native  ; a form ID (a Form
 ; the High Heels System's height turned off or back on to match.
 Function HeelsChanged(int aiActorID) Global Native
 
+; Internal (FourStimScene's release): akActor.EvaluatePackage(), on the main
+; thread, through 4Stim.ini's iEvaluatePackage (0: as Papyrus's; 1 / 2:
+; called directly, a test logged in 4Stim.log).
+Function EvaluatePackageOf(Actor akActor) Global Native
+
 ; ---- Settings (the MCM page, docs\MCM.md) ----
 
 ; Reads 4Stim.ini and the MCM's settings again (the MCM calls it when a

@@ -3,6 +3,9 @@
 ## 0.5.0 alpha (in progress)
 
 ### Who has a penis, from the body
+- **Keyword conditions see keywords a script gave an actor** (`AddKeyword`), as Papyrus's `HasKeyword` does: before, only the race's and base's.
+- **Futanari FEV patch**: an actor property gives the mod's futa (its keyword) a penis dressed or not: the mod shows the penis only once they're naked, after 4Stim had picked the scene, so they got lesbian scenes.
+- **`iEvaluatePackage` covers scene ends**: NPCs let go at a scene's end are evaluated through it too (`FourStim.EvaluatePackageOf`), where the test can tell "now" from "queued".
 - **Aliases and magic effects can register for events**: `FourModEvents.RegisterForModEvent` and `FourStim.RegisterForSceneEvents` take any script (`ScriptObject`), as SKSE's does, not only a form's. Scripts compiled against the old `Form` versions keep working. Needed a fix in CommonLibF4 (a `ScriptObject` parameter couldn't be bound).
 - **Futanari FEV patch** (`patches/Futanari FEV - 4Stim`): its AAF watcher replaced by one listening to 4Stim's scene events: the penis goes erect at a scene's start and flaccid at its end, without AAF.
 - **Wearable penises from before ZeX's bones** (Bag of Dicks, Futanari FEV): their meshes are skinned to the pelvis, so the bone check missed them, and Undress took them off as clothing. A mesh named like a penis now counts too (`sPenisMeshNames=penis,schlong`), the log names the item that gives it, and Undress leaves that item on.

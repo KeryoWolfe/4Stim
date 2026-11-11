@@ -169,11 +169,21 @@ namespace ActorProperties
 			return a_form && (a_ref.id ? a_form->HasKeywordID(a_ref.id) : a_form->HasKeywordString(a_ref.editorID));
 		}
 
+		// On the actor itself too, as Papyrus's ObjectReference.HasKeyword (and
+		// OStim's condition, Skyrim's HasKeyword) sees it: a keyword a script
+		// gave them with AddKeyword (Futanari FEV's futa, docs/ACTORS.md).
+		bool OnReference(RE::Actor* a_actor, const FormRef& a_ref)
+		{
+			const auto keyword = a_ref.id ? RE::TESForm::GetFormByID<RE::BGSKeyword>(a_ref.id) :
+			                                RE::TESForm::GetFormByEditorID<RE::BGSKeyword>(RE::BSFixedString(a_ref.editorID));
+			return keyword && a_actor->HasKeywordHelper(keyword, nullptr);
+		}
+
 		bool HasAnyKeyword(RE::Actor* a_actor, const std::vector<FormRef>& a_refs)
 		{
 			const auto npc = a_actor->GetNPC();
 			return std::ranges::any_of(a_refs, [&](const FormRef& r) {
-				return (a_actor->race && KeywordMatches(a_actor->race, r)) || (npc && KeywordMatches(npc, r));
+				return (a_actor->race && KeywordMatches(a_actor->race, r)) || (npc && KeywordMatches(npc, r)) || OnReference(a_actor, r);
 			});
 		}
 

@@ -34,7 +34,7 @@ OStim's actor properties borrow a perk's conditions from OStim.esp. 4Stim has no
 |---|---|
 | `sex` | `"male"` / `"female"`: the body's sex. |
 | `races` / `notRaces` | Their race is (isn't) one of these. |
-| `keywords` / `notKeywords` | Their race or base has (doesn't have) one of these keywords. |
+| `keywords` / `notKeywords` | They, their race or their base have (don't have) one of these keywords: one a script gave them (`AddKeyword`) counts, as with Papyrus's `HasKeyword`. |
 | `factions` / `notFactions` | They're (not) in one of these factions. |
 | `worn` / `notWorn` | They're (not) wearing one of these armors: an equippable penis, a gag... |
 | `wornKeywords` / `notWornKeywords` | Something they wear has (none has) one of these keywords. |
@@ -62,7 +62,7 @@ As OStim's `OStimNPC`, everyone "has" a penis: a woman can take a role that need
 
 In Fallout 4, futa usually comes from an equippable penis. With `bPenisFromBody=1` (the default; `[Roles]` in `4Stim.ini`, OStim's `useSoSSex` / `useTNGSex`) 4Stim sees it by itself: when no actor property says, anything the actor wears, their naked body included, that has a mesh skinned to ZeX's `Penis_*` bones, or named like a penis (`sPenisMeshNames`, `penis,schlong`: older penis mods such as Bag of Dicks and Futanari FEV skin theirs to the pelvis, from before ZeX's bones), gives them a penis (`Penis from body:` in `4Stim.log` says which mesh and which item). Undress leaves that item on, as it would a body. 4Stim's own equip objects don't count, so a strap-on never does. OStim reads Schlongs of Skyrim's or TNG's factions for the same thing; Fallout 4 has neither, so 4Stim reads the meshes. Without the 3D loaded, or with `bPenisFromBody=0`, it's the base sex.
 
-An actor property still decides first, as in OStim: to give a penis to those wearing something without penis bones, or to override the body:
+Some futa mods hide the penis while their futa are dressed and show it only once they're naked (Futanari FEV); as roles and scenes are picked before undressing, an actor property on the mod's keyword says it instead (4Stim's patch for Futanari FEV ships one). An actor property still decides first, as in OStim: to give a penis to those wearing something without penis bones, to override the body, or for mods like that:
 
 ```json
 {

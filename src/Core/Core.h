@@ -1033,6 +1033,7 @@ namespace Core
 	void UnsetObjectVariant(std::monostate, RE::Actor* a_actor, std::string a_type);
 	std::vector<std::string> GetEquipObjectTypes(std::monostate);
 	void HeelsChanged(std::monostate, std::int32_t a_actorID);
+	void EvaluatePackageOf(std::monostate, RE::Actor* a_actor);
 	bool HasPenis(std::monostate, RE::Actor* a_actor);
 	std::string GetActorType(std::monostate, RE::Actor* a_actor);
 	void NoteFurnitureBlocked(std::monostate, std::int32_t a_refID);

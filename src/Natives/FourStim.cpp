@@ -385,6 +385,22 @@ namespace Core
 		return EquipObjects::Types();
 	}
 
+	// FourStimScene's release, an NPC out of a scene: EvaluatePackage on the
+	// main thread, through iEvaluatePackage's switch (Papyrus's as before
+	// with 0; directly with 1 or 2, logged: the test in roadmap 2b.6).
+	void EvaluatePackageOf(std::monostate, RE::Actor* a_actor)
+	{
+		if (!a_actor) {
+			return;
+		}
+		const auto id = a_actor->GetFormID();
+		F4SE::GetTaskInterface()->AddTask([id]() {
+			if (const auto actor = RE::TESForm::GetFormByID<RE::Actor>(id)) {
+				EvaluateActorPackage(actor, "scene end");
+			}
+		});
+	}
+
 	// 4Stim's undressing took clothes off or put them on (Papyrus, after the
 	// items): heels are measured again and HHS turned off or on to match.
 	void HeelsChanged(std::monostate, std::int32_t a_actorID)

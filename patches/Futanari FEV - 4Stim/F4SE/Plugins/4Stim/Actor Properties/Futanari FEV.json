@@ -1,0 +1,7 @@
+{
+	"condition": {
+		"keywords": [ { "mod": "FutaFEV.esp", "formid": "0x22AF5" } ]
+	},
+	"priority": 30,
+	"sex": "male"
+}

@@ -193,7 +193,7 @@ Function ReleaseFromScene(Actor akActor) Global
 		Game.SetPlayerAIDriven(false)
 	else
 		akActor.SetRestrained(false)
-		akActor.EvaluatePackage()  ; walk back into their routine
+		FourStim.EvaluatePackageOf(akActor)  ; walk back into their routine (iEvaluatePackage)
 	endif
 	RearmAfterScene(akActor)
 EndFunction
@@ -274,7 +274,7 @@ Function ReleaseAfterLoad(int aiActorID) Global
 		return
 	endif
 	akActor.SetRestrained(false)
-	akActor.EvaluatePackage()
+	FourStim.EvaluatePackageOf(akActor)  ; iEvaluatePackage
 	FourStim.RestoreInteraction(akActor)
 EndFunction
 
