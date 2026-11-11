@@ -3,6 +3,7 @@
 ## 0.5.0 alpha (in progress)
 
 ### Who has a penis, from the body
+- **Scene check: talking no longer warns.** 4Stim's own moans count as talking, so every scene change warned ("Scene check: ... talking") with no chatter heard; talking is now only noted. A scene's idle not playing still warns.
 - **Fixed: the picker froze the game** (this build's first try): the body check didn't recognise the main thread and queued itself as a task, which queued itself again, for ever. The queued look now runs directly, and the main thread is taken from inside an F4SE task (`kGameLoaded` comes on another thread), which also makes `FindFurniture`'s and `MigrateThread`'s main-thread checks right: before, they always answered no.
 - **Penis from the body** (roadmap 2b.7; OStim's `useSoSSex` / `useTNGSex`): when no actor property says, anything an actor wears, their naked body included, with a mesh skinned to ZeX's `Penis_*` bones gives them a penis, so a wearable penis makes futa without an actor property. 4Stim's equip objects (the strap-on) never count. `Penis from body:` lines in `4Stim.log` name the mesh; `bPenisFromBody=0` goes back to the base sex.
 - **`iEvaluatePackage` test switch** (roadmap 2b.6): 1 or 2 calls `EvaluatePackage` directly with false or true first, logging which package NPCs run before, right after and half a second later, to tell which means "now". 0 (the default) keeps Papyrus.

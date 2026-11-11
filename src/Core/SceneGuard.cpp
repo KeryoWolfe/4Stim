@@ -157,7 +157,10 @@ namespace Core
 						talking ? "" : "not ", actor->GetWeaponMagicDrawn() ? "out" : "away");
 					// No current idle is normal: the process doesn't keep one for
 					// idles played this way (every check in the owner's log).
-					if ((idle && !ours) || talking) {
+					// Talking alone isn't a problem: 4Stim's own moans count as
+					// talking (every scene change in the owner's log, 10
+					// November, with no chatter heard), so it's only noted.
+					if (idle && !ours) {
 						REX::WARN("Scene check: {:08X} in \"{}\" a second after it played: {}", id, active.sceneID, what);
 					} else {
 						REX::INFO("Scene check: {:08X} in \"{}\": {}", id, active.sceneID, what);
