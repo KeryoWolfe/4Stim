@@ -2,6 +2,7 @@
 
 #include "EquipObjects.h"
 
+#include <atomic>
 #include <mutex>
 #include <unordered_map>
 #include <unordered_set>
@@ -19,7 +20,7 @@ namespace PenisMesh
 		std::mutex                               g_lock;
 		std::unordered_map<std::uint32_t, Known> g_known;
 		std::unordered_set<std::uint32_t>        g_queued;  // looks waiting for the main thread
-		std::thread::id                          g_mainThread;
+		std::atomic<std::thread::id>             g_mainThread;  // set from a task, read anywhere
 
 		// What the body is made of right now: the 3D's root and each worn
 		// piece's clone in it. Equipping, unequipping or reloading the 3D
@@ -95,7 +96,31 @@ namespace PenisMesh
 
 	void SetMainThread(std::thread::id a_id)
 	{
-		g_mainThread = a_id;
+		g_mainThread.store(a_id);
+	}
+
+	namespace
+	{
+		// On the main thread: the cached answer while nothing worn or the 3D
+		// changed, else a new look.
+		std::optional<bool> OnMain(RE::Actor* a_actor)
+		{
+			const auto id = a_actor->GetFormID();
+			const auto fingerprint = Fingerprint(a_actor);
+			{
+				std::scoped_lock lock(g_lock);
+				if (const auto it = g_known.find(id); it != g_known.end() && it->second.fingerprint == fingerprint) {
+					return it->second.penis;
+				}
+			}
+			const auto penis = Look(a_actor);
+			if (!penis) {
+				return std::nullopt;  // no 3D yet: looked at again next time
+			}
+			std::scoped_lock lock(g_lock);
+			g_known[id] = { fingerprint, penis };
+			return penis;
+		}
 	}
 
 	std::optional<bool> FromBody(RE::Actor* a_actor)
@@ -103,37 +128,29 @@ namespace PenisMesh
 		if (!a_actor) {
 			return std::nullopt;
 		}
+		if (std::this_thread::get_id() == g_mainThread.load()) {
+			return OnMain(a_actor);
+		}
 		const auto id = a_actor->GetFormID();
-		if (std::this_thread::get_id() != g_mainThread) {
-			std::scoped_lock lock(g_lock);
-			if (const auto it = g_known.find(id); it != g_known.end()) {
-				return it->second.penis;
-			}
-			if (g_queued.insert(id).second) {
-				F4SE::GetTaskInterface()->AddTask([id]() {
-					{
-						std::scoped_lock lock(g_lock);
-						g_queued.erase(id);
-					}
-					FromBody(RE::TESForm::GetFormByID<RE::Actor>(id));
-				});
-			}
-			return std::nullopt;
-		}
-		const auto fingerprint = Fingerprint(a_actor);
-		{
-			std::scoped_lock lock(g_lock);
-			if (const auto it = g_known.find(id); it != g_known.end() && it->second.fingerprint == fingerprint) {
-				return it->second.penis;
-			}
-		}
-		const auto penis = Look(a_actor);
-		if (!penis) {
-			return std::nullopt;  // no 3D yet: looked at again next time
-		}
 		std::scoped_lock lock(g_lock);
-		g_known[id] = { fingerprint, penis };
-		return penis;
+		if (const auto it = g_known.find(id); it != g_known.end()) {
+			return it->second.penis;
+		}
+		if (g_queued.insert(id).second) {
+			// F4SE's tasks run on the main thread: the look happens there,
+			// straight away (never through FromBody again, which would queue
+			// another task for ever if the main thread weren't known yet).
+			F4SE::GetTaskInterface()->AddTask([id]() {
+				{
+					std::scoped_lock lock(g_lock);
+					g_queued.erase(id);
+				}
+				if (const auto actor = RE::TESForm::GetFormByID<RE::Actor>(id)) {
+					OnMain(actor);
+				}
+			});
+		}
+		return std::nullopt;
 	}
 
 	void Clear()

@@ -130,8 +130,15 @@ namespace Core
 		case F4SE::MessagingInterface::kGameLoaded:
 			{
 				REX::INFO("kGameLoaded");
-				g_mainThread = std::this_thread::get_id();
-				PenisMesh::SetMainThread(g_mainThread);
+				// The main thread is the one that runs F4SE's tasks. kGameLoaded
+				// itself comes on another (71292 in a log where tasks ran on
+				// 67424), so it's taken from inside a task: before, every "on
+				// the main thread?" check (FindFurniture's, MigrateThread's,
+				// the body's) answered no on the main thread too.
+				F4SE::GetTaskInterface()->AddTask([]() {
+					g_mainThread = std::this_thread::get_id();
+					PenisMesh::SetMainThread(g_mainThread);
+				});
 				// The scene files and the rest the first picker and the first
 				// scene read (with a big pack: hundreds of scene files, their
 				// translations, every plugin's Idle editor IDs), read now on a
