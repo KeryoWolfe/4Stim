@@ -137,6 +137,10 @@ namespace Undress
 			if (!list) {
 				return items;
 			}
+			// Read-locked: another thread may be adding an item right now (an
+			// equip object put on: AddItem, then EquipItem), which can move
+			// the array; unlocked, a worn item could be missed.
+			const RE::BSAutoReadLock lock{ list->rwLock };
 			for (auto& item : list->data) {
 				const auto object = item.object;
 				if (!object || object->GetFormType() != RE::ENUM_FORM_ID::kARMO || object->GetFormID() == PIPBOY) {

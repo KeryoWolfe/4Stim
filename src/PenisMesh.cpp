@@ -158,6 +158,25 @@ namespace PenisMesh
 			return found;
 		}
 
+		// An item that gave a_actor a penis is still worn but not drawn yet:
+		// its 3D is being built again (something else was put on, and the
+		// game rebuilds the worn pieces over a few frames). Looked at now, the
+		// penis would be missing; the last answer stands until it's drawn.
+		bool StillLoading(RE::Actor* a_actor, const std::vector<std::uint32_t>& a_items)
+		{
+			const auto biped = a_items.empty() ? nullptr : a_actor->biped.get();
+			if (!biped) {
+				return false;
+			}
+			for (const auto& object : biped->object) {
+				const auto form = object.parent.object;
+				if (form && !object.partClone && std::ranges::find(a_items, form->GetFormID()) != a_items.end()) {
+					return true;
+				}
+			}
+			return false;
+		}
+
 		// On the main thread: the cached answer while nothing worn or the 3D
 		// changed, else a new look.
 		std::optional<bool> OnMain(RE::Actor* a_actor)
@@ -166,8 +185,10 @@ namespace PenisMesh
 			const auto fingerprint = Fingerprint(a_actor);
 			{
 				std::scoped_lock lock(g_lock);
-				if (const auto it = g_known.find(id); it != g_known.end() && it->second.fingerprint == fingerprint) {
-					return it->second.penis;
+				if (const auto it = g_known.find(id); it != g_known.end()) {
+					if (it->second.fingerprint == fingerprint || StillLoading(a_actor, it->second.items)) {
+						return it->second.penis;
+					}
 				}
 			}
 			auto found = Look(a_actor);

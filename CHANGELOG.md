@@ -4,6 +4,7 @@
 
 ### Who has a penis, from the body
 - **Keyword conditions see keywords a script gave an actor** (`AddKeyword`), as Papyrus's `HasKeyword` does: before, only the race's and base's.
+- **A futa losing their penis mid-scene** (in the log, not on screen): when a tongue went on, the next scene change re-read the actors while the game was still adding the item and rebuilding the worn 3D, and saw neither the penis item nor its mesh. The worn-items read now holds the inventory's lock, and the body check keeps its last answer while an item that gave a penis is still being drawn again.
 - **Futa still getting lesbian scenes** (Futanari FEV): the body check read only mesh names, and the game names a worn mesh after its armor (`Futanari Flaccid`), so it saw no penis. It now reads the mesh's material file too (`Materials\Futa\penis.bgsm`). The patch also gains a second actor property, on wearing the mod's flaccid or erect penis, and the log says for each actor whether a property file or the body gave them a penis.
 - **Futanari FEV patch**: an actor property gives the mod's futa (its keyword) a penis dressed or not: the mod shows the penis only once they're naked, after 4Stim had picked the scene, so they got lesbian scenes.
 - **`iEvaluatePackage` covers scene ends**: NPCs let go at a scene's end are evaluated through it too (`FourStim.EvaluatePackageOf`), where the test can tell "now" from "queued".

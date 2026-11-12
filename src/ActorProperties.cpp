@@ -555,7 +555,7 @@ namespace ActorProperties
 		std::scoped_lock lock(g_cacheLock);
 		const auto       id = a_actor->GetFormID();
 		if (const auto it = g_cache.find(id); it == g_cache.end() || it->second.penis != condition.penis) {
-			REX::INFO("Actor properties: {:08X} {} a penis, {}", id, condition.penis ? "has" : "has no", why);
+			REX::INFO("Actor properties: {:08X} {}, {}", id, condition.penis ? "has a penis" : "has no penis", why);
 		}
 		g_cache[id] = std::move(condition);
 	}
