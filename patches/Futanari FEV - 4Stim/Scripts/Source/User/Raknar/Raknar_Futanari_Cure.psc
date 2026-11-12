@@ -5,7 +5,11 @@ keyword), which failed to link without AAF ("Unable to link types
 associated with function LoadAAF"). 4Stim needs no marking: it sees the
 penis on the body (docs/ACTORS.md, Futa). It also takes the actor off the
 mod's list before the penis, and takes the penis again after half a second:
-the mod's reveal spell, cast every 4 seconds, could give it back.}
+the mod's reveal spell, cast every 4 seconds, could give it back. And
+FutaFEV.esp leaves this script's Raknar_Futanari_list empty, so the original
+never took anyone off the list ("Cannot call RemoveAddedForm() on a None
+object") and the spell kept giving the penis back: the list is now read
+from FutaFEV.esp when the property is empty.}
 
 
 Armor Property Raknar_Futanari_Flaccid Auto Const
@@ -23,7 +27,7 @@ If (FutaChar.HasKeyword(Raknar_Futanari_Effect))
 	; seconds spell stops before the penis goes (the original took the items
 	; first, and a spell already cast could give them back).
 	If(FutaChar != PlayerRef)
-	Raknar_Futanari_list.RemoveAddedform(FutaChar as Form)
+	GetFutaList().RemoveAddedform(FutaChar as Form)
 	endif
 	FutaChar.RemoveSpell(Raknar_Futanari_Spell)
  	FutaChar.RemoveKeyword(Raknar_Futanari_Effect)
@@ -42,4 +46,13 @@ endevent
 Function RemovePenis(Actor FutaChar)
 	FutaChar.RemoveItem(Raknar_Futanari_Flaccid, -1, True)
 	FutaChar.RemoveItem(Raknar_Futanari_Erect, -1, True)
+EndFunction
+
+; The patch's: the mod's list of futas, from the property if the plugin filled
+; it (it doesn't), else from FutaFEV.esp (0x6AFB, Raknar_Futanari_list).
+FormList Function GetFutaList()
+	if Raknar_Futanari_list
+		return Raknar_Futanari_list
+	endif
+	return Game.GetFormFromFile(0x6AFB, "FutaFEV.esp") as FormList
 EndFunction
