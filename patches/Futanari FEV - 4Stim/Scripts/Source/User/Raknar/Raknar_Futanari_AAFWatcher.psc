@@ -82,55 +82,59 @@ Function Flaccid(Actor[] akActors)
 	EndWhile
 EndFunction
 
-; The original's, unchanged.
-Function RestoreFutaErect (Actor FutaChar)
+; The original's, with one change: their parameter was named FutaChar, the
+; same as the script's FutaChar property, and Papyrus took the property (None,
+; never filled): "Cannot call GetItemCount() on a None object", and no
+; erection. The original only worked because AAF's handler set the property
+; first. Now akFuta.
+Function RestoreFutaErect (Actor akFuta)
 
-if (Futachar.GetItemCount(Raknar_Futanari_Erect) == 0)
-	Futachar.Additem(Raknar_Futanari_Erect)
+if (akFuta.GetItemCount(Raknar_Futanari_Erect) == 0)
+	akFuta.Additem(Raknar_Futanari_Erect)
 endif
 
-int Currentsize = FutaChar.GetValue(Raknar_Futanari_Size) as int
-FutaChar.RemoveAllModsFromInventoryItem (Raknar_Futanari_Erect)
+int Currentsize = akFuta.GetValue(Raknar_Futanari_Size) as int
+akFuta.RemoveAllModsFromInventoryItem (Raknar_Futanari_Erect)
  If(Currentsize == 0)
-	FutaChar.AttachModToInventoryItem (Raknar_Futanari_Erect, Raknar_FutanariE0)
+	akFuta.AttachModToInventoryItem (Raknar_Futanari_Erect, Raknar_FutanariE0)
 ElseIf (Currentsize == 1)
-	FutaChar.AttachModToInventoryItem (Raknar_Futanari_Erect, Raknar_FutanariE1)
+	akFuta.AttachModToInventoryItem (Raknar_Futanari_Erect, Raknar_FutanariE1)
 Elseif (Currentsize == 2)
-	FutaChar.AttachModToInventoryItem (Raknar_Futanari_Erect, Raknar_FutanariE2)
+	akFuta.AttachModToInventoryItem (Raknar_Futanari_Erect, Raknar_FutanariE2)
 Elseif (Currentsize == 3)
-	FutaChar.AttachModToInventoryItem (Raknar_Futanari_Erect, Raknar_FutanariE3)
+	akFuta.AttachModToInventoryItem (Raknar_Futanari_Erect, Raknar_FutanariE3)
 Elseif (Currentsize == 4)
-	FutaChar.AttachModToInventoryItem (Raknar_Futanari_Erect, Raknar_FutanariE4)
+	akFuta.AttachModToInventoryItem (Raknar_Futanari_Erect, Raknar_FutanariE4)
 Elseif (Currentsize == 5)
-	FutaChar.AttachModToInventoryItem (Raknar_Futanari_Erect, Raknar_FutanariE5)
+	akFuta.AttachModToInventoryItem (Raknar_Futanari_Erect, Raknar_FutanariE5)
 Elseif (Currentsize >= 6)
-	FutaChar.AttachModToInventoryItem (Raknar_Futanari_Erect, Raknar_FutanariE6)
+	akFuta.AttachModToInventoryItem (Raknar_Futanari_Erect, Raknar_FutanariE6)
 EndIf
-FutaChar.EquipItem(Raknar_Futanari_Erect,false,true)
+akFuta.EquipItem(Raknar_Futanari_Erect,false,true)
 EndFunction
 
-Function RestoreFutaFlaccid (Actor FutaChar)
+Function RestoreFutaFlaccid (Actor akFuta)
 
-if (Futachar.GetItemCount(Raknar_Futanari_Flaccid) == 0)
-	Futachar.Additem(Raknar_Futanari_Flaccid)
+if (akFuta.GetItemCount(Raknar_Futanari_Flaccid) == 0)
+	akFuta.Additem(Raknar_Futanari_Flaccid)
 endif
 
-int Currentsize = FutaChar.GetValue(Raknar_Futanari_Size) as int
-FutaChar.RemoveAllModsFromInventoryItem (Raknar_Futanari_Flaccid)
+int Currentsize = akFuta.GetValue(Raknar_Futanari_Size) as int
+akFuta.RemoveAllModsFromInventoryItem (Raknar_Futanari_Flaccid)
  If(Currentsize == 0)
-	FutaChar.AttachModToInventoryItem (Raknar_Futanari_Flaccid, Raknar_Futanari0)
+	akFuta.AttachModToInventoryItem (Raknar_Futanari_Flaccid, Raknar_Futanari0)
 ElseIf (Currentsize == 1)
-	FutaChar.AttachModToInventoryItem (Raknar_Futanari_Flaccid, Raknar_Futanari1)
+	akFuta.AttachModToInventoryItem (Raknar_Futanari_Flaccid, Raknar_Futanari1)
 Elseif (Currentsize == 2)
-	FutaChar.AttachModToInventoryItem (Raknar_Futanari_Flaccid, Raknar_Futanari2)
+	akFuta.AttachModToInventoryItem (Raknar_Futanari_Flaccid, Raknar_Futanari2)
 Elseif (Currentsize == 3)
-	FutaChar.AttachModToInventoryItem (Raknar_Futanari_Flaccid, Raknar_Futanari3)
+	akFuta.AttachModToInventoryItem (Raknar_Futanari_Flaccid, Raknar_Futanari3)
 Elseif (Currentsize == 4)
-	FutaChar.AttachModToInventoryItem (Raknar_Futanari_Flaccid, Raknar_Futanari4)
+	akFuta.AttachModToInventoryItem (Raknar_Futanari_Flaccid, Raknar_Futanari4)
 Elseif (Currentsize == 5)
-	FutaChar.AttachModToInventoryItem (Raknar_Futanari_Flaccid, Raknar_Futanari5)
+	akFuta.AttachModToInventoryItem (Raknar_Futanari_Flaccid, Raknar_Futanari5)
 Elseif (Currentsize >= 6)
-	FutaChar.AttachModToInventoryItem (Raknar_Futanari_Flaccid, Raknar_Futanari6)
+	akFuta.AttachModToInventoryItem (Raknar_Futanari_Flaccid, Raknar_Futanari6)
 EndIf
-FutaChar.EquipItem(Raknar_Futanari_Flaccid,false,true)
+akFuta.EquipItem(Raknar_Futanari_Flaccid,false,true)
 EndFunction
