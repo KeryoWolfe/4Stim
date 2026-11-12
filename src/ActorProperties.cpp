@@ -48,6 +48,7 @@ namespace ActorProperties
 			std::vector<FormRef> keywords, notKeywords;  // on the actor's race or base
 			std::vector<FormRef> factions, notFactions;
 			std::vector<FormRef> worn, notWorn;          // armor worn
+			std::vector<FormRef> carried, notCarried;    // items in the inventory, worn or not (4Stim's)
 			std::vector<FormRef> wornKeywords, notWornKeywords;
 			std::optional<bool>  player, child, penis;
 			int                  priority = 0;
@@ -150,6 +151,8 @@ namespace ActorProperties
 			out->factions = ReadForms(c, "factions", a_file);
 			out->notFactions = ReadForms(c, "notFactions", a_file);
 			out->worn = ReadForms(c, "worn", a_file);
+			out->carried = ReadForms(c, "carried", a_file);
+			out->notCarried = ReadForms(c, "notCarried", a_file);
 			out->notWorn = ReadForms(c, "notWorn", a_file);
 			out->wornKeywords = ReadForms(c, "wornKeywords", a_file);
 			out->notWornKeywords = ReadForms(c, "notWornKeywords", a_file);
@@ -203,6 +206,24 @@ namespace ActorProperties
 			});
 		}
 
+		// Any of a_refs in a_actor's inventory, worn or not. 4Stim's: a futa
+		// mod that takes its penis off while the actor is clothed (Futanari
+		// FEV) still leaves it in the inventory.
+		bool Carries(RE::Actor* a_actor, const std::vector<FormRef>& a_refs)
+		{
+			const auto list = a_actor->inventoryList;
+			if (!list || a_refs.empty()) {
+				return false;
+			}
+			const RE::BSAutoReadLock lock{ list->rwLock };
+			for (const auto& item : list->data) {
+				if (item.object && item.GetCount() > 0 && std::ranges::any_of(a_refs, [&](const FormRef& r) { return r.id && r.id == item.object->GetFormID(); })) {
+					return true;
+				}
+			}
+			return false;
+		}
+
 		bool Wears(const std::vector<std::uint32_t>& a_worn, const std::vector<FormRef>& a_refs)
 		{
 			return std::ranges::any_of(a_refs, [&](const FormRef& r) { return r.id && std::ranges::find(a_worn, r.id) != a_worn.end(); });
@@ -222,9 +243,11 @@ namespace ActorProperties
 		// useTNGSex, PenisMesh.h), else the base sex.
 		bool ByBody(RE::Actor* a_actor)
 		{
+			// The body can only add a penis: clothes hide a man's (his body
+			// isn't drawn under them), so seeing none says nothing.
 			if (g_config.penisFromBody) {
-				if (const auto body = PenisMesh::FromBody(a_actor)) {
-					return *body;
+				if (const auto body = PenisMesh::FromBody(a_actor); body && *body) {
+					return true;
 				}
 			}
 			return Compat::GetSex(a_actor) == RE::SEX::kMale;
@@ -264,6 +287,9 @@ namespace ActorProperties
 				if ((!a_c.wornKeywords.empty() && !WearsKeyword(worn, a_c.wornKeywords)) || WearsKeyword(worn, a_c.notWornKeywords)) {
 					return false;
 				}
+			}
+			if ((!a_c.carried.empty() && !Carries(a_actor, a_c.carried)) || Carries(a_actor, a_c.notCarried)) {
+				return false;
 			}
 			if (a_c.penis) {
 				// Inside a "sex" property's own condition, by the body.

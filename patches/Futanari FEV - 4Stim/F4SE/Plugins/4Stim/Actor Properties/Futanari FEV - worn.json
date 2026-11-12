@@ -1,9 +1,11 @@
 {
-	// Wearing Futanari FEV's penis (flaccid or erect) means a penis too, for
-	// when the keyword alone doesn't show: the game's own runtime keyword list
-	// isn't always what 4Stim reads (docs/ACTORS.md, Futa).
+	// Carrying Futanari FEV's penis (flaccid or erect), worn or not, means a
+	// penis. Not only worn: the mod takes it off while the futa is clothed and
+	// puts it back when they undress, and 4Stim's picker looks at them
+	// clothed. Its Cure takes both items away. ("carried" is 4Stim's own
+	// condition, docs/ACTORS.md.)
 	"condition": {
-		"worn": [
+		"carried": [
 			{ "mod": "FutaFEV.esp", "formid": "0x800" },
 			{ "mod": "FutaFEV.esp", "formid": "0x822" }
 		]

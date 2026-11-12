@@ -4,6 +4,8 @@
 
 ### Who has a penis, from the body
 - **Keyword conditions see keywords a script gave an actor** (`AddKeyword`), as Papyrus's `HasKeyword` does: before, only the race's and base's.
+- **Clothed men read as having no penis**: the body check said "none" when a man's clothes hid his body. It can now only give a penis, never take one: otherwise it's the base sex.
+- **A clothed futa read as a woman** (Futanari FEV takes its penis off while clothed): new actor property condition `carried` / `notCarried` (4Stim's own), items in the inventory, worn or not; the patch's property now uses it.
 - **Futanari FEV patch: no erection at scene start**: the watcher's erect / flaccid functions used the script's empty `FutaChar` property instead of their parameter of the same name (the original's bug, hidden under AAF). Fixed; the patch also quiets the mod's polling script (errors every 4 seconds).
 - **A futa's penis came off when a tongue came out**: giving an NPC an item makes the game choose their gear again, and it took off what a script had put on (Futanari FEV's penis). After putting on an equip object, 4Stim now puts back anything the actor lost that the object doesn't replace, Undress didn't take off, and nothing else now fills (`Equip objects: … lost … putting back` in the log).
 - **Futanari FEV patch: the Cure didn't stick**: the mod's reveal spell, cast on every futa every 4 seconds, gave the penis back right after the Cure took it. The patch now ships the Reveal script too (it does nothing for an actor without the futa keyword), and its Cure takes the actor off the mod's list before the penis (the original never could: FutaFEV.esp leaves the Cure's list property empty, so the patch reads the list from the plugin) and removes it again half a second later.
