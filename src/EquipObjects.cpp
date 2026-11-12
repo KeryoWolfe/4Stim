@@ -18,6 +18,9 @@
 
 #include "ActorProperties.h"
 #include "Bridge.h"
+#include "Erection.h"
+#include "Scheduler.h"
+#include "Undress.h"
 #include "Lights.h"
 #include "Sounds.h"
 
@@ -222,6 +225,52 @@ namespace EquipObjects
 			}
 		}
 
+		// Giving an NPC an item (WearObject's AddItem) makes the game choose
+		// their gear again, and it takes off what a script put on them that
+		// isn't in their outfit: a futa mod's penis went when a tongue came
+		// out. A moment later, whatever they wore before and lost, that isn't
+		// in the new object's slots or taken off by Undress, goes back on.
+		void KeepWorn(std::uint32_t a_id, std::uint32_t a_object, std::vector<std::uint32_t> a_before)
+		{
+			if (a_before.empty()) {
+				return;
+			}
+			Scheduler::AfterOnMain(std::chrono::milliseconds(750), [a_id, a_object, before = std::move(a_before)]() {
+				const auto actor = RE::TESForm::GetFormByID<RE::Actor>(a_id);
+				if (!actor) {
+					return;
+				}
+				const auto object = RE::TESForm::GetFormByID<RE::TESObjectARMO>(a_object);
+				const auto objectSlots = object ? object->GetFilledSlots() : 0u;
+				const auto now = Undress::WornItems(actor);
+				const auto stripped = Undress::Stripped(a_id);
+				std::uint32_t nowSlots = 0;  // something else in its slots now: swapped on purpose (a futa mod's flaccid -> erect)
+				for (const auto id : now) {
+					if (const auto armor = RE::TESForm::GetFormByID<RE::TESObjectARMO>(id)) {
+						nowSlots |= armor->GetFilledSlots();
+					}
+				}
+				std::vector<std::int32_t> back;
+				std::string               names;
+				for (const auto id : before) {
+					if (std::ranges::find(now, id) != now.end() || std::ranges::find(stripped, id) != stripped.end() || IsObjectItem(id) || Erection::IsErectionItem(id)) {
+						continue;
+					}
+					const auto armor = RE::TESForm::GetFormByID<RE::TESObjectARMO>(id);
+					if (!armor || (armor->GetFilledSlots() & (objectSlots | nowSlots))) {
+						continue;  // gone for the object's sake, or replaced
+					}
+					back.push_back(static_cast<std::int32_t>(id));
+					const char* name = armor->GetFullName();
+					names += std::format("{}{:08X} \"{}\"", names.empty() ? "" : ", ", id, name ? name : "");
+				}
+				if (!back.empty()) {
+					REX::INFO("Equip objects: {:08X} lost {} item(s) when the game chose their gear again: putting back {}", a_id, back.size(), names);
+					Dispatch("WearObject"sv, a_id, std::move(back));
+				}
+			});
+		}
+
 		void PutOn(std::uint32_t a_id, Handler& a_handler)
 		{
 			const auto it = a_handler.variant.empty() ? a_handler.object->variants.end() : a_handler.object->variants.find(a_handler.variant);
@@ -230,7 +279,10 @@ namespace EquipObjects
 				a_handler.given.push_back(a_handler.equipped);
 			}
 			REX::INFO("Equip objects: {:08X} puts on \"{}\"{} ({:08X})", a_id, a_handler.object->id, a_handler.variant.empty() ? "" : " (" + a_handler.variant + ")", a_handler.equipped);
+			const auto actor = RE::TESForm::GetFormByID<RE::Actor>(a_id);
+			auto       before = actor ? Undress::WornItems(actor) : std::vector<std::uint32_t>{};
 			Dispatch("WearObject"sv, a_id, { static_cast<std::int32_t>(a_handler.equipped) });
+			KeepWorn(a_id, a_handler.equipped, std::move(before));
 		}
 
 		void TakeOff(std::uint32_t a_id, Handler& a_handler)
