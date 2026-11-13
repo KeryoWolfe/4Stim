@@ -4,6 +4,8 @@
 
 ### Who has a penis, from the body
 - **Keyword conditions see keywords a script gave an actor** (`AddKeyword`), as Papyrus's `HasKeyword` does: before, only the race's and base's.
+- **NPCs pick their package again directly** as they enter and leave a scene (`iEvaluatePackage=2`, the default now; 0 for Papyrus as before): tests showed the same packages either way, without going through the VM.
+- **Timing for the freeze when picking a transition**: `Player scene timing:` lines in the log.
 - **Clothed men read as having no penis**: the body check said "none" when a man's clothes hid his body. It can now only give a penis, never take one: otherwise it's the base sex.
 - **A clothed futa read as a woman** (Futanari FEV takes its penis off while clothed): new actor property condition `carried` / `notCarried` (4Stim's own), items in the inventory, worn or not; the patch's property now uses it.
 - **Futanari FEV patch: no erection at scene start**: the watcher's erect / flaccid functions used the script's empty `FutaChar` property instead of their parameter of the same name (the original's bug, hidden under AAF). Fixed; the patch also quiets the mod's polling script (errors every 4 seconds).

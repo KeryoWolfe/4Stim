@@ -211,25 +211,17 @@ namespace Core
 	// a_queue and Skyrim's CommonLib a_immediate (roadmap 2b.6). Which one
 	// means "now" shows in the log: the package running before the call,
 	// right after it and half a second later. Main thread.
-	void EvaluateActorPackage(RE::Actor* a_actor, const char* a_why)
+	// Directly (roadmap 2b.6): the owner's runs with iEvaluatePackage 1 and 2
+	// (10-12 November) showed the same packages either way, at a scene's
+	// start and end, so 2 (CommonLibF4's a_queue true, Skyrim's a_immediate)
+	// is the default; 0 still goes through Papyrus.
+	void EvaluateActorPackage(RE::Actor* a_actor, [[maybe_unused]] const char* a_why)
 	{
 		if (g_settings.evaluatePackage == 0) {
 			CallActorMethod(a_actor, "Actor"sv, "EvaluatePackage"sv, false);
 			return;
 		}
-		const auto running = [](RE::Actor* a) -> std::uint32_t {
-			const auto process = a ? a->currentProcess : nullptr;
-			const auto package = process ? process->currentPackage.package : nullptr;
-			return package ? package->GetFormID() : 0;
-		};
-		const auto id = a_actor->GetFormID();
-		const bool first = g_settings.evaluatePackage == 2;
-		const auto before = running(a_actor);
-		a_actor->EvaluatePackage(first, false);
-		REX::INFO("EvaluatePackage test ({}): {:08X} called directly with {}: package {:08X} before, {:08X} right after", a_why, id, first, before, running(a_actor));
-		Scheduler::AfterOnMain(std::chrono::milliseconds(500), [id, first, running]() {
-			REX::INFO("EvaluatePackage test: {:08X} (called with {}) package {:08X} half a second later", id, first, running(RE::TESForm::GetFormByID<RE::Actor>(id)));
-		});
+		a_actor->EvaluatePackage(g_settings.evaluatePackage == 2, false);
 	}
 
 	// Actors leaving a scene: their own scale back (and their heels).

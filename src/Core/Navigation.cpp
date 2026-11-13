@@ -8,6 +8,32 @@ namespace Core
 	// the roles (destination scenes always have the same number of actors)
 	// and keeps the current speed where the destination has that many.
 
+	namespace
+	{
+		struct FrameTiming
+		{
+			std::string                           line;
+			std::chrono::steady_clock::time_point last;
+			std::vector<double>                   frames;
+		};
+
+		// One frame later (F4SE's tasks run once a frame): the gap since the
+		// last, three times, then the log line.
+		void TimeNextFrame(std::shared_ptr<FrameTiming> a_timing)
+		{
+			F4SE::GetTaskInterface()->AddTask([a_timing]() {
+				const auto now = std::chrono::steady_clock::now();
+				a_timing->frames.push_back(std::chrono::duration<double, std::milli>(now - a_timing->last).count());
+				a_timing->last = now;
+				if (a_timing->frames.size() < 3) {
+					TimeNextFrame(a_timing);
+					return;
+				}
+				REX::INFO("{}; next frames {:.1f} / {:.1f} / {:.1f} ms", a_timing->line, a_timing->frames[0], a_timing->frames[1], a_timing->frames[2]);
+			});
+		}
+	}
+
 	// Plays speed a_speed of a_scene on the player's scene actors, on the main
 	// thread, and records the new state.
 	void PlayPlayerScene(const SceneRegistry::Scene& a_scene, int a_speed, const PlayerScene& a_current)
@@ -17,7 +43,14 @@ namespace Core
 		PlayerScene next = a_current;
 		next.sceneID = a_scene.id;
 		next.speed = a_speed;
-		F4SE::GetTaskInterface()->AddTask([idles, next, count, previous = a_current]() {
+		// Timing (the short freeze when picking a transition, docs/TODO.md):
+		// from the pick to the task, each PlayIdle, and the next frames after.
+		const auto picked = std::chrono::steady_clock::now();
+		const bool transition = a_scene.IsTransition();
+		F4SE::GetTaskInterface()->AddTask([idles, next, count, previous = a_current, picked, transition]() {
+			using ms = std::chrono::duration<double, std::milli>;
+			const auto started = std::chrono::steady_clock::now();
+			std::string playTimes;
 			// The scene may have ended or moved on since this was queued (an
 			// End right after a speed key, say): then don't bring it back.
 			const auto now = GetPlayerScene();
@@ -30,7 +63,9 @@ namespace Core
 			for (std::size_t role = 0; role < idles.size() && role < ids.size(); ++role) {
 				const auto actor = RE::TESForm::GetFormByID<RE::Actor>(ids[role]);
 				const auto process = actor ? actor->currentProcess : nullptr;
+				const auto before = std::chrono::steady_clock::now();
 				const bool ok = process && process->PlayIdle(*actor, idles[role], nullptr);
+				playTimes += std::format("{}{:.1f}", playTimes.empty() ? "" : " / ", ms(std::chrono::steady_clock::now() - before).count());
 				if (ok) {
 					CuePlayed(ids[role], idles[role], next.sceneID);
 				}
@@ -57,6 +92,14 @@ namespace Core
 			} else if (next.speed != previous.speed) {
 				SceneEvents::SpeedChanged(next.ActorIDs(), next.sceneID, next.speed, count, ThreadIDOf(next.role0));
 			}
+			const auto done = std::chrono::steady_clock::now();
+			// The next three frames: a freeze while the game loads the new
+			// animations shows as one long gap here, after PlayIdle returned.
+			auto timing = std::make_shared<FrameTiming>();
+			timing->line = std::format("Player scene timing: \"{}\"{}: {:.1f} ms from the pick to the task, PlayIdle {} ms, task {:.1f} ms",
+				next.sceneID, transition ? " (transition)" : "", ms(started - picked).count(), playTimes, ms(done - started).count());
+			timing->last = done;
+			TimeNextFrame(timing);
 		});
 	}
 
