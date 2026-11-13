@@ -44,13 +44,28 @@ Children are never eligible for scenes.
 
 | Key | Action |
 |---|---|
-| `N` (hotkey) | Out of a scene: start one (who, where, then an idle). In a scene: give the HUD the arrow keys / d-pad, or hand them back. |
-| Arrow keys / d-pad | Move through the HUD (tabs, navigation list) |
-| Enter / A | Choose |
+| Up arrow (the hotkey) | Out of a scene: start one (who, where, then a scene; held 2 seconds: alone). In a scene: give the HUD the arrow keys / d-pad, or hand them back. |
+| `Shift` + Up arrow | A scene between NPCs |
+| Arrow keys / numpad 8 5 4 6, d-pad | Move through the picker and the HUD |
+| Enter / numpad 7 / A | Choose |
 | Esc or Backspace / B | Back, or hand the keys back to the game |
-| `=` / `-` (gamepad Y / X) | Scene speed up / down |
+| Numpad + / - | Scene speed up / down |
+| Numpad 0 | Auto mode on / off |
 
-The hotkey and the speed keys are set in `Data\F4SE\Plugins\4Stim.ini`.
+Every key is set in `Data\F4SE\Plugins\4Stim.ini` or on the MCM's Controls page (OStim's keys and names). Testers: docs/BETA.md.
+
+## Project documents
+
+| Document | What's in it |
+|---|---|
+| [ARCHITECTURE.md](ARCHITECTURE.md) | How the plugin, scripts and HUD fit together; a scene from start to end |
+| [DECISIONS.md](DECISIONS.md) | Where 4Stim departs from OStim, and why |
+| [SOURCE_AUDIT.md](SOURCE_AUDIT.md) | What 4Stim took from OStim NG, and where every borrowed file comes from |
+| [DEPENDENCY_MATRIX.md](DEPENDENCY_MATRIX.md) | What 4Stim needs and works with, and the libraries built in |
+| [PORTING_STATUS.md](PORTING_STATUS.md) | Each feature: tested, built but untested, or open |
+| [TEST_PLAN.md](TEST_PLAN.md) / [TEST_RESULTS.md](TEST_RESULTS.md) | The tests a release has to pass, and the runs so far |
+| [CHANGELOG.md](CHANGELOG.md) | Changes by version |
+| [docs/PORTING_ROADMAP.md](docs/PORTING_ROADMAP.md), [docs/TODO.md](docs/TODO.md) | The plan, and what's left |
 
 ## Repository layout
 

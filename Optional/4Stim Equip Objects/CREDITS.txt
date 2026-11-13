@@ -9,3 +9,7 @@ with 4Stim's penis bend.
 
 Build it in BodySlide ("4Stim OStim Strap-On (TWB)") with your preset, and
 enable "4Stim - Equip Objects.esp".
+
+Tongues: OStim NG's tongues (meshes\OStim\tongues and their textures),
+from OStim NG (GPL-3.0, github.com/VersuchDrei/OStimNG), converted for
+Fallout 4.

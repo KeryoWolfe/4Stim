@@ -3,7 +3,7 @@
 ## 0.5.0 alpha (in progress)
 
 ### Who has a penis, from the body
-- **Keyword conditions see keywords a script gave an actor** (`AddKeyword`), as Papyrus's `HasKeyword` does: before, only the race's and base's.
+- **Keyword conditions also ask the reference** (`HasKeywordHelper` on the actor), meant to see keywords a script gave an actor (`AddKeyword`). It doesn't (Futanari FEV, 12 November): those are kept where CommonLibF4 can't read them yet; the `carried` condition is used instead (Separate projects, futa module).
 - **NPCs pick their package again directly** as they enter and leave a scene (`iEvaluatePackage=2`, the default now; 0 for Papyrus as before): tests showed the same packages either way, without going through the VM.
 - **Timing for the freeze when picking a transition**: `Player scene timing:` lines in the log.
 - **Clothed men read as having no penis**: the body check said "none" when a man's clothes hid his body. It can now only give a penis, never take one: otherwise it's the base sex.
