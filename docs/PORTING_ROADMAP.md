@@ -11,7 +11,7 @@ Written 29 October 2026, from the repository at `e21315e`, docs/TODO.md, docs/AL
 | Primary runtime | Fallout 4 1.11.240 (Steam), Address Library. Other versions through Runtime Database: experimental (docs/OLDGEN.md). |
 | Owner's test setup | Mod Organizer 2, profile "4Stim Testing", a large load order (not a clean install). |
 | Milestones in the instructions (A–F) | A–E reached in alpha: builds, loads, scenes start, play, change and end through the picker and HUD. F (feature migration) is largely done: docs/TODO.md, "OStim parity". |
-| What's missing | Seven of the ten required documents (DEPENDENCY_MATRIX.md done 13 November); written test records; a provenance list; a dev branch; tested dependency versions. |
+| What's missing | Six of the ten required documents (DEPENDENCY_MATRIX.md and DECISIONS.md done 13 November); written test records; a provenance list; a dev branch; tested dependency versions. |
 
 ## Phase 1: bring the project in line with the instructions
 
@@ -26,7 +26,7 @@ No code changes. Claude does this; the owner reviews.
 | 1.5 | **DEPENDENCY_MATRIX.md**: F4SE, Address Library / Runtime Database, MCM, LooksMenu, FSMP, HHS, ZeX, A-Body, BodyTalk, Atomic Muscle, Equip Objects add-on, Intiface, Addictol (recommended); purpose, licence, required or optional. No versions (see Decided). | Every dependency listed. Done (13 November): `DEPENDENCY_MATRIX.md`, with the libraries built into the plugin; the strap-on's TWB data is cleared, and the Futanari FEV patch is test material, never published (owner, 13 November). |
 | 1.6 | **SOURCE_AUDIT.md**: OStim NG's structure and what 4Stim took from it (designs, file formats, action types, scene data), classed Reusable / Adapted / Rewritten / Unresolved. | Each OStim subsystem classed. |
 | 1.7 | **ARCHITECTURE.md**: the plugin's modules (src/), the Papyrus scripts, the HUD, and how a scene's data and events move between them, with a diagram. | Matches the code. |
-| 1.8 | **DECISIONS.md**: the departures from OStim and why (Idle forms instead of behavior files, the scene lock and collision, sheathing, physics swaps, Runtime Database...), gathered from code comments and commits. | One entry per departure. |
+| 1.8 | **DECISIONS.md**: the departures from OStim and why (Idle forms instead of behavior files, the scene lock and collision, sheathing, physics swaps, Runtime Database...), gathered from code comments and commits. | One entry per departure. Done (13 November): `DECISIONS.md`, 23 entries by area, each forced by Fallout 4 or 4Stim's own. |
 | 1.9 | **Provenance list** (in SOURCE_AUDIT.md): every borrowed file (OStim's action types and scene data, converted animations, icons, sounds) with its source and licence or permission. | Nothing in a release package is unaccounted for. |
 
 ## Phase 2: fix what the alpha testers found (beta blockers)
