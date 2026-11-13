@@ -65,7 +65,7 @@ EndFunction
 Function Erect(Actor[] akActors)
 	Int i = 0
 	While i < akActors.Length
-		If akActors[i] && akActors[i].HasKeyword(Raknar_Futanari_Effect)
+		If IsFuta(akActors[i])
 			RestoreFutaErect(akActors[i])
 		EndIf
 		i += 1
@@ -75,11 +75,30 @@ EndFunction
 Function Flaccid(Actor[] akActors)
 	Int i = 0
 	While i < akActors.Length
-		If akActors[i] && akActors[i].HasKeyword(Raknar_Futanari_Effect)
+		If IsFuta(akActors[i])
 			RestoreFutaFlaccid(akActors[i])
 		EndIf
 		i += 1
 	EndWhile
+EndFunction
+
+; The patch's: a futa by the mod's keyword, or by its own records of who is
+; one (its list of futa NPCs, the player's futa ability), for a futa whose
+; keyword is missing (the watcher found none on a futa with the penis in her
+; inventory). The keyword is given back then, so the Cure works on them.
+bool Function IsFuta(Actor akActor)
+	if !akActor
+		return false
+	elseif akActor.HasKeyword(Raknar_Futanari_Effect)
+		return true
+	endif
+	FormList futas = Game.GetFormFromFile(0x6AFB, "FutaFEV.esp") as FormList
+	Spell ability = Game.GetFormFromFile(0x2CA8C, "FutaFEV.esp") as Spell
+	if (futas && futas.HasForm(akActor)) || (ability && akActor.HasSpell(ability))
+		akActor.AddKeyword(Raknar_Futanari_Effect)
+		return true
+	endif
+	return false
 EndFunction
 
 ; The original's, with one change: their parameter was named FutaChar, the
