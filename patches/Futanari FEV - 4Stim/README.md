@@ -1,5 +1,7 @@
 # Futanari FEV: 4Stim patch
 
+**For testing 4Stim's futa support only. Not meant to be published** (owner, 13 November 2026): it ships patched copies of Futanari FEV's scripts.
+
 Futanari FEV (Raknar) makes its penis erect when an AAF scene starts and flaccid when it ends, and keeps it on through AAF's undressing. This patch does the first for 4Stim scenes, so AAF isn't needed:
 
 - `Raknar_Futanari_AAFWatcher.psc` replaces the mod's script of that name (on `Raknar_Futanari_Quest`'s `PlayerRefAlias`). It registers for 4Stim's scene events (`FourStim.RegisterForSceneEvents`) when the alias starts and on every load, and equips the erect penis at a scene's start and the flaccid one at its end, for actors with `Raknar_Futanari_Effect`: the player's scenes and NPC scenes. The original's properties and erect / flaccid code are unchanged, so `FutaFEV.esp` needs no edit.

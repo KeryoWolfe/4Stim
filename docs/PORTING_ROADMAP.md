@@ -23,7 +23,7 @@ No code changes. Claude does this; the owner reviews.
 | 1.2 | **PORTING_STATUS.md**: every feature in docs/TODO.md marked Tested / Built, untested / Open, with the log line that shows it. | Every "Done" in TODO.md has a status. |
 | 1.3 | **TEST_PLAN.md**: the instructions' matrix (installation, dependencies, loading, Papyrus, actors, start, animation, end, cancel, save/load, cells, UI, compatibility, performance, packaging), with steps and expected log lines for each. | Each row has steps a tester can follow. |
 | 1.4 | **TEST_RESULTS.md**, started from the 23–25 October tests (see Phase 2), in the instructions' format: setup and versions, steps, expected, actual, logs, status. | This week's tests recorded. |
-| 1.5 | **DEPENDENCY_MATRIX.md**: F4SE, Address Library / Runtime Database, MCM, LooksMenu, FSMP, HHS, ZeX, A-Body, BodyTalk, Atomic Muscle, Equip Objects add-on, Intiface, Addictol (recommended); purpose, licence, required or optional. No versions (see Decided). | Every dependency listed. Done (13 November): `DEPENDENCY_MATRIX.md`, with the libraries built into the plugin and two open permission questions (the strap-on's TWB data, the Futanari FEV patch's copies). |
+| 1.5 | **DEPENDENCY_MATRIX.md**: F4SE, Address Library / Runtime Database, MCM, LooksMenu, FSMP, HHS, ZeX, A-Body, BodyTalk, Atomic Muscle, Equip Objects add-on, Intiface, Addictol (recommended); purpose, licence, required or optional. No versions (see Decided). | Every dependency listed. Done (13 November): `DEPENDENCY_MATRIX.md`, with the libraries built into the plugin; the strap-on's TWB data is cleared, and the Futanari FEV patch is test material, never published (owner, 13 November). |
 | 1.6 | **SOURCE_AUDIT.md**: OStim NG's structure and what 4Stim took from it (designs, file formats, action types, scene data), classed Reusable / Adapted / Rewritten / Unresolved. | Each OStim subsystem classed. |
 | 1.7 | **ARCHITECTURE.md**: the plugin's modules (src/), the Papyrus scripts, the HUD, and how a scene's data and events move between them, with a diagram. | Matches the code. |
 | 1.8 | **DECISIONS.md**: the departures from OStim and why (Idle forms instead of behavior files, the scene lock and collision, sheathing, physics swaps, Runtime Database...), gathered from code comments and commits. | One entry per departure. |
@@ -120,6 +120,7 @@ None open.
 
 ## Decided by the owner
 
+- **Strap-on and test patches (13 November 2026):** the Equip Objects strap-on (with its TWB refit) is cleared for release. `patches/Futanari FEV - 4Stim` is only for testing 4Stim's futa support and is never published.
 - **Dependency versions (31 October 2026):** none declared. 4Stim is built and tested against the latest version of each, so the release lists what's required and what's optional. If a dependency's update breaks 4Stim, the mod page says to stay on the version before it until 4Stim is fixed.
 - **Crash logger (31 October 2026):** Addictol is the recommended one (not Buffout 4).
 

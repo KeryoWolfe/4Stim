@@ -33,7 +33,7 @@ runtime tables is: users install those themselves, under their own terms.
 | [Intiface Central](https://intiface.com/central/) and a supported toy | Sex toys (docs/API.md, "Sex toys") | No toys | No |
 | Animation packs (scene files and their animations) | What 4Stim plays. 4Stim ships no scenes of its own beyond `4StimTestAnims.json`'s additions; see "Animations" below | Nothing to play | See below |
 | Addictol (or another crash logger) | Recommended: crash logs for bug reports (docs/ALPHA.md) | No crash logs | No |
-| Futanari FEV | 4Stim's patch for it (`patches/Futanari FEV - 4Stim`): its AAF calls on 4Stim's scene events, and an actor property for its futas | The patch isn't needed | Patch only (4Stim's scripts and a JSON file; the mod's own scripts are changed copies, see below) |
+| Futanari FEV | A test patch (`patches/Futanari FEV - 4Stim`): its AAF calls on 4Stim's scene events, and an actor property for its futas. Only for testing 4Stim's futa support (owner, 13 November 2026) | Not needed | No: never published |
 
 ## Libraries built into the plugin
 
@@ -71,5 +71,5 @@ The full provenance list belongs in SOURCE_AUDIT.md (roadmap 1.9); in short:
 | Animations: OStim's base animations, converted for Fallout 4 | OStim NG | Permission for the base animations only, without the vampire and tailjob ones (owner, 31 October 2026) | Beta packages only these |
 | Other converted animation packs (Atomic Lust and others) | Their authors | No permission | Test material only: in no package |
 | The strap-on (Equip Objects add-on) | OStim NG's "Calyps Strap-On" (Calyps; 3BA conversion by VersuchDrei) | GPL-3.0, as part of OStim NG | Taken; refit by `tools/refit/build_strapon.cpp` |
-| The strap-on's TWB weights and sliders | True Wasteland Body | Unresolved: whether the refit's BodySlide data carries TWB's own and needs its author's permission | To check before the add-on ships |
-| Futanari FEV scripts (patched copies) | Futanari FEV (its scripts are under `Raknar:`) | Unresolved: the mod's permissions for patched copies of its scripts | To check before the patch ships |
+| The strap-on's TWB weights and sliders | True Wasteland Body | Cleared for use (owner, 13 November 2026) | Taken |
+| Futanari FEV scripts (patched copies) | Futanari FEV (its scripts are under `Raknar:`) | None needed: the patch is test material, never published (owner, 13 November 2026) | In no package |
