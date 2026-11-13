@@ -76,7 +76,7 @@ Data/                  Files that ship with the mod
   Interface/4Stim/     HUD themes
   Scripts/Source/User/ Papyrus sources (FourStim, FourStimScene, FourStimMenu, FourStimTest)
 Interface-src/         ActionScript 3 sources for the picker and HUD movies
-tools/                 package-alpha.ps1 (test build archives)
+tools/                 package.ps1 (test build archives)
 docs/                  Scene format (SCENES.md), HUD API (HUD_API.md), API for other mods (API.md)
 include/4Stim/         C++ plugin interface for other F4SE plugins (PluginInterface.h)
 lib/commonlibf4/       CommonLibF4, Dear Modding's fork (git submodule, pinned)
@@ -108,10 +108,10 @@ Compile the scripts in `Data\Scripts\Source\User\` with the Creation Kit's Papyr
 
 ### Test builds
 
-`tools\package-alpha.ps1` packages a test build: `4Stim-<version>-alpha.zip` (the framework) and `4Stim-TestAnims-<version>-alpha.zip` (the test pack), with the testers' read-me, in `release\`. Build the plugin, movies and scripts first. The top of the script says where it takes each file from; it stops if one is missing, and warns about anything older than its source:
+`tools\package.ps1` packages a test build: `4Stim-<version>-beta.zip` (the framework), `4Stim-TestAnims-<version>-beta.zip` (the test pack) and `4Stim-EquipObjects-<version>-beta.zip` (the optional add-on), with the testers' read-me (docs/BETA.md), in `release\`. `-Stage alpha` makes alpha archives with docs/ALPHA.md. Build the plugin, movies and scripts first. The top of the script says where it takes each file from; it stops if one is missing or if anything SOURCE_AUDIT.md keeps out of packages is in one (vampire and tailjob animations are left out of the test pack), and warns about anything older than its source:
 
 ```bat
-powershell -ExecutionPolicy Bypass -File tools\package-alpha.ps1
+powershell -ExecutionPolicy Bypass -File tools\package.ps1
 ```
 
 ## Credits

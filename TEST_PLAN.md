@@ -139,6 +139,6 @@ matrix. Results go in TEST_RESULTS.md, one entry per run.
 
 | # | Steps | Expected |
 |---|---|---|
-| 15.1 | Build the zips (`tools/package-alpha.ps1`, renamed for beta). | Three zips; every file in them is in SOURCE_AUDIT.md's provenance list. |
+| 15.1 | Build the zips (`tools/package.ps1`). | Three zips; every file in them is in SOURCE_AUDIT.md's provenance list. |
 | 15.2 | Look in the zips. | No Skyrim files (no Skyrim `.pex`, behaviors or `OStim.esp`), no other packs' animations, no Futanari FEV patch. |
 | 15.3 | Install from the zips into a clean profile and run 6.1. | Works. |

@@ -1,6 +1,10 @@
 # Changelog
 
-## 0.5.0 alpha (in progress)
+## 0.5.0 beta (in progress)
+
+### Beta
+- **Project documents** (roadmap Phase 1): ARCHITECTURE.md, DECISIONS.md, SOURCE_AUDIT.md (with the provenance list), DEPENDENCY_MATRIX.md, TEST_PLAN.md, TEST_RESULTS.md, PORTING_STATUS.md, and the beta tester's guide, docs/BETA.md.
+- **Packaging for beta**: `tools/package-alpha.ps1` is now `tools/package.ps1`, beta by default (`-Stage alpha` for alpha archives). It leaves OStim's vampire and tailjob scenes and animations out of the test pack (owner, 31 October 2026), refuses anything SOURCE_AUDIT.md keeps out of packages (the Futanari FEV test patch, `OStim.esp`, behavior files, animations outside the test pack), and ships OStim's three Papyrus-only API scripts the alpha left out (`FourData`, `FourEvent`, `FourUndress`).
 
 ### Who has a penis, from the body
 - **Keyword conditions also ask the reference** (`HasKeywordHelper` on the actor), meant to see keywords a script gave an actor (`AddKeyword`). It doesn't (Futanari FEV, 12 November): those are kept where CommonLibF4 can't read them yet; the `carried` condition is used instead (Separate projects, futa module).

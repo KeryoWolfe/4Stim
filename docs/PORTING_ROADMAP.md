@@ -73,7 +73,7 @@ From a seasoned modder's review (7 November 2026). Details and order in docs/TOD
 | 3.1 | Run TEST_PLAN.md on 1.11.240 in a separate MO2 profile, with backups. | Every row Pass, Fail (with an issue) or Not tested (with a reason). |
 | 3.2 | At least one run in a small load order (4Stim and its requirements only). | Shows which problems come from 4Stim and which from other mods. |
 | 3.3 | Beta tester guide (docs/BETA.md, from ALPHA.md): install, uninstall, requirements with versions, what to test, how to report. | Reviewed by the owner. Written (13 November): `docs/BETA.md`, for the owner to review. |
-| 3.4 | Package with tools/package-alpha.ps1 (renamed for beta), checking the zip against the provenance list: OStim's base animations only, without the vampire and tailjob ones (see Decided). | Nothing unlicensed in the zip; no other pack's animations; nothing from Skyrim. |
+| 3.4 | Package with tools/package.ps1, checking the zip against the provenance list: OStim's base animations only, without the vampire and tailjob ones (see Decided). | Nothing unlicensed in the zip; no other pack's animations; nothing from Skyrim. Ready (13 November): `tools/package.ps1` (`-Stage beta`, the default) leaves the vampire and tailjob files out of the test pack and refuses anything SOURCE_AUDIT.md keeps out; not yet run. |
 | 3.5 | Merge `dev` into `main`, tag `v0.5.0-beta`. | Owner's go-ahead. |
 
 ## Phase 4: first public release (1.0)

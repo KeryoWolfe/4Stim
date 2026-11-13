@@ -82,28 +82,28 @@ properties; RaceMenu height: DECISIONS.md).
 
 ## Provenance: every borrowed file in a package
 
-What `tools/package-alpha.ps1` (renamed for beta, roadmap 3.4) puts in each
-zip, and where it came from. Anything not here doesn't go in.
+What `tools/package.ps1` (roadmap 3.4) puts in each zip, and where it came
+from. Anything not here doesn't go in; the script refuses what's under
+"Never packaged".
 
 ### `4Stim-<version>.zip` (the framework)
 
 | Files | Source | Licence or permission |
 |---|---|---|
 | `4Stim.dll` | 4Stim's code, with CommonLibF4 and the libraries in DEPENDENCY_MATRIX.md | GPL-3.0 (libraries: GPL-3.0, MIT, BSD-3-Clause) |
-| Papyrus scripts (`.pex`) | 4Stim's, OStim's API under 4Stim's names | GPL-3.0 |
+| Papyrus scripts (`.pex` and sources): `FourStim*` and OStim's API under 4Stim's names (`FourThread`... `FourData`, `FourEvent`, `FourUndress`) | 4Stim's | GPL-3.0 |
 | HUD and picker SWFs, icons | 4Stim's (`Interface-src/`; icons drawn in code) | GPL-3.0 |
 | `4Stim` logo | Made for the project at the owner's request | The owner's |
 | `4Stim.esl` | Made by `tools/make-api-plugin.py` from OStim.esp's API forms | GPL-3.0, as OStim NG |
 | `Actions`, `Action Tags`, `Events`, `Facial Expressions` | OStim NG's data files | GPL-3.0 |
 | `Actor Properties`, `Erection`, `Furniture`, `Lights`, `Options`, `Physics`, `Voice Sets`, `Expression Morphs.json`, `4Stim.ini`, MCM config, translations | 4Stim's, in OStim's formats where OStim has one | GPL-3.0 |
 | `Sound\fx\4Stim\` (85 `.wav`: moans, climaxes, effects) | OStim NG's `Sound\fx\OStim\`, the same files (sizes match), in a 4Stim folder | GPL-3.0, as part of OStim NG |
-| `Scenes\killer905_pose.json` | 4Stim's scene file for Killer905's pose plugin | GPL-3.0; the poses and plugin aren't shipped |
 
 ### `4Stim-TestAnims-<version>.zip` (the base animation pack)
 
 | Files | Source | Licence or permission |
 |---|---|---|
-| OStim's scene files | OStim NG's `scenes` | GPL-3.0 |
+| OStim's scene files, without the vampire ones (`*Vampire*`, `*Drained*`) | OStim NG's `scenes` | GPL-3.0 |
 | Animations (`meshes\actors\character\animations\OStim`), converted for Fallout 4 | OStim's base animations | Permission for the base animations only (owner, 31 October 2026); without the vampire and tailjob ones |
 | `4StimTestAnims.esp` (Idle records) | 4Stim's | GPL-3.0 |
 | `4StimTestAnims.json` | 4Stim's additions | GPL-3.0 |
@@ -121,5 +121,6 @@ zip, and where it came from. Anything not here doesn't go in.
 ### Never packaged
 
 `patches/Futanari FEV - 4Stim` (test material, owner, 13 November 2026),
+`killer905_pose.json` and the `FourStimTest` console-test script (4Stim's, for testing only),
 other converted animation packs, anything from Skyrim (no Skyrim `.pex`,
 behaviors or `OStim.esp`).

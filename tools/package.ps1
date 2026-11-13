@@ -1,5 +1,5 @@
 <#
-Packages a 4Stim test build for private testers: two mod-manager archives
+Packages a 4Stim build for testers: three mod-manager archives
 
   4Stim-<version>.zip            the framework (plugin, settings, data, HUD,
                                  icons, sounds, scripts)
@@ -7,14 +7,21 @@ Packages a 4Stim test build for private testers: two mod-manager archives
   4Stim-EquipObjects-<version>.zip  the optional strap-ons and tongues
                                  (Optional\4Stim Equip Objects in this repository)
 
-plus the testers' read-me (docs\ALPHA.md) beside them, in .\release\.
+plus the testers' read-me beside them (docs\BETA.md for -Stage beta, the
+default; docs\ALPHA.md for -Stage alpha), in .\release\.
+
+What goes in follows SOURCE_AUDIT.md's provenance list (roadmap 3.4): OStim's
+base animations without the vampire and tailjob ones (owner, 31 October
+2026), no other pack, no test patch, nothing from Skyrim. The archives are
+checked for those before they're written; anything that shouldn't be there
+stops the packaging.
 
 Run from anywhere, after building everything you want in it:
   xmake build -r                 (the plugin)
   Interface-src\build.bat        (the HUD and picker, if they changed)
   the Papyrus compiler           (the FourStim scripts)
 
-  powershell -ExecutionPolicy Bypass -File tools\package-alpha.ps1
+  powershell -ExecutionPolicy Bypass -File tools\package.ps1 [-Stage alpha|beta]
 
 The plugin, settings, data files and script sources come from this repository
 (so testers get the default 4Stim.ini, not yours); the HUD movies, icons and
@@ -25,6 +32,8 @@ stops if anything is missing and warns about anything that looks older than
 its source.
 #>
 param(
+    [ValidateSet("alpha", "beta")]
+    [string]   $Stage        = "beta",
     [string]   $CoreMod      = "D:\Naked Commonwealth\mods\4Stim Core",
     [string]   $TestAnimsMod = "D:\Naked Commonwealth\mods\4Stim Test Anims",
     [string[]] $ScriptDirs   = @(
@@ -42,12 +51,20 @@ $Repo = Split-Path -Parent $PSScriptRoot
 if (-not $Out) { $Out = Join-Path $Repo "release" }
 
 $version = (Select-String -Path (Join-Path $Repo "xmake.lua") -Pattern 'set_version\("([^"]+)"\)').Matches[0].Groups[1].Value
-$tag = "$version-alpha"
+$tag = "$version-$Stage"
 $Scripts = @("FourStim", "FourStimScene", "FourStimMenu", "FourStimUndress", "FourStimPhysics", "FourStimErection", "FourStimFurniture",
     "FourStimMCM", "FourStimOptions",
     # OStim's API scripts (docs\API.md)
     "FourThread", "FourThreadBuilder", "FourLibrary", "FourMetadata", "FourActor", "FourFurniture", "FourActorUtil", "FourSequence",
-    "FourModEvents", "FourJSON", "FourStimFactions")
+    "FourModEvents", "FourJSON", "FourStimFactions",
+    # OStim's Papyrus-only API scripts (OData, OEvent, OUndress)
+    "FourData", "FourEvent", "FourUndress")
+# Content the owner has no permission to ship or that makes no sense in
+# Fallout 4 (SOURCE_AUDIT.md, "Never packaged"): skipped from the test pack,
+# and refused anywhere else.
+$Excluded = '(?i)vampir|drained|tail'
+$Forbidden = '(?i)futanari|raknar|OStim\.esp$|nemesis'
+$skippedContent = @()
 $problems = @()
 $warnings = @()
 
@@ -70,8 +87,12 @@ function Add-Tree($list, [string] $dir, [string] $prefix, [string[]] $skip = @()
     $root = (Resolve-Path -LiteralPath $dir).Path.TrimEnd('\')
     foreach ($f in Get-ChildItem -LiteralPath $root -Recurse -File) {
         $name = $f.Name
-        if ($skip | Where-Object { $name -like $_ }) { continue }
+        if ($name -like "*.bak" -or ($skip | Where-Object { $name -like $_ })) { continue }
         $rel = $f.FullName.Substring($root.Length + 1).Replace('\', '/')
+        if (($prefix -like "*animations*" -or $prefix -like "*Scenes*") -and $rel -match $Excluded) {
+            $script:skippedContent += $f.Name
+            continue
+        }
         $list.Add(@($f.FullName, ($prefix.TrimEnd('/') + '/' + $rel).TrimStart('/')))
     }
 }
@@ -169,8 +190,16 @@ $equipRoot = Join-Path $Repo "Optional\4Stim Equip Objects"
 Need (Join-Path $equipRoot "4Stim - Equip Objects.esp") "the Equip Objects plugin" | Out-Null
 Add-Tree $equip $equipRoot "" @("*.bak")
 
+# Provenance check: nothing forbidden in any archive.
+foreach ($pair in @(@("4Stim", $core), @("TestAnims", $anims), @("EquipObjects", $equip))) {
+    foreach ($e in $pair[1]) {
+        if ($e[1] -match $Forbidden) { $problems += "$($pair[0]): $($e[1]) is not allowed in a package (SOURCE_AUDIT.md)" }
+        if ($pair[0] -ne "TestAnims" -and $e[1] -match '\.hkx$') { $problems += "$($pair[0]): animation $($e[1]) outside the test pack" }
+    }
+}
+
 if ($problems) {
-    Write-Host "Not packaged, missing:" -ForegroundColor Red
+    Write-Host "Not packaged:" -ForegroundColor Red
     $problems | ForEach-Object { Write-Host "  $_" -ForegroundColor Red }
     exit 1
 }
@@ -180,7 +209,9 @@ Write-Host "4Stim $tag"
 Write-Zip (Join-Path $Out "4Stim-$tag.zip") $core
 Write-Zip (Join-Path $Out "4Stim-TestAnims-$tag.zip") $anims
 Write-Zip (Join-Path $Out "4Stim-EquipObjects-$tag.zip") $equip
-Copy-Item -LiteralPath (Join-Path $Repo "docs\ALPHA.md") -Destination (Join-Path $Out "4Stim-$tag-ReadMe.md") -Force
+$readme = if ($Stage -eq "beta") { "docs\BETA.md" } else { "docs\ALPHA.md" }
+Copy-Item -LiteralPath (Join-Path $Repo $readme) -Destination (Join-Path $Out "4Stim-$tag-ReadMe.md") -Force
+if ($skippedContent) { Write-Host ("Left out (vampire / tailjob): {0} file(s)" -f $skippedContent.Count) }
 Write-Host "Read-me: 4Stim-$tag-ReadMe.md"
 Write-Host "In: $Out"
 if ($warnings) {
