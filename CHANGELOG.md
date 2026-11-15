@@ -3,6 +3,7 @@
 ## 0.5.0 beta (in progress)
 
 ### Beta
+- **CommonLibF4: asdasdduck's fork merged in** (`4stim/combined` at `6d889c5`): ragdolls, navmesh placement, movement and motion control, actor state helpers, Havok queries and more; nothing in 4Stim uses them yet. 4Stim's sources syntax-check clean against it.
 - **Project documents** (roadmap Phase 1): ARCHITECTURE.md, DECISIONS.md, SOURCE_AUDIT.md (with the provenance list), DEPENDENCY_MATRIX.md, TEST_PLAN.md, TEST_RESULTS.md, PORTING_STATUS.md, and the beta tester's guide, docs/BETA.md.
 - **Packaging for beta**: `tools/package-alpha.ps1` is now `tools/package.ps1`, beta by default (`-Stage alpha` for alpha archives). It leaves OStim's vampire and tailjob scenes and animations out of the test pack (owner, 31 October 2026), refuses anything SOURCE_AUDIT.md keeps out of packages (the Futanari FEV test patch, `OStim.esp`, behavior files, animations outside the test pack), and ships OStim's three Papyrus-only API scripts the alpha left out (`FourData`, `FourEvent`, `FourUndress`).
 

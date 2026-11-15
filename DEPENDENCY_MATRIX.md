@@ -39,7 +39,7 @@ runtime tables is: users install those themselves, under their own terms.
 
 | Library | Licence | What for |
 |---|---|---|
-| CommonLibF4 (KeryoWolfe/CommonLibF4, branch `4stim/combined`: Dear Modding's, with other forks' fixes) | GPL-3.0 | The game's types and functions |
+| CommonLibF4 (KeryoWolfe/CommonLibF4, branch `4stim/combined`: Dear Modding's, with other forks' work, asdasdduck's included; its COMBINED.md lists them) | GPL-3.0 | The game's types and functions |
 | [commonlib-shared](https://github.com/Dear-Modding-FO4/commonlib-shared) (CommonLibF4's) | GPL-3.0 | CommonLibF4's shared base |
 | [DearModdingUI-API](https://github.com/Dear-Modding-FO4/DearModdingUI-API) (CommonLibF4's) | GPL-3.0 | CommonLibF4's UI interface |
 | CommonLibF4RD's resolver (`src/compat/rd/`) | MIT (`LICENSE-CommonLibF4RD.txt`) | Runtime Database support |
