@@ -416,6 +416,10 @@ namespace SceneRegistry
 					}
 					role.muffled = a.value("muffled", false);
 					role.noStrip = a.value("noStrip", false);
+					role.genitalAlignment = Lower(a.value("genitalAlignment", std::string{}));
+					if (const auto v = a.find("genitalAlignmentTarget"); v != a.end() && v->is_number_unsigned()) {
+						role.genitalAlignmentTarget = v->get<std::uint32_t>();
+					}
 					role.singleSpeed = a.value("singleSpeed", false);
 					// As OStim: lookUp, else lookDown (negated); lookLeft, else
 					// lookRight. Negative values look the other way.
@@ -643,6 +647,21 @@ namespace SceneRegistry
 					merge(actor, type->actor);
 					merge(target, type->target);
 					merge(performer, type->performer);
+					// As OStim's Node.cpp: an actor without a genital alignment
+					// takes the first action's (actor, then target), pointed at
+					// the action's other role.
+					auto align = [&](int a_role, const Actions::Side& a_side, int a_other) {
+						if (!inRange(a_role) || a_side.genitalAlignment.empty()) {
+							return;
+						}
+						auto& part = scene.actors[static_cast<std::size_t>(a_role)];
+						if (part.genitalAlignment.empty()) {
+							part.genitalAlignment = a_side.genitalAlignment;
+							part.genitalAlignmentTarget = static_cast<std::uint32_t>(a_other);
+						}
+					};
+					align(actor, type->actor, target);
+					align(target, type->target, actor);
 					SceneAction action{ std::move(type), stored(actor), stored(target), stored(performer) };
 					if (a.is_object()) {
 						action.muted = a.value("muted", false);

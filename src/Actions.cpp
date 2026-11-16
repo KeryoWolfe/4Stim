@@ -238,6 +238,7 @@ namespace Actions
 			side.talk = it->value("talk", false);
 			side.muffled = it->value("muffled", false);
 			side.expressionOverride = Lower(it->value("expressionOverride", std::string{}));
+			side.genitalAlignment = Lower(it->value("genitalAlignment", std::string{}));
 			side.equipObjects = LowerList(*it, "equipObject");  // OStim's field name (a string or a list)
 			side.toySlots = LowerList(*it, "toySlot");          // OStim's, a string or a list
 			side.forms = ParseForms(*it);

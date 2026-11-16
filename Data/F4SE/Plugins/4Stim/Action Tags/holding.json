@@ -1,0 +1,16 @@
+{
+	"actor": {
+		"faction": {
+			"info": "4StimAnyHoldingActorFaction",
+			"mod": "4Stim.esl",
+			"formid": "0xA08"
+		}
+	},
+	"target": {
+		"faction": {
+			"info": "4StimAnyHoldingTargetFaction",
+			"mod": "4Stim.esl",
+			"formid": "0xA09"
+		}
+	}
+}

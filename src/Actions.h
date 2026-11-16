@@ -58,6 +58,11 @@ namespace Actions
 		bool                     talk = false;             // and may talk (voice sets' dialogue lines)
 		bool                     muffled = false;          // their mouth is busy: muffled sounds
 		std::string              expressionOverride;       // facial expression set while doing it ("openmouth", "tongue"...)
+		// OStim's "genitalAlignment" (its 13 November 2026 update, for Skyrim's
+		// Accurate Penetration mod): vagina, anus, mouth, hands, handr, handl or
+		// none; "" not set. Read and kept for parity; nothing in Fallout 4 uses
+		// it, and 4Stim has no OStim GraphInterface to hand it out through.
+		std::string              genitalAlignment;
 		std::vector<std::string> equipObjects;             // OStim's "equipObject": equip object types this side's actor wears ("tongue"...), lowercase
 		std::vector<std::string> toySlots;                 // OStim's "toySlot": sex toy slots this side drives ("genital", "anus"...), lowercase (SexToys.h)
 		ApiFormRefs              forms;                    // OStim's factions and stat forms, with its action tags' (Action Tags\)

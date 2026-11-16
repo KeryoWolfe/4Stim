@@ -108,6 +108,11 @@ namespace SceneRegistry
 		float lookUp = 0.0F;
 		float lookLeft = 0.0F;
 		bool  noStrip = false;      // OStim's actor noStrip: this role isn't undressed
+		// OStim's "genitalAlignment" / "genitalAlignmentTarget" (Actions.h): the
+		// scene's own, else the first action's side that has one, with that
+		// action's other role as the target (OStim's Node.cpp).
+		std::string   genitalAlignment;
+		std::uint32_t genitalAlignmentTarget = 0;
 		bool  singleSpeed = false;  // OStim's: this role plays the slowest speed's animation at every speed
 
 		[[nodiscard]] bool HasTag(std::string_view a_tag) const;
