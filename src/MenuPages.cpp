@@ -12,10 +12,11 @@
 #ifndef WIN32_LEAN_AND_MEAN
 #	define WIN32_LEAN_AND_MEAN
 #endif
-// Its UTF-8 helpers use std::wstring_convert, deprecated since C++17 (C4996).
+// Its UTF-8 helpers use std::wstring_convert, deprecated since C++17 (C4996),
+// and it declares ImGuiTextFilter as a struct, then defines it as a class (C4099).
 #ifdef _MSC_VER
 #	pragma warning(push)
-#	pragma warning(disable: 4996)
+#	pragma warning(disable: 4996 4099)
 #endif
 #include "F4SEMenuFramework.h"
 #ifdef _MSC_VER
