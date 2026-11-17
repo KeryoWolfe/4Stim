@@ -24,6 +24,7 @@ runtime tables is: users install those themselves, under their own terms.
 | Dependency | What 4Stim does with it | Without it | Shipped |
 |---|---|---|---|
 | [Mod Configuration Menu](https://www.nexusmods.com/fallout4/mods/21497) | The settings pages (docs/MCM.md) | Everything is in `4Stim.ini` | No |
+| [F4SE Menu Framework](https://www.nexusmods.com/fallout4/mods/105090) | 4Stim's settings pages in its ImGui menu (docs/MCM.md) | The MCM and `4Stim.ini` only | No (its header, `include/F4SEMenuFramework.h`, is built in; nothing to link) |
 | [LooksMenu](https://www.nexusmods.com/fallout4/mods/12631) | Erections by morphs on BodyTalk and Atomic Muscle's `.tri` install (docs/ERECTION.md) | No morph erections | No |
 | FO4 Faster HDT-SMP | Physics swaps during scenes: erect (and receiving) physics for A-Body's male body (docs/PHYSICS.md) | No physics swaps | No |
 | High Heels System | Actors in heels scaled or lowered to fit the animation (docs/SCALING.md) | Heels not corrected | No |
@@ -48,6 +49,7 @@ runtime tables is: users install those themselves, under their own terms.
 | nlohmann_json | MIT | JSON scene, action and settings files |
 | yaml-cpp | MIT | YAML scene files (`src/YamlJSON.cpp`) |
 | zydis | MIT | The resolver's instruction decoder |
+| F4SE Menu Framework's header (`include/F4SEMenuFramework.h`, DCCStudios; from SKSE Menu Framework, Thiago Kaique) | No licence file in its repository; its docs tell plugin authors to copy it in (the example plugin is MIT). To confirm with DCCStudios before release | Its menu's functions, found at runtime |
 
 All are compatible with 4Stim's GPL-3.0. CommonLibF4 and commonlib-shared
 carry the same modding exception as 4Stim (their `EXCEPTIONS` files).

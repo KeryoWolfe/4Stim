@@ -118,6 +118,11 @@ are Fallout 4's Mod Configuration Menu, with OStim's pages, order, labels
 and help texts, and 4Stim's own settings after them. Without the MCM,
 `4Stim.ini` has everything. docs/MCM.md.
 
+**Settings in F4SE Menu Framework too** (4Stim's own, the owner's
+request). The MCM's pages, drawn from its `config.json` in the
+framework's ImGui menu when it's installed, writing to the MCM's file.
+docs/MCM.md.
+
 **Translations in Fallout 4's format** (forced). UTF-16 `$key<tab>text`
 files, handed to the game's translator for the MCM; packs' `$` keys are
 translated the way OStim's `LocaleManager` does. docs/TRANSLATIONS.md.

@@ -4,6 +4,7 @@
 #include <optional>
 #include <string>
 #include <string_view>
+#include <unordered_map>
 
 // 4Stim's page in Fallout 4's Mod Configuration Menu (docs/MCM.md). MCM
 // keeps what the player changes in Data\MCM\Settings\4Stim.ini, over the
@@ -39,4 +40,18 @@ namespace MCM
 
 	// Forgets MCM's changes: 4Stim.ini's values again.
 	void UseIni();
+
+	// A setting as the MCM shows it: MCM's file of changes, else its
+	// defaults ("" if neither has it). a_section and a_key as in MCM's
+	// config ("General", "b4S_SetEndOnOrgasm").
+	std::string Get(std::string_view a_section, std::string_view a_key);
+
+	// Every setting as the MCM shows it, "section|key" lowercase -> value,
+	// and when MCM's file of changes was last written (to read it again
+	// only after a change).
+	std::unordered_map<std::string, std::string> Snapshot();
+	std::filesystem::file_time_type             SettingsTime();
+
+	// Writes one setting to MCM's file of changes, as the MCM does.
+	bool Set(std::string_view a_section, std::string_view a_key, std::string_view a_value);
 }

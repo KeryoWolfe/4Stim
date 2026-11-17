@@ -1,4 +1,5 @@
 #include "Core/Core.h"
+#include "MenuPages.h"
 
 // The plugin's entry points; everything else is in src/Core/ and
 // src/Natives/, with Core/Core.h declaring what they share.
@@ -174,6 +175,7 @@ namespace Core
 				if (!translated) {
 					Translations::Load();  // the game's language is known by now
 					Translations::AddToGame();  // MCM's "$4stim_..." labels
+					MenuPages::Register();      // F4SE Menu Framework's pages, if it's installed
 					translated = true;
 				}
 				HUD::LoadConfig();

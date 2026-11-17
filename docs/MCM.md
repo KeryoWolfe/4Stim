@@ -45,3 +45,15 @@ Departure from OStim, forced by Fallout 4: SkyUI builds pages while the game run
 `tools/make-mcm.py` writes the page (`config.json`, `settings.ini`, `keybinds.json`) from `4Stim.ini`: its tables have the pages (OStim's), each setting's kind and range, and which of OStim's label and tooltip keys it takes. Its texts are translated like the rest (TRANSLATIONS.md), under OStim's keys with "4stim" for "ostim" (`$ostim_reset_position` is `$4stim_reset_position`, `$ostim_tooltip_fades` is `$4stim_tooltip_fades`) and OStim's English from `tools/ostim-mcm-english.json` ("OStim" written "4Stim"). 4Stim's own settings get keys in the same style, `$4stim_<setting in snake case>` and `$4stim_tooltip_<...>` (`bLockScenes`: `$4stim_lock_scenes`), with their `4Stim.ini` comment as help; an OStim setting that works differently in 4Stim keeps OStim's label key but its help has a key of its own (`$4stim_tooltip_reset_position_4stim`), so an OStim translation can't put OStim's description on it.
 
 The logo on the first page is MCM's `image` control: the class `FourStimLogo` in `Data\MCM\Config\4Stim\lib.swf`, which `Interface-src\build.bat` builds from `Interface-src\logo\` with the picture `4StimMCMLogo.png` inside (MCM's docs say images must be vector art, but a picture inside a movie clip shows; MCM tints it in the Pip-Boy color). MCM's image has no alignment, so the logo sits in a clear box that centers it on the page; `ROW_WIDTH` and `TOP_MARGIN` in `FourStimLogo.as` move it.
+
+## F4SE Menu Framework
+
+With [F4SE Menu Framework](https://www.nexusmods.com/fallout4/mods/105090)
+installed, the same pages are also in its ImGui menu, under **4Stim >
+Settings**: the MCM's pages in its order, with its labels, help (hover a
+setting) and choices, read from this page's `config.json`. A change is
+written to the MCM's file of changes (`Data\MCM\Settings\4Stim.ini`) and
+takes effect at once; a slider's when it's let go. Keys are shown but set
+in the MCM or `4Stim.ini`. The framework is optional: without it nothing
+changes. 4Stim's own (OStim has no counterpart); `src/MenuPages.cpp`.
+

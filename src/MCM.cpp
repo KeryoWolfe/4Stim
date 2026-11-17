@@ -596,4 +596,39 @@ namespace MCM
 			REX::INFO("MCM: back to 4Stim.ini's values");
 		}
 	}
+
+	std::string Get(std::string_view a_section, std::string_view a_key)
+	{
+		if (auto value = Ini::Read(USER).Get(a_section, a_key)) {
+			return *value;
+		}
+		return Ini::Read(DEFAULTS).Get(a_section, a_key).value_or(std::string{});
+	}
+
+	bool Set(std::string_view a_section, std::string_view a_key, std::string_view a_value)
+	{
+		auto user = Ini::Read(USER);
+		user.Set(a_section, a_key, a_value);
+		return user.Write(USER);
+	}
+
+	std::unordered_map<std::string, std::string> Snapshot()
+	{
+		std::unordered_map<std::string, std::string> values;
+		for (const auto& path : { DEFAULTS, USER }) {  // the player's changes over the defaults
+			for (const auto& [section, entries] : Ini::Read(path).sections) {
+				for (const auto& [key, value] : entries) {
+					values[Lower(section) + "|" + Lower(key)] = value;
+				}
+			}
+		}
+		return values;
+	}
+
+	std::filesystem::file_time_type SettingsTime()
+	{
+		std::error_code ec;
+		const auto      time = std::filesystem::last_write_time(USER, ec);
+		return ec ? std::filesystem::file_time_type{} : time;
+	}
 }
