@@ -12,7 +12,15 @@
 #ifndef WIN32_LEAN_AND_MEAN
 #	define WIN32_LEAN_AND_MEAN
 #endif
+// Its UTF-8 helpers use std::wstring_convert, deprecated since C++17 (C4996).
+#ifdef _MSC_VER
+#	pragma warning(push)
+#	pragma warning(disable: 4996)
+#endif
 #include "F4SEMenuFramework.h"
+#ifdef _MSC_VER
+#	pragma warning(pop)
+#endif
 
 #include <array>
 #include <fstream>
