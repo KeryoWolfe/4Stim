@@ -38,6 +38,14 @@ in the log.
 
 ## Runs
 
+### 15-17 November 2026: builds (CommonLibF4 merge, OStim's November data, menu pages)
+
+| | |
+|---|---|
+| Steps | `xmake build -r` with CommonLibF4 `4stim/combined` (asdasdduck's fork merged), OStim NG's November data, and the F4SE Menu Framework pages. |
+| Actual | MSVC warnings only (C4834 and C4456 in the merged `Actor.cpp`, C4996 and C4099 from the framework's header), all fixed. |
+| Status | **Built**; not yet run in game (TEST_PLAN.md 12.5 for the pages). |
+
 ### 12 November 2026: strap-on, timing, EvaluatePackage
 
 | | |

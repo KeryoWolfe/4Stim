@@ -9,6 +9,20 @@ about finding what still breaks before the first public release.
 
 **Please don't share these files.**
 
+## New since the 0.4 alpha
+
+The full list is CHANGELOG.md, "0.5.0 beta". The main ones:
+
+- **Who has a penis** is read from the body: futa from a wearable penis,
+  clothed men, a woman in the strap-on, all get the right scenes.
+- **Gear the game takes off** when a tongue or strap-on goes on is put back.
+- **NPCs** stop talking over scenes and get their own AI back after.
+- **Scene events** reach add-ons' scripts, aliases included.
+- **OStim NG's November data**: the holding and leg-locking factions, talking
+  in more actions.
+- **Settings in F4SE Menu Framework** (optional).
+- The alpha testers' problems fixed (docs/PORTING_ROADMAP.md, Phase 2).
+
 ## What you need
 
 | | |
@@ -16,7 +30,7 @@ about finding what still breaks before the first public release.
 | **Required** | Fallout 4 **1.11.240** (Steam), [F4SE](https://f4se.silverlock.org/) for it, Address Library for F4SE Plugins for 1.11.240, a mod manager (Mod Organizer 2 or Vortex) |
 | **Experimental** | 1.10.163, 1.10.984 or another 1.11 version, with [Runtime Database](https://www.nexusmods.com/fallout4/mods/108394) instead of the Address Library ("Other game versions") |
 | **Recommended** | [Mod Configuration Menu](https://www.nexusmods.com/fallout4/mods/21497) (the settings pages; everything is also in `4Stim.ini`); a crash logger (Addictol) |
-| **Optional** | A-Body (male) with FO4 Faster HDT-SMP (rigid physics in scenes); [LooksMenu](https://www.nexusmods.com/fallout4/mods/12631) (erections on BodyTalk and Atomic Muscle's `.tri` install); the High Heels System; a skeleton with ZeX's penis bones (penis bend and aim); True Wasteland Body (for the strap-on); [Intiface Central](https://intiface.com/central/) and a toy |
+| **Optional** | [F4SE Menu Framework](https://www.nexusmods.com/fallout4/mods/105090) (4Stim's settings in its in-game menu, too); A-Body (male) with FO4 Faster HDT-SMP (rigid physics in scenes); [LooksMenu](https://www.nexusmods.com/fallout4/mods/12631) (erections on BodyTalk and Atomic Muscle's `.tri` install); the High Heels System; a skeleton with ZeX's penis bones (penis bend and aim); True Wasteland Body (for the strap-on); [Intiface Central](https://intiface.com/central/) and a toy |
 
 The full list, with what each is for: DEPENDENCY_MATRIX.md. No versions are
 required: use the latest of each.
@@ -67,7 +81,9 @@ mention 4Stim's scripts being missing, which is harmless.
 to the tab buttons, then hides the HUD. **OStim Classic** (MCM, Controller
 page) uses OStim's navigation on the d-pad.
 
-Every setting is on 4Stim's MCM pages and in `F4SE\Plugins\4Stim.ini`.
+Every setting is on 4Stim's MCM pages and in `F4SE\Plugins\4Stim.ini`;
+with F4SE Menu Framework installed, the same pages are also in its menu
+under **4Stim > Settings**, taking effect as soon as they're changed.
 Settings OStim also has use OStim's names and defaults (docs/SETTINGS.md).
 
 ## What to test

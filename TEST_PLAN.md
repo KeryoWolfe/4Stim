@@ -120,6 +120,7 @@ matrix. Results go in TEST_RESULTS.md, one entry per run.
 | 12.2 | The same with a gamepad. | The d-pad and buttons work as the keys do. |
 | 12.3 | Every MCM page; change a setting, export, import. | `MCM: …`; the change takes effect; export / import round-trips. |
 | 12.4 | A non-English game language (if a translation is installed). | Texts in that language, English where a text is missing. |
+| 12.5 | With F4SE Menu Framework: its menu, 4Stim > Settings; every page; change a switch, a slider, a dropdown; the export button. | `Menu Framework: 14 settings page(s) added` at load; `Menu Framework: <setting> = <value>` for each change, which takes effect (and shows in the MCM); without the framework, `Menu Framework: not installed` and nothing else. |
 
 ### 13. Compatibility
 

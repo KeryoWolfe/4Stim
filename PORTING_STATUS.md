@@ -48,7 +48,8 @@ says otherwise. Test runs: TEST_RESULTS.md.
 
 | Feature | Status | Evidence |
 |---|---|---|
-| Actions and action tags | Tested | `Actions: loaded 87 action type(s)` |
+| Actions and action tags | Tested | `Actions: loaded 87 action type(s)`; OStim NG's November additions (the holding tag, leg locking's factions) built, untested |
+| OStim's `genitalAlignment` | Built, untested | Read and kept; nothing in Fallout 4 uses it |
 | Excitement and climax | Tested | `Excitement: X in "…"` (136), `Climax: X (role N)` |
 | Facial expressions | Tested | `Expressions: 80 facial expression(s)`; faces seen |
 | Eye directions | Tested | Eye lines (28) |
@@ -66,6 +67,7 @@ says otherwise. Test runs: TEST_RESULTS.md.
 | Options in the HUD | Tested | Used (Utility tab) |
 | MCM page | Tested | `MCM: its settings are newer than 4Stim.ini`; "Intended gender only" changed (12 November) |
 | OStim's setting names, defaults and keys | Tested | `Settings:` lines at load |
+| Settings in F4SE Menu Framework | Built, untested | Compiles (the owner's build, 17 November, warnings only, fixed); not yet opened in game (TEST_PLAN.md 12.5) |
 | Translations | Tested | `Translations: 602 text(s) in 4Stim_en.txt`; only English tried |
 
 ## APIs and saving
