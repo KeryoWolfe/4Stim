@@ -86,7 +86,10 @@ What `tools/package.ps1` (roadmap 3.4) puts in each zip, and where it came
 from. Anything not here doesn't go in; the script refuses what's under
 "Never packaged".
 
-### `4Stim-<version>.zip` (the framework)
+All of it goes in one zip, `4Stim-<version>.zip` (one mod to install; owner, 18
+November 2026). By part:
+
+### The framework
 
 | Files | Source | Licence or permission |
 |---|---|---|
@@ -99,7 +102,7 @@ from. Anything not here doesn't go in; the script refuses what's under
 | `Actor Properties`, `Erection`, `Furniture`, `Lights`, `Options`, `Physics`, `Voice Sets`, `Expression Morphs.json`, `4Stim.ini`, MCM config, translations | 4Stim's, in OStim's formats where OStim has one | GPL-3.0 |
 | `Sound\fx\4Stim\` (85 `.wav`: moans, climaxes, effects) | OStim NG's `Sound\fx\OStim\`, the same files (sizes match), in a 4Stim folder | GPL-3.0, as part of OStim NG |
 
-### `4Stim-TestAnims-<version>.zip` (the base animation pack)
+### The base animation pack
 
 | Files | Source | Licence or permission |
 |---|---|---|
@@ -109,7 +112,7 @@ from. Anything not here doesn't go in; the script refuses what's under
 | `4StimTestAnims.json` | 4Stim's additions | GPL-3.0 |
 | Other packs (Atomic Lust and others) | Their authors | **No permission: in no package** |
 
-### `4Stim-EquipObjects-<version>.zip` (optional)
+### The Equip Objects add-on (optional plugin)
 
 | Files | Source | Licence or permission |
 |---|---|---|

@@ -1,13 +1,14 @@
 <#
-Packages a 4Stim build for testers: three mod-manager archives
+Packages a 4Stim build for testers: one mod-manager archive,
 
-  4Stim-<version>.zip            the framework (plugin, settings, data, HUD,
-                                 icons, sounds, scripts)
-  4Stim-TestAnims-<version>.zip  the test animation pack
-  4Stim-EquipObjects-<version>.zip  the optional strap-ons and tongues
-                                 (Optional\4Stim Equip Objects in this repository)
+  4Stim-<version>.zip  the framework (plugin, settings, data, HUD, icons,
+                       sounds, scripts), the test animation pack and the
+                       Equip Objects add-on (strap-ons and tongues,
+                       Optional\4Stim Equip Objects in this repository)
+                       together, one mod to install (owner, 18 November
+                       2026; until then three archives)
 
-plus the testers' read-me beside them (docs\BETA.md for -Stage beta, the
+plus the testers' read-me beside it (docs\BETA.md for -Stage beta, the
 default; docs\ALPHA.md for -Stage alpha), in .\release\.
 
 What goes in follows SOURCE_AUDIT.md's provenance list (roadmap 3.4): OStim's
@@ -188,7 +189,9 @@ Add-Tree $anims (Join-Path $TestAnimsMod "meshes\actors\character\animations\OSt
 $equip = New-List
 $equipRoot = Join-Path $Repo "Optional\4Stim Equip Objects"
 Need (Join-Path $equipRoot "4Stim - Equip Objects.esp") "the Equip Objects plugin" | Out-Null
-Add-Tree $equip $equipRoot "" @("*.bak")
+Add-Tree $equip $equipRoot "" @("*.bak", "CREDITS.txt")
+# Its credits beside the framework's files, under a name of their own.
+Add-File $equip (Join-Path $equipRoot "CREDITS.txt") "4Stim Equip Objects - CREDITS.txt"
 
 # Provenance check: nothing forbidden in any archive.
 foreach ($pair in @(@("4Stim", $core), @("TestAnims", $anims), @("EquipObjects", $equip))) {
@@ -206,9 +209,12 @@ if ($problems) {
 
 New-Item -ItemType Directory -Force -Path $Out | Out-Null
 Write-Host "4Stim $tag"
-Write-Zip (Join-Path $Out "4Stim-$tag.zip") $core
-Write-Zip (Join-Path $Out "4Stim-TestAnims-$tag.zip") $anims
-Write-Zip (Join-Path $Out "4Stim-EquipObjects-$tag.zip") $equip
+# One archive (owner, 18 November 2026): the framework, the test pack and the
+# Equip Objects add-on together, one mod to install. Their files don't
+# overlap; were one to, the framework's would win.
+$all = New-List
+foreach ($list in $core, $anims, $equip) { foreach ($e in $list) { [void]$all.Add($e) } }
+Write-Zip (Join-Path $Out "4Stim-$tag.zip") $all
 $readme = if ($Stage -eq "beta") { "docs\BETA.md" } else { "docs\ALPHA.md" }
 Copy-Item -LiteralPath (Join-Path $Repo $readme) -Destination (Join-Path $Out "4Stim-$tag-ReadMe.md") -Force
 if ($skippedContent) { Write-Host ("Left out (vampire / tailjob): {0} file(s)" -f $skippedContent.Count) }

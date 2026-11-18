@@ -27,8 +27,8 @@ matrix. Results go in TEST_RESULTS.md, one entry per run.
 
 | # | Steps | Expected |
 |---|---|---|
-| 1.1 | Install `4Stim-<version>.zip` with the mod manager; enable `4Stim.esl`. | Files land under `Data\` (`F4SE\Plugins\4Stim.dll`, `4Stim.ini`, `4Stim\…`, `Interface\`, `Scripts\`, `Sound\fx\4Stim\`, `MCM\Config\4Stim\`). |
-| 1.2 | Install the test pack and, optionally, the Equip Objects add-on (enable their plugins; build the strap-on in BodySlide). | `4StimTestAnims.esp` and `4Stim - Equip Objects.esp` enabled. |
+| 1.1 | Install `4Stim-<version>.zip` with the mod manager, one mod; enable `4Stim.esl`. | Files land under `Data\` (`F4SE\Plugins\4Stim.dll`, `4Stim.ini`, `4Stim\…`, `Interface\`, `Scripts\`, `Sound\fx\4Stim\`, `MCM\Config\4Stim\`). |
+| 1.2 | Enable the test pack's and, optionally, the Equip Objects plugin (in the same mod); build the strap-on in BodySlide. | `4StimTestAnims.esp` and `4Stim - Equip Objects.esp` enabled. |
 | 1.3 | Uninstall: end any scene, save, remove the mods, load that save. | The save loads; no 4Stim errors in the Papyrus log beyond "unable to bind script" for removed scripts. |
 
 ### 2. Dependency checks
@@ -140,6 +140,6 @@ matrix. Results go in TEST_RESULTS.md, one entry per run.
 
 | # | Steps | Expected |
 |---|---|---|
-| 15.1 | Build the zips (`tools/package.ps1`). | Three zips; every file in them is in SOURCE_AUDIT.md's provenance list. |
+| 15.1 | Build the zip (`tools/package.ps1`). | One zip; every file in it is in SOURCE_AUDIT.md's provenance list. |
 | 15.2 | Look in the zips. | No Skyrim files (no Skyrim `.pex`, behaviors or `OStim.esp`), no other packs' animations, no Futanari FEV patch. |
 | 15.3 | Install from the zips into a clean profile and run 6.1. | Works. |

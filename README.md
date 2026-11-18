@@ -108,7 +108,7 @@ Compile the scripts in `Data\Scripts\Source\User\` with the Creation Kit's Papyr
 
 ### Test builds
 
-`tools\package.ps1` packages a test build: `4Stim-<version>-beta.zip` (the framework), `4Stim-TestAnims-<version>-beta.zip` (the test pack) and `4Stim-EquipObjects-<version>-beta.zip` (the optional add-on), with the testers' read-me (docs/BETA.md), in `release\`. `-Stage alpha` makes alpha archives with docs/ALPHA.md. Build the plugin, movies and scripts first. The top of the script says where it takes each file from; it stops if one is missing or if anything SOURCE_AUDIT.md keeps out of packages is in one (vampire and tailjob animations are left out of the test pack), and warns about anything older than its source:
+`tools\package.ps1` packages a test build: `4Stim-<version>-beta.zip`, the framework, the test pack and the Equip Objects add-on in one mod, with the testers' read-me (docs/BETA.md), in `release\`. `-Stage alpha` makes alpha archives with docs/ALPHA.md. Build the plugin, movies and scripts first. The top of the script says where it takes each file from; it stops if one is missing or if anything SOURCE_AUDIT.md keeps out of packages is in one (vampire and tailjob animations are left out of the test pack), and warns about anything older than its source:
 
 ```bat
 powershell -ExecutionPolicy Bypass -File tools\package.ps1

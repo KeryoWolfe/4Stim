@@ -45,11 +45,13 @@ by hand (`F4SE\Plugins\4Stim.dll`, the `F4SE\Plugins\4Stim` folder,
 `Scripts\Four*.pex`). An old `4Stim.dll` left behind is the most common
 reason the scene key does nothing.
 
-Then install with your mod manager, one mod each:
+Then install **`4Stim-0.5.0-beta.zip`** with your mod manager, as one mod.
+It holds the framework, OStim's base animations (converted) and the
+strap-ons and tongues. Enable its three plugins:
 
-1. **`4Stim-0.5.0-beta.zip`**: the framework. Enable **`4Stim.esl`**.
-2. **`4Stim-TestAnims-0.5.0-beta.zip`**: OStim's base animations, converted. Enable **`4StimTestAnims.esp`**.
-3. Optional, **`4Stim-EquipObjects-0.5.0-beta.zip`**: strap-ons and tongues. Enable **`4Stim - Equip Objects.esp`** and build **4Stim OStim Strap-On (TWB)** in BodySlide.
+1. **`4Stim.esl`**: the framework.
+2. **`4StimTestAnims.esp`**: the animations.
+3. **`4Stim - Equip Objects.esp`**: strap-ons and tongues (optional: leave it off if you don't want them). Then build **4Stim OStim Strap-On (TWB)** in BodySlide.
 
 Take the new `4Stim.ini`. Settings you changed in the MCM stay.
 
@@ -59,7 +61,7 @@ starts with `4Stim v0.5.0.0`, `Game version …, F4SE …` and, a few lines on,
 
 ## Uninstalling
 
-End any scene, save, disable and remove the three mods, and load that save.
+End any scene, save, disable and remove the mod, and load that save.
 4Stim keeps nothing in the save that the game needs; the Papyrus log may
 mention 4Stim's scripts being missing, which is harmless.
 
