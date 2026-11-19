@@ -375,36 +375,6 @@ namespace Core
 	// collision (RestoreCollisionNow).
 	std::unordered_map<std::uint32_t, float> g_savedGravity;  // actor -> their controller's gravity before the scene (main thread)
 
-	// No collision while the lock holds them (bNoActorCollision; 4Stim's,
-	// not in OStim: Skyrim's lock leaves the capsule out of it). Sharing a
-	// collision group (IgnorePairCollision) didn't keep two scene actors'
-	// capsules apart with the player in the scene: a beta tester's log (18
-	// November) had the NPC pushed 36-39 units off her spot, about both
-	// capsules' radii, every few seconds in standing and sitting scenes,
-	// the lock pulling her back each time: the jitter. Without gravity the
-	// lock holds them, so they don't need the floor either (as walls,
-	// bPassThroughWalls). Their own filter comes back with their gravity
-	// (RestoreCollisionNow).
-	void HoldNoCollision(RE::Actor* a_actor, RE::bhkCharacterController* a_controller)
-	{
-		if (!g_settings.noActorCollision) {
-			return;
-		}
-		const auto body = a_controller->GetBodyImpl();
-		if (!body) {
-			return;
-		}
-		RE::CFilter filter{};
-		filter.filter = body->m_collisionFilterInfo;
-		if (filter.QNoCollision()) {
-			return;
-		}
-		g_savedFilters.try_emplace(a_actor->GetFormID(), filter.filter);
-		filter.SetNoCollision(true);
-		const auto ok = a_controller->SetCollisionFilterInfo(filter);
-		REX::INFO("Scene lock: {:08X} collides with nothing for the scene (filter {:08X} -> {:08X}, {})", a_actor->GetFormID(), body->m_collisionFilterInfo, filter.filter, ok);
-	}
-
 	void HoldGravity(RE::Actor* a_actor)
 	{
 		const auto controller = g_lockScenes ? GetCharController(a_actor) : nullptr;
@@ -418,7 +388,6 @@ namespace Core
 		}
 		controller->gravity = 0.0F;
 		controller->fallTime = 0.0F;
-		HoldNoCollision(a_actor, controller);
 	}
 
 	void RestoreGravity(RE::Actor* a_actor)
