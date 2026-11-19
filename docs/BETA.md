@@ -107,6 +107,7 @@ TEST_PLAN.md is the full list. Most wanted:
 - **Clipping**: a penis through bodies or faces, hands through bodies, mostly in the animations themselves. Use the Align tab to fix a scene for your characters, and tell us which scenes are worst.
 - **First person** in scenes isn't supported yet: scenes switch to third person.
 - **Freezes with FO4 Faster HDT-SMP**: its Papyrus functions can stop the game for seconds, more with many SMP actors around. 4Stim's physics swaps call them at scene start and end; A-Body's NPC script calls them all the time.
+- **Two SMP plugins at once** (FO4 Faster HDT-SMP and FO4SMP): actors jitter in standing and sitting scenes (a tester, 19 November). Run only one.
 - **Toys** only follow scenes you're in (as OStim's), and only actions with a toy slot.
 - A wearable penis that isn't on ZeX's penis bones (older mods) can't be aimed by the scene; at large sizes it clips.
 
