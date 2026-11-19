@@ -38,6 +38,16 @@ in the log.
 
 ## Runs
 
+### 19 November 2026: beta tester, 1.10.163, crash on save load
+
+| | |
+|---|---|
+| Setup | 4Stim 0.5.0 beta, Fallout 4 1.10.163, F4SE 0.6.23, Buffout 4; the tester's load order. |
+| Steps | Load a save. |
+| Expected | The save loads (`kPostLoadGame` handled). |
+| Actual | Crash in `4Stim.dll`: `Core::OnMessage` (kPostLoadGame) > `Undress::QueryPapyrusUndressing` > `Compat::DispatchStaticCall` > CommonLibF4's `IVirtualMachine::DispatchStaticCall` copying a `std::function` (`call [rax]`, rax 0), read with the beta's PDB. 4Stim's 1.10.163 layout of the arguments was converted again by CommonLibF4 (`msvc::with_native_function`, from the asdasdduck merge). |
+| Status | **Fail**: fixed in code (4Stim `compat/ScrapFunction.h`, CommonLibF4 `0064693`), to be retested on 1.10.163. |
+
 ### 18 November 2026: beta tester (GranMasterYawn), jitter
 
 | | |
