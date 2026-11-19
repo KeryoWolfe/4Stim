@@ -47,6 +47,7 @@ in the log.
 | Expected | Both actors still on their spots. |
 | Actual | Jitter in standing and sitting scenes, not in lying ones; again on replaying the scene and after leaving and restarting it. Log: `Scene lock: 001B19CA … was 36.3-38.6 units / 0.0 deg off its spot, locking it again` every few seconds; the pair shared the player's collision group (`IgnorePairCollision: 00000014 filter 0008001E -> 0008001E, 001B19CA filter 051F001E -> 0008001E`). |
 | Status | **Fail**: fixed in code (`bNoActorCollision`), to be retested. |
+| Also | `Physics: 00000014 not swapped: FSMP has no active physics on it`, at scene start and end. **Not 4Stim**: the tester runs FO4SMP V1 *and* FO4 Faster HDT-SMP. FO4SMP's log stops stepping at the first load (`Frame step: paused (… timer disabled 122934 …)`, never `resumed`) and builds no physics for anyone, so its `HasPhysicsSystem` answers false. V1 reads the game timer's `disabledLastTime` (+0x38 in 1.11.240) as its disable counter (+0x48); FO4SMP V1.1 (24d9b58) reads +0x48. Advice: run one SMP plugin. |
 
 ### 15-17 November 2026: builds (CommonLibF4 merge, OStim's November data, menu pages)
 
