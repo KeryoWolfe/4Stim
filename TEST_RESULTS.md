@@ -38,6 +38,16 @@ in the log.
 
 ## Runs
 
+### 18 November 2026: beta tester (GranMasterYawn), jitter
+
+| | |
+|---|---|
+| Setup | 4Stim 0.5.0 beta, Fallout 4 1.11.240, F4SE 0.7.9; the tester's load order. |
+| Steps | Standing scenes with the player and an NPC (Standing Apart, Holding, Groping From Behind, Standing Behind); sitting scenes. |
+| Expected | Both actors still on their spots. |
+| Actual | Jitter in standing and sitting scenes, not in lying ones; again on replaying the scene and after leaving and restarting it. Log: `Scene lock: 001B19CA … was 36.3-38.6 units / 0.0 deg off its spot, locking it again` every few seconds; the pair shared the player's collision group (`IgnorePairCollision: 00000014 filter 0008001E -> 0008001E, 001B19CA filter 051F001E -> 0008001E`). |
+| Status | **Fail**: fixed in code (`bNoActorCollision`), to be retested. |
+
 ### 15-17 November 2026: builds (CommonLibF4 merge, OStim's November data, menu pages)
 
 | | |
