@@ -87,6 +87,27 @@ namespace Physics
 		std::vector<Swap>                         g_swaps;
 		bool                                      g_loaded = false;
 		std::unordered_map<std::uint32_t, Applied> g_applied;  // actor -> what's swapped in
+		// Each scene actor's scene and role, for a swap tried again later.
+		struct InScene
+		{
+			std::string sceneID;
+			std::size_t role = 0;
+		};
+		std::unordered_map<std::uint32_t, InScene> g_inScene;
+		// Scene actors FSMP had no physics on when their swap was asked
+		// (SwapPhysicsFile answered 0): asked again every RETRY_EVERY while
+		// their scene lasts, up to RETRIES times. A 1.10.163 tester's NPCs,
+		// dressed at the start, got no erect physics for the whole scene
+		// (19 November 2026): FSMP builds physics for the naked body only
+		// once it's on, or only for its nearest actors in a crowd.
+		struct Retry
+		{
+			int                                   left = 0;
+			std::chrono::steady_clock::time_point next;
+		};
+		std::unordered_map<std::uint32_t, Retry> g_retry;
+		constexpr int  RETRIES = 10;
+		constexpr auto RETRY_EVERY = std::chrono::seconds(3);
 		// Scene actors whose meshes name no physics file (a body without SMP,
 		// such as BodyTalk, or no FSMP at all): nothing of FSMP's is called
 		// for them, so a game without FSMP gets no "Cannot open store for
@@ -333,6 +354,9 @@ namespace Physics
 					if (code >= 1 && code <= 3 && !_pairs[code - 1].first.empty()) {
 						g_spelling[_key] = _pairs[code - 1];
 					}
+					if (code != 0) {
+						g_retry.erase(_actor);
+					}
 					if (_start) {
 						if (const auto it = g_applied.find(_actor); it != g_applied.end()) {
 							it->second.pendingStart = false;
@@ -352,6 +376,27 @@ namespace Physics
 					REX::INFO("Physics: {:08X} now uses \"{}\" (spelling {})", _actor, _to, code);
 					break;
 				case 0:
+					if (_start) {
+						// Nothing was swapped: forgotten, so the scene's end
+						// doesn't swap back, and tried again while the scene
+						// lasts (g_retry).
+						std::scoped_lock lock(g_lock);
+						const auto it = g_applied.find(_actor);
+						if (it != g_applied.end() && !it->second.pendingBack && g_inScene.contains(_actor)) {
+							g_applied.erase(it);
+							const auto [retry, fresh] = g_retry.try_emplace(_actor);
+							if (fresh) {
+								retry->second.left = RETRIES;
+							}
+							if (retry->second.left > 0) {
+								retry->second.next = std::chrono::steady_clock::now() + RETRY_EVERY;
+								REX::WARN("Physics: {:08X} not swapped: FSMP has no active physics on it yet (dressed, not loaded, or beyond maxActiveActors in FSMP's configs.xml): trying again in a moment ({} tr{} left)",
+									_actor, retry->second.left, retry->second.left == 1 ? "y" : "ies");
+								break;
+							}
+							g_retry.erase(retry);
+						}
+					}
 					REX::WARN("Physics: {:08X} not swapped: FSMP has no active physics on it (not loaded, or beyond maxActiveActors in FSMP's configs.xml)", _actor);
 					break;
 				case -1:
@@ -545,6 +590,22 @@ namespace Physics
 			StartSwap(actor, scene.get(), it->second.role, SWAP_DELAY);
 			it = g_waiting.erase(it);
 		}
+		for (auto& [id, retry] : g_retry) {
+			if (retry.left <= 0 || now < retry.next || g_applied.contains(id)) {
+				continue;
+			}
+			const auto actor = RE::TESForm::GetFormByID<RE::Actor>(id);
+			const auto where = g_inScene.find(id);
+			if (!actor || !actor->Get3D(false) || where == g_inScene.end()) {
+				continue;
+			}
+			--retry.left;
+			retry.next = now + RETRY_EVERY;  // also when nothing could be asked: the answer reschedules otherwise
+			const auto scene = SceneRegistry::Find(where->second.sceneID);
+			if (StartSwap(actor, scene.get(), where->second.role, 0.0F)) {
+				REX::INFO("Physics: {:08X} swap asked again", id);
+			}
+		}
 	}
 
 	Config& Settings()
@@ -587,6 +648,7 @@ namespace Physics
 		float      delay = SWAP_DELAY;
 		for (std::size_t role = 0; role < a_actors.size(); ++role) {
 			const auto id = a_actors[role];
+			g_inScene[id] = { a_sceneID, role };
 			if (const auto it = g_applied.find(id); it != g_applied.end()) {
 				// Still swapped: a new scene before the last one's swap back
 				// (which then leaves it alone); SceneChanged picks giving or
@@ -638,6 +700,9 @@ namespace Physics
 			if (const auto it = g_waiting.find(a_actors[role]); it != g_waiting.end()) {
 				it->second = { a_sceneID, role };
 			}
+			if (const auto it = g_inScene.find(a_actors[role]); it != g_inScene.end()) {
+				it->second = { a_sceneID, role };
+			}
 		}
 		SwitchForScene(a_actors, a_sceneID);
 	}
@@ -649,6 +714,8 @@ namespace Physics
 		float                      delay = AFTER_SCENE_DELAY;
 		for (const auto id : a_actors) {
 			g_waiting.erase(id);  // never undressed: nothing was swapped (g_noPhysics: no rebuild either)
+			g_inScene.erase(id);
+			g_retry.erase(id);
 			const auto it = g_applied.find(id);
 			if (it == g_applied.end()) {
 				unswapped.push_back(id);

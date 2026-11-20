@@ -38,6 +38,16 @@ in the log.
 
 ## Runs
 
+### 19 November 2026: beta tester (riveth), 1.10.163, scenes ending and no erections
+
+| | |
+|---|---|
+| Setup | 4Stim 0.5.0 beta with the 1.10.163 save-load fix, Fallout 4 1.10.163; A-Body 2 with SMP; NPCs from Diamond City Outskirts. |
+| Steps | Scenes with the female player and several male NPCs; undressing scenes. |
+| Expected | Scenes run to their end; erect physics on each male NPC. |
+| Actual | (1) The save loads (the fix works). (2) Every scene that undressed the player ended: `Scene "OStim2PUndressBottom1MF": ending, 00000014 was hurt (20 health lost)` right after `Undress: 00000014 … "Hooded Rags"` (the item raises Health by 20). (3) Two NPCs (4822AB23, 2406388A) never got erect physics: `not swapped: FSMP has no active physics on it` at scene start, never asked again; others from the same mod worked. |
+| Status | **Fail**: both fixed in code (Health's damage modifier for `bEndOnDamage`; the swap asked again while the scene lasts), to be retested. |
+
 ### 19 November 2026: beta tester, 1.10.163, crash on save load
 
 | | |

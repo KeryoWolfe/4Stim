@@ -163,16 +163,22 @@ namespace Core
 				// 4Stim's (bEndOnDamage): hurt. Actors in a scene don't start
 				// fights, so OStim's combat check alone let a scene go on
 				// while its actors were shot (the owner's Legendary Raider).
-				// Health only goes down from harm; it coming back up is regeneration.
-				const float health = g_endOnDamage && g_healthAV ? actor->GetActorValue(*g_healthAV) : -1.0F;
+				// Harm is read from Health's damage modifier, not Health
+				// itself: taking off an item that raises Health (the "Hooded
+				// Rags" of a 1.10.163 tester, +20) lowers Health with no harm
+				// done, and every scene that undressed her ended as "hurt (20
+				// health lost)" (19 November 2026). The damage modifier
+				// (negative) only grows from harm and shrinks back as health
+				// regenerates; tracked as a positive amount.
+				const float health = g_endOnDamage && g_healthAV ? (std::max)(0.0F, -actor->GetModifier(RE::ACTOR_VALUE_MODIFIER::kDamage, *g_healthAV)) : -1.0F;
 				const float before = active.health[role];
 				active.health[role] = health;
 				if (actor->IsDead(false)) {
 					why = std::format("{:08X} died", id);
 				} else if (actor->IsInCombat()) {
 					why = std::format("{:08X} is in combat", id);
-				} else if (health >= 0.0F && before >= 0.0F && health < before - 0.5F) {
-					why = std::format("{:08X} was hurt ({:.0f} health lost)", id, before - health);
+				} else if (health >= 0.0F && before >= 0.0F && health > before + 0.5F) {
+					why = std::format("{:08X} was hurt ({:.0f} health lost)", id, health - before);
 				}
 				if (!why.empty()) {
 					break;

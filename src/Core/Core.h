@@ -561,7 +561,7 @@ namespace Core
 		// Ended because someone died, fought or was hurt (not a normal end):
 		// with bStayWhenInterrupted no one is sent back where they stood.
 		bool interrupted = false;
-		// Each actor's health at the last look (bEndOnDamage), role order.
+		// Each actor's harm at the last look (Health's damage modifier, as a positive amount; bEndOnDamage), role order.
 		std::vector<float> health;
 	};
 	void NoteSpeed(ActiveScene& a_active, const std::string& a_sceneID, int a_speed);
