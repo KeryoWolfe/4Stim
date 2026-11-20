@@ -52,6 +52,14 @@ package hud
 		private var _navigation:Array = [];
 		private var _utility:Array = [];
 		private var _align:Object = null;  // SetAlign's data
+		// The Align row being changed: Yes (Accept) on a value, actor or step
+		// row selects it, and only then do Left / Right change it; Yes again,
+		// Up / Down, Cancel or B let it go. Until then Left / Right move as
+		// on any other tab, so the tab buttons can always be reached (a
+		// tester could not get back from the Align list, 20 November 2026).
+		// OStim's align menu changes the value on Left / Right at once: a
+		// 4Stim departure, asked for by the project owner.
+		private var _alignEditing:Boolean = false;
 		private var _speed:int = 0;
 		private var _speedCount:int = 0;
 		private var _focused:Boolean = false;
@@ -325,7 +333,7 @@ package hud
 					return true;
 				}
 				if (!_tabFocus) {
-					alignChange(side);
+					alignChange(side);  // only while a row is selected
 				}
 				return true;
 			}
@@ -350,6 +358,17 @@ package hud
 			}
 			if (_tabFocus && handleTabFocus(a_name, _columns)) {
 				return true;
+			}
+			// A selected Align row lets go on Yes (activate), Cancel and B;
+			// Up / Down let go and move on.
+			if (_alignEditing) {
+				if (a_name == "Cancel" || a_name == "Back") {
+					stopAlignEditing();
+					return true;
+				}
+				if (a_name == "Up" || a_name == "Down") {
+					stopAlignEditing();
+				}
 			}
 			// The controller's B (Modern): from the list to the tab buttons (Up /
 			// Down pick a tab, A opens it); from the tab buttons it hides the HUD,
@@ -407,7 +426,7 @@ package hud
 		private function alignChange(a_side:String):Boolean
 		{
 			var row:Object = _list.selectedEntry;
-			if (_tabs.selectedID != "align" || row == null) {
+			if (!_alignEditing || _tabs.selectedID != "align" || row == null) {
 				return false;
 			}
 			var dir:int = a_side == "Left" ? -1 : 1;
@@ -484,9 +503,8 @@ package hud
 		}
 
 		// OStim's columns, in the list. Returns true if it handled a_name.
-		// Left / Right still change a value on the Align tab's value, actor and
-		// step rows (the safeguard): the tab buttons are reached from any other
-		// row.
+		// Left / Right change a value only on an Align row selected with Yes
+		// (_alignEditing); otherwise they reach the tab buttons from any row.
 		private function handleColumns(a_name:String):Boolean
 		{
 			var toTabs:String = _mirror ? "Right" : "Left";
@@ -496,8 +514,8 @@ package hud
 			}
 			var row:Object = _list.selectedEntry;
 			var kind:String = row != null ? String(row.kind) : "";
-			if (_tabs.selectedID == "align" && (kind == "alignValue" || kind == "alignActor" || kind == "alignStep")) {
-				return false;  // changes the value
+			if (_alignEditing && _tabs.selectedID == "align" && adjustable(kind)) {
+				return false;  // changes the selected row's value
 			}
 			if (a_name == toTabs) {
 				enterTabs();
@@ -584,13 +602,17 @@ package hud
 					code("OpenSearch");
 					break;
 				case "disabled":
+					break;
 				case "alignValue":
-					break;
 				case "alignActor":
-					code("AlignActor", 1);
-					break;
 				case "alignStep":
-					code("AlignStep", 1);
+					// Yes selects the row for Left / Right, Yes again lets it go.
+					if (_alignEditing) {
+						stopAlignEditing();
+					} else {
+						_alignEditing = true;
+						showTab(true);
+					}
 					break;
 				case "alignReset":
 					code("AlignReset");
@@ -628,6 +650,9 @@ package hud
 		// Fills the list for the selected tab.
 		private function showTab(a_keepSelection:Boolean):void
 		{
+			if (_tabs.selectedID != "align" || !a_keepSelection) {
+				_alignEditing = false;
+			}
 			switch (_tabs.selectedID) {
 				case "navigation":
 					_list.setTitle(Strings.t("$4stim_tab_navigation", "Navigation"));
@@ -665,9 +690,14 @@ package hud
 			}
 			var name:String = String(_align.name);
 			var count:int = int(_align.roleCount);
+			var editing:String = "";
+			var selected:Object = _list.selectedEntry;
+			if (_alignEditing && selected != null) {
+				editing = String(selected.id);
+			}
 			var sex:String = String(_align.sex) == "male" ? "M" : String(_align.sex) == "female" ? "F" : "*";
 			var digits:int = stepDigits();
-			return [
+			var rows:Array = [
 				{ id: "align_actor", label: "< " + name + " >   " + Strings.t("$4stim_align_role", "Role") + " " + int(_align.role) + (count > 1 ? "/" + (count - 1) : "") + "  " + sex, icon: "", kind: "alignActor" },
 				{ id: "align_x", label: Strings.t("$4stim_align_x", "Left / right") + "   " + signed(Number(_align.x), digits), icon: "", kind: "alignValue", field: "x" },
 				{ id: "align_y", label: Strings.t("$4stim_align_y", "Back / forward") + "   " + signed(Number(_align.y), digits), icon: "", kind: "alignValue", field: "y" },
@@ -678,6 +708,13 @@ package hud
 				{ id: "align_step", label: Strings.t("$4stim_align_step", "Step") + "   < " + stepText() + " >", icon: "", kind: "alignStep" },
 				{ id: "align_reset", label: Strings.t("$4stim_align_reset", "Reset") + " " + name, icon: "", kind: "alignReset" }
 			];
+			// The row selected with Yes, marked as being changed.
+			for (var i:int = 0; i < rows.length; ++i) {
+				if (rows[i].id == editing) {
+					rows[i].label = "> " + rows[i].label + "  <";
+				}
+			}
+			return rows;
 		}
 
 		// The step as OStim's align menu writes it: 10.00, 1.000, 0.100, 0.010, 0.001.
@@ -706,7 +743,26 @@ package hud
 		{
 			var row:Object = _list.selectedEntry;
 			var kind:String = row != null ? String(row.kind) : "";
-			code("SetHorizontalRepeat", !_tabFocus && _tabs.selectedID == "align" && kind == "alignValue");
+			code("SetHorizontalRepeat", !_tabFocus && _alignEditing && _tabs.selectedID == "align" && kind == "alignValue");
+		}
+
+		private static function adjustable(a_kind:String):Boolean
+		{
+			return a_kind == "alignValue" || a_kind == "alignActor" || a_kind == "alignStep";
+		}
+
+		// Lets go of the selected Align row (_alignEditing).
+		private function stopAlignEditing():void
+		{
+			if (!_alignEditing) {
+				return;
+			}
+			_alignEditing = false;
+			if (_tabs.selectedID == "align") {
+				showTab(true);
+			} else {
+				updateRepeat();
+			}
 		}
 
 		private function px(a_x:Number, a_w:Number):Number

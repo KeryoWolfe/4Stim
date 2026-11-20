@@ -3,6 +3,7 @@
 ## 0.5.0 beta (in progress)
 
 ### Beta
+- **Align tab: a row is selected with Yes before Left / Right change it** (Enter / A; again, Up / Down, Cancel or B let it go). Left / Right otherwise move between tabs, so the Align list can always be left (a tester couldn't get back from it, 20 November). A departure from OStim's align menu, asked for by the owner (docs/ALIGNMENT.md).
 - **Scenes ended when an item that raises Health came off** (a 1.10.163 tester, 19 November): undressing the player's "Hooded Rags" (+20 Health) ended every scene as `was hurt (20 health lost)`. `bEndOnDamage` now reads Health's damage, which only harm changes.
 - **No erect physics on some NPCs** (the same tester): FSMP had no physics on them yet when the scene started (dressed, in a crowd), and 4Stim asked once. The swap is now asked again every 3 seconds while the scene lasts, up to 10 times, and an actor whose swap never landed isn't swapped back at the end.
 - **Crash on loading a save on 1.10.163** (first beta, a tester's crash log, 19 November): every call from 4Stim into Papyrus on 1.10.163 handed the VM a garbled argument list, first at load (`FourUndress.UsePapyrusUndressing`). After the asdasdduck merge, CommonLibF4 converts the arguments to 1.10.163's layout itself, and both 4Stim's `compat/ScrapFunction.h` and an older path in CommonLibF4 still converted them first. Both removed (CommonLibF4 `4stim/combined` at `0064693`). NG and AE weren't affected.
