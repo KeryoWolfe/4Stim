@@ -314,6 +314,7 @@ namespace Core
 		{ "bfurnitureoutoftheway", [](const std::string& value) { g_settings.furnitureOutOfWay = std::stoi(value) != 0; } },
 		{ "bresetphysicsafterscene", [](const std::string& value) { Physics::Settings().resetAfterScene = std::stoi(value) != 0; } },
 		{ "bpassthroughwalls", [](const std::string& value) { g_settings.passThroughWalls = std::stoi(value) != 0; } },
+		{ "bnoactorcollision", [](const std::string& value) { g_settings.noActorCollision = std::stoi(value) != 0; } },
 		{ "bcollisionwatch", [](const std::string& value) { g_settings.collisionWatch = std::stoi(value) != 0; } },
 		{ "bplayeraidriven", [](const std::string& value) { g_settings.playerAIDriven = std::stoi(value) != 0; } },
 		{ "btranslationlock", [](const std::string& value) { g_settings.translationLock = std::stoi(value) != 0; } },

@@ -38,6 +38,16 @@ in the log.
 
 ## Runs
 
+### 19 November 2026: owner, 1.10.163 (GOG), jitter
+
+| | |
+|---|---|
+| Setup | 4Stim 0.5.0 beta with the 1.10.163 fixes, Fallout 4 1.10.163 (GOG), F4SE 0.6.23; FO4 Faster HDT-SMP only (no FO4SMP: V1 is 1.11.240 only). |
+| Steps | Standing scenes with the player and an NPC (00002F07), on and off a mattress; a table scene. |
+| Expected | Both actors still on their spots. |
+| Actual | Jitter in standing scenes (three videos). The log shows one `Scene lock: … off its spot, locking it again` per scene, at its start (52-78 units), and none after: the shaking stays under the lock's threshold. |
+| Status | **Fail**: `bNoActorCollision` (the change from 18 November, taken out after that report) brought back, to be tested. |
+
 ### 19 November 2026: beta tester (riveth), 1.10.163, scenes ending and no erections
 
 | | |
