@@ -132,6 +132,25 @@
 			}
 		},
 		{
+			"id": "sleepingbag",
+			"name": "Sleeping bag",
+			"supertype": "mattress",
+			"priority": 6,
+			"forms": [
+				"FURN"
+			],
+			"models": [
+				"sleepingbag"
+			],
+			"minMarkers": 1,
+			"anchor": "center",
+			"offset": [
+				0,
+				0,
+				-1
+			]
+		},
+		{
 			"id": "chair",
 			"name": "Chair",
 			"forms": [
