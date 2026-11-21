@@ -19,6 +19,13 @@ namespace Core
 			bool          started = false;
 			int           frames = 0, locTurns = 0, rootTurns = 0, lines = 0;
 			float         locStepMax = 0.0F, rootStepMax = 0.0F, locOffMax = 0.0F, rootOffMax = 0.0F, time = 0.0F;
+			// Turning: the reference's heading (data.angle.z) and the drawn
+			// root's whole rotation, per frame. Added for the player's faint
+			// vibration on 1.10.163 (20 November 2026), which showed no
+			// movement at all in the steps above.
+			float         lastHeading = 0.0F, lastHeadStep = 0.0F, headStepMax = 0.0F, rootTurnMax = 0.0F, headOffMax = 0.0F;
+			RE::NiMatrix3 lastRot{};
+			int           headTurns = 0;
 			std::string   scene;
 		};
 		static std::unordered_map<std::uint32_t, Track> tracks;
@@ -46,7 +53,15 @@ namespace Core
 					t = Track{};
 					t.scene = active.sceneID;
 				}
-				const auto spot = SpotOf(active, role).position;
+				const auto spotFull = SpotOf(active, role);
+				const auto spot = spotFull.position;
+				const float heading = actor->data.angle.z;
+				const auto& rot = root->world.rotate;
+				auto wrap = [](float a) {
+					while (a > PI_F) a -= 2.0F * PI_F;
+					while (a < -PI_F) a += 2.0F * PI_F;
+					return a;
+				};
 				const auto loc = actor->data.location;
 				const auto drawn = root->world.translate;
 				if (t.started) {
@@ -58,7 +73,22 @@ namespace Core
 					t.rootStepMax = std::max(t.rootStepMax, rootStep.Length());
 					t.lastLocStep = locStep;
 					t.lastRootStep = rootStep;
+					const float headStep = wrap(heading - t.lastHeading);
+					t.headTurns += (headStep * t.lastHeadStep < 0.0F && std::fabs(headStep) > 1e-5F) ? 1 : 0;
+					t.headStepMax = std::max(t.headStepMax, std::fabs(headStep));
+					t.lastHeadStep = headStep;
+					// The angle between this frame's rotation and the last: trace(Rlast^T R).
+					float trace = 0.0F;
+					for (int r = 0; r < 3; ++r) {
+						for (int c = 0; c < 3; ++c) {
+							trace += t.lastRot.entry[r][c] * rot.entry[r][c];
+						}
+					}
+					t.rootTurnMax = std::max(t.rootTurnMax, std::acos(std::clamp((trace - 1.0F) * 0.5F, -1.0F, 1.0F)));
 				}
+				t.lastHeading = heading;
+				t.lastRot = rot;
+				t.headOffMax = std::max(t.headOffMax, std::fabs(wrap(heading - spotFull.heading)));
 				t.started = true;
 				t.lastLoc = loc;
 				t.lastRoot = drawn;
@@ -69,8 +99,9 @@ namespace Core
 				if (t.time >= 2.0F) {
 					if (t.lines < 10) {
 						++t.lines;
-						REX::INFO("Shake watch: {:08X} in \"{}\", {} frames: reference up to {:.2f} off its spot, steps up to {:.2f}, {} turn(s) back; drawn root up to {:.2f} off, steps up to {:.2f}, {} turn(s) back",
-							id, active.sceneID, t.frames, t.locOffMax, t.locStepMax, t.locTurns, t.rootOffMax, t.rootStepMax, t.rootTurns);
+						REX::INFO("Shake watch: {:08X} in \"{}\", {} frames: reference up to {:.2f} off its spot, steps up to {:.2f}, {} turn(s) back; drawn root up to {:.2f} off, steps up to {:.2f}, {} turn(s) back; heading up to {:.3f} deg off, steps up to {:.4f} deg, {} reversal(s); drawn root turns up to {:.4f} deg a frame",
+							id, active.sceneID, t.frames, t.locOffMax, t.locStepMax, t.locTurns, t.rootOffMax, t.rootStepMax, t.rootTurns, t.headOffMax * 180.0F / PI_F,
+							t.headStepMax * 180.0F / PI_F, t.headTurns, t.rootTurnMax * 180.0F / PI_F);
 					}
 					const auto scene = t.scene;
 					const int  lines = t.lines;
