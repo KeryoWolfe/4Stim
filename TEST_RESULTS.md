@@ -47,7 +47,7 @@ in the log.
 | Expected | Both actors stay on their spots; the Align tab takes Left / Right only after Yes. |
 | Actual | Jitter gone. Align tab works as intended (owner). On the first bag the player sank slowly into the ground during Standing Apart (to the knees in the video); nothing in the log (the lock's watchdog leaves the player alone); not on the second bag. |
 | Status | Jitter, Align: **Pass**. Sinking: **Fail**, fixed in code (no-collision for NPCs only), to be retested. |
-| Retest (same night) | No sinking. A faint vibration of the player stayed. `bCollisionWatch=1`: her held position and drawn root 0.00 off her spot, every 2 s window. FO4SMP V1.1's log: the player's TWB breast bones simulated 105-211 units from their parents every minute, bad poses rejected, explosions reset (at the scene's start, when the actors are moved onto the spot, and later). **Not 4Stim**: FO4SMP (the owner's SMP port) physics on the player. |
+| Retest (same night) | No sinking. A faint vibration of the player stayed. `bCollisionWatch=1`: her held position and drawn root 0.00 off her spot, every 2 s window. FO4SMP V1.1's log: the player's TWB breast bones exploded when the scene moved her onto the spot and were reset, 3-13 bad simulated poses rejected a minute and 1-5 rest-pose resets a minute after that. **Most likely not 4Stim**: the player's SMP breast and belly physics (FO4SMP, the owner's port); to confirm with FO4SMP's physics off for the player. |
 
 ### 19 November 2026: owner, 1.10.163 (GOG), jitter
 
