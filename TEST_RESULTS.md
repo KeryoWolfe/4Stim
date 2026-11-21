@@ -38,6 +38,16 @@ in the log.
 
 ## Runs
 
+### 20 November 2026: owner, 1.10.163 (GOG), player sinking on a sleeping bag
+
+| | |
+|---|---|
+| Setup | As 19 November (1.10.163), with `bNoActorCollision` back; the Align tab change. |
+| Steps | Standing scenes with an NPC (2206388E) on a sleeping bag (22063827); again on another sleeping bag (22063883). |
+| Expected | Both actors stay on their spots; the Align tab takes Left / Right only after Yes. |
+| Actual | Jitter gone. Align tab works as intended (owner). On the first bag the player sank slowly into the ground during Standing Apart (to the knees in the video); nothing in the log (the lock's watchdog leaves the player alone); not on the second bag. |
+| Status | Jitter, Align: **Pass**. Sinking: **Fail**, fixed in code (no-collision for NPCs only), to be retested. |
+
 ### 19 November 2026: owner, 1.10.163 (GOG), jitter
 
 | | |

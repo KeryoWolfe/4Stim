@@ -385,9 +385,17 @@ namespace Core
 	// lock holds them, so they don't need the floor either (as walls,
 	// bPassThroughWalls). Their own filter comes back with their gravity
 	// (RestoreCollisionNow).
+	//
+	// Not the player: with no collision the player's controller sank into
+	// the ground through a standing scene on a sleeping bag (the owner's
+	// 1.10.163 game, 20 November: down to the knees in Standing Apart), and
+	// the lock's watchdog leaves the player alone. Two capsules collide only
+	// if both allow it, so the NPCs' no-collision alone keeps the player's
+	// capsule off them; NPCs that drift (down included) are put back by the
+	// watchdog.
 	void HoldNoCollision(RE::Actor* a_actor, RE::bhkCharacterController* a_controller)
 	{
-		if (!g_settings.noActorCollision) {
+		if (!g_settings.noActorCollision || IsPlayer(a_actor)) {
 			return;
 		}
 		const auto body = a_controller->GetBodyImpl();
