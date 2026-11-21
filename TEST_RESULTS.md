@@ -48,7 +48,8 @@ in the log.
 | Actual | Jitter gone. Align tab works as intended (owner). On the first bag the player sank slowly into the ground during Standing Apart (to the knees in the video); nothing in the log (the lock's watchdog leaves the player alone); not on the second bag. |
 | Status | Jitter, Align: **Pass**. Sinking: **Fail**, fixed in code (no-collision for NPCs only), to be retested. |
 | Retest (same night) | No sinking. A faint vibration of the player stayed. `bCollisionWatch=1`: her held position and drawn root 0.00 off her spot, every 2 s window. FO4SMP V1.1's log: the player's TWB breast bones exploded when the scene moved her onto the spot and were reset, 3-13 bad simulated poses rejected a minute and 1-5 rest-pose resets a minute after that. **Most likely not 4Stim**: the player's SMP breast and belly physics (FO4SMP, the owner's port); to confirm with FO4SMP's physics off for the player. |
-| Then | Not FO4SMP (off: still there), not head tracking, not upscaling, frame generation, ActorVelocityFramework or HighFPSPhysicsFix, not OG (AE too); not in NPC-only scenes; only on sleeping bags. -3 down in the Align tab stopped it: the spot was 16 above the bag's origin (bounds top 14 with its rolled end, plus the mattress type's 2). **Fail**, fixed in data (`sleepingbag` type, 3 lower), to be retested. |
+| Then | Not FO4SMP (off: still there), not head tracking, not upscaling, frame generation, ActorVelocityFramework or HighFPSPhysicsFix, not OG (AE too); not in NPC-only scenes; only on sleeping bags. -3 down in the Align tab stopped it: the spot was 16 above the bag's origin (bounds top 14 with its rolled end, plus the mattress type's 2). **Fail**, fixed in data (`sleepingbag` type, 3 lower). |
+| Retest (21 November) | With the `sleepingbag` type and the alignment reset: no vibration (owner). **Pass**. |
 
 ### 19 November 2026: owner, 1.10.163 (GOG), jitter
 
