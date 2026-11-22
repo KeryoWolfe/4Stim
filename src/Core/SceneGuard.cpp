@@ -278,4 +278,91 @@ namespace Core
 			}
 		}
 	}
+
+	// ---- Holding the player (bHoldPlayer) ----
+	//
+	// The lock holds scene actors on their spots with a translation; NPCs'
+	// controllers collide with nothing (bNoActorCollision) and have no
+	// gravity, so nothing pulls against it. The player's controller still
+	// collided with the ground, and wherever her spot wasn't exactly on it
+	// (a sleeping bag's spot 3 units above the bag, 20 November 2026; any
+	// height change in the Align tab, a tester, 22 November) the game kept
+	// settling her onto the ground while the translation held her up: her
+	// position and root stayed put (the shake watch: 0.00) but her body
+	// vibrated faintly. With no collision she instead sank slowly through
+	// the ground, as nothing put her back (the lock's watchdog leaves the
+	// player alone).
+	//
+	// So with bHoldPlayer the player collides with nothing too
+	// (HoldNoCollision), and every frame her controller is put at her spot
+	// (plus its own height over her feet, measured once a scene) with no
+	// velocity and no fall time: the spot itself, at any height, with nothing
+	// to settle onto. NPCs keep the translation and the watchdog.
+	void HoldPlayer(float a_seconds)
+	{
+		struct Hold
+		{
+			std::string sceneID;
+			std::size_t role = 0;
+			float       capsuleZ = 0.0F;  // the controller's position over the feet (its capsule's middle)
+			float       time = 0.0F, maxFix = 0.0F;
+			int         fixes = 0, frames = 0;
+		};
+		static std::optional<Hold> s_hold;
+		constexpr float            HAVOK_TO_GAME = 69.99125F;  // Fallout 4's Havok scale (1 / 0.0142875)
+
+		const auto player = RE::PlayerCharacter::GetSingleton();
+		const ActiveScene* active = nullptr;
+		std::size_t        role = 0;
+		if (g_lockScenes && g_settings.holdPlayer && g_settings.noActorCollision && player) {
+			for (const auto& candidate : g_activeScenes) {
+				for (std::size_t r = 0; r < candidate.actors.size(); ++r) {
+					if (candidate.actors[r] == player->GetFormID()) {
+						active = &candidate;
+						role = r;
+					}
+				}
+			}
+		}
+		const auto controller = active ? GetCharController(player) : nullptr;
+		// Only once the lock holds her (gravity 0, HoldGravity), and not while
+		// a transition walks the actors between spots.
+		const auto scene = active ? SceneRegistry::Find(active->sceneID) : nullptr;
+		if (!controller || controller->gravity != 0.0F || !scene || scene->IsTransition()) {
+			if (s_hold && !active) {
+				REX::INFO("Player hold: done ({} correction(s) in the last stretch)", s_hold->fixes);
+				s_hold.reset();
+			}
+			return;
+		}
+		const PhysicsLock physics(player);
+		RE::hkVector4f    at{};
+		controller->GetPositionImpl(at, false);
+		const RE::NiPoint3 controllerAt{ at[0] * HAVOK_TO_GAME, at[1] * HAVOK_TO_GAME, at[2] * HAVOK_TO_GAME };
+		if (!s_hold || s_hold->sceneID != active->sceneID || s_hold->role != role) {
+			const float capsuleZ = s_hold ? s_hold->capsuleZ : controllerAt.z - player->data.location.z;
+			s_hold = Hold{ active->sceneID, role, capsuleZ };
+			REX::INFO("Player hold: \"{}\" role {}: held on her spot through her controller (capsule {:.1f} over her feet)", active->sceneID, role, capsuleZ);
+		}
+		auto&       hold = *s_hold;
+		const auto  spot = SpotOf(*active, role).position;
+		const RE::NiPoint3 wanted{ spot.x, spot.y, spot.z + hold.capsuleZ };
+		const float off = wanted.GetDistance(controllerAt);
+		if (off > 0.05F) {
+			controller->SetPositionImpl(RE::hkVector4f{ wanted.x / HAVOK_TO_GAME, wanted.y / HAVOK_TO_GAME, wanted.z / HAVOK_TO_GAME, 0.0F }, false, false);
+			++hold.fixes;
+			hold.maxFix = std::max(hold.maxFix, off);
+		}
+		controller->SetLinearVelocityImpl(RE::hkVector4f{ 0.0F, 0.0F, 0.0F, 0.0F });
+		controller->fallTime = 0.0F;
+		++hold.frames;
+		hold.time += a_seconds;
+		if (hold.time >= 5.0F) {
+			REX::INFO("Player hold: \"{}\": {} of {} frame(s) put back on the spot (up to {:.2f} off)", hold.sceneID, hold.fixes, hold.frames, hold.maxFix);
+			hold.time = 0.0F;
+			hold.fixes = 0;
+			hold.frames = 0;
+			hold.maxFix = 0.0F;
+		}
+	}
 }

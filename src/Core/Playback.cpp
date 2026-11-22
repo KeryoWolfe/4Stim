@@ -72,6 +72,7 @@ namespace Core
 			KeepFadedIn();
 			WatchShaking(elapsed);
 			GuardScenes(elapsed);
+			HoldPlayer(elapsed);
 			PruneScenePackage(elapsed);
 			Undress::Tick(elapsed);
 			EquipObjects::Tick(elapsed);

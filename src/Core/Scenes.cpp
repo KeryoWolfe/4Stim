@@ -392,11 +392,12 @@ namespace Core
 	// the lock's watchdog leaves the player alone. Two capsules collide only
 	// if both allow it, so the NPCs' no-collision alone keeps the player's
 	// capsule off them; NPCs that drift (down included) are put back by the
-	// watchdog.
+	// watchdog. With bHoldPlayer (the default) the player collides with
+	// nothing too, and HoldPlayer holds her on her spot every frame.
 	void HoldNoCollision(RE::Actor* a_actor, RE::bhkCharacterController* a_controller)
 	{
-		if (!g_settings.noActorCollision || IsPlayer(a_actor)) {
-			return;
+		if (!g_settings.noActorCollision || (IsPlayer(a_actor) && !g_settings.holdPlayer)) {
+			return;  // the player only with bHoldPlayer, which holds her height itself
 		}
 		const auto body = a_controller->GetBodyImpl();
 		if (!body) {

@@ -183,6 +183,7 @@ namespace Core
 		bool          furnitureOutOfWay = true; // bFurnitureOutOfTheWay: scene furniture doesn't collide with the scene's actors
 		bool          passThroughWalls = true;  // bPassThroughWalls: a scene actor touching a wall (no reference) collides with nothing for the scene
 		bool          noActorCollision = true;  // bNoActorCollision: scene actors' controllers collide with nothing while the lock holds them
+		bool          holdPlayer = true;        // bHoldPlayer: the player too, held on her spot through her controller every frame (HoldPlayer)
 		float         transitionLead = 0.0F;   // seconds before a transition's length to move on (see 4Stim.ini)
 		bool          matchSex = true;         // SetOnlyGayAnimsInGayScenes (OStim's intended sex only): a role's sex must be the actor's
 		// Who the player is in a scene for two (OStim's): always the first
@@ -890,6 +891,7 @@ namespace Core
 	void SetCameraFadeOff(bool a_off);
 	void KeepFadedIn();
 	void WatchShaking(float a_seconds);
+	void HoldPlayer(float a_seconds);
 	void GuardScenes(float a_seconds);
 
 	// ---- Excitement and climax (Excitement.h) ----

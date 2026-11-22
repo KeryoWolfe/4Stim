@@ -3,6 +3,7 @@
 ## 0.5.0 beta (in progress)
 
 ### Beta
+- **The player vibrated when her spot wasn't on the ground** (a sleeping bag; any Down / up change in the Align tab, a tester, 22 November): the game kept settling her collision onto the ground against the lock. With `bHoldPlayer` (1 by default) she collides with nothing during scenes, like NPCs, and is held on her spot through her own controller every frame, so she doesn't sink either. `Player hold:` lines in the log.
 - **The player vibrated in scenes on sleeping bags**: sleeping bags are now their own subtype of `mattress` (same scenes, same bedroll faction), placed 3 units lower, on the bag instead of above its rolled end (the owner, 20 November; found with the Align tab).
 - **Align tab: a row is selected with Yes before Left / Right change it** (Enter / A; again, Up / Down, Cancel or B let it go). Left / Right otherwise move between tabs, so the Align list can always be left (a tester couldn't get back from it, 20 November). A departure from OStim's align menu, asked for by the owner (docs/ALIGNMENT.md).
 - **Scenes ended when an item that raises Health came off** (a 1.10.163 tester, 19 November): undressing the player's "Hooded Rags" (+20 Health) ended every scene as `was hurt (20 health lost)`. `bEndOnDamage` now reads Health's damage, which only harm changes.
