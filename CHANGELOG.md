@@ -1,15 +1,20 @@
 # Changelog
 
-## 0.5.0 beta (in progress)
+## 0.6.0 beta
 
-### Beta
+Fixes and changes since the 0.5.0 beta, from its testers' reports.
+
 - **The player vibrated when her spot wasn't on the ground** (a sleeping bag; any Down / up change in the Align tab, a tester, 22 November): the game kept settling her collision onto the ground against the lock. With `bHoldPlayer` (1 by default) she collides with nothing during scenes, like NPCs, and is held on her spot through her own controller every frame, so she doesn't sink either. `Player hold:` lines in the log.
 - **The player vibrated in scenes on sleeping bags**: sleeping bags are now their own subtype of `mattress` (same scenes, same bedroll faction), placed 3 units lower, on the bag instead of above its rolled end (the owner, 20 November; found with the Align tab).
 - **Align tab: a row is selected with Yes before Left / Right change it** (Enter / A; again, Up / Down, Cancel or B let it go). Left / Right otherwise move between tabs, so the Align list can always be left (a tester couldn't get back from it, 20 November). A departure from OStim's align menu, asked for by the owner (docs/ALIGNMENT.md).
 - **Scenes ended when an item that raises Health came off** (a 1.10.163 tester, 19 November): undressing the player's "Hooded Rags" (+20 Health) ended every scene as `was hurt (20 health lost)`. `bEndOnDamage` now reads Health's damage, which only harm changes.
 - **No erect physics on some NPCs** (the same tester): FSMP had no physics on them yet when the scene started (dressed, in a crowd), and 4Stim asked once. The swap is now asked again every 3 seconds while the scene lasts, up to 10 times, and an actor whose swap never landed isn't swapped back at the end.
 - **Crash on loading a save on 1.10.163** (first beta, a tester's crash log, 19 November): every call from 4Stim into Papyrus on 1.10.163 handed the VM a garbled argument list, first at load (`FourUndress.UsePapyrusUndressing`). After the asdasdduck merge, CommonLibF4 converts the arguments to 1.10.163's layout itself, and both 4Stim's `compat/ScrapFunction.h` and an older path in CommonLibF4 still converted them first. Both removed (CommonLibF4 `4stim/combined` at `0064693`). NG and AE weren't affected.
-- **Scene NPCs collide with nothing while the scene lock holds them** (`bNoActorCollision`, 1 by default; their gravity is off then too): on 1.10.163 with FO4 Faster HDT-SMP alone, standing scenes still jittered (the owner, 19 November). Back from the change first made for the 18 November report (which was two SMP plugins at once). `bNoActorCollision=0` for the old way. Not the player: the player's controller sank into the ground with it (a sleeping bag, 20 November); the NPCs' no-collision alone keeps the two capsules apart.
+- **Standing and sitting scenes jittered** (the owner on 1.10.163, 19 November; the 18 November tester's report was two SMP plugins at once): scene NPCs collide with nothing while the scene lock holds them (`bNoActorCollision`, 1 by default; their gravity is off then too), so two capsules on one spot don't shove each other. The player too, held through her controller (`bHoldPlayer`, below). `bNoActorCollision=0` for the old way.
+
+## 0.5.0 beta
+
+### Beta
 - **Settings in F4SE Menu Framework**: with DCCStudios' F4SE Menu Framework installed, 4Stim's MCM pages are also in its ImGui menu (4Stim > Settings), with the same labels, help and choices, changes taking effect at once (docs/MCM.md). Optional: nothing changes without it.
 - **OStim NG's 9-15 November update** (checked at `19c1e8b`): the new `holding` action tag and its factions (`4StimAnyHoldingActorFaction` / `TargetFaction`), on the holding, groping, stroking and hugging actions; leg locking's factions (`4StimLegLocking…Faction`); `talk` on hugging, holding the chin, patting and stroking the head, spanking and stroking the tail; the facial's target no longer forced into the tongue face; the four factions added to `4Stim.esl`. OStim's `genitalAlignment` (for Skyrim's Accurate Penetration mod) is read from actions and scenes and kept, as OStim does; nothing in Fallout 4 uses it, and OStim hands it out only through its graph interface, which 4Stim doesn't have.
 - **CommonLibF4: asdasdduck's fork merged in** (`4stim/combined` at `3630675`): ragdolls, navmesh placement, movement and motion control, actor state helpers, Havok queries, skinning matrices and bone names, the BGSM stream and more; nothing in 4Stim uses them yet. 4Stim's sources syntax-check clean against it.

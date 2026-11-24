@@ -1,4 +1,4 @@
-# 4Stim 0.5.0 beta: tester's guide
+# 4Stim 0.6.0 beta: tester's guide
 
 Thanks for testing. 4Stim is an OStim-style scene framework for Fallout 4:
 you pick someone (or several people), pick where, and a scene starts; from
@@ -9,7 +9,22 @@ about finding what still breaks before the first public release.
 
 **Please don't share these files.**
 
-## New since the 0.4 alpha
+## New since the 0.5.0 beta
+
+The full list is CHANGELOG.md, "0.6.0 beta". The main ones:
+
+- **1.10.163 no longer crashes** on loading a save.
+- **No more jitter or vibration** in standing and sitting scenes, on
+  sleeping bags or after moving someone in the Align tab: scene actors no
+  longer push each other, and the player is held steady at any height.
+- **Align tab**: press Yes on a row before Left / Right change it, so you
+  can always get back to the tabs.
+- **Scenes don't end** when an item that raises Health comes off.
+- **Erect physics** is asked for again if an NPC had no physics yet when
+  the scene started.
+- **Sleeping bags**: actors lie on the bag, not above it.
+
+## New in the 0.5.0 beta (since the 0.4 alpha)
 
 The full list is CHANGELOG.md, "0.5.0 beta". The main ones:
 
@@ -45,7 +60,7 @@ by hand (`F4SE\Plugins\4Stim.dll`, the `F4SE\Plugins\4Stim` folder,
 `Scripts\Four*.pex`). An old `4Stim.dll` left behind is the most common
 reason the scene key does nothing.
 
-Then install **`4Stim-0.5.0-beta.zip`** with your mod manager, as one mod.
+Then install **`4Stim-0.6.0-beta.zip`** with your mod manager, as one mod.
 It holds the framework, OStim's base animations (converted) and the
 strap-ons and tongues. Enable its three plugins:
 
@@ -56,7 +71,7 @@ strap-ons and tongues. Enable its three plugins:
 Take the new `4Stim.ini`. Settings you changed in the MCM stay.
 
 **Is it the new build?** `Documents\My Games\Fallout4\F4SE\4Stim.log`
-starts with `4Stim v0.5.0.0`, `Game version …, F4SE …` and, a few lines on,
+starts with `4Stim v0.6.0.0`, `Game version …, F4SE …` and, a few lines on,
 `4Stim loaded`.
 
 ## Uninstalling
