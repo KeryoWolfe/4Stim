@@ -45,7 +45,7 @@ in the log.
 | Setup | 4Stim with `bHoldPlayer=1` (commit 9ad36dc). |
 | Steps | A scene with the player; Down / up and other moves in the Align tab. |
 | Expected | No vibration at any height; the player doesn't sink. |
-| Actual | No vibration while moving her around in the Align tab (owner). |
+| Actual | No vibration while moving her around in the Align tab; none on scene changes; after the scene she walks normally (owner). |
 | Status | **Pass** (the tester's report of 22 November). |
 
 ### 20 November 2026: owner, 1.10.163 (GOG), player sinking on a sleeping bag
