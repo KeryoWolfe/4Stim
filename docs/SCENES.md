@@ -114,7 +114,7 @@ The first scene has two speeds and one navigation option. The second uses the si
 - **One scene per file**, anywhere under `Scenes\` (subfolders too, as OStim's `scenes\` folder). The file name is the scene id: `Scenes\MyPack\MyPack_Cowgirl.json` is `MyPack_Cowgirl`. A file with no `scenes` or `sequences` list is read this way.
 - **OStim's field names**: `intendedSex`, `navigations` with `destination` / `origin` / `description` / `priority`, `offset`, `modpack`, `fadeOnEntry`, scene-wide `autoTransitions`, `sosBend`, `animationIndex`.
 - **`speeds[].animation`**: one name for all actors, as OStim's: role 0 plays the Idle whose **editor ID** is `<animation>_0`, role 1 `<animation>_1`, and so on (OStim appends the actor's index the same way, or the actor's `animationIndex`). Name your Idle records after OStim's animations (the converter does) and no plugin or form IDs are needed.
-- **Sequences**: one per file in `Data\F4SE\Plugins\4Stim\Sequences\`, the file name being the sequence id, with OStim's `scenes` (`id`, `duration`) and `tags`.
+- **Sequences**: one per file anywhere under `Data\F4SE\Plugins\4Stim\Sequences\` (subfolders too, as OStim since November 2026), the file name being the sequence id, with OStim's `scenes` (`id`, `duration`) and `tags`.
 
 Every field of OStim NG's scene files is read and used. `playbackSpeed`: OStim sets its `OStimSpeed` behavior variable, which only OStim's Skyrim behavior patch has; 4Stim speeds up or slows down the actors' animation updates instead (`bUsePlaybackSpeed`, API.md).
 

@@ -1007,8 +1007,9 @@ namespace SceneRegistry
 			for (const auto& f : files) {
 				LoadFile(f, loaded, skipped);
 			}
-			// OStim's sequences folder: one sequence per file, id = file name.
-			for (const auto& e : std::filesystem::directory_iterator(SEQUENCE_FOLDER, ec)) {
+			// OStim's sequences folder: one sequence per file, id = file name,
+			// subfolders too (OStim NG bc71ab6, 27 November 2026).
+			for (const auto& e : std::filesystem::recursive_directory_iterator(SEQUENCE_FOLDER, ec)) {
 				if (e.is_regular_file() && sceneFile(e.path())) {
 					if (const auto root = ReadJSON(e.path(), "Sequences")) {
 						AddRawSequence(*root, e.path().stem().string(), e.path().filename().string());
