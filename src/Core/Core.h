@@ -1217,6 +1217,7 @@ namespace Core
 	// builder with the player: OStim's start flow follows).
 	void StartSoloScene();
 	void HandleButton(const RE::ButtonEvent* a_event);
+	[[nodiscard]] bool ConsumesButton(const RE::ButtonEvent* a_event);
 	void RunKeyAction(std::string_view a_action);
 	void WatchAnimEvents(const std::vector<std::uint32_t>& a_actors, const std::string& a_sceneID);
 	void InstallAnimEventHook();

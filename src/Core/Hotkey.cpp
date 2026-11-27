@@ -30,6 +30,41 @@ namespace Core
 		return !(GetPlayerScene().Active() && HUD::IsOpen());
 	}
 
+	// Whether a key press is 4Stim's alone (OStim NG e6ea818, 23 November
+	// 2026: its input listener stops the event, kStop, once it has handled a
+	// scene key). While the player is in or watches a scene, with no menu or
+	// console up: OStim's navigation keys and the scene keys (speed, auto
+	// mode, pull out, end, search, align, free camera, hide UI) on the
+	// keyboard, and the controller buttons set for those in [Controller].
+	// Only the press, as OStim's (IsDown); the hotkey and the NPC scene key
+	// still go on, as OStim's do. The input hook takes these out of the
+	// queue before the game's menu controls and other mods' handlers see it.
+	bool ConsumesButton(const RE::ButtonEvent* a_event)
+	{
+		if (!a_event->QJustPressed() || !GetPlayerScene().Active()) {
+			return false;
+		}
+		const auto ui = RE::UI::GetSingleton();
+		if (!ui || ui->menuMode > 0 || ui->GetMenuOpen("Console") || ui->GetMenuOpen(PICKER_MENU)) {
+			return false;
+		}
+		const auto  code = static_cast<std::uint32_t>(a_event->idCode);
+		const auto& st = g_settings;
+		if (code == 0) {
+			return false;
+		}
+		if (a_event->device.get() == RE::INPUT_DEVICE::kKeyboard) {
+			return HUD::IsNavigationKey(code) || code == st.speedUpKey || code == st.speedDownKey ||
+			       (g_autoConfig.key != 0 && code == g_autoConfig.key) || code == st.pullOutKey || code == st.endKey ||
+			       code == st.searchKey || code == st.alignmentKey || code == st.freeCamKey || code == st.hideUIKey;
+		}
+		if (a_event->device.get() == RE::INPUT_DEVICE::kGamepad) {
+			return code == st.padSpeedUp || code == st.padSpeedDown || code == st.padAutoMode || code == st.padPullOut ||
+			       code == st.padEnd || code == st.padSearch || code == st.padAlign || code == st.padFreeCam || code == st.padHideUI;
+		}
+		return false;
+	}
+
 	void HandleButton(const RE::ButtonEvent* a_event)
 	{
 		// Hold-to-scroll tracking for the picker: arrow keys and d-pad up/down.

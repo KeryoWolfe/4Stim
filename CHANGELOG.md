@@ -4,6 +4,7 @@
 
 Fixes and changes since the 0.5.0 beta, from its testers' reports.
 
+- **Scene keys stay with 4Stim**: in a player scene, pressing a scene key (the navigation keys, speed, auto mode, pull out, end, search, align, free camera, hide UI, and their controller buttons) no longer reaches the game's menu controls or other mods, as OStim's keys don't since its 23 November update. The hotkey and the NPC scene key still go through.
 - **Sequence files in subfolders** of `Sequences\` load too, as OStim's do since its 27 November update.
 - **The player vibrated when her spot wasn't on the ground** (a sleeping bag; any Down / up change in the Align tab, a tester, 22 November): the game kept settling her collision onto the ground against the lock. With `bHoldPlayer` (1 by default) she collides with nothing during scenes, like NPCs, and is held on her spot through her own controller every frame, so she doesn't sink either. `Player hold:` lines in the log.
 - **The player vibrated in scenes on sleeping bags**: sleeping bags are now their own subtype of `mattress` (same scenes, same bedroll faction), placed 3 units lower, on the bag instead of above its rolled end (the owner, 20 November; found with the Align tab).

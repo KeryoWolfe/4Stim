@@ -15,14 +15,38 @@ namespace Core
 
 		static void Thunk(RE::BSInputEventReceiver* a_this, const RE::InputEvent* a_queueHead)
 		{
-			for (auto event = a_queueHead; event; event = event->next) {
+			// The scene keys 4Stim handles in a player scene stop here, as
+			// OStim's do (ConsumesButton): they're unlinked from the queue for
+			// the game's call and linked back after it, as the queue belongs
+			// to the game. Everything else goes on as before.
+			std::vector<std::pair<RE::InputEvent*, RE::InputEvent*>> relinked;  // (event, its own next)
+			const RE::InputEvent* head = a_queueHead;
+			RE::InputEvent*       kept = nullptr;  // the last event passed on
+			for (auto event = const_cast<RE::InputEvent*>(a_queueHead); event;) {
+				const auto next = event->next;
+				bool       consumed = false;
 				if (const auto button = event->As<RE::ButtonEvent>()) {
+					consumed = ConsumesButton(button);
 					HandleButton(button);
 				} else if (const auto character = event->As<RE::CharacterEvent>()) {
 					HandleCharacter(character);
 				}
+				if (consumed) {
+					if (kept) {
+						relinked.emplace_back(kept, kept->next);
+						kept->next = next;
+					} else {
+						head = next;
+					}
+				} else {
+					kept = event;
+				}
+				event = next;
 			}
-			original(a_this, a_queueHead);  // always let the game process the input too
+			original(a_this, head);
+			for (auto it = relinked.rbegin(); it != relinked.rend(); ++it) {
+				it->first->next = it->second;
+			}
 		}
 
 		static void Install()

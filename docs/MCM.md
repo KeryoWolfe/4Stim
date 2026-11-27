@@ -26,6 +26,8 @@ In the MCM's file, 4Stim's own setting names stay as they are (`bLockScenes`, `f
 
 The Controls page sets `4Stim.ini`'s keys, laid out as OStim's Controls page: the scene keys (start a scene / the HUD, a scene without you, faster, slower, pull out, free camera, search, Align tab, hide the HUD, auto mode) and the navigation keys (up, down, left, right, toggle, yes, end), with OStim's defaults. They're MCM key inputs, so they show the key that's set (no Shift / Ctrl / Alt). Its Controller section has the controller scheme (4Stim Modern or OStim Classic, `sPadScheme`) and picks a controller button for each scene key (LB, RB, LT, RT, X, Y, either stick pressed in, or Back; none by default); the d-pad, A and B are the HUD's. Earlier versions had MCM hotkeys here; they're gone, so a key set there no longer does anything.
 
+As OStim's (since its 23 November 2026 update), the scene and navigation keys and their controller buttons are 4Stim's alone while the player is in or watches a scene, with no menu up: their press doesn't reach the game's menu controls or other mods. The hotkey and the NPC scene key still do.
+
 ## Export and import
 
 As OStim's: **Export settings** writes the settings in effect to `Documents\My Games\Fallout4\4Stim\mcmsettings.json` (OStim's file name, next to `alignment.json`) in OStim's layout: one flat list, each setting under its `4Stim.ini` name (OStim's name wherever OStim has the setting), numbers as numbers, plus `"4StimExport": 1` to mark it as 4Stim's. **Import settings** reads it back into the MCM's file. Copy the file to share settings, or keep it before trying something.

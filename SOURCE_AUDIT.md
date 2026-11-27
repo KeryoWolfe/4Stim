@@ -4,7 +4,7 @@ What OStim NG is made of, what 4Stim took from each part and how (roadmap
 1.6), and where every borrowed file in a 4Stim package comes from (1.9).
 
 **Source of truth:** OStim NG, github.com/VersuchDrei/OStimNG, GPL-3.0.
-Read at commit `2c98cb2` (22 October 2026); its 9-15 November changes (to `19c1e8b`) checked and brought in, and its 16-27 November ones (to `dd34b0c`): sequences from subfolders taken; the rest already so in 4Stim or not applicable (see CHANGELOG.md, 0.6.0). 4Stim is GPL-3.0 with the same
+Read at commit `2c98cb2` (22 October 2026); its 9-15 November changes (to `19c1e8b`) checked and brought in, and its 16-27 November ones (to `dd34b0c`): sequences from subfolders and scene keys stopped once handled taken; the rest already so in 4Stim or not applicable (see CHANGELOG.md, 0.6.0). 4Stim is GPL-3.0 with the same
 modding exception (LICENSE, EXCEPTIONS).
 
 **Classes** (the instructions'): **Reusable** taken with little change;
